@@ -633,9 +633,6 @@ Module Cespiti
         'In base alla vista ci sono campi in piu'
         'MA_FixedAssetsFiscal o MA_FixedAssetsBalance
         'In base alla causale di sono colonne da valorizzare o no
-        'TODO aggiorna saldo cespite
-        'Se devo creare un anno devo portarmi dietro i valori pregressi dell'ultimo anno buono
-        'Eventualmente creare gli anni in mezzo se assenti ( tipo ho il 1998 e devo scrivere il 2002, devo creare anche il 1999,2000,2001) 
         Try
             If found = -1 Then
                 'Controllo se e' l'ultimo in ordine progressivo o se ci sono degli anni mancanti da creare
