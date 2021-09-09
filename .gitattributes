@@ -4,6 +4,13 @@
 * text=auto
 
 ###############################################################################
+# Per file Clickonce di VisualStudio
+###############################################################################
+*.manifest binary
+*.application binary
+*.deploy binary
+
+###############################################################################
 # Set default behavior for command prompt diff.
 #
 # This is need for earlier builds of msysgit that does not have it on by
