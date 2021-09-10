@@ -2349,26 +2349,31 @@ Module Fatture
                         o.EndEdit()
                     End If
                 End If
+
+                '10/09/2021 
+                'DEPRECATA ()
+                If IsDeprecated Then
                     Dim updCat As Boolean
-                Dim catClienord As String = .Item("C").ToString
-                Select Case catClienord
-                    Case "O"
-                        catClienord = "OR"
-                    Case "S"
-                        catClienord = "SP"
-                    Case Else
-                        catClienord = "OR"
-                End Select
-                Dim catMago = o.Item("Category").ToString
-                Select Case catMago
-                    Case "OR", "SP", ""
-                        updCat = catClienord <> catMago
-                End Select
-                If updCat Then
-                    o.BeginEdit()
-                    avvisi.AppendLine("Categoria cliente : (" & catClienord & ") [" & catMago & "]")
-                    o.Item("Category") = catClienord
-                    o.EndEdit()
+                    Dim catClienord As String = .Item("C").ToString
+                    Select Case catClienord
+                        Case "O"
+                            catClienord = "OR"
+                        Case "S"
+                            catClienord = "SP"
+                        Case Else
+                            catClienord = "OR"
+                    End Select
+                    Dim catMago = o.Item("Category").ToString
+                    Select Case catMago
+                        Case "OR", "SP", ""
+                            updCat = catClienord <> catMago
+                    End Select
+                    If updCat Then
+                        o.BeginEdit()
+                        avvisi.AppendLine("Categoria cliente : (" & catClienord & ") [" & catMago & "]")
+                        o.Item("Category") = catClienord
+                        o.EndEdit()
+                    End If
                 End If
 
                 If avvisi.Length > 0 Then mlog.Avvisi.Append("Cliente: " & origine.Item("AA").ToString & " Doc. nr: " & origine.Item("O").ToString & vbCrLf & avvisi.ToString())

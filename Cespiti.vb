@@ -158,7 +158,7 @@ Module Cespiti
 
                                                         End If
                                                         'Determino l'anno Fiscale
-                                                        Dim dtaMov As Date = .Item("I").ToString
+                                                        Dim dtaMov As Date = MagoFormatta(.Item("I").ToString, GetType(DateTime), True).DataTempo
                                                         Dim annoF As Short = CShort(Year(dtaMov))
 
                                                         'Determino la Causale e anche il valore

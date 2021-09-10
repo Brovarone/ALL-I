@@ -674,6 +674,7 @@ Module MagoNet
         .MONey = 0
         }
         Dim ITCult As CultureInfo = New CultureInfo("it-IT")
+
         Try
 
 
@@ -683,7 +684,7 @@ Module MagoNet
                     'res.DataTempo = DateTime.ParseExact("20111120", "yyyyMMdd", CultureInfo.InvariantCulture)
                     If IsITA_Culture Then
                         'la stringa passata e' scritta come gg/MM/aaaa = 02/05/2021 = 2 maggio
-                        res.DataTempo = DateTime.ParseExact(value, "dd/MM/yyyy", ITCult)
+                        res.DataTempo = DateTime.ParseExact(value, "d", ITCult)
                     Else
                         res.DataTempo = DateTime.ParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture)
                     End If
