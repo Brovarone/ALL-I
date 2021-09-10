@@ -6,6 +6,12 @@ Imports System.Reflection.MethodBase
 'parametri publish locale che funziona
 'folder:C:\inetpub\wwwroot\ALL-I\
 'install folder:http://localhost/ALL-I/
+'update folder : ?
+
+'Parametri Publish su GitHub
+'Publishing folder: Installer/
+'Installation Folder: https://raw.githubusercontent.com/Brovarone/ALL-I/master/Installer/
+'Update: https://raw.githubusercontent.com/Brovarone/ALL-I/master/Installer/
 
 'Da testare x csv
 'Imports FileHelpers.ExcelNPOIStorage

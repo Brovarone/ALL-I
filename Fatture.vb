@@ -2218,7 +2218,7 @@ Module Fatture
                 anag.EndEdit()
 
                 'Dati su tabella MA_CustSuppCustomerOptions
-                If anag.Item("IPACode".ToString.Length) = 6 Then
+                If anag.Item("IPACode".ToString).Length = 6 Then
                     opt.BeginEdit()
                     If opt.Item("PublicAuthority").ToString <> "1" Then
                         avvisi.AppendLine("Pubblica amministrazione : (SI) [" & opt.Item("PublicAuthority") & "]")
