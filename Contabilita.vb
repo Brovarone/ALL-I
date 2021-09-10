@@ -2,7 +2,7 @@
 Imports System.IO
 Imports System.Data.SqlClient
 Imports System.Text
-
+Imports System.Reflection.MethodBase
 Public Module Paghe
     Private dtTeste As DataTable
     Private dtRighe As DataTable
@@ -366,7 +366,8 @@ Public Module Paghe
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-
+                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                mb.ShowDialog()
             End Try
             'Scrivi Gli ID ( faccio solo a fine elaborazione)
             AggiornaID(IdType.PNota, idPn)
@@ -532,7 +533,8 @@ Public Module Paghe
             End Using
         Catch ex As Exception
             Debug.Print(ex.Message)
-
+            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
         End Try
         If Not someTrouble Then
             'Scrivi Gli ID ( faccio solo a fine elaborazione)
@@ -591,6 +593,8 @@ Public Module Analitica
             End If
         Catch ex As Exception
             Debug.Print(ex.Message)
+            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
         End Try
 
         Return result
@@ -850,7 +854,8 @@ Public Module Contabilita
 
                                                             Catch ex As Exception
                                                                 Debug.Print(ex.Message)
-
+                                                                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                                                                mb.ShowDialog()
                                                             End Try
 
                                                             If .Item("M") IsNot DBNull.Value AndAlso Double.TryParse(.Item("M"), quadraturaDaFile) Then 'OrElse bChiudiRegistrazione Then
@@ -955,6 +960,8 @@ Public Module Contabilita
             Catch ex As Exception
                 Debug.Print(ex.Message)
                 My.Application.Log.WriteEntry(ex.Message)
+                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                mb.ShowDialog()
             End Try
 
             If Not someTrouble Then
@@ -983,7 +990,9 @@ Public Module Contabilita
                 pSum += Math.Round(p, 2)
             Next
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            Debug.Print(ex.Message)
+            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
         End Try
 
     End Sub
@@ -1021,6 +1030,8 @@ Public Module Contabilita
             End If
         Catch ex As Exception
             Debug.Print(ex.Message)
+            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
         End Try
 
         Return result

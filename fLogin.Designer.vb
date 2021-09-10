@@ -1007,13 +1007,13 @@ Partial Class FLogin
         'ImportaToolStripMenuItem
         '
         Me.ImportaToolStripMenuItem.Name = "ImportaToolStripMenuItem"
-        Me.ImportaToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.ImportaToolStripMenuItem.Size = New System.Drawing.Size(119, 22)
         Me.ImportaToolStripMenuItem.Text = "Importa"
         '
         'CancellaToolStripMenuItem
         '
         Me.CancellaToolStripMenuItem.Name = "CancellaToolStripMenuItem"
-        Me.CancellaToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.CancellaToolStripMenuItem.Size = New System.Drawing.Size(119, 22)
         Me.CancellaToolStripMenuItem.Text = "Cancella"
         '
         'HelpToolStripMenuItem

@@ -1,6 +1,7 @@
 ﻿Imports System.Text
 Imports System.Data.SqlClient
 Imports System.IO
+Imports System.Reflection.MethodBase
 
 'parametri publish locale che funziona
 'folder:C:\inetpub\wwwroot\ALL-I\
@@ -794,7 +795,8 @@ Public Class FLogin
         Try
             Directory.CreateDirectory(newFolder)
         Catch ex As Exception
-            MessageBox.Show(ex.Message.ToString)
+            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
         End Try
 
         For Each f As String In lista
@@ -1181,7 +1183,8 @@ Public Class FLogin
                 Try
                     Directory.CreateDirectory(newFolder)
                 Catch ex As Exception
-                    MessageBox.Show(ex.Message.ToString)
+                    Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                    mb.ShowDialog()
                 End Try
 
                 Dim l As String = My.Application.Log.DefaultFileLogWriter.FullLogFileName
@@ -1307,7 +1310,7 @@ Public Class FLogin
     Private Sub ImportaToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles ImportaToolStripMenuItem.Click
         'Processa Cespiti
         ChkCespiti.Checked = True
-        Dim bok As Boolean = MessageBox.Show("Temporaneo [" & TxtTMPDB.Text & "] (SI) o definitivo [" & txtDATABASE.Text & "] (NO)?", "Import Cespiti", MessageBoxButtons.YesNo) = DialogResult.Yes
+        Dim bok As Boolean = MessageBox.Show("Temporaneo [" & TxtTMPDB.Text & "] (SI) o definitivo [" & txtDATABASE.Text & "] (NO)?", "Import Cespiti", MessageBoxButtons.YesNoCancel) = DialogResult.Yes
         SUBConnetti(If(bok, TxtTMPDB.Text, ""))
         SUBProcessa()
     End Sub
@@ -1373,4 +1376,5 @@ Public Class FLogin
         MessageBox.Show(result.ToString)
         Me.Cursor = Cursors.Default
     End Sub
+
 End Class

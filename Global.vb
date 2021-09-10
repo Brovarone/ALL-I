@@ -1,12 +1,13 @@
 ﻿Imports System.Data.SqlClient
 Imports System.IO
-Imports System.Web.UI.WebControls
 Imports System.Text
+Imports System.Globalization
 Imports ExcelDataReader
 Imports CsvHelper
 Imports CsvHelper.Configuration
 Imports FileHelpers
 Imports System.Reflection
+Imports System.Reflection.MethodBase
 Module Variabili
     ' Definisco variabili connessione e tabelle
     Public Connection As SqlConnection
@@ -72,7 +73,7 @@ Module CSV
         ' .HasHeaderRecord = hasHeader non funziona
         Dim stopwatch As New Stopwatch
         stopwatch.Start()
-        Dim cfg As CsvConfiguration = New CsvConfiguration(Globalization.CultureInfo.InvariantCulture) With {
+        Dim cfg As CsvConfiguration = New CsvConfiguration(CultureInfo.InvariantCulture) With {
             .Delimiter = delimiter
         }
 
@@ -124,7 +125,7 @@ Module CSV
         ' .HasHeaderRecord = hasHeader non funziona
         Dim stopwatch As New Stopwatch
         stopwatch.Start()
-        Dim cfg As CsvConfiguration = New CsvConfiguration(Globalization.CultureInfo.InvariantCulture) With {
+        Dim cfg As CsvConfiguration = New CsvConfiguration(CultureInfo.InvariantCulture) With {
             .Delimiter = delimiter,
             .HasHeaderRecord = hasHeader
         }
@@ -330,339 +331,6 @@ Module MagoNet
         Return res
     End Function
 
-    Private Sub AddF(Of T)(cmd As SqlCommand, ByRef qry As String, field As String, value As T)
-        'se viene passata una stringa vuota esco
-        'If (value.GetType = GetType(String) And String.IsNullOrEmpty(value.ToString)) Then Exit Sub
-        If String.IsNullOrEmpty(value.ToString) Then Exit Sub
-        Dim pName As String = "@" & field
-        qry = qry & field & ", "
-        Dim p As New SqlParameter With {
-            .DbType = Parameter.ConvertTypeCodeToDbType(Type.GetTypeCode(value.GetType)),
-            .ParameterName = pName,
-            .Value = value
-            }
-        'p.Size = Len(value)
-        cmd.Parameters.Add(p)
-    End Sub
-
-    Private Sub AddFUpdate(Of T)(cmd As SqlCommand, ByRef qry As String, field As String, value As T)
-        'se viene passata una stringa vuota esco
-        If String.IsNullOrEmpty(value.ToString) Then Exit Sub
-        Dim pName As String = "@" & field
-        'creo la stringa della query con il parametro
-        qry = qry & field & "= " & pName & ","
-        'creo il parametro e il suo valore
-        Dim p As New SqlParameter With {
-            .DbType = Parameter.ConvertTypeCodeToDbType(Type.GetTypeCode(value.GetType)),
-            .ParameterName = pName,
-            .Value = value
-        }
-        cmd.Parameters.Add(p)
-    End Sub
-    Public Function Processa_PdCXLS(ByVal dts As DataSet, Optional ByVal bConIntestazione As Boolean = True) As Boolean
-        'Piano dei conti - MA_ChartOfAccounts
-        Dim adpPdc As SqlDataAdapter
-        adpPdc = New SqlDataAdapter("Select * from MA_ChartOfAccounts", Connection)
-        adpPdc.Fill(dts, "MA_ChartOfAccounts")
-        Dim dtPdc As DataTable = dts.Tables("MA_ChartOfAccounts")
-        Dim drpdc As DataRow()
-        'Variabili PdC
-        Dim sMastro As String = ""
-
-        'Mastri - MA_Ledgers
-        'Dim adpMastri As SqlDataAdapter
-        'adpMastri = New SqlDataAdapter("Select * from MA_Ledgers", Connection)
-        'adpMastri.Fill(dts, "MA_Ledgers")
-        'cbMar = New SqlCommandBuilder(adpMastri)
-        'adpMastri.InsertCommand = cbMar.GetInsertCommand(True)
-        'adpMastri.UpdateCommand = cbMar.GetUpdateCommand(True)
-        'Dim dtMastri As DataTable = dts.Tables("MA_Ledgers")
-        'Dim drMastri() As DataRow = dtMastri.Select()
-
-        'Assegno un datatable al file xls e un datarow con tutte le righe
-        Dim dtXLS As DataTable = dts.Tables("MA_ChartOfAccounts")
-        Dim drXLS As DataRow() = dtXLS.Select()
-
-        If drXLS.Length > 0 Then
-            Try
-                ' Ciclo le righe del file XLS
-                'Posso chiamare le Colonne con la stessa logica di Excel A,B,C o con i Numeri
-                Dim irxls As Integer = 0
-                Dim i As Byte = 0
-                If bConIntestazione Then i = 1
-
-                For irxls = i To drXLS.Length - 1
-                    Dim sInsert As String = "INSERT INTO MA_ChartOfAccounts ("
-                    Dim sValue As String = "VALUES ("
-                    'Debug.Print(drXLS(irxls).Item("B").ToString)
-                    Dim qry As String = "Account ='" & drXLS(irxls).Item("B").ToString & "'"
-                    drpdc = dtPdc.Select(qry)
-                    'Creo il comando che popolero' con i vari parametri
-                    Dim cmd = New SqlCommand("", Connection)
-
-                    If drpdc.Length = 0 Then
-                        With drXLS(irxls) ' accorcio per comodità di scrittura
-                            AddF(Of String)(cmd, sInsert, "Account", .Item("B").ToString)
-                            AddF(Of String)(cmd, sInsert, "Description", Left(.Item("C").ToString, 64))
-                            If Len(.Item("B")) = 2 Then ' e' un mastro processo !!
-                                sMastro = .Item("B").ToString
-                                'GESTISCO A MANO
-                                'cmd.CommandText = "INSERT INTO dbo.MA_Ledgers (Ledger) VALUES ('" & sMastro & "')"
-                                'cmd.ExecuteNonQuery()
-                                'Continuo con il Pdc
-                                AddF(Of String)(cmd, sInsert, "PostableInJE", "0")
-
-                            Else
-                                AddF(Of String)(cmd, sInsert, "PostableInJE", "1") ' sui conti , non sul mastro
-                                AddF(Of String)(cmd, sInsert, "PostableInCostAcc", If((String.IsNullOrEmpty(.Item("H").ToString) OrElse .Item("H").ToString = "N"), "0", "1"))
-
-                            End If
-                            AddF(Of String)(cmd, sInsert, "Ledger", sMastro)
-                            AddF(Of Integer)(cmd, sInsert, "CashFlowType", 8781824)
-
-                        End With
-                        PreparaEdEsegui(sInsert, sValue, cmd)
-
-                    Else
-                        'Esco dal ciclo ( magari devo correggere le descrizioni ma per ora esco)
-                        MessageBox.Show("Conto già presente:" & drXLS(irxls).Item("B").ToString & " " & drXLS(irxls).Item("C").ToString)
-                        Continue For
-                    End If
-                Next
-
-            Catch ex As Exception
-                Debug.Print(ex.Message)
-
-            End Try
-        End If
-
-        'adpPdc.Update(dts, "MA_Ledgers")
-
-        Return True
-
-    End Function
-
-    Public Function Processa_PdcAnaliticoXLS(ByVal dts As DataSet, Optional ByVal bConIntestazione As Boolean = True) As Boolean
-        'Piano dei conti solo valori campo analitico / Raggruppamento 
-        Dim adpPdc As SqlDataAdapter
-        adpPdc = New SqlDataAdapter("select * from MA_ChartOfAccounts", Connection)
-        adpPdc.Fill(dts, "MA_ChartOfAccounts")
-        Dim dtPdc As DataTable = dts.Tables("MA_ChartOfAccounts")
-        Dim drpdc As DataRow()
-
-        'Assegno un datatable al file xls e un datarow con tutte le righe
-        Dim dtXLS As DataTable = dts.Tables("Foglio2")
-        Dim drXLS As DataRow() = dtXLS.Select()
-
-        If drXLS.Length > 0 Then
-            Try
-                ' Ciclo le righe del file XLS
-                'Posso chiamare le Colonne con la stessa logica di Excel A,B,C o con i Numeri
-                Dim irxls As Integer = 0
-                Dim i As Byte = 0
-                If bConIntestazione Then i = 1
-
-                For irxls = i To drXLS.Length - 1
-                    Dim qry As String = "Account ='" & drXLS(irxls).Item("A").ToString & "'"
-                    Dim sUpdate As String = "UPDATE dbo.MA_ChartOfAccounts SET ALLRubrica = @allrubrica WHERE " & qry
-                    drpdc = dtPdc.Select(qry)
-                    'Creo il comando che popolero' con i vari parametri
-                    Dim cmd = New SqlCommand("", Connection)
-
-                    If drpdc.Length = 0 Then
-                        'salto
-                        'Esco dal ciclo ( magari devo correggere le descrizioni ma per ora esco)
-                        'MessageBox.Show("Conto non presente:" & drXLS(irxls).Item("A").ToString & " rubrica: " & drXLS(irxls).Item("C").ToString)
-                        Debug.Print("Conto non presente:" & drXLS(irxls).Item("A").ToString & " rubrica: " & drXLS(irxls).Item("C").ToString)
-                        Continue For
-
-                    Else
-                        cmd.Parameters.AddWithValue("@allrubrica", drXLS(irxls).Item("C").ToString)
-                        cmd.CommandText = sUpdate
-                        cmd.ExecuteNonQuery()
-
-                    End If
-                Next
-
-            Catch ex As Exception
-                Debug.Print(ex.Message)
-
-            End Try
-        End If
-
-        Return True
-
-    End Function
-    Public Function Processa_PdcRubricaXLS(ByVal dts As DataSet, Optional ByVal bConIntestazione As Boolean = True) As Boolean
-        'Nuova Tabella Raggruppamenti
-        'PURO INSERT
-        'Dim adpPdc As SqlDataAdapter
-        'adpPdc = New SqlDataAdapter("select * from MA_ChartOfAccounts", Connection)
-        'adpPdc.Fill(dts, "MA_ChartOfAccounts")
-        'Dim dtPdc As DataTable = dts.Tables("MA_ChartOfAccounts")
-        'Dim drpdc() As DataRow
-
-        'Assegno un datatable al file xls e un datarow con tutte le righe
-        Dim dtXLS As DataTable = dts.Tables("Foglio3")
-        Dim drXLS As DataRow() = dtXLS.Select()
-
-        If drXLS.Length > 0 Then
-            Try
-                ' Ciclo le righe del file XLS
-                'Posso chiamare le Colonne con la stessa logica di Excel A,B,C o con i Numeri
-                Dim irxls As Integer = 0
-                Dim i As Byte = 0
-                If bConIntestazione Then
-                    i = 1
-                End If
-
-                For irxls = i To drXLS.Length - 1
-                    'Dim qry As String = "Account ='" & drXLS(irxls).Item("A").ToString & "'"
-                    Dim sInsert As String = "INSERT INTO NOMENUOVATABELLA ("
-                    Dim sValue As String = "VALUES ("
-                    'Creo il comando che popolero' con i vari parametri
-                    Dim cmd = New SqlCommand("", Connection)
-                    AddF(Of String)(cmd, sInsert, "ALLRubrica", drXLS(irxls).Item("A").ToString)
-                    AddF(Of String)(cmd, sInsert, "Descrizione", drXLS(irxls).Item("B").ToString)
-                    PreparaEdEsegui(sInsert, sValue, cmd)
-                Next
-
-            Catch ex As Exception
-                Debug.Print(ex.Message)
-
-            End Try
-        End If
-
-        Return True
-
-    End Function
-
-    Public Function Processa_MovContXLS(ByVal dts As DataSet, Optional ByVal bConIntestazione As Boolean = True) As Boolean
-        'Movimenti Contabili PURI - MA_JournalEntries
-        'Righe - MA_JournalEntriesGLDetail
-
-        'Capire in che modo andare su uno a l'altra per fatture ricevute essenzialmente e storico Fatture emesse.
-        'MA_JournalEntriesTax - castelletto
-        'MA_JournalEntriesTaxDetail 
-        Dim adpPN As SqlDataAdapter
-        adpPN = New SqlDataAdapter("SELECT * FROM MA_JournalEntries", Connection)
-        adpPN.Fill(dts, "MA_JournalEntries")
-        Dim dtPN As DataTable = dts.Tables("MA_JournalEntries")
-        Dim drPN As DataRow()
-
-        'Identificatore 
-        Dim idPn As Integer
-
-        'Assegno un datatable al file xls e un datarow con tutte le righe
-        Dim dtXLS As DataTable = dts.Tables("Foglio1")
-        Dim drXLS As DataRow() = dtXLS.Select()
-
-        If drXLS.Length > 0 Then
-            Try
-                ' Ciclo le righe del file XLS
-                'Posso chiamare le Colonne con la stessa logica di Excel A,B,C o con i Numeri
-                Dim irxls As Integer = 0
-                Dim i As Byte = 0
-                If bConIntestazione Then
-                    i = 1
-                End If
-
-                For irxls = i To drXLS.Length - 1
-                    'Creo il comando per la tabella master che popolero' con i vari parametri
-                    Dim cmd = New SqlCommand("", Connection) 'MA_CustSupp
-                    Dim sInsert As String = "INSERT INTO MA_JournalEntries ("
-                    Dim sValue As String = "VALUES ("
-                    Dim qry As String = "MA_JournalEntries ='" & drXLS(irxls).Item("D").ToString & "' and CustSuppType=" & CustSuppType.Fornitore.ToString
-                    drPN = dtPN.Select(qry)
-
-                    'MA_JournalEntriesGLDetail
-                    Dim cmdOpt = New SqlCommand("", Connection) 'MA_JournalEntriesGLDetail
-                    Dim sInsertOpt As String = "INSERT INTO MA_JournalEntriesGLDetail ("
-                    Dim sValueOpt As String = "VALUES ("
-
-                    'potrebbe non servire, nessun update !!
-                    If drPN.Length = 0 Then
-                        'Inserisco nuovo movimento, che finirà al cambio del NUMOV ( colonna J)
-                        'Dim numov As Integer = drXLS(irxls).Item("J") 'forse da mettere sopra
-                        'Se nuova Registrazione leggo ID
-                        'TODO mettere a posto''''
-                        'LOW: Processa_MovContXLS
-                        If 1 <> 2 Then idPn = LeggiID(IdType.PNota) + 1
-
-                        With drXLS(irxls) ' accorcio per comodità di scrittura
-                            AddF(Of String)(cmd, sInsert, "AccTpl", .Item("L").ToString) 'Oppure associarne una standard di mago
-                            AddF(Of DateTime)(cmd, sInsert, "PostingDate", MagoFormatta(.Item("I").ToString, GetType(DateTime)).DataTempo)
-                            'AddF(Of String)(cmd, sInsert, "RefNo", .Item("H").ToString)
-                            AddF(Of DateTime)(cmd, sInsert, "DocumentDate", MagoFormatta(.Item("X").ToString, GetType(DateTime)).DataTempo)
-                            AddF(Of String)(cmd, sInsert, "DocNo", .Item("Y").ToString)
-                            'AddF(Of Double)(cmd, sInsert, "TotalAmount", .Item("K").ToString)
-                            AddF(Of Integer)(cmd, sInsert, "JournalEntryId", idPn)
-                            AddF(Of DateTime)(cmd, sInsert, "AccrualDate", MagoFormatta(.Item("AC").ToString, GetType(DateTime)).DataTempo)
-                            ''AddF(Of Integer)(cmd, sInsert, "CodeType", .Item("O").ToString) ' Normale / Apertura / Assestamento
-                            AddF(Of String)(cmd, sInsert, "Currency", If(.Item("O").ToString = "EURO", "EUR", .Item("O").ToString))
-                            AddF(Of DateTime)(cmd, sInsert, "ValueDate", MagoFormatta(.Item("CAC").ToString, GetType(DateTime)).DataTempo)
-                            'AddF(Of Integer)(cmd, sInsert, "LastSubId", .Item("U").ToString)
-
-                            ''''''''''''''''''''''
-                            'Righe MA_JournalEntriesGLDetail
-                            ''''''''''''''''''''''
-                            AddF(Of Integer)(cmdOpt, sInsertOpt, "JournalEntryId", idPn)
-                            AddF(Of Int16)(cmdOpt, sInsertOpt, "Line", .Item("K").ToString)
-                            'VEDERE
-                            'AddF(Of String)(cmdOpt, sInsertOpt, "AccRsn", .Item("L").ToString) ' Causale di riga
-                            'AddF(Of String)(cmdOpt, sInsertOpt, "Notes", .Item("N").ToString) ' M = Standard, N = Aggiuntiva
-
-                            AddF(Of DateTime)(cmdOpt, sInsertOpt, "PostingDate", MagoFormatta(.Item("I").ToString, GetType(DateTime)).DataTempo)
-                            AddF(Of DateTime)(cmdOpt, sInsertOpt, "AccrualDate", MagoFormatta(.Item("AC").ToString, GetType(DateTime)).DataTempo)
-                            ''AddF(Of Integer)(cmdOpt, sInsertOpt, "CodeType", 5177344) ' Normale / Apertura / Assestamento
-                            AddF(Of String)(cmdOpt, sInsertOpt, "Account", .Item("U").ToString)
-                            'AddF(Of Integer)(cmdOpt, sInsertOpt, "AmountType", 6356992) ' usato su FR e FE 
-                            AddF(Of Integer)(cmdOpt, sInsertOpt, "CustSupptype", If((String.IsNullOrEmpty(.Item("E").ToString) OrElse .Item("E").ToString = "C"), CustSuppType.Cliente, CustSuppType.Fornitore)) ' 3211264 = Cliente
-                            AddF(Of String)(cmdOpt, sInsertOpt, "CustSupp", .Item("W").ToString)
-                            AddF(Of Integer)(cmdOpt, sInsertOpt, "DebitCrediSign", If(.Item("T").ToString = "D", 4980736, 4980737)) 'T= Dare 4980736 / Avere 4980737
-                            AddF(Of Double)(cmdOpt, sInsertOpt, "Amount", .Item("U").ToString)
-                            AddF(Of String)(cmdOpt, sInsertOpt, "Currency", If(.Item("O").ToString = "EURO", "EUR", .Item("O").ToString))
-                            AddF(Of Double)(cmdOpt, sInsertOpt, "FiscalAmount", .Item("K").ToString)
-                            AddF(Of DateTime)(cmdOpt, sInsertOpt, "ValueDate", MagoFormatta(.Item("AC").ToString, GetType(DateTime)).DataTempo)
-                            AddF(Of Integer)(cmdOpt, sInsertOpt, "SubId", .Item("K").ToString) ' 
-                        End With
-                        'Forse conviene creare prima le righe e poi la testa (per last sub id e totoal amout)
-                        'va fatta prima
-                        PreparaEdEsegui(sInsert, sValue, cmd) ' Master
-                        'va fatta n volte
-                        PreparaEdEsegui(sInsertOpt, sValueOpt, cmdOpt) ' Slave Customer option
-                        'Scrivi Gli ID
-                        AggiornaID(IdType.PNota, idPn)
-                    Else
-                        'Esco dal ciclo ( magari devo correggere le descrizioni ma per ora esco)
-                        MessageBox.Show("Movimento già presente:" & drXLS(irxls).Item("D").ToString & " " & drXLS(irxls).Item("E").ToString)
-                        Continue For
-                    End If
-                Next
-
-            Catch ex As Exception
-                Debug.Print(ex.Message)
-
-            End Try
-        End If
-
-        Return True
-
-    End Function
-
-    Private Sub PreparaEdEsegui(ByRef sInsert As String, ByRef sValue As String, ByVal cmd As SqlCommand)
-        sInsert = sInsert.Substring(0, sInsert.Length - 2) & ") "
-        Dim sVal As New StringBuilder
-        sVal.Append(sValue)
-        For x = 0 To cmd.Parameters.Count - 1
-            sVal.Append(cmd.Parameters(x).ParameterName & ", ")
-        Next
-        sValue = sVal.ToString
-        sValue = sValue.Substring(0, sValue.Length - 2) & ")"
-        cmd.CommandText = sInsert & sValue & "OPTION(RECOMPILE)" ' " OPTION(OPTIMIZE FOR UNKNOWN)"
-        Debug.Print(cmd.CommandText.ToString)
-        cmd.ExecuteNonQuery()
-    End Sub
     Friend Structure CustSuppType
         Public Shared Cliente As Integer = 3211264
         Public Shared Fornitore As Integer = 3211265
@@ -996,7 +664,7 @@ Module MagoNet
     ''' <param name="value"></param>
     ''' <param name="Tipo"></param>
     ''' <returns></returns>
-    Public Function MagoFormatta(ByVal value As String, ByVal Tipo As Type) As MagoType
+    Public Function MagoFormatta(ByVal value As String, ByVal Tipo As Type, Optional ByVal IsITA_Culture As Boolean = False) As MagoType
         Dim res As New MagoType With {
         .BOOLeano = True,
         .STRinga = "",
@@ -1005,29 +673,36 @@ Module MagoNet
         .INTero = 0,
         .MONey = 0
         }
+        Dim ITCult As CultureInfo = New CultureInfo("it-IT")
         Try
 
 
             Select Case Tipo
                 Case GetType(DateTime)
                     'PASSARE SE POSSIBILE LA DATA CON yyyyMMdd
-                    'res.DataTempo = DateTime.ParseExact("20111120", "yyyyMMdd", Globalization.CultureInfo.InvariantCulture)
-                    res.DataTempo = DateTime.ParseExact(value, "yyyyMMdd", Globalization.CultureInfo.InvariantCulture)
+                    'res.DataTempo = DateTime.ParseExact("20111120", "yyyyMMdd", CultureInfo.InvariantCulture)
+                    If IsITA_Culture Then
+                        'la stringa passata e' scritta come gg/MM/aaaa = 02/05/2021 = 2 maggio
+                        res.DataTempo = DateTime.ParseExact(value, "dd/MM/yyyy", ITCult)
+                    Else
+                        res.DataTempo = DateTime.ParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture)
+                    End If
                     res.STRinga = res.DataTempo.ToString("yyyy-MM-dd")
                     res.sDataSlash = res.DataTempo.ToString("dd/MM/yyyy")
 
                 Case GetType(Double)
-                    Dim dbl As Double = Double.Parse(value, New Globalization.CultureInfo("en-US"))
-                    res.STRinga = dbl.ToString("0.00", New Globalization.CultureInfo("it-IT"))
+                    Dim dbl As Double = Double.Parse(value, New CultureInfo("en-US"))
+                    res.STRinga = dbl.ToString("0.00", ITCult)
                     res.MONey = dbl
-                'dbl = Double.Parse(res.STRinga, New Globalization.CultureInfo("it-IT"))
+                'dbl = Double.Parse(res.STRinga,ITCult)
                 Case GetType(String)
-                    DateTime.TryParse(value, New Globalization.CultureInfo("it-IT"), Globalization.DateTimeStyles.AdjustToUniversal, res.DataTempo)
+                    DateTime.TryParse(value, ITCult, DateTimeStyles.AdjustToUniversal, res.DataTempo)
                     res.STRinga = res.DataTempo.ToString("yyyy-MM-dd")
                     res.sDataSlash = res.DataTempo.ToString("dd/MM/yyyy")
             End Select
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
         End Try
         Return res
 
@@ -1078,6 +753,8 @@ Module MagoNet
                     Debug.Print("NON OK la scrittura in Bulk Copy di : " & TableName & " , " & dt.Rows.Count.ToString & " record.")
                     logTxt = "ERRORE SU INSERIMENTO : " & TableName & " , " & dt.Rows.Count.ToString & " record." & vbCrLf & ex.Message.ToString
                     esito = False
+                    Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                    mb.ShowDialog()
                 End Try
                 RemoveHandler bulkCopy.SqlRowsCopied, AddressOf BulkBar
                 Application.DoEvents()
@@ -1187,7 +864,8 @@ Module MagoNet
                             End If
                         Catch ex As Exception
                             Debug.Print(ex.Message)
-
+                            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                            mb.ShowDialog()
                         End Try
                         Application.DoEvents()
                     End While
@@ -1203,9 +881,38 @@ Module MagoNet
         Application.DoEvents()
         Return dt
     End Function
-    Public Sub LiberaRam()
-        GC.Collect()
-        GC.WaitForPendingFinalizers()
-
-    End Sub
 End Module
+Public Module FiltriAnalitica
+    Public Class FiltriAnalitici
+        Public Property DataDA As Date
+        Public Property DataA As Date
+        Public Property GiaRegistrati As Boolean
+        Public Property MovInAnalitica As Boolean
+        Public Property NumberFirst As String
+        Public Property NumberLast As String
+        Public Property AllNumbers As Boolean
+        Public Sub New()
+            DataA = Today
+            DataDA = Today
+            GiaRegistrati = False
+            MovInAnalitica = False
+            NumberFirst = ""
+            NumberLast = ""
+            AllNumbers = True
+        End Sub
+    End Class
+    Public NotInheritable Class DareAvereIgnora
+        'Dare Avere ignora - segno analitica 125
+        Public Shared Dare As Integer = 8192000
+        Public Shared Avere As Integer = 8192001
+        Public Shared Ignora As Integer = 8192002
+    End Class
+End Module
+
+Module Common
+        Public Sub LiberaRam()
+            GC.Collect()
+            GC.WaitForPendingFinalizers()
+
+        End Sub
+    End Module

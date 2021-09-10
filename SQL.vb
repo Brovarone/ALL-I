@@ -1,6 +1,7 @@
 ﻿Imports System.Data.Sql
 Imports System.Data.SqlClient
 Imports System.IO
+Imports System.Reflection.MethodBase
 
 Namespace MySqlServerBackup
     Module Utilities
@@ -57,6 +58,8 @@ Namespace MySqlServerBackup
                 '  Next
 
             Catch ex As Exception
+                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                mb.ShowDialog()
             Finally
             End Try
             FLogin.PanelUser.Enabled = True

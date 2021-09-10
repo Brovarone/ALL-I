@@ -1,6 +1,7 @@
 ﻿Imports System.Data.SqlClient
 Imports System.Text
 Imports System.Text.RegularExpressions
+Imports System.Reflection.MethodBase
 
 Module Fatture
     'TODO: creare dei parametri
@@ -230,7 +231,7 @@ Module Fatture
                                                                                 'Fattura Elettronica
                                                                                 ''''''''''''''''''''''
                                                                                 drCli("ElectronicInvoicing") = "1"
-                                                                                Dim isPA As Boolean = Len(.Item("Z").ToString) = 6
+                                                                                Dim isPA As Boolean = .Item("Z").ToString.Length = 6
                                                                                 If isPA Then
                                                                                     drCliOpt("PublicAuthority") = "1"
                                                                                     drCliOpt("PASplitPayment") = "1"
@@ -352,7 +353,8 @@ Module Fatture
                                                                                                 listOfNewSedi.Add(sNewSede)
                                                                                             Catch ex As Exception
                                                                                                 Debug.Print("E16: Sede già presente: " & sNewSede)
-                                                                                                MessageBox.Show(ex.Message)
+                                                                                                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                                                                                                mb.ShowDialog()
                                                                                                 errori.AppendLine("E16: Sede già presente: " & sNewSede)
                                                                                             End Try
                                                                                         End If
@@ -372,7 +374,8 @@ Module Fatture
                                                                                                 listOfNewSedi.Add(sNewSede)
                                                                                             Catch ex As Exception
                                                                                                 Debug.Print("E16: Sede già presente: " & sNewSede)
-                                                                                                MessageBox.Show(ex.Message)
+                                                                                                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                                                                                                mb.ShowDialog()
                                                                                                 errori.AppendLine("E16: Sede già presente: " & sNewSede)
                                                                                             End Try
                                                                                         End If
@@ -1063,7 +1066,9 @@ Module Fatture
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                MessageBox.Show(ex.Message)
+                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                mb.ShowDialog()
+
             End Try
             If Not someTrouble Then
                 'Scrivi Gli ID ( faccio solo a fine elaborazione)
@@ -1918,29 +1923,34 @@ Module Fatture
             End If
         Next
         vistaSedi.RowFilter = ""
+        Try
+            destinazione("Branch") = iSedeCount.ToString("0000")
+            destinazione("CustSupp") = origine.Item("AA").ToString
+            destinazione("CustSuppType") = CustSuppType.Cliente
+            destinazione("CompanyName") = origine.Item("AB").ToString
+            destinazione("FiscalCode") = origine.Item("AI").ToString
+            destinazione("TaxIdNumber") = origine.Item("AJ").ToString
+            destinazione("Address") = origine.Item("AC").ToString
+            destinazione("City") = origine.Item("AE").ToString
+            destinazione("County") = origine.Item("AF").ToString
+            destinazione("ZIPCode") = origine.Item("AD").ToString
 
-        destinazione("Branch") = iSedeCount.ToString("0000")
-        destinazione("CustSupp") = origine.Item("AA").ToString
-        destinazione("CustSuppType") = CustSuppType.Cliente
-        destinazione("CompanyName") = origine.Item("AB").ToString
-        destinazione("FiscalCode") = origine.Item("AI").ToString
-        destinazione("TaxIdNumber") = origine.Item("AJ").ToString
-        destinazione("Address") = origine.Item("AC").ToString
-        destinazione("City") = origine.Item("AE").ToString
-        destinazione("County") = origine.Item("AF").ToString
-        destinazione("ZIPCode") = origine.Item("AD").ToString
-
-        Dim sEmail As String = origine.Item("HH").ToString
-        If Len(sEmail) > 128 Then log.AppendLine("A06: Email/pec troppo lunga su Sede Cliente: " & origine.Item("AA").ToString)
-        destinazione("EMail") = Left(sEmail, 128).ToLower
-        'drCustSede("ContactPerson") = drXLS(irxls).Item("C").ToString
-        destinazione("ISOCountryCode") = "IT"
-        destinazione("MailSendingType") = 12451840 'Tipo invio mail ( A: 12451841, non inviare: 12451840)
-        destinazione("AdministrationReference") = origine.Item("HE").ToString
-        destinazione("IPACode") = origine.Item("Z").ToString
-        'drCustSede("Notes") = origine.Item("S").ToString
-        destinazione("TBCreatedID") = My.Settings.mLOGINID 'ID utente
-        destinazione("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+            Dim sEmail As String = origine.Item("HH").ToString
+            If Len(sEmail) > 128 Then log.AppendLine("A06: Email/pec troppo lunga su Sede Cliente: " & origine.Item("AA").ToString)
+            destinazione("EMail") = Left(sEmail, 128).ToLower
+            'drCustSede("ContactPerson") = drXLS(irxls).Item("C").ToString
+            destinazione("ISOCountryCode") = "IT"
+            destinazione("MailSendingType") = 12451840 'Tipo invio mail ( A: 12451841, non inviare: 12451840)
+            destinazione("AdministrationReference") = origine.Item("HE").ToString
+            destinazione("IPACode") = origine.Item("Z").ToString
+            'drCustSede("Notes") = origine.Item("S").ToString
+            destinazione("TBCreatedID") = My.Settings.mLOGINID 'ID utente
+            destinazione("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+        Catch ex As Exception
+            Debug.Print(ex.Message)
+            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
+        End Try
 
         Return destinazione
     End Function
@@ -2101,7 +2111,7 @@ Module Fatture
                 End If
 
                 'Dati su tabella MA_CustSuppCustomerOptions
-                If Len(anagBranch.Item("IPACode")) = 6 Then
+                If anagBranch.Item("IPACode").ToString.Length = 6 Then
                     opt.BeginEdit()
                     If opt.Item("PublicAuthority").ToString <> "1" Then
                         avvisi.AppendLine("Pubblica amministrazione : (SI) [" & opt.Item("PublicAuthority") & "]")
@@ -2118,7 +2128,8 @@ Module Fatture
             End With
         Catch ex As Exception
             Debug.Print(ex.Message)
-            MessageBox.Show(ex.Message)
+            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
         End Try
 
         Return mlog
@@ -2207,7 +2218,7 @@ Module Fatture
                 anag.EndEdit()
 
                 'Dati su tabella MA_CustSuppCustomerOptions
-                If Len(anag.Item("IPACode")) = 6 Then
+                If anag.Item("IPACode".ToString.Length) = 6 Then
                     opt.BeginEdit()
                     If opt.Item("PublicAuthority").ToString <> "1" Then
                         avvisi.AppendLine("Pubblica amministrazione : (SI) [" & opt.Item("PublicAuthority") & "]")
@@ -2224,7 +2235,8 @@ Module Fatture
             End With
         Catch ex As Exception
             Debug.Print(ex.Message)
-            MessageBox.Show(ex.Message)
+            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
         End Try
 
         Return mlog
@@ -2329,7 +2341,7 @@ Module Fatture
                     avvisi.AppendLine("Pubblica Amministrazione : (1) [" & o.Item("PublicAuthority") & "]")
                     o.Item("PublicAuthority") = "1"
                     o.EndEdit()
-                    If Len(anag.Item("IPACode") <> 6) Then warnings.AppendLine("Codice IPA Pubblica Amministrazione con lunghezza diversa da 6: [" & anag.Item("IPACode").ToString & "]")
+                    If anag.Item("IPACode").ToString.Length <> 6 Then warnings.AppendLine("Codice IPA Pubblica Amministrazione con lunghezza diversa da 6: [" & anag.Item("IPACode").ToString & "]")
                     If o.Item("PASplitPayment").ToString <> "1" Then
                         o.BeginEdit()
                         avvisi.AppendLine("Split Payment : (1) [" & o.Item("PASplitPayment") & "]")
@@ -2337,7 +2349,7 @@ Module Fatture
                         o.EndEdit()
                     End If
                 End If
-                Dim updCat As Boolean
+                    Dim updCat As Boolean
                 Dim catClienord As String = .Item("C").ToString
                 Select Case catClienord
                     Case "O"
@@ -2366,7 +2378,8 @@ Module Fatture
 
         Catch ex As Exception
             Debug.Print(ex.Message)
-            MessageBox.Show(ex.Message)
+            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
         End Try
 
         Return mlog
@@ -3059,7 +3072,8 @@ Module MovimentiAnaliticiDaFatture
             End Using
         Catch ex As Exception
             Debug.Print(ex.Message)
-            MessageBox.Show(ex.Message)
+            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
         End Try
         If bIsSomething AndAlso Not someTrouble Then
             'Scrivi Gli ID ( faccio solo a fine elaborazione)
@@ -3141,7 +3155,8 @@ Module MovimentiAnaliticiDaFatture
             End If
         Catch ex As Exception
             Debug.Print(ex.Message)
-            MessageBox.Show(ex.Message)
+            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
         End Try
 
         Return result
@@ -3159,7 +3174,8 @@ Module MovimentiAnaliticiDaFatture
                 pSum += Math.Round(p, 2)
             Next
         Catch ex As Exception
-            MessageBox.Show(ex.Message)
+            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
         End Try
 
     End Sub
@@ -3237,7 +3253,8 @@ Module SEPA
 
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                MessageBox.Show(ex.Message)
+                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                mb.ShowDialog()
             End Try
 
             'Scrivo i LOG
@@ -3363,7 +3380,8 @@ Module SEPA
 
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                MessageBox.Show(ex.Message)
+                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                mb.ShowDialog()
             End Try
 
             'Scrivo i LOG

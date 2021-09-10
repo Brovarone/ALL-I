@@ -1,6 +1,6 @@
 ﻿Imports System.Data.SqlClient
 Imports System.Text
-Imports System.Text.RegularExpressions
+Imports System.Reflection.MethodBase
 
 Module Cespiti
     Private Function ColumnIndexToColumnLetter(columnNumber As Integer) As String
@@ -33,11 +33,11 @@ Module Cespiti
         FLogin.prgCopy.Value = 1
         Dim idAndNumber As StringBuilder = New StringBuilder()
         Dim loggingTxt As String = "Si"
-        Dim errori As StringBuilder = New StringBuilder()  ' Ultimo = 0
+        Dim errori As StringBuilder = New StringBuilder()  ' Ultimo =2
         Dim avvisi As StringBuilder = New StringBuilder()  ' Ultimo = 0  / 0
         Dim aggiornamenti As StringBuilder = New StringBuilder()
+        Dim warnings As StringBuilder = New StringBuilder() ' Ultimo = 1
         Dim bulkMessage As StringBuilder = New StringBuilder()
-        Dim warnings As StringBuilder = New StringBuilder()
         Dim okBulk As Boolean
         Dim someTrouble As Boolean
 
@@ -207,16 +207,16 @@ Module Cespiti
                                                             drCesp("DepreciationStart") = Year(.Item("D"))
                                                             drCesp("LastDepreciation") = 0 'CShort(Year(Today))
                                                             drCesp("PurchaseType") = 7208960 '7208960 (nuovo) / 7208961 ( Usato)
-                                                            drCesp("PurchaseDate") = MagoFormatta(.Item("D").ToString, GetType(String)).DataTempo
+                                                            drCesp("PurchaseDate") = MagoFormatta(.Item("D").ToString, GetType(DateTime), True).DataTempo
                                                             drCesp("PurchaseYear") = Year(.Item("D"))
                                                             drCesp("PurchaseCost") = myVal
                                                             If Not String.IsNullOrWhiteSpace(.Item("L")) Then
-                                                                drCesp("PurchaseDocDate") = MagoFormatta(.Item("L").ToString, GetType(String)).DataTempo
+                                                                drCesp("PurchaseDocDate") = MagoFormatta(.Item("L").ToString, GetType(DateTime), True).DataTempo
                                                             End If
                                                             drCesp("PurchaseDocNo") = .Item("K").ToString
                                                             drCesp("LogNo") = ""
                                                             drCesp("Supplier") = .Item("M").ToString
-                                                            drCesp("DepreciationStartingDate") = MagoFormatta(.Item("E").ToString, GetType(String)).DataTempo
+                                                            drCesp("DepreciationStartingDate") = MagoFormatta(.Item("E").ToString, GetType(DateTime), True).DataTempo
                                                             ''% ammortamento Fiscale personalizzata
                                                             'drCesp("FiscalCustomized") = "1"
                                                             'drCesp("FiscalPerc") = 0
@@ -251,9 +251,9 @@ Module Cespiti
                                                         '''''''''''''''''''''''
                                                         ' Testa
                                                         drMov("FARsn") = mCau.Codice
-                                                        drMov("PostingDate") = MagoFormatta(.Item("I").ToString, GetType(String)).DataTempo
+                                                        drMov("PostingDate") = MagoFormatta(.Item("I").ToString, GetType(DateTime), True).DataTempo
                                                         If Not String.IsNullOrWhiteSpace(.Item("L")) Then
-                                                            drMov("DocumentDate") = MagoFormatta(.Item("L").ToString, GetType(String)).DataTempo
+                                                            drMov("DocumentDate") = MagoFormatta(.Item("L").ToString, GetType(DateTime), True).DataTempo
                                                         End If
                                                         drMov("DocNo") = .Item("K").ToString()
                                                         drMov("RefNo") = Right(Year(Today), 2) & "/" & iRefNo.ToString("00000")
@@ -276,7 +276,7 @@ Module Cespiti
                                                         drMovDet("Line") = 1
                                                         drMovDet("Codetype") = If(.Item("C").ToString = "Materiale", 7012352, 7012353)
                                                         drMovDet("FixedAsset") = codCespite
-                                                        drMovDet("PostingDate") = MagoFormatta(.Item("I").ToString, GetType(String)).DataTempo
+                                                        drMovDet("PostingDate") = MagoFormatta(.Item("I").ToString, GetType(DateTime), True).DataTempo
                                                         drMovDet("Qty") = 0
                                                         drMovDet("Perc") = myPerc
                                                         If myPerc > 0 Then
@@ -296,7 +296,7 @@ Module Cespiti
                                                         End If
                                                         Dim dImporto As Double = If(myVal <> 0, myVal, myValFondo)
                                                         drMovDet("Amount") = dImporto
-                                                        If Len(.Item("J").ToString) > 64 Then errori.AppendLine("E3:  Riga: " & (i + irxls).ToString & " Cespite: " & .Item("A").ToString & " descrizione movimento troppo lunga")
+                                                        If .Item("J").ToString.Length > 64 Then warnings.AppendLine("W1:  Riga: " & (i + irxls).ToString & " Cespite: " & .Item("A").ToString & " descrizione movimento troppo lunga, verrà troncata.")
                                                         drMovDet("Notes") = Left(.Item("J").ToString, 64)
                                                         drMovDet("Currency") = "EUR"
                                                         drMovDet("AmountDocCurr") = 0
@@ -386,7 +386,8 @@ Module Cespiti
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                MessageBox.Show(ex.Message)
+                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                mb.ShowDialog()
             End Try
             If Not someTrouble Then
                 'Scrivi Gli ID ( faccio solo a fine elaborazione)
@@ -510,7 +511,8 @@ Module Cespiti
             End Select
         Catch ex As Exception
             Debug.Print(ex.Message)
-            MessageBox.Show(ex.Message)
+            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
 
         End Try
         Return esito
@@ -743,7 +745,8 @@ Module Cespiti
 
         Catch ex As Exception
             Debug.Print(ex.Message)
-            MessageBox.Show(ex.Message)
+            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
             result = False
         End Try
 

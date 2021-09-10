@@ -1,6 +1,6 @@
 ﻿Imports System.Data.SqlClient
 Imports System.Text
-
+Imports System.Reflection.MethodBase
 Module Partite
     Private Const Causale As String = "APE"
     Private isDiff As Boolean
@@ -298,7 +298,8 @@ Module Partite
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                MessageBox.Show(ex.Message)
+                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                mb.ShowDialog()
             End Try
             'Scrivi Gli ID ( faccio solo a fine elaborazione)
             AggiornaID(IdType.Partite, idPartita)
@@ -591,7 +592,8 @@ Module Partite
                     End Using
                 Catch ex As Exception
                     Debug.Print(ex.Message)
-
+                    Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                    mb.ShowDialog()
                 End Try
                 'Scrivi Gli ID ( faccio solo a fine elaborazione)
                 AggiornaID(IdType.PNota, idPn)

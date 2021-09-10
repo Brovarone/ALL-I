@@ -1,4 +1,5 @@
 ﻿Imports System.Text
+Imports System.Reflection.MethodBase
 
 Module Unused
 
@@ -348,7 +349,8 @@ Module Unused
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-
+                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                mb.ShowDialog()
             End Try
             'Scrivi Gli ID ( faccio solo a fine elaborazione)
             AggiornaID(IdType.DocVend, idDoc)
@@ -490,7 +492,7 @@ Module Unused
                 End If
                 anag.EndEdit()
 
-                If Len(anag.Item("IPACode")) = 6 Then
+                If anag.Item("IPACode").ToString.Length = 6 Then
                     o.BeginEdit()
                     If o.Item("PublicAuthority").ToString <> "1" Then
                         avvisi.AppendLine("Pubblica amministrazione : (SI) [" & o.Item("PublicAuthority") & "]")
@@ -516,9 +518,10 @@ Module Unused
             End With
         Catch ex As Exception
             Debug.Print(ex.Message)
-            MessageBox.Show(ex.Message)
-        End Try
+            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
 
+        End Try
         Return "" ' mlog
     End Function
 End Module
