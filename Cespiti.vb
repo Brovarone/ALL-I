@@ -204,11 +204,11 @@ Module Cespiti
                                                             drCesp("Class") = ""
                                                             drCesp("Location") = ""
                                                             drCesp("CostCenter") = ""
-                                                            drCesp("DepreciationStart") = Year(.Item("D"))
+                                                            drCesp("DepreciationStart") = Year(MagoFormatta(.Item("D").ToString, GetType(DateTime), True).DataTempo)
                                                             drCesp("LastDepreciation") = 0 'CShort(Year(Today))
                                                             drCesp("PurchaseType") = 7208960 '7208960 (nuovo) / 7208961 ( Usato)
                                                             drCesp("PurchaseDate") = MagoFormatta(.Item("D").ToString, GetType(DateTime), True).DataTempo
-                                                            drCesp("PurchaseYear") = Year(.Item("D"))
+                                                            drCesp("PurchaseYear") = Year(MagoFormatta(.Item("D").ToString, GetType(DateTime), True).DataTempo)
                                                             drCesp("PurchaseCost") = myVal
                                                             If Not String.IsNullOrWhiteSpace(.Item("L")) Then
                                                                 drCesp("PurchaseDocDate") = MagoFormatta(.Item("L").ToString, GetType(DateTime), True).DataTempo
