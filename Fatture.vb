@@ -1205,6 +1205,13 @@ Module Fatture
         End Select
         Return esito
     End Function
+
+    Private Function TrovaCdC(Codice As String) As String
+        Dim s As String = Mid(Codice, InStr(Codice, "(", CompareMethod.Text) + 1, 2)
+
+        Return s
+    End Function
+
     ''' <summary>
     ''' Dati per la fatturazione elettronica
     ''' 2.2.1.7 e 8 Date di periodo
@@ -1356,11 +1363,7 @@ Module Fatture
             End If
         End If
     End Sub
-    Private Function TrovaCdC(Codice As String) As String
-        Dim s As String = Mid(Codice, InStr(Codice, "(", CompareMethod.Text) + 1, 2)
 
-        Return s
-    End Function
 
     ''' <summary>
     ''' Dati aggiuntivi per la fatturazione elettronica Sicuritalia

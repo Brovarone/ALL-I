@@ -398,7 +398,7 @@ Module Cespiti
                 AggiornaNonFiscalNumber(CodeType.MovCes, Year(Today), iRefNo)
                 'idAndNumber.AppendLine(loggingTxt)
             End If
-            'Scrivo i Log
+            'Scrivo i Log 
             My.Application.Log.DefaultFileLogWriter.WriteLine("Nuovi cespiti=" & listOfNewCespiti.Count.ToString)
             FLogin.lstStatoConnessione.Items.Add("Nuovi cespiti=" & listOfNewCespiti.Count.ToString)
             If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Inserimento Dati ---" & vbCrLf & bulkMessage.ToString)
@@ -419,7 +419,8 @@ Module Cespiti
 
             If avvisi.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Avvisi ---" & vbCrLf & avvisi.ToString)
             Debug.Print(avvisi.ToString)
-            If listOfNewCespiti.Count > 0 Then
+            '( solo se in debugging)
+            If bIsDebugging AndAlso listOfNewCespiti.Count > 0 Then
                 My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Nuovi cespiti ---")
                 For l = 0 To listOfNewCespiti.Count - 1
                     My.Application.Log.DefaultFileLogWriter.WriteLine(listOfNewCespiti(l).ToString)
@@ -428,13 +429,13 @@ Module Cespiti
             End If
 
             If aggiornamenti.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Aggiornamenti anagrafici (NUOVO VALORE ) [VECCHIO VALORE] ---" & vbCrLf & aggiornamenti.ToString)
-            If idAndNumber.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Id e Numeratori ---" & vbCrLf & idAndNumber.ToString)
-            Debug.Print(idAndNumber.ToString)
+                If idAndNumber.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Id e Numeratori ---" & vbCrLf & idAndNumber.ToString)
+                Debug.Print(idAndNumber.ToString)
 
-            Debug.Print("Gestione Cespiti" & " " & stopwatch.Elapsed.ToString)
+                Debug.Print("Gestione Cespiti" & " " & stopwatch.Elapsed.ToString)
 
-        End If
-        stopwatch.Stop()
+            End If
+            stopwatch.Stop()
         Return Not someTrouble
 
     End Function
