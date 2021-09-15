@@ -28,7 +28,6 @@ Public Class FLogin
     Public AdpDoc As SqlDataAdapter
     Public Ds As DataSet
     Public iIdCounter As Integer = 0 ' contatore degli id/fatture estratte
-    Private FolderPath As String
     Public prgCopy As New CustomProgress
 
     Const adminPsw = "123456"
@@ -761,10 +760,7 @@ Public Class FLogin
             ProcessaGruppo(cespiti, "Cespiti")
         End If
 
-        'Salvo il log
-        My.Application.Log.DefaultFileLogWriter.Flush()
-        My.Application.Log.DefaultFileLogWriter.Close()
-
+        'Scrivo informazioni di Chiusura
         lstStatoConnessione.Items.Add("   ---   Elaborazione completata   ---")
         prgCopy.Value = 0
         prgCopy.Text = "Elaborazione completata"
@@ -773,12 +769,9 @@ Public Class FLogin
         Application.DoEvents()
         Me.Cursor = Cursors.Default
         Me.Refresh()
+        'Salvo il log
+        ScriviLogESposta(lista)
 
-        'Sposto i file e il log
-        Dim b As DialogResult = If(isAdmin, MessageBox.Show("Elaborazione terminata" & vbCrLf & "Si vogliono storicizzare i file?", My.Application.Info.Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question), DialogResult.Yes)
-        If b = DialogResult.Yes Then
-            SpostaFile(lista)
-        End If
     End Sub
     Private Sub ProcessaGruppo(ByVal lista As String(), ByVal nomegruppo As String)
         Dim bOkImport As Boolean
@@ -792,29 +785,7 @@ Public Class FLogin
         Next
 
     End Sub
-    Private Sub SpostaFile(lista As List(Of String))
-        Const sl As String = "\"
-        'Dim newFolder As String = FolderPath & "\PROCESSATI\" & DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")
-        Dim d As DateTime = DateTime.Now
-        Dim periodo As String = d.ToString("yyyy") & sl & d.ToString("MMMM", New Globalization.CultureInfo("it-IT")).ToUpper
-        Dim newFolder As String = FolderPath & sl & "PROCESSATI" & sl & periodo & sl & d.ToString("yyyy-MM-dd HH-mm-ss")
-        Try
-            Directory.CreateDirectory(newFolder)
-        Catch ex As Exception
-            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
-            mb.ShowDialog()
-        End Try
 
-        For Each f As String In lista
-            Dim newFilename As String = System.IO.Path.GetFileName(f)
-            File.Move(f, newFolder & sl & newFilename)
-        Next
-        Dim l As String = My.Application.Log.DefaultFileLogWriter.FullLogFileName
-        File.Copy(l, newFolder & sl & System.IO.Path.GetFileName(l))
-        My.Settings.mLastLogPath = newFolder
-        My.Settings.Save()
-
-    End Sub
 
     Private Function ProcessaFile(ByVal filename As String, ByVal ext As String) As Boolean
         Dim esito As Boolean = False
@@ -1170,9 +1141,6 @@ Public Class FLogin
             esito = CreaAnaliticaDaFatture(f)
             lstStatoConnessione.Items.Add("Esito creazione Movimenti analitici " & If(esito, "OK", "Errore"))
 
-            'Salvo il log
-            My.Application.Log.DefaultFileLogWriter.Flush()
-            My.Application.Log.DefaultFileLogWriter.Close()
 
             lstStatoConnessione.Items.Add("   ---   Elaborazione completata   ---")
             prgCopy.Value = 0
@@ -1182,23 +1150,9 @@ Public Class FLogin
             Me.Cursor = Cursors.Default
             Me.Refresh()
 
-            'Sposto i file e il log
-            Dim b As DialogResult = If(isAdmin, MessageBox.Show("Elaborazione terminata" & vbCrLf & "Si vogliono storicizzare i file?", My.Application.Info.Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question), DialogResult.Yes)
-            If b = DialogResult.Yes Then
-                Dim newFolder As String = FolderPath & "\PROCESSATI\" & DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")
-                Try
-                    Directory.CreateDirectory(newFolder)
-                Catch ex As Exception
-                    Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
-                    mb.ShowDialog()
-                End Try
+            'Salvo il log
+            ScriviLogESposta()
 
-                Dim l As String = My.Application.Log.DefaultFileLogWriter.FullLogFileName
-                Const sl As String = "\"
-                File.Copy(l, newFolder & sl & System.IO.Path.GetFileName(l))
-                My.Settings.mLastLogPath = newFolder
-                My.Settings.Save()
-            End If
         End If
     End Sub
     Private Sub BtnAnalitica_Click(sender As Object, e As EventArgs) Handles BtnAnalitica.Click
