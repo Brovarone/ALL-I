@@ -567,7 +567,6 @@ Module Fatture
                                                                                                     iSubLinea -= 1
                                                                                                 End If
                                                                                             Else
-                                                                                                'TODO log
                                                                                                 sicuritalia.AppendLine("Doc: " & drDoc("DocNo") & " numero ODA / NSO assente")
                                                                                             End If
                                                                                         End If

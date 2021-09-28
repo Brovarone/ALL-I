@@ -1135,9 +1135,10 @@ Public Class FLogin
             lstStatoConnessione.Items.Add("Attendere... il processo potrebbe durare qualche minuto")
             'INIZIALIZZO NUOVO LOG
             My.Application.Log.DefaultFileLogWriter.BaseFileName += "-" & DateTime.Now.ToString("dd-MM-yyyy--HH-mm-ss")
-            Dim esito As Boolean
+            My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Movimenti Analitici  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
 
             'ESEGUO LA PROCEDURA
+            Dim esito As Boolean
             esito = CreaAnaliticaDaFatture(f)
             lstStatoConnessione.Items.Add("Esito creazione Movimenti analitici " & If(esito, "OK", "Errore"))
 

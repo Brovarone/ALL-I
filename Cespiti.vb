@@ -19,7 +19,6 @@ Module Cespiti
     Public Function CespitiXLS(dts As DataSet, isFiscale As Boolean, Optional bConIntestazione As Boolean = False) As Boolean
         'Il file contiene il registro storico, per ogni riga controllo se esiste il cespite e lo creo
         'Poi scrivo i movimenti cespiti adeguati negli anni
-        'TODO: CESPITI: gestione anni su tabella azienda
         'QUANDO PASSO UN DOUBLE DEVO FARE ATTENZIONE
         'Cespiti - MA_FixedAssets
         'MA_FixAssetEntries
@@ -85,15 +84,13 @@ Module Cespiti
                         'Dim dvDocDet As DataView = New DataView(dtMovAnaDet, "", "SaleDocId", DataViewRowState.CurrentRows)
                         EditTestoBarra("Carico Schema: Anagrafiche Cespiti")
                         Using dtCespiti As DataTable = CaricaSchema("MA_FixedAssets", True, True)
-                            'TODO la vista va ordinata per il campo Codice ACG appena lo faccio
-                            Dim dvcespiti As DataView = New DataView(dtCespiti, "", "FixedAsset", DataViewRowState.CurrentRows)
                             Dim dvcespitiACG As DataView = New DataView(dtCespiti, "", "ACGCode", DataViewRowState.CurrentRows)
                             EditTestoBarra("Carico Schema: Amm." & If(isFiscale, " Fiscale", " di Bilancio"))
                             Using dtSaldi As DataTable = If(isFiscale, CaricaSchema("MA_FixedAssetsFiscal", True, True), CaricaSchema("MA_FixedAssetsBalance", True, True))
                                 Dim dvSaldi As DataView = New DataView(dtSaldi, "", "FiscalYear,CodeType,FixedAsset,Currency", DataViewRowState.CurrentRows)
                                 'Creo un dataset con le anagrafiche Clienti
-                                Using dtCat As DataTable = CaricaSchema("MA_FixAssetsCtg", True, True)
-                                    Dim dvCat As DataView = New DataView(dtCat, "", "Category", DataViewRowState.CurrentRows)
+                                Using dtCategoria As DataTable = CaricaSchema("MA_FixAssetsCtg", True, True)
+                                    Dim dvCat As DataView = New DataView(dtCategoria, "", "Category", DataViewRowState.CurrentRows)
                                     Dim isNewCespite As Boolean = False
                                     ' Ciclo le righe del file XLS
                                     'Posso chiamare le Colonne con la stessa logica di Excel A,B,C o con i Numeri
@@ -106,7 +103,7 @@ Module Cespiti
                                         Dim dvCliFor As DataView = New DataView(dtCliFor, "", "CustSupp", DataViewRowState.CurrentRows)
 
                                         'Creo le dataview per l'aggiornameno anagrafico dei Cespiti ( solo bilancio) 
-                                        Using adpCespiti As SqlDataAdapter = New SqlDataAdapter("SELECT CodeType, FixedAsset, ACGCode, BalanceCustomized, BalancePerc FROM MA_FixedAssets", Connection)
+                                        Using adpCespiti As SqlDataAdapter = New SqlDataAdapter("SELECT CodeType, FixedAsset, ACGCode, BalanceCustomized, BalancePerc, DeprByDate, DepreciationEndingDate, Location, CostCenter, Qty  FROM MA_FixedAssets", Connection)
                                             Dim cbMar = New SqlCommandBuilder(adpCespiti)
                                             adpCespiti.UpdateCommand = cbMar.GetUpdateCommand(True)
                                             Dim dtUpdCespiti As DataTable = New DataTable("UpdCespiti")
@@ -152,16 +149,13 @@ Module Cespiti
 
                                                         'Cerco la categoria
                                                         Dim catFound As Integer = dvCat.Find(.Item("F").ToString)
-                                                        If catFound = -1 Then
+                                                        If catFound = -1 AndAlso Not listofNewCategorie.Contains(.Item("F".ToString)) Then listofNewCategorie.Add(.Item("F".ToString))
 
-                                                            If Not listofNewCategorie.Contains(.Item("F".ToString)) Then listofNewCategorie.Add(.Item("F".ToString))
-
-                                                        End If
                                                         'Determino l'anno Fiscale
                                                         Dim dtaMov As Date = MagoFormatta(.Item("I").ToString, GetType(DateTime), True).DataTempo
                                                         Dim annoF As Short = CShort(Year(dtaMov))
 
-                                                        'Determino la Causale e anche il valore
+                                                        'Determino la Causale , se e' doppia e il valore che
                                                         'a seconda della casuale si trova su colonne diverse
                                                         Dim myVal As Double = 0
                                                         Dim myValFondo As Double = 0
@@ -171,7 +165,8 @@ Module Cespiti
                                                         Else
                                                             myPerc = CDbl(drXLS(irxls).Item("S").ToString)
                                                         End If
-                                                        Dim mCau As MyCausale = TrovaCausaleeValore(drXLS(irxls), isFiscale, myVal, myValFondo)
+                                                        Dim mCau As MyCausale = New MyCausale
+                                                        mCau = TrovaCausaleeValore(drXLS(irxls), isFiscale, myVal, myValFondo)
 
                                                         'Creo l'oggetto per l'aggiornamento saldi con i vari valori
                                                         wSaldo = New MySaldoCespite With {
@@ -189,6 +184,7 @@ Module Cespiti
                                                         'Cerco il Cespite
                                                         Dim cespFndACG As Integer = dvcespitiACG.Find(.Item("A").ToString)
                                                         If cespFndACG = -1 Then
+                                                            'CREO NUOVO CESPITE
                                                             isNewCespite = True
                                                             listOfNewCespiti.Add(.Item("A").ToString & ": " & .Item("B").ToString)
                                                             Debug.Print("Nuovo Cespite: " & .Item("A").ToString)
@@ -202,8 +198,6 @@ Module Cespiti
                                                             drCesp("Description") = .Item("B").ToString
                                                             drCesp("Category") = .Item("F").ToString
                                                             drCesp("Class") = ""
-                                                            drCesp("Location") = ""
-                                                            drCesp("CostCenter") = ""
                                                             drCesp("DepreciationStart") = Year(MagoFormatta(.Item("D").ToString, GetType(DateTime), True).DataTempo)
                                                             drCesp("LastDepreciation") = 0 'CShort(Year(Today))
                                                             drCesp("PurchaseType") = 7208960 '7208960 (nuovo) / 7208961 ( Usato)
@@ -223,6 +217,15 @@ Module Cespiti
                                                             ''% ammortamento Bilancio personalizzata
                                                             'drCesp("BalanceCustomized") = "1"
                                                             'drCesp("BalancePerc") = 0
+                                                            If Not isFiscale Then
+                                                                If Not String.IsNullOrWhiteSpace(.Item("AB").ToString) Then
+                                                                    drCesp("DeprByDate") = "1"
+                                                                    drCesp("DepreciationEndingDate") = MagoFormatta(.Item("AB").ToString, GetType(DateTime), True).DataTempo
+                                                                End If
+                                                                drCesp("Location") = .Item("Z").ToString
+                                                                drCesp("CostCenter") = .Item("Z").ToString
+                                                                drCesp("Qty") = CShort(.Item("AA"))
+                                                            End If
                                                             drCesp("TBCreatedID") = My.Settings.mLOGINID 'ID utente
                                                             drCesp("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                                                             dtCespiti.Rows.Add(drCesp)
@@ -233,82 +236,110 @@ Module Cespiti
                                                             ACGCode = .Item("A").ToString
                                                             wSaldo.Cespite = codCespite
                                                             wSaldo.CodiceACG = dvcespitiACG(cespFndACG)("ACGCode")
+                                                            If Not isFiscale Then
+                                                                Dim idUpd As Integer = dvUpdCespiti.Find(ACGCode)
+                                                                If Not String.IsNullOrWhiteSpace(.Item("AB").ToString) Then
+                                                                    dvUpdCespiti(idUpd)("DeprByDate") = "1"
+                                                                    dvUpdCespiti(idUpd)("DepreciationEndingDate") = MagoFormatta(.Item("AB").ToString, GetType(DateTime), True).DataTempo
+                                                                End If
+                                                                dvUpdCespiti(idUpd)("Location") = .Item("Z").ToString
+                                                                dvUpdCespiti(idUpd)("CostCenter") = .Item("Z").ToString
+                                                                dvUpdCespiti(idUpd)("Qty") = CShort(.Item("AA"))
+                                                            End If
                                                         End If
 
                                                         'Cerco il Fornitore ( se necessario)
                                                         If Not String.IsNullOrWhiteSpace(.Item("M").ToString) Then
                                                             Dim forFound As Integer = dvCliFor.Find(.Item("M").ToString)
-                                                            If forFound = -1 Then
-                                                                errori.AppendLine("E2: Fornitore non presente: " & .Item("M").ToString & " : " & .Item("N").ToString)
+                                                            If forFound = -1 Then errori.AppendLine("E2: Fornitore non presente: " & .Item("M").ToString & " : " & .Item("N").ToString)
+                                                        End If
+
+                                                        'Controllo che la causale non sia doppia e
+                                                        'Quindi creo 1 o 2 movimenti
+                                                        Dim nrMov As Byte = 0
+                                                        If mCau.isCausaleDoppia Then nrMov = 1
+                                                        For x = 0 To nrMov
+                                                            '''''''''''''''''''''''
+                                                            ' Scrivo il movimento '
+                                                            '''''''''''''''''''''''
+                                                            drMov = dtMovCes.NewRow
+                                                            idMovCesp += 1 ' Incremento Id
+                                                            iRefNo += 1
+                                                            ' Testa
+                                                            drMov("FARsn") = If(nrMov = 0, mCau.Codice, mCau.SecondaCausale.Codice)
+                                                            drMov("PostingDate") = MagoFormatta(.Item("I").ToString, GetType(DateTime), True).DataTempo
+                                                            If Not String.IsNullOrWhiteSpace(.Item("L")) Then
+                                                                drMov("DocumentDate") = MagoFormatta(.Item("L").ToString, GetType(DateTime), True).DataTempo
                                                             End If
-                                                        End If
+                                                            drMov("DocNo") = .Item("K").ToString()
+                                                            drMov("RefNo") = Right(Year(Today), 2) & "/" & iRefNo.ToString("00000")
+                                                            drMov("LogNo") = ""
+                                                            If Not String.IsNullOrWhiteSpace(.Item("M").ToString()) Then
+                                                                drMov("CustSuppType") = CustSuppType.FornitoreIgnora
+                                                                drMov("CustSupp") = .Item("M").ToString
+                                                            End If
 
-                                                        drMov = dtMovCes.NewRow
-                                                        idMovCesp += 1 ' Incremento Id
-                                                        iRefNo += 1
-                                                        '''''''''''''''''''''''
-                                                        ' Scrivo il movimento '
-                                                        '''''''''''''''''''''''
-                                                        ' Testa
-                                                        drMov("FARsn") = mCau.Codice
-                                                        drMov("PostingDate") = MagoFormatta(.Item("I").ToString, GetType(DateTime), True).DataTempo
-                                                        If Not String.IsNullOrWhiteSpace(.Item("L")) Then
-                                                            drMov("DocumentDate") = MagoFormatta(.Item("L").ToString, GetType(DateTime), True).DataTempo
-                                                        End If
-                                                        drMov("DocNo") = .Item("K").ToString()
-                                                        drMov("RefNo") = Right(Year(Today), 2) & "/" & iRefNo.ToString("00000")
-                                                        drMov("LogNo") = ""
-                                                        If Not String.IsNullOrWhiteSpace(.Item("M").ToString()) Then
-                                                            drMov("CustSuppType") = CustSuppType.FornitoreIgnora
-                                                            drMov("CustSupp") = .Item("M").ToString
-                                                        End If
+                                                            drMov("DepreciationEntry") = If((drMov("FARsn") = CauCes.AmmAnt.Codice.ToString) OrElse (drMov("FARsn") = CauCes.AmmBil.Codice.ToString) OrElse (drMov("FARsn") = CauCes.AmmFisc.Codice.ToString), 1, 0)
+                                                            drMov("DisposalEntry") = If(drMov("FARsn") = CauCes.VendPF.Codice.ToString OrElse drMov("FARsn") = CauCes.VendPB.Codice.ToString, 1, 0)
 
-                                                        drMov("DepreciationEntry") = If((drMov("FARsn") = CauCes.AmmAnt.ToString) OrElse (drMov("FARsn") = CauCes.AmmBil.ToString) OrElse (drMov("FARsn") = CauCes.AmmFisc.ToString), 1, 0)
-                                                        drMov("DisposalEntry") = If(drMov("FARsn") = CauCes.VendPF.ToString OrElse drMov("FARsn") = CauCes.VendPB.ToString, 1, 0)
-                                                        drMov("EntryId") = idMovCesp
-                                                        drMov("Currency") = "EUR"
-                                                        drMov("TBCreatedID") = My.Settings.mLOGINID 'ID utente
-                                                        drMov("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+                                                            drMov("EntryId") = idMovCesp
+                                                            drMov("Currency") = "EUR"
+                                                            drMov("TBCreatedID") = My.Settings.mLOGINID 'ID utente
+                                                            drMov("TBModifiedID") = My.Settings.mLOGINID 'ID utente
 
-                                                        'Righe
-                                                        drMovDet = dtMovCesDet.NewRow
-                                                        drMovDet("EntryId") = idMovCesp
-                                                        drMovDet("Line") = 1
-                                                        drMovDet("Codetype") = If(.Item("C").ToString = "Materiale", 7012352, 7012353)
-                                                        drMovDet("FixedAsset") = codCespite
-                                                        drMovDet("PostingDate") = MagoFormatta(.Item("I").ToString, GetType(DateTime), True).DataTempo
-                                                        drMovDet("Qty") = 0
-                                                        drMovDet("Perc") = myPerc
-                                                        If myPerc > 0 Then
-                                                            'Si presuppone che l'anagrafica venga popolata dal file fiscale e "aggiornata" dal file Bilancio
-                                                            'Aggiorna percentuale personalizzata
-                                                            Dim nCespF As Integer = dvcespitiACG.Find(.Item("A").ToString)
-                                                            If isFiscale Then
-                                                                '% ammortamento Fiscale personalizzata
-                                                                dvcespitiACG(nCespF)("FiscalCustomized") = "1"
-                                                                dvcespitiACG(nCespF)("FiscalPerc") = If(myPerc > dvcespitiACG(nCespF)("FiscalPerc"), myPerc, dvcespitiACG(nCespF)("FiscalPerc"))
+                                                            'Righe
+                                                            drMovDet = dtMovCesDet.NewRow
+                                                            drMovDet("EntryId") = idMovCesp
+                                                            drMovDet("Line") = 1
+                                                            drMovDet("Codetype") = If(.Item("C").ToString = "Materiale", 7012352, 7012353)
+                                                            drMovDet("FixedAsset") = codCespite
+                                                            drMovDet("PostingDate") = MagoFormatta(.Item("I").ToString, GetType(DateTime), True).DataTempo
+                                                            'todo quantità
+                                                            drMovDet("Qty") = 0
+                                                            drMovDet("Perc") = myPerc
+
+                                                            'Deprecata
+                                                            If IsDeprecated AndAlso myPerc > 0 Then
+                                                                'Si presuppone che l'anagrafica venga popolata dal file fiscale e "aggiornata" dal file Bilancio
+                                                                'Aggiorna percentuale personalizzata
+                                                                Dim nCespF As Integer = dvcespitiACG.Find(.Item("A").ToString)
+                                                                If isFiscale Then
+                                                                    '% ammortamento Fiscale personalizzata
+                                                                    dvcespitiACG(nCespF)("FiscalCustomized") = "1"
+                                                                    dvcespitiACG(nCespF)("FiscalPerc") = If(myPerc > dvcespitiACG(nCespF)("FiscalPerc"), myPerc, dvcespitiACG(nCespF)("FiscalPerc"))
+                                                                Else
+                                                                    '% ammortamento Bilancio personalizzata
+                                                                    Dim idUpd As Integer = dvUpdCespiti.Find(.Item("A").ToString)
+                                                                    dvUpdCespiti(idUpd)("BalanceCustomized") = "1"
+                                                                    dvUpdCespiti(idUpd)("BalancePerc") = If(myPerc > dvUpdCespiti(idUpd)("BalancePerc"), myPerc, dvUpdCespiti(idUpd)("BalancePerc"))
+                                                                End If
+                                                            End If
+                                                            Dim dImporto As Double
+                                                            'Sul Secondo movimento utilizzo il valore del fondo
+                                                            If x = 0 Then
+                                                                dImporto = If(myVal <> 0, myVal, myValFondo)
                                                             Else
-                                                                '% ammortamento Bilancio personalizzata
-                                                                Dim idUpd As Integer = dvUpdCespiti.Find(.Item("A").ToString)
-                                                                dvUpdCespiti(idUpd)("BalanceCustomized") = "1"
-                                                                dvUpdCespiti(idUpd)("BalancePerc") = If(myPerc > dvUpdCespiti(idUpd)("BalancePerc"), myPerc, dvUpdCespiti(idUpd)("BalancePerc"))
+                                                                dImporto = myValFondo 'If(myValFondo <> 0, myValFondo, myVal)
                                                             End If
-                                                        End If
-                                                        Dim dImporto As Double = If(myVal <> 0, myVal, myValFondo)
-                                                        drMovDet("Amount") = dImporto
-                                                        If .Item("J").ToString.Length > 64 Then warnings.AppendLine("W1:  Riga: " & (i + irxls).ToString & " Cespite: " & .Item("A").ToString & " descrizione movimento troppo lunga, verrà troncata.")
-                                                        drMovDet("Notes") = Left(.Item("J").ToString, 64)
-                                                        drMovDet("Currency") = "EUR"
-                                                        drMovDet("AmountDocCurr") = 0
-                                                        drMovDet("TBCreatedID") = My.Settings.mLOGINID 'ID utente
-                                                        drMovDet("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+                                                            'If dImporto.Equals(0) Then Continue For
+                                                            drMovDet("Amount") = dImporto
+                                                            If .Item("J").ToString.Length > 64 Then warnings.AppendLine("W1:  Riga: " & (i + irxls).ToString & " Cespite: " & .Item("A").ToString & " descrizione movimento troppo lunga, verrà troncata.")
+                                                            drMovDet("Notes") = Left(.Item("J").ToString, 64)
+                                                            drMovDet("Currency") = "EUR"
+                                                            drMovDet("AmountDocCurr") = 0
+                                                            drMovDet("TBCreatedID") = My.Settings.mLOGINID 'ID utente
+                                                            drMovDet("TBModifiedID") = My.Settings.mLOGINID 'ID utente
 
-                                                        'Aggiungo le righe all'insieme Rows del Datatable
-                                                        dtMovCes.Rows.Add(drMov)
-                                                        dtMovCesDet.Rows.Add(drMovDet)
+                                                            'Aggiungo le righe all'insieme Rows del Datatable
+                                                            dtMovCes.Rows.Add(drMov)
+                                                            dtMovCesDet.Rows.Add(drMovDet)
 
-                                                        AggiornaSaldoCespite(wSaldo, dvSaldi, isFiscale)
-
+                                                            'Corrego le informazioni per l'aggiornamento saldo solo sul secondo movimento
+                                                            If x <> 0 Then
+                                                                wSaldo.Causale = wSaldo.Causale.SecondaCausale
+                                                            End If
+                                                            AggiornaSaldoCespite(wSaldo, dvSaldi, isFiscale)
+                                                        Next
                                                         'Else
                                                         'Totale categoria
                                                         ' End If
@@ -337,6 +368,10 @@ Module Cespiti
                                                 Using bulkTrans = Connection.BeginTransaction
                                                     EditTestoBarra("Salvataggio: Anagrafica Cespiti")
                                                     okBulk = ScriviBulk("MA_FixedAssets", dtCespiti, bulkTrans, DataRowState.Added, loggingTxt)
+                                                    If Not okBulk Then someTrouble = True
+                                                    bulkMessage.AppendLine(loggingTxt)
+                                                    EditTestoBarra("Salvataggio: Anagrafica Categorie Cespiti")
+                                                    okBulk = ScriviBulk("MA_FixAssetsCtg", dtCategoria, bulkTrans, DataRowState.Added, loggingTxt)
                                                     If Not okBulk Then someTrouble = True
                                                     bulkMessage.AppendLine(loggingTxt)
                                                     EditTestoBarra("Salvataggio: Movimenti Cespiti")
@@ -495,8 +530,11 @@ Module Cespiti
                 Case "Ammortamento anticipato" ' Solo fiscale
                     esito = CauCes.AmmAnt
                     val = If(String.IsNullOrWhiteSpace(row.Item("T")), 0, row.Item("T"))
-                Case "Acquisizione cespiti" ' riporta anche il fondo ???
+                Case "Acquisizione cespiti"
+                    ' !! DOPPIA OPERAZIONE !! Ripresa Tot. ammortizzabile e Ripresa Fondo
                     esito = IIf(Fiscale, CauCes.AcquisizF, CauCes.AcquisizB)
+                    esito.isCausaleDoppia = True
+                    esito.SecondaCausale = (IIf(Fiscale, CauCes.RipFondoF, CauCes.RipFondoB))
                     val = If(String.IsNullOrWhiteSpace(row.Item("P")), 0, row.Item("P"))
                     valFondo = If(String.IsNullOrWhiteSpace(row.Item("U")), 0, row.Item("U"))
                 Case "Incremento del costo originario"
@@ -504,8 +542,12 @@ Module Cespiti
                     esito = IIf(Fiscale, CauCes.IncFisc, CauCes.IncBil)
                     val = If(String.IsNullOrWhiteSpace(row.Item("P")), 0, row.Item("P"))
                 Case "Scorporo per vendita a La Vedetta", "Vendita parziale CON VAR FDO AMM MANUALE"
+                    ' !! DOPPIA OPERAZIONE !! Storno Tot. ammortizzabile e Storno Fondo
                     esito = IIf(Fiscale, CauCes.VendPF, CauCes.VendPB)
+                    esito.isCausaleDoppia = True
+                    esito.SecondaCausale = (IIf(Fiscale, CauCes.StFondoF, CauCes.StFondoB))
                     val = If(String.IsNullOrWhiteSpace(row.Item("P")), 0, row.Item("P"))
+                    valFondo = If(String.IsNullOrWhiteSpace(row.Item("U")), 0, row.Item("U"))
                 Case Else ' "Not Defined"
                     esito = IIf(Fiscale, CauCes.AcqF, CauCes.AcqB)
                     val = If(String.IsNullOrWhiteSpace(row.Item("P")), 0, row.Item("P"))
@@ -537,6 +579,9 @@ Module Cespiti
         Public Property Dismissione As Boolean
         Public Property Acquisto As Boolean
         Public Property Ripresa As Boolean
+        Public Property isCausaleDoppia As Boolean
+        Public Property SecondaCausale As MyCausale
+
         Public Sub New()
             Codice = ""
             Ammortamento = False
@@ -544,32 +589,33 @@ Module Cespiti
             Dismissione = False
             Acquisto = False
             Ripresa = False
+            isCausaleDoppia = False
         End Sub
     End Class
 
     Private NotInheritable Class CauCes
         'Max Lunghezza 8 Chr
         'Acquisto e ripresa non possono coesistere
-        Public Shared AcqF As MyCausale = New MyCausale With {.Codice = "ACQ", .Acquisto = True} ' CREARE
-        Public Shared AcqB As MyCausale = New MyCausale With {.Codice = "ACQ", .Acquisto = True} ' CREARE
-        Public Shared AcquisizF As MyCausale = New MyCausale With {.Codice = "RIPTOTAM", .Ripresa = True}  ' CREARE
-        Public Shared AcquisizB As MyCausale = New MyCausale With {.Codice = "RIPTOTAM", .Ripresa = True}  ' CREARE
+        Public Shared AcqF As MyCausale = New MyCausale With {.Codice = "ACQFISC", .Acquisto = True}
+        Public Shared AcqB As MyCausale = New MyCausale With {.Codice = "ACQBIL", .Acquisto = True}
+        Public Shared AcquisizF As MyCausale = New MyCausale With {.Codice = "RIPTOTAM", .Ripresa = True}
+        Public Shared AcquisizB As MyCausale = New MyCausale With {.Codice = "RIPTOAMB", .Ripresa = True}
         Public Shared AcquisizConFondofISC As MyCausale = New MyCausale With {.Codice = "RTACF", .Acquisto = True, .Ripresa = True, .Ammortamento = True} '( ripresa e ammortamneto contano 1)  ' CREARE
         Public Shared AmmAnt As MyCausale = New MyCausale With {.Codice = "AMMANT", .Ammortamento = True}
         Public Shared AmmFisc As MyCausale = New MyCausale With {.Codice = "AMMFISC", .Ammortamento = True}
         Public Shared AmmBil As MyCausale = New MyCausale With {.Codice = "AMMBIL", .Ammortamento = True}
-        Public Shared IncFisc As MyCausale = New MyCausale With {.Codice = "ACQINCF", .Ripresa = True} ' CREARE
-        Public Shared IncBil As MyCausale = New MyCausale With {.Codice = "ACQINCB", .Ripresa = True} ' CREARE
-        Public Shared RipTotAmF As MyCausale = New MyCausale With {.Codice = "RIPTOTAF", .Ripresa = True} ' CREARE
-        Public Shared RipTotAmB As MyCausale = New MyCausale With {.Codice = "RIPTOTAB", .Ripresa = True} ' CREARE
-        'Public Shared RipFoAnt As MyCau = "RIPFOANT"
-        Public Shared RipFondoF As MyCausale = New MyCausale With {.Codice = "RIPFONDO", .Ripresa = True, .Ammortamento = True} ' CREARE
-        Public Shared RipFondoB As MyCausale = New MyCausale With {.Codice = "RIPFONBI", .Ripresa = True, .Ammortamento = True} ' CREARE
-        'Public Shared StFoAnt As MyCau = "STFONANT"
-        'Public Shared StFondoF As MyCau = "STFONDO"
-        'Public Shared StFondoB As MyCau = "STFONDO"
-        Public Shared VendPF As MyCausale = New MyCausale With {.Codice = "VENDP", .Dismissione = True} ' CREARE
-        Public Shared VendPB As MyCausale = New MyCausale With {.Codice = "VENDPB", .Dismissione = True} ' CREARE
+        Public Shared IncFisc As MyCausale = New MyCausale With {.Codice = "ACQINCF", .Ripresa = True}
+        Public Shared IncBil As MyCausale = New MyCausale With {.Codice = "ACQINCB", .Ripresa = True}
+        Public Shared RipTotAmF As MyCausale = New MyCausale With {.Codice = "RIPTOTAM", .Ripresa = True}
+        Public Shared RipTotAmB As MyCausale = New MyCausale With {.Codice = "RIPTOAMB", .Ripresa = True}
+        'Public Shared RipFondoAnt As MyCausale = New MyCausale With {.Codice = "RIPFOANT", .Ripresa = True,.Ammortamento = True, .Anticipato = True}} 
+        Public Shared RipFondoF As MyCausale = New MyCausale With {.Codice = "RIPFONDO", .Ripresa = True, .Ammortamento = True}
+        Public Shared RipFondoB As MyCausale = New MyCausale With {.Codice = "RIPFOBIL", .Ripresa = True, .Ammortamento = True}
+        'Public Shared StFonodoAnt As MyCausale = New MyCausale With {.Codice = "STFONANT", .Dismissione = True, .Ammortamento = True, .Anticipato = True}
+        Public Shared StFondoF As MyCausale = New MyCausale With {.Codice = "STFONDO", .Dismissione = True, .Ammortamento = True}
+        Public Shared StFondoB As MyCausale = New MyCausale With {.Codice = "STFONDOB", .Dismissione = True, .Ammortamento = True}
+        Public Shared VendPF As MyCausale = New MyCausale With {.Codice = "VENDP", .Dismissione = True}
+        Public Shared VendPB As MyCausale = New MyCausale With {.Codice = "VENDPBIL", .Dismissione = True}
     End Class
     Private Class MySaldoCespite
         Public Property Cespite As String
