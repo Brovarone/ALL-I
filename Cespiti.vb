@@ -323,7 +323,10 @@ Module Cespiti
                                                             End If
                                                             'If dImporto.Equals(0) Then Continue For
                                                             drMovDet("Amount") = dImporto
-                                                            If .Item("J").ToString.Length > 64 Then warnings.AppendLine("W1:  Riga: " & (i + irxls).ToString & " Cespite: " & .Item("A").ToString & " descrizione movimento troppo lunga, verrà troncata.")
+                                                            If .Item("J").ToString.Length > 64 Then
+                                                                warnings.AppendLine("W1:  Riga: " & (i + irxls).ToString & " Cespite: " & .Item("A").ToString & " descrizione movimento troppo lunga, verrà troncata!")
+                                                                warnings.AppendLine(.Item("J").ToString)
+                                                            End If
                                                             drMovDet("Notes") = Left(.Item("J").ToString, 64)
                                                             drMovDet("Currency") = "EUR"
                                                             drMovDet("AmountDocCurr") = 0
@@ -370,10 +373,10 @@ Module Cespiti
                                                     okBulk = ScriviBulk("MA_FixedAssets", dtCespiti, bulkTrans, DataRowState.Added, loggingTxt)
                                                     If Not okBulk Then someTrouble = True
                                                     bulkMessage.AppendLine(loggingTxt)
-                                                    EditTestoBarra("Salvataggio: Anagrafica Categorie Cespiti")
-                                                    okBulk = ScriviBulk("MA_FixAssetsCtg", dtCategoria, bulkTrans, DataRowState.Added, loggingTxt)
-                                                    If Not okBulk Then someTrouble = True
-                                                    bulkMessage.AppendLine(loggingTxt)
+                                                    'EditTestoBarra("Salvataggio: Anagrafica Categorie Cespiti")
+                                                    'okBulk = ScriviBulk("MA_FixAssetsCtg", dtCategoria, bulkTrans, DataRowState.Added, loggingTxt)
+                                                    'If Not okBulk Then someTrouble = True
+                                                    'bulkMessage.AppendLine(loggingTxt)
                                                     EditTestoBarra("Salvataggio: Movimenti Cespiti")
                                                     okBulk = ScriviBulk("MA_FixAssetEntries", dtMovCes, bulkTrans, DataRowState.Unchanged, loggingTxt)
                                                     If Not okBulk Then someTrouble = True
@@ -448,7 +451,7 @@ Module Cespiti
                 My.Application.Log.DefaultFileLogWriter.Write(vbLf)
             End If
 
-            If warnings.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Warnings ---" & vbCrLf & " - Queste modifiche non vengono salvate - " & warnings.ToString)
+            If warnings.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Warnings ---" & vbCrLf & " - La riga verrà troncata - " & vbCrLf & warnings.ToString)
             Debug.Print(warnings.ToString)
 
 
@@ -579,7 +582,7 @@ Module Cespiti
         Public Property Dismissione As Boolean
         Public Property Acquisto As Boolean
         Public Property Ripresa As Boolean
-        Public Property isCausaleDoppia As Boolean
+        Public Property IsCausaleDoppia As Boolean
         Public Property SecondaCausale As MyCausale
 
         Public Sub New()
