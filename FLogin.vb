@@ -737,7 +737,7 @@ Public Class FLogin
 
         If ChkCespiti.Checked Then
             Dim bFound As Boolean
-            Dim cespiti As String() = {"CFIS", "CBIL"}
+            Dim cespiti As String() = {"CBIL", "CFIS"}
             Dim cespitiFound As Boolean() = {False, False}
             Dim FileInFolder As String() = Directory.GetFiles(FolderPath, "*.*", SearchOption.TopDirectoryOnly)
 
@@ -1278,6 +1278,8 @@ Public Class FLogin
 
     Private Sub CancellaToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles CancellaToolStripMenuItem.Click
         'Elimina cespiti
+        Dim bok As Boolean = MessageBox.Show("Temporaneo [" & TxtTMPDB.Text & "] (SI) o definitivo [" & txtDATABASE.Text & "] (NO)?", "Import Cespiti", MessageBoxButtons.YesNoCancel) = DialogResult.Yes
+        SUBConnetti(If(bok, TxtTMPDB.Text, ""))
         SUBConnetti()
         Dim res As Integer
         Me.Cursor = Cursors.WaitCursor
@@ -1318,7 +1320,7 @@ Public Class FLogin
                 'Dim data As String = MagoFormatta(s, GetType(DateTime)).DataTempo
                 If Len(s) = 8 Then
                     Dim wCr_Mod_CrDt As String = " WHERE TBCreatedID=" & My.Settings.mLOGINID & " AND TBModifiedID=" & My.Settings.mLOGINID & " AND TBCreated='" & s & "'"
-                    Dim wCL_Cr_Mod_CrDt As String = " WHERE CustSuppType=" & CustSuppType.Cliente & " AND TBCreatedID=" & My.Settings.mLOGINID & " AND TBModifiedID=" & My.Settings.mLOGINID & " AND TBCreated='" & s & "'"
+                    'Dim wCL_Cr_Mod_CrDt As String = " WHERE CustSuppType=" & CustSuppType.Cliente & " AND TBCreatedID=" & My.Settings.mLOGINID & " AND TBModifiedID=" & My.Settings.mLOGINID & " AND TBCreated='" & s & "'"
 
                     comm.CommandText = "DELETE MA_FixedAssetsBalance" & wCr_Mod_CrDt
                     result.Append(" MA_FixedAssetsBalance: " & comm.ExecuteNonQuery().ToString)

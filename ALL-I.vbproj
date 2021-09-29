@@ -36,7 +36,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>11</ApplicationRevision>
+    <ApplicationRevision>13</ApplicationRevision>
     <ApplicationVersion>3.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -237,6 +237,11 @@
   <ItemGroup>
     <None Include="ALL-I_TemporaryKey.pfx" />
     <None Include="CreaZip.ps1" />
+    <None Include="Links\Adding automatic updates to your program - Part 1 - CodeProject.URL" />
+    <None Include="Links\c# - Automatically install updates with ClickOnce deployment - Stack Overflow.URL" />
+    <None Include="Links\c# - Making ClickOnce Updates Mandatory - Stack Overflow.URL" />
+    <None Include="Links\GitHub - deadlydogAutoUpdateProjectsMinimumRequiredClickOnceVersion Automatically force your ClickOnce app to update itself .URL" />
+    <None Include="Links\GitHub.URL" />
     <None Include="My Project\app.manifest" />
     <None Include="My Project\Application.myapp">
       <Generator>MyApplicationCodeGenerator</Generator>

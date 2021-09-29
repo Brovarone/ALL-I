@@ -236,7 +236,8 @@ Module Cespiti
                                                             ACGCode = .Item("A").ToString
                                                             wSaldo.Cespite = codCespite
                                                             wSaldo.CodiceACG = dvcespitiACG(cespFndACG)("ACGCode")
-                                                            If Not isFiscale Then
+                                                            If IsDeprecated AndAlso Not isFiscale Then
+                                                                'Processo prima il file di Bilancio !
                                                                 Dim idUpd As Integer = dvUpdCespiti.Find(ACGCode)
                                                                 If Not String.IsNullOrWhiteSpace(.Item("AB").ToString) Then
                                                                     dvUpdCespiti(idUpd)("DeprByDate") = "1"
@@ -300,8 +301,7 @@ Module Cespiti
 
                                                             'Deprecata
                                                             If IsDeprecated AndAlso myPerc > 0 Then
-                                                                'Si presuppone che l'anagrafica venga popolata dal file fiscale e "aggiornata" dal file Bilancio
-                                                                'Aggiorna percentuale personalizzata
+                                                                'Aggiorna percentuale personalizzata / Si usa Percentuale di Categoria
                                                                 Dim nCespF As Integer = dvcespitiACG.Find(.Item("A").ToString)
                                                                 If isFiscale Then
                                                                     '% ammortamento Fiscale personalizzata
@@ -323,7 +323,10 @@ Module Cespiti
                                                             End If
                                                             'If dImporto.Equals(0) Then Continue For
                                                             drMovDet("Amount") = dImporto
-                                                            If .Item("J").ToString.Length > 64 Then warnings.AppendLine("W1:  Riga: " & (i + irxls).ToString & " Cespite: " & .Item("A").ToString & " descrizione movimento troppo lunga, verrà troncata.")
+                                                            If .Item("J").ToString.Length > 64 Then
+                                                                warnings.AppendLine("W1:  Riga: " & (i + irxls).ToString & " Cespite: " & .Item("A").ToString & " descrizione movimento troppo lunga, verrà troncata!")
+                                                                warnings.AppendLine(.Item("J").ToString)
+                                                            End If
                                                             drMovDet("Notes") = Left(.Item("J").ToString, 64)
                                                             drMovDet("Currency") = "EUR"
                                                             drMovDet("AmountDocCurr") = 0
@@ -370,10 +373,10 @@ Module Cespiti
                                                     okBulk = ScriviBulk("MA_FixedAssets", dtCespiti, bulkTrans, DataRowState.Added, loggingTxt)
                                                     If Not okBulk Then someTrouble = True
                                                     bulkMessage.AppendLine(loggingTxt)
-                                                    EditTestoBarra("Salvataggio: Anagrafica Categorie Cespiti")
-                                                    okBulk = ScriviBulk("MA_FixAssetsCtg", dtCategoria, bulkTrans, DataRowState.Added, loggingTxt)
-                                                    If Not okBulk Then someTrouble = True
-                                                    bulkMessage.AppendLine(loggingTxt)
+                                                    'EditTestoBarra("Salvataggio: Anagrafica Categorie Cespiti")
+                                                    'okBulk = ScriviBulk("MA_FixAssetsCtg", dtCategoria, bulkTrans, DataRowState.Added, loggingTxt)
+                                                    'If Not okBulk Then someTrouble = True
+                                                    'bulkMessage.AppendLine(loggingTxt)
                                                     EditTestoBarra("Salvataggio: Movimenti Cespiti")
                                                     okBulk = ScriviBulk("MA_FixAssetEntries", dtMovCes, bulkTrans, DataRowState.Unchanged, loggingTxt)
                                                     If Not okBulk Then someTrouble = True
@@ -396,7 +399,8 @@ Module Cespiti
                                                     End If
                                                     Debug.Print("Fine bulk")
                                                 End Using
-                                                If Not someTrouble AndAlso Not isFiscale Then
+                                                If IsDeprecated AndAlso Not someTrouble AndAlso isFiscale Then
+                                                    ' Non aggiorno piu' nulla, leggo tutto dal Bilancio
                                                     Dim irows As Integer
                                                     Using updTrans = Connection.BeginTransaction
                                                         EditTestoBarra("Aggiornamento Anagrafica Cespiti")
@@ -406,7 +410,6 @@ Module Cespiti
                                                         Debug.Print("Aggiornamento Anagrafiche Cespiti: " & irows.ToString & " record")
                                                         updTrans.Commit()
                                                     End Using
-
                                                 End If
                                                 cmdqry.CommandText = "DBCC TRACEOFF(610)"
                                                 cmdqry.ExecuteNonQuery()
@@ -448,7 +451,7 @@ Module Cespiti
                 My.Application.Log.DefaultFileLogWriter.Write(vbLf)
             End If
 
-            If warnings.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Warnings ---" & vbCrLf & " - Queste modifiche non vengono salvate - " & warnings.ToString)
+            If warnings.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Warnings ---" & vbCrLf & " - La riga verrà troncata - " & vbCrLf & warnings.ToString)
             Debug.Print(warnings.ToString)
 
 
@@ -579,7 +582,7 @@ Module Cespiti
         Public Property Dismissione As Boolean
         Public Property Acquisto As Boolean
         Public Property Ripresa As Boolean
-        Public Property isCausaleDoppia As Boolean
+        Public Property IsCausaleDoppia As Boolean
         Public Property SecondaCausale As MyCausale
 
         Public Sub New()
