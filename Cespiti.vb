@@ -267,7 +267,7 @@ Module Cespiti
                                                             idMovCesp += 1 ' Incremento Id
                                                             iRefNo += 1
                                                             ' Testa
-                                                            drMov("FARsn") = If(nrMov = 0, mCau.Codice, mCau.SecondaCausale.Codice)
+                                                            drMov("FARsn") = If(x = 0, mCau.Codice, mCau.SecondaCausale.Codice)
                                                             drMov("PostingDate") = MagoFormatta(.Item("I").ToString, GetType(DateTime), True).DataTempo
                                                             If Not String.IsNullOrWhiteSpace(.Item("L")) Then
                                                                 drMov("DocumentDate") = MagoFormatta(.Item("L").ToString, GetType(DateTime), True).DataTempo
@@ -322,7 +322,7 @@ Module Cespiti
                                                                 dImporto = myValFondo 'If(myValFondo <> 0, myValFondo, myVal)
                                                             End If
                                                             'If dImporto.Equals(0) Then Continue For
-                                                            drMovDet("Amount") = dImporto
+                                                            drMovDet("Amount") = Math.Round(dImporto, 2)
                                                             If .Item("J").ToString.Length > 64 Then
                                                                 warnings.AppendLine("W1:  Riga: " & (i + irxls).ToString & " Cespite: " & .Item("A").ToString & " descrizione movimento troppo lunga, verrà troncata!")
                                                                 warnings.AppendLine(.Item("J").ToString)
@@ -706,14 +706,15 @@ Module Cespiti
                             rr.Item("FiscalYear") = i + 1
                             rr.Item("Currency") = what.Currency
                             rr.Item("Category") = what.Categoria
-                            rr.Item("InitialTotalDepreciable") = .Item("InitialTotalDepreciable")
-                            rr.Item("TotalDepreciable") = .Item("TotalDepreciable")
+                            'Forse devo usare sempre il finale !
+                            rr.Item("InitialTotalDepreciable") = Math.Round(.Item("TotalDepreciable"), 2) ' = Finale dell'anno prima  .Item("InitialTotalDepreciable")
+                            rr.Item("TotalDepreciable") = Math.Round(.Item("TotalDepreciable"), 2)
                             If isFiscal Then
-                                rr.Item("InitialAcceleratedAccumDepr") = .Item("InitialAcceleratedAccumDepr") + .Item("AcceleratedAccumDepr")
-                                rr.Item("AcceleratedAccumDepr") = .Item("AcceleratedAccumDepr")
+                                rr.Item("InitialAcceleratedAccumDepr") = Math.Round(.Item("InitialAcceleratedAccumDepr") + .Item("AcceleratedAccumDepr"), 2)
+                                rr.Item("AcceleratedAccumDepr") = Math.Round(.Item("AcceleratedAccumDepr"), 2)
                             End If
-                            rr.Item("InitialAccumDepr") = .Item("InitialAccumDepr") + .Item("Depreciation")
-                            rr.Item("AccumDepr") = .Item("AccumDepr")
+                            rr.Item("InitialAccumDepr") = Math.Round(.Item("InitialAccumDepr") + .Item("Depreciation"), 2)
+                            rr.Item("AccumDepr") = Math.Round(.Item("AccumDepr"), 2)
                             rr.Item("TBCreatedID") = My.Settings.mLOGINID 'ID utente
                             rr.Item("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                         End With
@@ -754,40 +755,40 @@ Module Cespiti
                 'Inizio calcoli a seconda del tipo Causale
                 .BeginEdit()
                 If what.Causale.Acquisto Then
-                    .Item("InitialTotalDepreciable") += what.Valore
-                    .Item("TotalDepreciable") += what.Valore
+                    .Item("InitialTotalDepreciable") += Math.Round(what.Valore, 2)
+                    .Item("TotalDepreciable") += Math.Round(what.Valore, 2)
                 End If
                 If what.Causale.Ripresa Then
                     'Questi non li sommo ! li sovrascrivo
                     If what.Causale.Ammortamento Then
                         If what.Causale.Anticipato Then
-                            .Item("InitialAcceleratedAccumDepr") = what.Valore
-                            .Item("AcceleratedAccumDepr") = what.Valore
+                            .Item("InitialAcceleratedAccumDepr") = Math.Round(what.Valore, 2)
+                            .Item("AcceleratedAccumDepr") = Math.Round(what.Valore, 2)
                         Else
-                            .Item("InitialAccumDepr") = what.Valore
-                            .Item("AccumDepr") = what.Valore
+                            .Item("InitialAccumDepr") = Math.Round(what.Valore, 2)
+                            .Item("AccumDepr") = Math.Round(what.Valore, 2)
                         End If
                     Else
 
-                        .Item("InitialTotalDepreciable") = what.Valore
-                        .Item("TotalDepreciable") = what.Valore
+                        .Item("InitialTotalDepreciable") = Math.Round(what.Valore, 2)
+                        .Item("TotalDepreciable") = Math.Round(what.Valore, 2)
                     End If
                 End If
-                If what.Causale.Ammortamento AndAlso Not what.Causale.Ripresa Then
+                If what.Causale.Ammortamento AndAlso Not what.Causale.Ripresa AndAlso Not what.Causale.Dismissione Then
                     If what.Causale.Anticipato Then
-                        .Item("AcceleratedDepr") += what.Valore
-                        .Item("AcceleratedAccumDepr") += what.Valore
+                        .Item("AcceleratedDepr") += Math.Round(what.Valore, 2)
+                        .Item("AcceleratedAccumDepr") += Math.Round(what.Valore, 2)
                         .Item("Perc") += what.Percentuale
                     Else
-                        .Item("Depreciation") += what.Valore
-                        .Item("AccumDepr") += what.Valore
+                        .Item("Depreciation") += Math.Round(what.Valore, 2)
+                        .Item("AccumDepr") += Math.Round(what.Valore, 2)
                         .Item("Perc") += what.Percentuale
                     End If
 
                 End If
-                If what.Causale.Dismissione Then
-                    .Item("TotalDepreciable") -= what.Valore
-                    .Item("Sales") += what.Valore
+                If what.Causale.Dismissione AndAlso Not what.Causale.Ammortamento Then
+                    .Item("TotalDepreciable") -= Math.Round(what.Valore, 2)
+                    .Item("Sales") += Math.Round(what.Valore, 2)
                 End If
 
                 .EndEdit()
