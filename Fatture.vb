@@ -2337,10 +2337,9 @@ Module Fatture
                     o.Item("CustomerClassification") = .Item("P").ToString 'CLPAR
                     o.EndEdit()
                 End If
-                '14/07/2021 : Aggiunto controllo su clienord per PA
-                If o.Item("PublicAuthority").ToString <> "1" Then
-                    '05/10/2021: la letra A non e' significativa
-                    'isdeprecated AndAlso .Item("P").ToString() = "A" Then 'CLPAR
+                If IsDeprecated AndAlso o.Item("PublicAuthority").ToString <> "1" AndAlso .Item("P").ToString() = "A" Then 'CLPAR
+                    '14/07/2021 : Aggiunto controllo su clienord per PA
+                    '05/10/2021 : DEPRECATO la lettera A non e' significativa
                     o.BeginEdit()
                     avvisi.AppendLine("Pubblica Amministrazione : (1) [" & o.Item("PublicAuthority") & "]")
                     o.Item("PublicAuthority") = "1"
