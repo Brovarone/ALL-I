@@ -332,6 +332,7 @@ Module MagoNet
         Return res
     End Function
 
+    'TODO: cambire structure e mettere Enum !!
     Friend Structure CustSuppType
         Public Shared Cliente As Integer = 3211264
         Public Shared Fornitore As Integer = 3211265
@@ -402,7 +403,7 @@ Module MagoNet
         'Tipo Documento non fiscale 57
         Public Shared PNota As Integer = 3735558
         Public Shared MovAna As Integer = 3735561
-        Public Shared MovCes = 3735585 '  Nr. Riferimento Movimenti Cespiti
+        Public Shared MovCes As Integer = 3735585 '  Nr. Riferimento Movimenti Cespiti
 
     End Class
 

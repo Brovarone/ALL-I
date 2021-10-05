@@ -273,6 +273,7 @@ Module Cespiti
                                                                 drMov("DocumentDate") = MagoFormatta(.Item("L").ToString, GetType(DateTime), True).DataTempo
                                                             End If
                                                             drMov("DocNo") = .Item("K").ToString()
+                                                            'TODO: Nr Riferimento mov cespiti per Anno e non tutti 21/xxx
                                                             drMov("RefNo") = Right(Year(Today), 2) & "/" & iRefNo.ToString("00000")
                                                             drMov("LogNo") = ""
                                                             If Not String.IsNullOrWhiteSpace(.Item("M").ToString()) Then

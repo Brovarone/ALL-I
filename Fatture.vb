@@ -236,8 +236,9 @@ Module Fatture
                                                                                     drCliOpt("PublicAuthority") = "1"
                                                                                     drCliOpt("PASplitPayment") = "1"
                                                                                 End If
-                                                                                'Il campo classe cliente =  A identifica una Pubblica Amministrazione
-                                                                                If dvClienOrd(iClienOrdFound).Item("P").ToString() = "A" Then 'CLPAR
+                                                                                If IsDeprecated AndAlso dvClienOrd(iClienOrdFound).Item("P").ToString() = "A" Then 'CLPAR
+                                                                                    '05/10/2021 : era stata aggiunta il 14/07/2021, ma non era cosi' vero che la lettera fosse giusta
+                                                                                    'Il campo classe cliente =  A identifica una Pubblica Amministrazione
                                                                                     drCliOpt("PublicAuthority") = "1"
                                                                                     drCliOpt("PASplitPayment") = "1"
                                                                                 End If
@@ -283,7 +284,6 @@ Module Fatture
                                                                                 End If
 
                                                                                 'Controllo se sulla Scheda "Comunicazioni digitali ho un IPA "valida"
-                                                                                'Dim isIPAClienteBlankOrZero As Boolean = String.IsNullOrWhiteSpace(dvClienti(iCliFound)("IPACode")) OrElse dvClienti(iCliFound)("IPACode") = "0000000" OrElse dvClienti(iCliFound)("IPACode") = "000000"
                                                                                 Dim isIPAClienteBlankOrZero As Boolean = String.IsNullOrWhiteSpace(dvClienti(iCliFound)("IPACode").ToString.Trim("0"))
                                                                                 ' e se e' uguale al file FTPA300
                                                                                 Dim bSameIPATesta As Boolean = .Item("Z").ToString = dvClienti(iCliFound).Item("IPACode")
@@ -856,7 +856,7 @@ Module Fatture
                                                                             Dim iCliopt As Integer = dvCliOpt.Find(.Item("AA").ToString)
                                                                             If .Item("DU").ToString = ACGIVASplit Then
                                                                                 If iCliopt <> -1 AndAlso dvCliOpt(iCliopt)("PASplitPayment") <> "1" Then
-                                                                                    avvisi.AppendLine("A07: doc: " & .Item("O").ToString & " in SPLIT payment ma Cliente: " & .Item("AA").ToString & " non in SPLIT")
+                                                                                    avvisi.AppendLine("A07: doc: " & .Item("O").ToString & " in SPLIT payment ma Cliente: " & .Item("AA").ToString & " non in SPLIT. Aggiornato il Cliente.")
                                                                                     dvCliOpt(iCliopt).BeginEdit()
                                                                                     dvCliOpt(iCliopt)("PASplitPayment") = "1"
                                                                                     dvCliOpt(iCliopt).EndEdit()
@@ -2338,7 +2338,9 @@ Module Fatture
                     o.EndEdit()
                 End If
                 '14/07/2021 : Aggiunto controllo su clienord per PA
-                If o.Item("PublicAuthority").ToString <> "1" AndAlso .Item("P").ToString() = "A" Then 'CLPAR
+                If o.Item("PublicAuthority").ToString <> "1" Then
+                    '05/10/2021: la letra A non e' significativa
+                    'isdeprecated AndAlso .Item("P").ToString() = "A" Then 'CLPAR
                     o.BeginEdit()
                     avvisi.AppendLine("Pubblica Amministrazione : (1) [" & o.Item("PublicAuthority") & "]")
                     o.Item("PublicAuthority") = "1"
