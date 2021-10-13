@@ -203,9 +203,11 @@ Module Cespiti
                                                             drCesp("PurchaseType") = 7208960 '7208960 (nuovo) / 7208961 ( Usato)
                                                             drCesp("PurchaseDate") = MagoFormatta(.Item("D").ToString, GetType(DateTime), True).DataTempo
                                                             drCesp("PurchaseYear") = Year(MagoFormatta(.Item("D").ToString, GetType(DateTime), True).DataTempo)
+                                                            wSaldo.PurchaseYear = Year(MagoFormatta(.Item("D").ToString, GetType(DateTime), True).DataTempo)
                                                             drCesp("PurchaseCost") = myVal
                                                             If Not String.IsNullOrWhiteSpace(.Item("L")) Then
                                                                 drCesp("PurchaseDocDate") = MagoFormatta(.Item("L").ToString, GetType(DateTime), True).DataTempo
+                                                                wSaldo.PurchaseDocDate = MagoFormatta(.Item("L").ToString, GetType(DateTime), True).DataTempo
                                                             End If
                                                             drCesp("PurchaseDocNo") = .Item("K").ToString
                                                             drCesp("LogNo") = ""
@@ -633,6 +635,8 @@ Module Cespiti
         Public Property Valore As Double
         Public Property ValoreFondo As Double
         Public Property Qta As Double
+        Public Property PurchaseYear As Short
+        Public Property PurchaseDocDate As String
         Public Sub New()
             Cespite = ""
             CodiceACG = ""
@@ -644,6 +648,8 @@ Module Cespiti
             Valore = 0
             ValoreFondo = 0
             Qta = 0
+            PurchaseYear = CShort(Year(Now))
+            PurchaseDocDate = ""
         End Sub
     End Class
     Private Function LeggiNrCespite(Optional ByRef MyReturnString As String = "") As Integer
@@ -707,6 +713,8 @@ Module Cespiti
                             rr.Item("FiscalYear") = i + 1
                             rr.Item("Currency") = what.Currency
                             rr.Item("Category") = what.Categoria
+                            rr.Item("PurchaseYear") = what.PurchaseYear
+                            If String.IsNullOrWhiteSpace(what.PurchaseDocDate) Then rr.Item("PurchaseDocDate") = what.PurchaseDocDate
                             'Forse devo usare sempre il finale !
                             rr.Item("InitialTotalDepreciable") = Math.Round(.Item("TotalDepreciable"), 2) ' = Finale dell'anno prima  .Item("InitialTotalDepreciable")
                             rr.Item("TotalDepreciable") = Math.Round(.Item("TotalDepreciable"), 2)
