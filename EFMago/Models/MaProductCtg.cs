@@ -1,0 +1,31 @@
+﻿using System;
+using System.Collections.Generic;
+
+// Code scaffolded by EF Core assumes nullable reference types (NRTs) are not used or disabled.
+// If you have enabled NRTs for your project, then un-comment the following line:
+// #nullable disable
+
+namespace EFMago.Models
+{
+    public partial class MaProductCtg
+    {
+        public MaProductCtg()
+        {
+            MaProductCtgLang = new HashSet<MaProductCtgLang>();
+            MaProductCtgSubCtg = new HashSet<MaProductCtgSubCtg>();
+        }
+
+        public string Category { get; set; }
+        public string Description { get; set; }
+        public int? CodeType { get; set; }
+        public string Notes { get; set; }
+        public Guid? Tbguid { get; set; }
+        public DateTime Tbcreated { get; set; }
+        public DateTime Tbmodified { get; set; }
+        public int TbcreatedId { get; set; }
+        public int TbmodifiedId { get; set; }
+
+        public virtual ICollection<MaProductCtgLang> MaProductCtgLang { get; set; }
+        public virtual ICollection<MaProductCtgSubCtg> MaProductCtgSubCtg { get; set; }
+    }
+}

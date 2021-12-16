@@ -30,19 +30,19 @@ Module Cespiti
         stopwatch.Start()
         EditTestoBarra("Creo Cespiti")
         FLogin.prgCopy.Value = 1
-        Dim idAndNumber As StringBuilder = New StringBuilder()
+        Dim idAndNumber As New StringBuilder()
         Dim loggingTxt As String = "Si"
-        Dim errori As StringBuilder = New StringBuilder()  ' Ultimo =2
-        Dim avvisi As StringBuilder = New StringBuilder()  ' Ultimo = 0  / 0
-        Dim aggiornamenti As StringBuilder = New StringBuilder()
-        Dim warnings As StringBuilder = New StringBuilder() ' Ultimo = 1
-        Dim bulkMessage As StringBuilder = New StringBuilder()
+        Dim errori As New StringBuilder()  ' Ultimo =2
+        Dim avvisi As New StringBuilder()  ' Ultimo = 0  / 0
+        Dim aggiornamenti As New StringBuilder()
+        Dim warnings As New StringBuilder() ' Ultimo = 1
+        Dim bulkMessage As New StringBuilder()
         Dim okBulk As Boolean
         Dim someTrouble As Boolean
 
-        Dim listOfNewCespiti As List(Of String) = New List(Of String)
-        Dim lLunghi As List(Of String) = New List(Of String)
-        Dim listofNewCategorie As List(Of String) = New List(Of String)
+        Dim listOfNewCespiti As New List(Of String)
+        Dim lLunghi As New List(Of String)
+        Dim listofNewCategorie As New List(Of String)
 
         'Inizializzo un datatable al file xls e un datarow con tutte le righe
         Dim irxls As Integer = 0
@@ -81,38 +81,38 @@ Module Cespiti
                 Using dtMovCes As DataTable = CaricaSchema("MA_FixAssetEntries")
                     EditTestoBarra("Carico Schema: Righe")
                     Using dtMovCesDet As DataTable = CaricaSchema("MA_FixAssetEntriesDetail")
-                        'Dim dvDocDet As DataView = New DataView(dtMovAnaDet, "", "SaleDocId", DataViewRowState.CurrentRows)
+                        'Dim dvDocDet As New DataView(dtMovAnaDet, "", "SaleDocId", DataViewRowState.CurrentRows)
                         EditTestoBarra("Carico Schema: Anagrafiche Cespiti")
                         Using dtCespiti As DataTable = CaricaSchema("MA_FixedAssets", True, True)
-                            Dim dvcespitiACG As DataView = New DataView(dtCespiti, "", "ACGCode", DataViewRowState.CurrentRows)
+                            Dim dvcespitiACG As New DataView(dtCespiti, "", "ACGCode", DataViewRowState.CurrentRows)
                             EditTestoBarra("Carico Schema: Amm." & If(isFiscale, " Fiscale", " di Bilancio"))
                             Using dtSaldi As DataTable = If(isFiscale, CaricaSchema("MA_FixedAssetsFiscal", True, True), CaricaSchema("MA_FixedAssetsBalance", True, True))
-                                Dim dvSaldi As DataView = New DataView(dtSaldi, "", "FiscalYear,CodeType,FixedAsset,Currency", DataViewRowState.CurrentRows)
+                                Dim dvSaldi As New DataView(dtSaldi, "", "FiscalYear,CodeType,FixedAsset,Currency", DataViewRowState.CurrentRows)
                                 'Creo un dataset con le anagrafiche Clienti
                                 Using dtCategoria As DataTable = CaricaSchema("MA_FixAssetsCtg", True, True)
-                                    Dim dvCat As DataView = New DataView(dtCategoria, "", "Category", DataViewRowState.CurrentRows)
+                                    Dim dvCat As New DataView(dtCategoria, "", "Category", DataViewRowState.CurrentRows)
                                     Dim isNewCespite As Boolean = False
                                     ' Ciclo le righe del file XLS
                                     'Posso chiamare le Colonne con la stessa logica di Excel A,B,C o con i Numeri
 
                                     EditTestoBarra("Caricamento tabelle di conversione")
                                     'Creo le dataview per l'anagrafica Fornitore 
-                                    Using adpCF As SqlDataAdapter = New SqlDataAdapter("Select * FROM MA_CustSupp Where CustSuppType=" & CustSuppType.Fornitore, Connection)
-                                        Dim dtCliFor As DataTable = New DataTable("CliFor")
+                                    Using adpCF As New SqlDataAdapter("Select * FROM MA_CustSupp Where CustSuppType=" & CustSuppType.Fornitore, Connection)
+                                        Dim dtCliFor As New DataTable("CliFor")
                                         adpCF.Fill(dtCliFor)
-                                        Dim dvCliFor As DataView = New DataView(dtCliFor, "", "CustSupp", DataViewRowState.CurrentRows)
+                                        Dim dvCliFor As New DataView(dtCliFor, "", "CustSupp", DataViewRowState.CurrentRows)
 
                                         'Creo le dataview per l'aggiornameno anagrafico dei Cespiti ( solo bilancio) 
-                                        Using adpCespiti As SqlDataAdapter = New SqlDataAdapter("SELECT CodeType, FixedAsset, ACGCode, BalanceCustomized, BalancePerc, DeprByDate, DepreciationEndingDate, Location, CostCenter, Qty  FROM MA_FixedAssets", Connection)
+                                        Using adpCespiti As New SqlDataAdapter("SELECT CodeType, FixedAsset, ACGCode, BalanceCustomized, BalancePerc, DeprByDate, DepreciationEndingDate, Location, CostCenter, Qty  FROM MA_FixedAssets", Connection)
                                             Dim cbMar = New SqlCommandBuilder(adpCespiti)
                                             adpCespiti.UpdateCommand = cbMar.GetUpdateCommand(True)
-                                            Dim dtUpdCespiti As DataTable = New DataTable("UpdCespiti")
+                                            Dim dtUpdCespiti As New DataTable("UpdCespiti")
                                             adpCespiti.Fill(dtUpdCespiti)
-                                            Dim dvUpdCespiti As DataView = New DataView(dtUpdCespiti, "", "ACGCode", DataViewRowState.CurrentRows)
+                                            Dim dvUpdCespiti As New DataView(dtUpdCespiti, "", "ACGCode", DataViewRowState.CurrentRows)
 
                                             EditTestoBarra("Scrittura Movimenti in corso...")
                                             Dim ACGCode As String = ""
-                                            Dim wSaldo As MySaldoCespite = New MySaldoCespite
+                                            Dim wSaldo As New MySaldoCespite
 
                                             For irxls = i To drXLS.Length - 1
                                                 Dim drMov As DataRow
@@ -142,7 +142,7 @@ Module Cespiti
                                                         If Not String.Equals(ACGCode, .Item("A")) AndAlso irxls <> i Then
                                                             'Porto i saldi all'anno in corso
                                                             wSaldo.Anno = 2021
-                                                            Dim xCau As MyCausale = New MyCausale
+                                                            Dim xCau As New MyCausale
                                                             wSaldo.Causale = xCau
                                                             AggiornaSaldoCespite(wSaldo, dvSaldi, isFiscale)
                                                         End If
@@ -165,7 +165,7 @@ Module Cespiti
                                                         Else
                                                             myPerc = CDbl(drXLS(irxls).Item("S").ToString)
                                                         End If
-                                                        Dim mCau As MyCausale = New MyCausale
+                                                        Dim mCau As New MyCausale
                                                         mCau = TrovaCausaleeValore(drXLS(irxls), isFiscale, myVal, myValFondo)
 
                                                         'Creo l'oggetto per l'aggiornamento saldi con i vari valori
@@ -260,7 +260,7 @@ Module Cespiti
                                                         'Controllo che la causale non sia doppia e
                                                         'Quindi creo 1 o 2 movimenti
                                                         Dim nrMov As Byte = 0
-                                                        If mCau.isCausaleDoppia Then nrMov = 1
+                                                        If mCau.IsCausaleDoppia Then nrMov = 1
                                                         For x = 0 To nrMov
                                                             '''''''''''''''''''''''
                                                             ' Scrivo il movimento '
@@ -360,7 +360,7 @@ Module Cespiti
                                             Next
                                             'Ultimo adeguamento al 2021
                                             wSaldo.Anno = 2021
-                                            Dim tCau As MyCausale = New MyCausale
+                                            Dim tCau As New MyCausale
                                             wSaldo.Causale = tCau
                                             AggiornaSaldoCespite(wSaldo, dvSaldi, isFiscale)
 
@@ -427,7 +427,7 @@ Module Cespiti
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
             If Not someTrouble Then
@@ -470,13 +470,13 @@ Module Cespiti
             End If
 
             If aggiornamenti.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Aggiornamenti anagrafici (NUOVO VALORE ) [VECCHIO VALORE] ---" & vbCrLf & aggiornamenti.ToString)
-                If idAndNumber.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Id e Numeratori ---" & vbCrLf & idAndNumber.ToString)
-                Debug.Print(idAndNumber.ToString)
+            If idAndNumber.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Id e Numeratori ---" & vbCrLf & idAndNumber.ToString)
+            Debug.Print(idAndNumber.ToString)
 
-                Debug.Print("Gestione Cespiti" & " " & stopwatch.Elapsed.ToString)
+            Debug.Print("Gestione Cespiti" & " " & stopwatch.Elapsed.ToString)
 
-            End If
-            stopwatch.Stop()
+        End If
+        stopwatch.Stop()
         Return Not someTrouble
 
     End Function
@@ -520,7 +520,7 @@ Module Cespiti
     ''' </summary>
     ''' <returns></returns>
     Private Function TrovaCausaleeValore(row As DataRow, Fiscale As Boolean, ByRef val As Double, ByRef valFondo As Double) As MyCausale
-        Dim esito As MyCausale
+        Dim esito As New MyCausale
         Try
             Dim codice As String = row.Item("J").ToString
             Select Case codice
@@ -539,7 +539,7 @@ Module Cespiti
                 Case "Acquisizione cespiti"
                     ' !! DOPPIA OPERAZIONE !! Ripresa Tot. ammortizzabile e Ripresa Fondo
                     esito = IIf(Fiscale, CauCes.AcquisizF, CauCes.AcquisizB)
-                    esito.isCausaleDoppia = True
+                    esito.IsCausaleDoppia = True
                     esito.SecondaCausale = (IIf(Fiscale, CauCes.RipFondoF, CauCes.RipFondoB))
                     val = If(String.IsNullOrWhiteSpace(row.Item("P")), 0, row.Item("P"))
                     valFondo = If(String.IsNullOrWhiteSpace(row.Item("U")), 0, row.Item("U"))
@@ -550,7 +550,7 @@ Module Cespiti
                 Case "Scorporo per vendita a La Vedetta", "Vendita parziale CON VAR FDO AMM MANUALE"
                     ' !! DOPPIA OPERAZIONE !! Storno Tot. ammortizzabile e Storno Fondo
                     esito = IIf(Fiscale, CauCes.VendPF, CauCes.VendPB)
-                    esito.isCausaleDoppia = True
+                    esito.IsCausaleDoppia = True
                     esito.SecondaCausale = (IIf(Fiscale, CauCes.StFondoF, CauCes.StFondoB))
                     val = If(String.IsNullOrWhiteSpace(row.Item("P")), 0, row.Item("P"))
                     valFondo = If(String.IsNullOrWhiteSpace(row.Item("U")), 0, row.Item("U"))
@@ -560,7 +560,7 @@ Module Cespiti
             End Select
         Catch ex As Exception
             Debug.Print(ex.Message)
-            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
 
         End Try
@@ -595,33 +595,33 @@ Module Cespiti
             Dismissione = False
             Acquisto = False
             Ripresa = False
-            isCausaleDoppia = False
+            IsCausaleDoppia = False
         End Sub
     End Class
 
     Private NotInheritable Class CauCes
         'Max Lunghezza 8 Chr
         'Acquisto e ripresa non possono coesistere
-        Public Shared AcqF As MyCausale = New MyCausale With {.Codice = "ACQFISC", .Acquisto = True}
-        Public Shared AcqB As MyCausale = New MyCausale With {.Codice = "ACQBIL", .Acquisto = True}
-        Public Shared AcquisizF As MyCausale = New MyCausale With {.Codice = "RIPTOTAM", .Ripresa = True}
-        Public Shared AcquisizB As MyCausale = New MyCausale With {.Codice = "RIPTOAMB", .Ripresa = True}
-        Public Shared AcquisizConFondofISC As MyCausale = New MyCausale With {.Codice = "RTACF", .Acquisto = True, .Ripresa = True, .Ammortamento = True} '( ripresa e ammortamneto contano 1)  ' CREARE
-        Public Shared AmmAnt As MyCausale = New MyCausale With {.Codice = "AMMANT", .Ammortamento = True}
-        Public Shared AmmFisc As MyCausale = New MyCausale With {.Codice = "AMMFISC", .Ammortamento = True}
-        Public Shared AmmBil As MyCausale = New MyCausale With {.Codice = "AMMBIL", .Ammortamento = True}
-        Public Shared IncFisc As MyCausale = New MyCausale With {.Codice = "ACQINCF", .Ripresa = True}
-        Public Shared IncBil As MyCausale = New MyCausale With {.Codice = "ACQINCB", .Ripresa = True}
-        Public Shared RipTotAmF As MyCausale = New MyCausale With {.Codice = "RIPTOTAM", .Ripresa = True}
-        Public Shared RipTotAmB As MyCausale = New MyCausale With {.Codice = "RIPTOAMB", .Ripresa = True}
-        'Public Shared RipFondoAnt As MyCausale = New MyCausale With {.Codice = "RIPFOANT", .Ripresa = True,.Ammortamento = True, .Anticipato = True}} 
-        Public Shared RipFondoF As MyCausale = New MyCausale With {.Codice = "RIPFONDO", .Ripresa = True, .Ammortamento = True}
-        Public Shared RipFondoB As MyCausale = New MyCausale With {.Codice = "RIPFOBIL", .Ripresa = True, .Ammortamento = True}
-        'Public Shared StFonodoAnt As MyCausale = New MyCausale With {.Codice = "STFONANT", .Dismissione = True, .Ammortamento = True, .Anticipato = True}
-        Public Shared StFondoF As MyCausale = New MyCausale With {.Codice = "STFONDO", .Dismissione = True, .Ammortamento = True}
-        Public Shared StFondoB As MyCausale = New MyCausale With {.Codice = "STFONDOB", .Dismissione = True, .Ammortamento = True}
-        Public Shared VendPF As MyCausale = New MyCausale With {.Codice = "VENDP", .Dismissione = True}
-        Public Shared VendPB As MyCausale = New MyCausale With {.Codice = "VENDPBIL", .Dismissione = True}
+        Public Shared AcqF As New MyCausale With {.Codice = "ACQFISC", .Acquisto = True}
+        Public Shared AcqB As New MyCausale With {.Codice = "ACQBIL", .Acquisto = True}
+        Public Shared AcquisizF As New MyCausale With {.Codice = "RIPTOTAM", .Ripresa = True}
+        Public Shared AcquisizB As New MyCausale With {.Codice = "RIPTOAMB", .Ripresa = True}
+        Public Shared AcquisizConFondofISC As New MyCausale With {.Codice = "RTACF", .Acquisto = True, .Ripresa = True, .Ammortamento = True} '( ripresa e ammortamneto contano 1)  ' CREARE
+        Public Shared AmmAnt As New MyCausale With {.Codice = "AMMANT", .Ammortamento = True}
+        Public Shared AmmFisc As New MyCausale With {.Codice = "AMMFISC", .Ammortamento = True}
+        Public Shared AmmBil As New MyCausale With {.Codice = "AMMBIL", .Ammortamento = True}
+        Public Shared IncFisc As New MyCausale With {.Codice = "ACQINCF", .Ripresa = True}
+        Public Shared IncBil As New MyCausale With {.Codice = "ACQINCB", .Ripresa = True}
+        Public Shared RipTotAmF As New MyCausale With {.Codice = "RIPTOTAM", .Ripresa = True}
+        Public Shared RipTotAmB As New MyCausale With {.Codice = "RIPTOAMB", .Ripresa = True}
+        'Public Shared RipFondoAnt As  New MyCausale With {.Codice = "RIPFOANT", .Ripresa = True,.Ammortamento = True, .Anticipato = True}} 
+        Public Shared RipFondoF As New MyCausale With {.Codice = "RIPFONDO", .Ripresa = True, .Ammortamento = True}
+        Public Shared RipFondoB As New MyCausale With {.Codice = "RIPFOBIL", .Ripresa = True, .Ammortamento = True}
+        'Public Shared StFonodoAnt As  New MyCausale With {.Codice = "STFONANT", .Dismissione = True, .Ammortamento = True, .Anticipato = True}
+        Public Shared StFondoF As New MyCausale With {.Codice = "STFONDO", .Dismissione = True, .Ammortamento = True}
+        Public Shared StFondoB As New MyCausale With {.Codice = "STFONDOB", .Dismissione = True, .Ammortamento = True}
+        Public Shared VendPF As New MyCausale With {.Codice = "VENDP", .Dismissione = True}
+        Public Shared VendPB As New MyCausale With {.Codice = "VENDPBIL", .Dismissione = True}
     End Class
     Private Class MySaldoCespite
         Public Property Cespite As String
@@ -805,7 +805,7 @@ Module Cespiti
 
         Catch ex As Exception
             Debug.Print(ex.Message)
-            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
             result = False
         End Try

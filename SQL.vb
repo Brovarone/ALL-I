@@ -22,7 +22,7 @@ Namespace MySqlServerBackup
 
                 Using conn = New SqlConnection(connectionString)
                     conn.FireInfoMessageEventOnUserErrors = True
-                    Dim cmd As SqlCommand = New SqlCommand(sqry, conn)
+                    Dim cmd As New SqlCommand(sqry, conn)
                     cmd.Parameters.AddWithValue("@DBname", My.Settings.mDATABASE)
                     cmd.CommandType = CommandType.Text
                     cmd.CommandTimeout = 0
@@ -58,7 +58,7 @@ Namespace MySqlServerBackup
                 '  Next
 
             Catch ex As Exception
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             Finally
             End Try

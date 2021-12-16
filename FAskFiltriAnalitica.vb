@@ -1,7 +1,7 @@
 ﻿Imports System.Windows.Forms
 
 Public Class FAskFiltriAnalitica
-    Public f As FiltriAnalitici
+    Public f As FiltroAnalitica
     Public Sub New()
 
         ' This call is required by the designer.
@@ -9,7 +9,7 @@ Public Class FAskFiltriAnalitica
 
         ' Add any initialization after the InitializeComponent() call.
         'DtaPickDA.Value = New DateTime(2021, 3, 19)
-        f = New FiltriAnalitici
+        f = New FiltroAnalitica
         ChkGiaRegistrati.Enabled = isAdmin
         ChkMovInAna.Enabled = isAdmin
         TxtNumberFirst.Text = "PRIMO"

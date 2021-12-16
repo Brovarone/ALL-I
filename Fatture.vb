@@ -1,7 +1,7 @@
 ﻿Imports System.Data.SqlClient
+Imports System.Reflection.MethodBase
 Imports System.Text
 Imports System.Text.RegularExpressions
-Imports System.Reflection.MethodBase
 
 Module Fatture
     'TODO: creare dei parametri
@@ -28,24 +28,48 @@ Module Fatture
         stopwatch.Start()
         EditTestoBarra("Creo Fatture")
         FLogin.prgCopy.Value = 1
-        Dim idAndNumber As StringBuilder = New StringBuilder()
+        Dim idAndNumber As New StringBuilder()
         Dim loggingTxt As String = "Si"
-        Dim errori As StringBuilder = New StringBuilder()  ' Ultimo = 18
-        Dim avvisi As StringBuilder = New StringBuilder()  ' Ultimo = 11  / 50
-        Dim aggiornamenti As StringBuilder = New StringBuilder()
-        Dim sicuritalia As StringBuilder = New StringBuilder()
-        Dim bulkMessage As StringBuilder = New StringBuilder()
-        Dim warnings As StringBuilder = New StringBuilder() ' Gestisce gli aggiornamenti di P.iva e Cod. fisc.
+#Region "Gestione Logs xml"
+        'Gestione Logs
+        Dim log As New MyLogs With {.Nome = "Importazione_Fatture"}
+        Dim l_Bulk As New MyLogRegistry With {.Nome = "Bulk", .Descrizione = "Inserimento Dati", .Origine = 1}
+        Dim l_Err As New MyLogRegistry With {.Nome = "Errori", .Descrizione = "Errori", .Ordine = 1, .StampaCodice = True}
+        Dim l_Warn As New MyLogRegistry With {.Nome = "Warning", .Descrizione = "Warnings. Queste modifiche non vengono salvate", .Ordine = 2}
+        Dim l_Avv As New MyLogRegistry With {.Nome = "Avvisi", .Descrizione = "Avvisi", .Ordine = 3, .StampaCodice = True}
+        Dim l_Agg As New MyLogRegistry With {.Nome = "Aggiornamenti", .Descrizione = "Aggiornamenti anagrafici (NUOVO VALORE ) [VECCHIO VALORE]", .Ordine = 4}
+        'Dim l_Sicur As  New MyLogRegistry With {.Nome = "Sicuritalia", .Descrizione = "", .Ordine = 1}
+        Dim l_NewBankCli As New MyLogRegistry With {.Nome = "NewBankCli", .Descrizione = "Nuove Banche Clienti (completare le informazioni su Mago)", .Ordine = 2}
+        Dim l_NewCli As New MyLogRegistry With {.Nome = "NewClienti", .Descrizione = "Nuovi clienti", .Ordine = 2}
+        Dim l_NewSedi As New MyLogRegistry With {.Nome = "NewSedi", .Descrizione = "Nuove Sedi", .Ordine = 2}
+        Dim l_ids As New MyLogRegistry With {.Nome = "Ids", .Descrizione = "Id e Numeratri", .Origine = 1}
+        log.Corpo.Add(l_Bulk)
+        log.Corpo.Add(l_Err)
+        log.Corpo.Add(l_Warn)
+        log.Corpo.Add(l_Avv)
+        log.Corpo.Add(l_Agg)
+        log.Corpo.Add(l_NewBankCli)
+        log.Corpo.Add(l_NewCli)
+        log.Corpo.Add(l_NewSedi)
+        log.Corpo.Add(l_ids)
+#End Region
+        Dim errori As New StringBuilder()  ' Ultimo = 19
+        Dim avvisi As New StringBuilder()  ' Ultimo = 12  / 50
+        Dim aggiornamenti As New StringBuilder()
+        Dim sicuritalia As New StringBuilder()
+        Dim bulkMessage As New StringBuilder()
+        Dim warnings As New StringBuilder() ' Gestisce gli aggiornamenti di P.iva e Cod. fisc.
+
         Dim totDoc(1) As Integer ' 0= Fatture 1 = Note di Credito
         Dim okBulk As Boolean
         Dim someTrouble As Boolean
         Dim bNoCondPag As Boolean
         Dim bNoBanca As Boolean
         '09/02/2021
-        '(Deprecato) Dim listOfSEPA As List(Of String) = New List(Of String)
-        Dim listOfNewClienti As List(Of String) = New List(Of String)
-        Dim listOfNewSedi As List(Of String) = New List(Of String)
-        Dim listOfNewBancheCli As List(Of String) = New List(Of String)
+        '(Deprecato) Dim listOfSEPA as New List(Of String)
+        Dim listOfNewClienti As New List(Of String)
+        Dim listOfNewSedi As New List(Of String)
+        Dim listOfNewBancheCli As New List(Of String)
         'Inizializzo un datatable al file xls e un datarow con tutte le righe
         Dim irxls As Integer = 0
         Dim i As Integer = 0
@@ -58,10 +82,12 @@ Module Fatture
             EditTestoBarra("Estraggo gli ID")
             Dim idDoc As Integer = LeggiID(IdType.DocVend, loggingTxt)
             idAndNumber.AppendLine(loggingTxt)
+            l_ids.Add("I01", loggingTxt)
             'Ritorna array con Ultimo numero Salvato, {numero da valorizzare a seguito lettura excel}, Codice registro
             Dim annualita As Short = Short.Parse(Left(drXLS(i).Item("Q").ToString, 4))
             Dim nrRegIva As String(,) = LeggiRegistriIva(annualita, loggingTxt)
             idAndNumber.AppendLine(loggingTxt)
+            l_ids.Add("I01", loggingTxt)
             FLogin.prgCopy.Maximum = drXLS.Length
             FLogin.prgCopy.Step = 1
             Dim idCausale As Integer = 0 ' usato per l'id riga della Causale nelle fatture elettroniche
@@ -71,15 +97,15 @@ Module Fatture
                 Using dtDoc As DataTable = CaricaSchema("MA_SaleDoc")
                     EditTestoBarra("Carico Schema: Righe")
                     Using dtDocDet As DataTable = CaricaSchema("MA_SaleDocDetail")
-                        Dim dvDocDet As DataView = New DataView(dtDocDet, "", "SaleDocId", DataViewRowState.CurrentRows)
+                        Dim dvDocDet As New DataView(dtDocDet, "", "SaleDocId", DataViewRowState.CurrentRows)
                         EditTestoBarra("Carico Schema: Dati accessori")
                         Using dtDocSumm As DataTable = CaricaSchema("MA_SaleDocSummary")
                             Using dtEI As DataTable = CaricaSchema("MA_EI_ITDocAdditionalData")
                                 Using dtBancheCli As DataTable = CaricaSchema("MA_Banks", True, True, "Select ABI, CAB, Bank, IsACompanyBank, Description , TBCreatedID, TBModifiedID FROM MA_Banks where IsACompanyBank=0")
-                                    Dim dvBancheCli As DataView = New DataView(dtBancheCli, "", "Bank", DataViewRowState.CurrentRows)
+                                    Dim dvBancheCli As New DataView(dtBancheCli, "", "Bank", DataViewRowState.CurrentRows)
                                     Dim dtBancheCliNew As DataTable = dtBancheCli.Clone
                                     'Creo un dataset con le anagrafiche Clienti
-                                    Using dsClienti As DataSet = New DataSet
+                                    Using dsClienti As New DataSet
                                         dsClienti.Tables.Add(CaricaSchema("MA_CustSupp", True, True, "SELECT * FROM MA_CustSupp WHERE CustSuppType=" & CustSuppType.Cliente))
                                         dsClienti.Tables.Add(CaricaSchema("MA_CustSuppCustomerOptions", True, True, "SELECT * FROM MA_CustSuppCustomerOptions"))
                                         dsClienti.Tables.Add(CaricaSchema("MA_CustSuppNaturalPerson", True, True, "SELECT * FROM MA_CustSuppNaturalPerson WHERE CustSuppType=" & CustSuppType.Cliente))
@@ -100,58 +126,59 @@ Module Fatture
                                         'SEQUH Colonna I = contatore righe ma forse non serve
                                         EditTestoBarra("Caricamento tabelle di conversione")
                                         'Creo le dataview 
-                                        Using da As SqlDataAdapter = New SqlDataAdapter("SELECT Payment, ACGCode, InstallmentType FROM MA_PaymentTerms", Connection)
+                                        Using da As New SqlDataAdapter("SELECT Payment, ACGCode, InstallmentType FROM MA_PaymentTerms", Connection)
                                             'per le condizioni di pagamento 
-                                            Dim dtCP As DataTable = New DataTable("CondPag")
+                                            Dim dtCP As New DataTable("CondPag")
                                             da.Fill(dtCP)
-                                            Dim dvCP As DataView = New DataView(dtCP, "", "ACGCode", DataViewRowState.CurrentRows)
+                                            Dim dvCP As New DataView(dtCP, "", "ACGCode", DataViewRowState.CurrentRows)
                                             Dim isRimessaDiretta As Boolean
                                             'per le contropartite 
-                                            Dim cmd As SqlCommand = New SqlCommand("Select Account, ACGCode FROM MA_ChartOfAccounts", Connection)
+                                            Dim cmd As New SqlCommand("Select Account, ACGCode FROM MA_ChartOfAccounts", Connection)
                                             da.SelectCommand = cmd
-                                            Dim dtCntrp As DataTable = New DataTable("Contropartita")
+                                            Dim dtCntrp As New DataTable("Contropartita")
                                             da.Fill(dtCntrp)
-                                            Dim dvCntrp As DataView = New DataView(dtCntrp, "", "ACGCode", DataViewRowState.CurrentRows)
+                                            Dim dvCntrp As New DataView(dtCntrp, "", "ACGCode", DataViewRowState.CurrentRows)
                                             'Per le banche Azienda NON disattive
                                             cmd = New SqlCommand("Select * FROM MA_Banks where IsACompanyBank=1 AND Disabled=0", Connection)
                                             da.SelectCommand = cmd
-                                            Dim dtBanche As DataTable = New DataTable("Banche")
+                                            Dim dtBanche As New DataTable("Banche")
                                             da.Fill(dtBanche)
-                                            Dim dvBanche As DataView = New DataView(dtBanche, "", "ABI,CAB,PreferredCA", DataViewRowState.CurrentRows)
+                                            Dim dvBanche As New DataView(dtBanche, "", "ABI,CAB,PreferredCA", DataViewRowState.CurrentRows)
                                             Dim aBanca(2) As String ' Array contenente ABI, CAB  c/c preferenziale
                                             'per i Codici Iva 
                                             cmd = New SqlCommand("Select TaxCode, ACGCode, ExemptInvoice FROM MA_TaxCodes", Connection)
                                             da.SelectCommand = cmd
-                                            Dim dtTax As DataTable = New DataTable("CodIva")
+                                            Dim dtTax As New DataTable("CodIva")
                                             da.Fill(dtTax)
-                                            Dim dvTax As DataView = New DataView(dtTax, "", "ACGCode", DataViewRowState.CurrentRows)
+                                            Dim dvTax As New DataView(dtTax, "", "ACGCode", DataViewRowState.CurrentRows)
                                             'per l'anagrafica Cliente 
-                                            Dim dvClienOrd As DataView = New DataView(dts.Tables("CLIENORD"), "", "AF", DataViewRowState.CurrentRows)
-                                            Using adpCF As SqlDataAdapter = New SqlDataAdapter("Select * FROM MA_CustSupp Where CustSuppType=" & CustSuppType.Cliente, Connection)
+                                            Dim dvClienOrd As New DataView(dts.Tables("CLIENORD"), "", "AF", DataViewRowState.CurrentRows)
+                                            Using adpCF As New SqlDataAdapter("Select * FROM MA_CustSupp Where CustSuppType=" & CustSuppType.Cliente, Connection)
                                                 Dim cbMar = New SqlCommandBuilder(adpCF)
                                                 adpCF.UpdateCommand = cbMar.GetUpdateCommand(True)
-                                                Dim dvClienti As DataView = New DataView(dsClienti.Tables("MA_CustSupp"), "", "CustSupp", DataViewRowState.CurrentRows)
+                                                Dim dvClienti As New DataView(dsClienti.Tables("MA_CustSupp"), "", "CustSupp", DataViewRowState.CurrentRows)
                                                 Dim dtClientiNew As DataTable = dsClienti.Tables("MA_CustSupp").Clone
                                                 'Per gli altri dati
-                                                Using adpCliOpt As SqlDataAdapter = New SqlDataAdapter("Select * FROM MA_CustSuppCustomerOptions Where CustSuppType=" & CustSuppType.Cliente, Connection)
+                                                Using adpCliOpt As New SqlDataAdapter("Select * FROM MA_CustSuppCustomerOptions Where CustSuppType=" & CustSuppType.Cliente, Connection)
                                                     cbMar = New SqlCommandBuilder(adpCliOpt)
                                                     adpCliOpt.UpdateCommand = cbMar.GetUpdateCommand(True)
-                                                    Dim dvCliOpt As DataView = New DataView(dsClienti.Tables("MA_CustSuppCustomerOptions"), "", "Customer", DataViewRowState.CurrentRows)
+                                                    Dim dvCliOpt As New DataView(dsClienti.Tables("MA_CustSuppCustomerOptions"), "", "Customer", DataViewRowState.CurrentRows)
                                                     Dim dtCliOptNew As DataTable = dsClienti.Tables("MA_CustSuppCustomerOptions").Clone
                                                     Dim dtCliNatPersNew As DataTable = dsClienti.Tables("MA_CustSuppNaturalPerson").Clone
                                                     'Per i Mandati SSD/RID
                                                     Using dtSSDNew As DataTable = dsClienti.Tables("MA_SDDMandate").Clone
                                                         EditTestoBarra("Carico Schema: Mandati SSD")
-                                                        Dim dvSSD As DataView = New DataView(dsClienti.Tables("MA_SDDMandate"), "", "Customer", DataViewRowState.CurrentRows)
+                                                        Dim dvSSD As New DataView(dsClienti.Tables("MA_SDDMandate"), "", "Customer", DataViewRowState.CurrentRows)
                                                         'per le Sedi 
-                                                        Using adpCliSedi As SqlDataAdapter = New SqlDataAdapter("Select * FROM MA_CustSuppBranches Where CustSuppType=" & CustSuppType.Cliente, Connection)
+                                                        Using adpCliSedi As New SqlDataAdapter("Select * FROM MA_CustSuppBranches Where CustSuppType=" & CustSuppType.Cliente, Connection)
                                                             cbMar = New SqlCommandBuilder(adpCliSedi)
                                                             adpCliSedi.UpdateCommand = cbMar.GetUpdateCommand(True)
-                                                            Dim dvSedi As DataView = New DataView(dsClienti.Tables("MA_CustSuppBranches"), "", "CustSupp, IPACode", DataViewRowState.CurrentRows)
+                                                            Dim dvSedi As New DataView(dsClienti.Tables("MA_CustSuppBranches"), "", "CustSupp, IPACode", DataViewRowState.CurrentRows)
                                                             Dim dtSediNew As DataTable = dsClienti.Tables("MA_CustSuppBranches").Clone
 
                                                             EditTestoBarra("Scrittura documenti in corso...")
                                                             For irxls = i To drXLS.Length - 1
+#Region "Definizione Datarows"
                                                                 Dim drDoc As DataRow
                                                                 Dim drDocDet As DataRow
                                                                 Dim drDocSumm As DataRow
@@ -161,7 +188,7 @@ Module Fatture
                                                                 Dim drCliOpt As DataRow
                                                                 Dim drCliNatPers As DataRow
                                                                 Dim drSedi As DataRow
-
+#End Region
                                                                 With drXLS(irxls)
                                                                     'TIREH Colonna G = 1=Testata 3=Riga Fattura 6=Riga descrittiva 9=Riepilogo fattura
                                                                     Select Case .Item("G").ToString
@@ -178,7 +205,7 @@ Module Fatture
                                                                             ReDim sContratto(2)
                                                                             iLinea = 0
                                                                             iSubLinea = 0
-
+#Region "Controllo Cliente New/Update"
                                                                             'Controllo se il cliente esiste
                                                                             Dim iCliFound As Integer = dvClienti.Find(.Item("AA").ToString)
                                                                             Dim iCliOptFound As Integer = dvCliOpt.Find(.Item("AA").ToString)
@@ -190,6 +217,7 @@ Module Fatture
                                                                                 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
                                                                                 Debug.Print("Nuovo cliente: " & .Item("AA").ToString)
                                                                                 listOfNewClienti.Add(.Item("AA").ToString & ": " & .Item("AB").ToString)
+                                                                                l_NewCli.Add("N01", .Item("AA").ToString & ": " & .Item("AB").ToString, .Item("AA").ToString)
                                                                                 drCli = dtClientiNew.NewRow
                                                                                 drCliOpt = dtCliOptNew.NewRow
                                                                                 drCli("CustSupp") = .Item("AA").ToString
@@ -245,8 +273,12 @@ Module Fatture
 
                                                                                 drCli("IPACode") = If(.Item("Z").ToString = "0", "0000000", .Item("Z").ToString)
                                                                                 Dim sPec As String() = Split(.Item("HI").ToString, ";")
-                                                                                If Len(sPec(0)) > 64 Then avvisi.AppendLine("A05: PEC troppo lunga su Cliente: " & .Item("AA").ToString & "!")
-                                                                                drCli("EICertifiedEMail") = sPec(0).ToLower
+                                                                                If Len(sPec(0)) > 64 Then
+                                                                                    errori.AppendLine("E06: PEC troppo lunga su Cliente: " & .Item("AA").ToString & " dato non salvato")
+                                                                                    l_Err.Add("E06", "PEC troppo lunga su Cliente: " & .Item("AA").ToString & " dato non salvato")
+                                                                                Else
+                                                                                    drCli("EICertifiedEMail") = sPec(0).ToLower
+                                                                                End If
                                                                                 drCli("SendByCertifiedEmail") = If(drCli("IPACode") = "0000000" AndAlso Not String.IsNullOrWhiteSpace(drCli("EICertifiedEMail")), "1", "0")
                                                                                 drCli("TBCreatedID") = My.Settings.mLOGINID 'ID utente
                                                                                 drCli("TBModifiedID") = My.Settings.mLOGINID 'ID utente
@@ -273,14 +305,15 @@ Module Fatture
 
                                                                             Else
                                                                                 'Il cliente esiste ! Devo preoccuparmi di aggiornare la sua anagrafica
-                                                                                Dim myLogsClienord As Mylogs = New Mylogs
-                                                                                Dim myLogs As Mylogs = New Mylogs
+                                                                                Dim myLogsClienord As New MyLogsString
+                                                                                Dim myLogs As New MyLogsString
                                                                                 '08/04/2021
                                                                                 'Aggiornare sempre anagrafica cliente da ClienOrd
                                                                                 If iClienOrdFound <> -1 Then
                                                                                     myLogsClienord = AggiornaAnagraficaDaClienOrd(drXLS(irxls), dvClienOrd(iClienOrdFound), dvClienti(iCliFound), dvCliOpt(iCliOptFound))
                                                                                 Else
                                                                                     errori.AppendLine("E17: Codice Cliente non presente in CLIENORD " & .Item("AA").ToString)
+                                                                                    l_Err.Add("E17", "Codice Cliente non presente in CLIENORD " & .Item("AA").ToString)
                                                                                 End If
 
                                                                                 'Controllo se sulla Scheda "Comunicazioni digitali ho un IPA "valida"
@@ -290,7 +323,10 @@ Module Fatture
                                                                                 Dim bSameRifAmmTesta As Boolean = .Item("HE").ToString = dvClienti(iCliFound).Item("AdministrationReference")
                                                                                 Dim bSameAddressTesta As Boolean = String.Equals(Regex.Replace(.Item("AC").ToString, "\s", ""), Regex.Replace(dvClienti(iCliFound).Item("Address"), "\s", ""), StringComparison.OrdinalIgnoreCase)
 
-                                                                                If Not bSameIPATesta AndAlso Not isIPAClienteBlankOrZero AndAlso String.IsNullOrWhiteSpace(.Item("Z").ToString) Then errori.AppendLine("E03: Cliente" & .Item("AA").ToString & " con IPA in anagrafica " & dvClienti(iCliFound)("IPACode") & " MA assente sul documento " & .Item("O").ToString)
+                                                                                If Not bSameIPATesta AndAlso Not isIPAClienteBlankOrZero AndAlso String.IsNullOrWhiteSpace(.Item("Z").ToString) Then
+                                                                                    errori.AppendLine("E03: Cliente" & .Item("AA").ToString & " con IPA in anagrafica " & dvClienti(iCliFound)("IPACode") & " MA assente sul documento " & .Item("O").ToString)
+                                                                                    l_Err.Add("E03", "Cliente" & .Item("AA").ToString & " con IPA in anagrafica " & dvClienti(iCliFound)("IPACode") & " MA assente sul documento " & .Item("O").ToString)
+                                                                                End If
 
                                                                                 If bSameIPATesta AndAlso bSameAddressTesta AndAlso bSameRifAmmTesta Then
                                                                                     'Posso usare i dati di Testa
@@ -337,7 +373,7 @@ Module Fatture
                                                                                     If okUsaSede Then
                                                                                         If okSedeFound Then
                                                                                             'Aggiorno la sede, la cerco per codice in quanto l'ho trovata sopra
-                                                                                            Using dvBranch As DataView = New DataView(dsClienti.Tables("MA_CustSuppBranches"), "CustSupp='" & .Item("AA").ToString & "'", "Branch", DataViewRowState.CurrentRows)
+                                                                                            Using dvBranch As New DataView(dsClienti.Tables("MA_CustSuppBranches"), "CustSupp='" & .Item("AA").ToString & "'", "Branch", DataViewRowState.CurrentRows)
                                                                                                 Dim branchFound As Integer = dvBranch.Find(drDoc("SendDocumentsTo").ToString)
                                                                                                 If iClienOrdFound <> -1 Then myLogs = AggiornaAnagraficaSede(drXLS(irxls), dvClienOrd(iClienOrdFound), dvClienti(iCliFound), dvBranch(branchFound), dvCliOpt(iCliOptFound))
                                                                                             End Using
@@ -351,11 +387,13 @@ Module Fatture
                                                                                                 drSedi.AcceptChanges()
                                                                                                 dvSedi.Table.ImportRow(drSedi)
                                                                                                 listOfNewSedi.Add(sNewSede)
+                                                                                                l_NewSedi.Add("N01", sNewSede)
                                                                                             Catch ex As Exception
                                                                                                 Debug.Print("E16: Sede già presente: " & sNewSede)
-                                                                                                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                                                                                                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                                                                                                 mb.ShowDialog()
                                                                                                 errori.AppendLine("E16: Sede già presente: " & sNewSede)
+                                                                                                l_Err.Add("E16", "Sede già presente: " & sNewSede)
                                                                                             End Try
                                                                                         End If
                                                                                     Else
@@ -372,22 +410,36 @@ Module Fatture
                                                                                                 drSedi.AcceptChanges()
                                                                                                 dvSedi.Table.ImportRow(drSedi)
                                                                                                 listOfNewSedi.Add(sNewSede)
+                                                                                                l_NewSedi.Add("N01", sNewSede)
                                                                                             Catch ex As Exception
                                                                                                 Debug.Print("E16: Sede già presente: " & sNewSede)
-                                                                                                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                                                                                                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                                                                                                 mb.ShowDialog()
                                                                                                 errori.AppendLine("E16: Sede già presente: " & sNewSede)
+                                                                                                l_Err.Add("E16", "Sede già presente: " & sNewSede)
                                                                                             End Try
                                                                                         End If
                                                                                     End If
                                                                                 End If
-                                                                                If Not String.IsNullOrWhiteSpace(myLogsClienord.Avvisi.ToString) Then aggiornamenti.AppendLine(myLogsClienord.Avvisi.ToString)
-                                                                                If Not String.IsNullOrWhiteSpace(myLogsClienord.Warning.ToString) Then warnings.AppendLine(myLogsClienord.Warning.ToString)
-                                                                                If Not String.IsNullOrWhiteSpace(myLogs.Avvisi.ToString) Then aggiornamenti.AppendLine(myLogs.Avvisi.ToString)
-                                                                                If Not String.IsNullOrWhiteSpace(myLogs.Warning.ToString) Then warnings.AppendLine(myLogs.Warning.ToString)
+                                                                                If Not String.IsNullOrWhiteSpace(myLogsClienord.Avvisi.ToString) Then
+                                                                                    aggiornamenti.AppendLine(myLogsClienord.Avvisi.ToString)
+                                                                                    l_Agg.Add("U01", myLogsClienord.Avvisi.ToString)
+                                                                                End If
+                                                                                If Not String.IsNullOrWhiteSpace(myLogsClienord.Warning.ToString) Then
+                                                                                    warnings.AppendLine(myLogsClienord.Warning.ToString)
+                                                                                    l_Warn.Add("W01", myLogsClienord.Warning.ToString)
+                                                                                End If
+                                                                                If Not String.IsNullOrWhiteSpace(myLogs.Avvisi.ToString) Then
+                                                                                    aggiornamenti.AppendLine(myLogs.Avvisi.ToString)
+                                                                                    l_Agg.Add("U02", myLogs.Avvisi.ToString)
+                                                                                End If
+                                                                                If Not String.IsNullOrWhiteSpace(myLogs.Warning.ToString) Then
+                                                                                    warnings.AppendLine(myLogs.Warning.ToString)
+                                                                                    l_Warn.Add("W02", myLogs.Warning.ToString)
+                                                                                End If
 
                                                                             End If
-
+#End Region
                                                                             ''''''''''''''''''''''
                                                                             'Scrivo la testa della Fattura
                                                                             ''''''''''''''''''''''
@@ -406,11 +458,14 @@ Module Fatture
                                                                                     drDoc("DocumentType") = DocumentType.NotaCredito
                                                                                     drDoc("AccTpl") = "NE"
                                                                                     totDoc(1) += 1 ' Note di Credito
+                                                                                    'Controllo su DDT collegate
+                                                                                    If .Item("FH").ToString = "1000" Then avvisi.AppendLine("A12: doc: " & .Item("O").ToString() & " presenti ddt collegate")
                                                                                 Case Else
                                                                                     drDoc("DocumentType") = DocumentType.Fattura
                                                                                     drDoc("AccTpl") = "FE"
                                                                                     totDoc(0) += 1 ' Fatture
                                                                                     errori.AppendLine("E18: Tipo documento sconosciuto inserito come fattura: " & .Item("O").ToString)
+                                                                                    l_Err.Add("E18", "Tipo documento sconosciuto inserito come fattura: " & .Item("O").ToString)
                                                                             End Select
                                                                             drDoc("DocNo") = .Item("O").ToString()
                                                                             drDoc("DocumentDate") = MagoFormatta(.Item("Q").ToString, GetType(DateTime)).DataTempo
@@ -423,12 +478,16 @@ Module Fatture
                                                                                     If Integer.Parse(.Item("O").ToString) > Integer.Parse(nrRegIva(1, n)) Then
                                                                                         nrRegIva(2, n) = .Item("O").ToString
                                                                                     Else
-                                                                                        errori.AppendLine("I01: documento con numero inferiore al contatore: " & .Item("O").ToString)
+                                                                                        errori.AppendLine("E01: Documento con numero inferiore al contatore: " & .Item("O").ToString)
+                                                                                        l_Err.Add("E01", "Documento con numero inferiore al contatore: " & .Item("O").ToString)
                                                                                     End If
                                                                                 End If
                                                                                 If codeFound Then Exit For
                                                                             Next
-                                                                            If Not codeFound Then errori.AppendLine("E05: Registro iva :" & .Item("N").ToString & " non presente su doc: " & .Item("O").ToString)
+                                                                            If Not codeFound Then
+                                                                                errori.AppendLine("E05: Registro iva :" & .Item("N").ToString & " non presente su doc: " & .Item("O").ToString)
+                                                                                l_Err.Add("E05", "Registro iva :" & .Item("N").ToString & " non presente su doc: " & .Item("O").ToString)
+                                                                            End If
                                                                             drDoc("CustSupptype") = CustSuppType.Cliente ' 3211264 = Cliente
                                                                             drDoc("CustSupp") = .Item("AA").ToString
                                                                             drDoc("InstallmStartDate") = MagoFormatta(.Item("Q").ToString, GetType(DateTime)).DataTempo
@@ -497,7 +556,8 @@ Module Fatture
                                                                                         'Se non ho trovato prima delle righe contratto lo segnalo MA solo se non sono accessorie in quanto gestite sotto
                                                                                         If String.IsNullOrWhiteSpace(.Item("BB").ToString) Then
                                                                                             iNoContratto += 1
-                                                                                            errori.AppendLine("E13: doc: " & .Item("O").ToString & " Riga contratto non presente per questa riga :" & .Item("I").ToString)
+                                                                                            errori.AppendLine("E13: Doc: " & .Item("O").ToString & " Riga contratto non presente per questa riga :" & .Item("I").ToString)
+                                                                                            l_Err.Add("E13", "Doc: " & .Item("O").ToString & " Riga contratto non presente per questa riga :" & .Item("I").ToString)
                                                                                             Debug.Print("Riga contratto non presente per questa riga :" & .Item("I").ToString & " fatt: " & .Item("O").ToString)
                                                                                         End If
                                                                                     End If
@@ -518,7 +578,8 @@ Module Fatture
                                                                                                 isTaxEsclusoIva = dvTax.Item(iTax).Item("ExemptInvoice").ToString
                                                                                             Else
                                                                                                 drDocSumm("StampsChargesTaxCode") = .Item("CQ").ToString
-                                                                                                errori.AppendLine("E01: doc: " & drDoc("DocNo") & " con Codice iva Spese Bolli senza corrispondenza: " & .Item("CQ").ToString)
+                                                                                                errori.AppendLine("E19: Doc: " & drDoc("DocNo") & " con Codice iva Spese Bolli senza corrispondenza: " & .Item("CQ").ToString)
+                                                                                                l_Err.Add("E19", "Doc: " & drDoc("DocNo") & " con Codice iva Spese Bolli senza corrispondenza: " & .Item("CQ").ToString)
                                                                                             End If
                                                                                         End If
                                                                                         drDocSumm("TBCreatedID") = My.Settings.mLOGINID 'ID utente
@@ -568,6 +629,7 @@ Module Fatture
                                                                                                 End If
                                                                                             Else
                                                                                                 sicuritalia.AppendLine("Doc: " & drDoc("DocNo") & " numero ODA / NSO assente")
+                                                                                                l_Err.Add("E20", "Doc: " & drDoc("DocNo") & " numero ODA / NSO assente", "SICURITALIA")
                                                                                             End If
                                                                                         End If
                                                                                         drDocDet("UoM") = .Item("BI").ToString
@@ -585,7 +647,8 @@ Module Fatture
                                                                                                 isTaxEsclusoIva = dvTax.Item(iTax).Item("ExemptInvoice").ToString
                                                                                             Else
                                                                                                 drDocDet("TaxCode") = .Item("CQ").ToString
-                                                                                                errori.AppendLine("E02: doc: " & drDoc("DocNo") & " con Codice iva senza corrispondenza: " & .Item("CQ").ToString)
+                                                                                                errori.AppendLine("E02: Doc: " & drDoc("DocNo") & " con Codice iva senza corrispondenza: " & .Item("CQ").ToString)
+                                                                                                l_Err.Add("E02", "Doc: " & drDoc("DocNo") & " con Codice iva senza corrispondenza: " & .Item("CQ").ToString)
                                                                                             End If
                                                                                         End If
 
@@ -671,7 +734,8 @@ Module Fatture
 
                                                                                 Else
                                                                                     drDoc("Payment") = .Item("FI").ToString
-                                                                                    errori.AppendLine("E08: doc: " & .Item("O").ToString & " senza corrispondenza di condizione di pagamento: " & .Item("FI").ToString)
+                                                                                    errori.AppendLine("E08: Doc: " & .Item("O").ToString & " senza corrispondenza di condizione di pagamento: " & .Item("FI").ToString)
+                                                                                    l_Err.Add("E08", "Doc: " & .Item("O").ToString & " senza corrispondenza di condizione di pagamento: " & .Item("FI").ToString)
                                                                                     bNoCondPag = True
                                                                                 End If
                                                                             End If
@@ -690,6 +754,7 @@ Module Fatture
                                                                                 If iBankFound = -1 Then
                                                                                     Debug.Print("Nuova Banca cliente: " & bancaCli)
                                                                                     listOfNewBancheCli.Add(bancaCli)
+                                                                                    l_NewBankCli.Add("N01", bancaCli)
                                                                                     Dim drBankCli = dtBancheCliNew.NewRow
                                                                                     drBankCli("Bank") = bancaCli
                                                                                     drBankCli("Description") = "Inserita da Importazione"
@@ -747,7 +812,8 @@ Module Fatture
                                                                                 Else
                                                                                     'Non devono esistere 2 UMR uguali a parità di cliente:
                                                                                     If Not String.Equals(dvSSD(0).Item("CustomerIBAN").ToString, .Item("FM").ToString, StringComparison.CurrentCultureIgnoreCase) Then
-                                                                                        errori.AppendLine("E14: doc: " & drDoc("DocNo") & " con UMRCode/Codice Mandato non univoco. Cliente: " & .Item("AA").ToString & " Controllare IBAN.")
+                                                                                        errori.AppendLine("E14: Doc: " & drDoc("DocNo") & " con UMRCode/Codice Mandato non univoco. Cliente: " & .Item("AA").ToString & " Controllare IBAN.")
+                                                                                        l_Err.Add("E14", "Doc: " & drDoc("DocNo") & " con UMRCode/Codice Mandato non univoco. Cliente: " & .Item("AA").ToString & " Controllare IBAN.")
                                                                                     End If
                                                                                 End If
                                                                                 'Dopo averne creato oppure no disattivo quelli piu' vecchi con lo stesso IBAN
@@ -786,7 +852,8 @@ Module Fatture
                                                                                         'drDoc("CompanyCA") = If(sbanca = "-", "", sbanca)  'Conto effetti
                                                                                     Else
                                                                                         If String.IsNullOrWhiteSpace(aBanca(0)) OrElse String.IsNullOrWhiteSpace(aBanca(1)) Then
-                                                                                            errori.AppendLine("E09: doc: " & .Item("O").ToString() & " ABI o CAB Banca Azienda assenti. Condizione di pagamento: " & drDoc("Payment"))
+                                                                                            errori.AppendLine("E09: Doc: " & .Item("O").ToString() & " ABI o CAB Banca Azienda assenti. Condizione di pagamento: " & drDoc("Payment").ToString)
+                                                                                            l_Err.Add("E09", "Doc: " & .Item("O").ToString() & " ABI o CAB Banca Azienda assenti. Condizione di pagamento: " & drDoc("Payment").ToString)
                                                                                         ElseIf String.IsNullOrWhiteSpace(aBanca(2)) Then
                                                                                             'Fattura senza IBAN
                                                                                             'Cerco su abi e cab e imposto il c/c preferenziale
@@ -798,7 +865,8 @@ Module Fatture
                                                                                                 drDoc("CompanyPymtCA") = dvBanche(ibl).Item("PreferredCA") 'C/C
                                                                                                 avvisi.AppendLine("A09: doc: " & .Item("O").ToString() & " IBAN assente, impostato c/c preferenziale della banca " & aBanca(0) & "-" & aBanca(1))
                                                                                             Else
-                                                                                                errori.AppendLine("E10: doc: " & .Item("O").ToString() & " IBAN assente e Banca Azienda non trovata: " & aBanca(0) & "-" & aBanca(1))
+                                                                                                errori.AppendLine("E10: Doc: " & .Item("O").ToString() & " IBAN assente e Banca Azienda non trovata: " & aBanca(0) & "-" & aBanca(1))
+                                                                                                l_Err.Add("E10", "Doc: " & .Item("O").ToString() & " IBAN assente e Banca Azienda non trovata: " & aBanca(0) & "-" & aBanca(1))
                                                                                             End If
                                                                                             'Ripristino vecchio ordinamento
                                                                                             dvBanche.Sort = "ABI,CAB,PreferredCA"
@@ -815,6 +883,7 @@ Module Fatture
                                                                                             dvBanche.Sort = "ABI,CAB,PreferredCA"
                                                                                         Else
                                                                                             errori.AppendLine("E11: doc: " & .Item("O").ToString() & " Banca Azienda non trovata: " & aBanca(0) & "-" & aBanca(1))
+                                                                                            l_Err.Add("E11", "Doc: " & .Item("O").ToString() & " Banca Azienda non trovata: " & aBanca(0) & "-" & aBanca(1))
                                                                                         End If
                                                                                     End If
                                                                                     bNoBanca = True
@@ -864,7 +933,8 @@ Module Fatture
                                                                             Else
                                                                                 'Controllo solo che la fattura non sia strana tipo che abbia iva su cliente in SPLIT
                                                                                 If iCliopt <> -1 AndAlso dvCliOpt(iCliopt)("PASplitPayment") = "1" Then
-                                                                                    errori.AppendLine("E15: doc: " & .Item("O").ToString & " con IVA ma Cliente: " & .Item("AA").ToString & " in SPLIT")
+                                                                                    errori.AppendLine("E15: Doc: " & .Item("O").ToString & " con IVA ma Cliente: " & .Item("AA").ToString & " in SPLIT")
+                                                                                    l_Err.Add("E15", "Doc: " & .Item("O").ToString & " con IVA ma Cliente: " & .Item("AA").ToString & " in SPLIT")
                                                                                 End If
                                                                             End If
                                                                             'Riga di totale posso aggiungere la riga all'insieme Rows del Datatable
@@ -924,7 +994,8 @@ Module Fatture
                                                                                 drEI("FieldValue") = "32440339" ' = lettera W Colonna BB (TPCEH)
                                                                             Else
                                                                                 drEI("FieldValue") = "32440347" ' (blank)
-                                                                                errori.AppendLine("E12: doc: " & .Item("O").ToString & " senza corrispondenza lettera pagamento Ritenuta:" & .Item("BB").ToString)
+                                                                                errori.AppendLine("E12: Doc: " & .Item("O").ToString & " senza corrispondenza lettera pagamento Ritenuta:" & .Item("BB").ToString)
+                                                                                l_Err.Add("E12", "Doc: " & .Item("O").ToString & " senza corrispondenza lettera pagamento Ritenuta:" & .Item("BB").ToString)
                                                                             End If
                                                                             drEI("TBCreatedID") = My.Settings.mLOGINID 'ID utente
                                                                             drEI("TBModifiedID") = My.Settings.mLOGINID 'ID utente
@@ -962,42 +1033,52 @@ Module Fatture
                                                                     okBulk = ScriviBulk("MA_SaleDoc", dtDoc, bulkTrans, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
+                                                                    l_Bulk.Add("B01", loggingTxt)
                                                                     EditTestoBarra("Salvataggio: Righe")
                                                                     okBulk = ScriviBulk("MA_SaleDocDetail", dtDocDet, bulkTrans, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
+                                                                    l_Bulk.Add("B01", loggingTxt)
                                                                     EditTestoBarra("Salvataggio: Dati Aggiuntivi fatt. ele.")
                                                                     okBulk = ScriviBulk("MA_EI_ITDocAdditionalData", dtEI, bulkTrans, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
+                                                                    l_Bulk.Add("B01", loggingTxt)
                                                                     EditTestoBarra("Salvataggio: Totali")
                                                                     okBulk = ScriviBulk("MA_SaleDocSummary", dtDocSumm, bulkTrans, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
+                                                                    l_Bulk.Add("B01", loggingTxt)
                                                                     EditTestoBarra("Salvataggio: SSD/RID")
                                                                     okBulk = ScriviBulk("MA_SDDMandate", dtSSDNew, bulkTrans, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
+                                                                    l_Bulk.Add("B01", loggingTxt)
                                                                     EditTestoBarra("Salvataggio: Clienti")
                                                                     okBulk = ScriviBulk("MA_CustSupp", dtClientiNew, bulkTrans, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
+                                                                    l_Bulk.Add("B01", loggingTxt)
                                                                     EditTestoBarra("Salvataggio: Altri dati Clienti")
                                                                     okBulk = ScriviBulk("MA_CustSuppCustomerOptions", dtCliOptNew, bulkTrans, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
+                                                                    l_Bulk.Add("B01", loggingTxt)
                                                                     EditTestoBarra("Salvataggio: Persona Fisica Clienti")
                                                                     okBulk = ScriviBulk("MA_CustSuppNaturalPerson", dtCliNatPersNew, bulkTrans, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
+                                                                    l_Bulk.Add("B01", loggingTxt)
                                                                     EditTestoBarra("Salvataggio: Sedi Clienti")
                                                                     okBulk = ScriviBulk("MA_CustSuppBranches", dtSediNew, bulkTrans, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
+                                                                    l_Bulk.Add("B01", loggingTxt)
                                                                     EditTestoBarra("Salvataggio: Banche Clienti")
                                                                     okBulk = ScriviBulk("MA_Banks", dtBancheCliNew, bulkTrans, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
+                                                                    l_Bulk.Add("B01", loggingTxt)
                                                                     If someTrouble Then
                                                                         FLogin.lstStatoConnessione.Items.Add("Riscontrati errori: annullamento operazione...")
                                                                         bulkTrans.Rollback()
@@ -1012,7 +1093,10 @@ Module Fatture
                                                                         EditTestoBarra("Aggiornamento Anagrafica Clienti")
                                                                         adpCF.UpdateCommand.Transaction = updTrans
                                                                         irows = adpCF.Update(dsClienti.Tables("MA_CustSupp"))
-                                                                        If irows > 0 Then aggiornamenti.AppendLine("Aggiornamento Vista Clienti: " & irows.ToString & " record")
+                                                                        If irows > 0 Then
+                                                                            aggiornamenti.AppendLine("Aggiornamento Vista Clienti: " & irows.ToString & " record")
+                                                                            l_Bulk.Add("B02", "Aggiornamento Vista Clienti: " & irows.ToString & " record")
+                                                                        End If
                                                                         Debug.Print("Aggiornamento Vista Clienti: " & irows.ToString & " record")
                                                                         updTrans.Commit()
                                                                     End Using
@@ -1020,7 +1104,10 @@ Module Fatture
                                                                         EditTestoBarra("Aggiornamento Anagrafica Clienti - Altri Dati")
                                                                         adpCliOpt.UpdateCommand.Transaction = updTrans
                                                                         irows = adpCliOpt.Update(dsClienti.Tables("MA_CustSuppCustomerOptions"))
-                                                                        If irows > 0 Then aggiornamenti.AppendLine("Aggiornamento Vista ClientiOptions: " & irows.ToString & " record")
+                                                                        If irows > 0 Then
+                                                                            aggiornamenti.AppendLine("Aggiornamento Vista ClientiOptions: " & irows.ToString & " record")
+                                                                            l_Bulk.Add("B02", "Aggiornamento Vista ClientiOptions: " & irows.ToString & " record")
+                                                                        End If
                                                                         Debug.Print("Aggiornamento Vista ClientiOptions: " & irows.ToString & " record")
                                                                         updTrans.Commit()
                                                                     End Using
@@ -1028,7 +1115,10 @@ Module Fatture
                                                                         EditTestoBarra("Aggiornamento Sedi Clienti")
                                                                         adpCliSedi.UpdateCommand.Transaction = updTrans
                                                                         irows = adpCliSedi.Update(dsClienti.Tables("MA_CustSuppBranches"))
-                                                                        If irows > 0 Then aggiornamenti.AppendLine("Aggiornamento Vista Sedi Clienti: " & irows.ToString & " record")
+                                                                        If irows > 0 Then
+                                                                            aggiornamenti.AppendLine("Aggiornamento Vista Sedi Clienti: " & irows.ToString & " record")
+                                                                            l_Bulk.Add("B02", "Aggiornamento Vista Sedi Clienti: " & irows.ToString & " record")
+                                                                        End If
                                                                         Debug.Print("Aggiornamento Vista Sedi Clienti: " & irows.ToString & " record")
                                                                         updTrans.Commit()
                                                                     End Using
@@ -1065,7 +1155,7 @@ Module Fatture
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
 
             End Try
@@ -1073,8 +1163,10 @@ Module Fatture
                 'Scrivi Gli ID ( faccio solo a fine elaborazione)
                 AggiornaID(IdType.DocVend, idDoc, loggingTxt)
                 idAndNumber.AppendLine(loggingTxt)
+                l_ids.Add("I02", loggingTxt)
                 AggiornaFiscalNumber(annualita, nrRegIva, loggingTxt)
                 idAndNumber.AppendLine(loggingTxt)
+                l_ids.Add("I02", loggingTxt)
             End If
             'Scrivo i Log
             My.Application.Log.DefaultFileLogWriter.WriteLine("Documenti importati: Fatture=" & totDoc(0).ToString & " Note di Credito=" & totDoc(1).ToString & vbCrLf)
@@ -1114,6 +1206,11 @@ Module Fatture
             Debug.Print(idAndNumber.ToString)
 
             Debug.Print("Gestione MA_SaleDoc" & " " & stopwatch.Elapsed.ToString)
+
+            'SCRIVO I NUOVI LOG
+            log.Testa.Nome = "Esito"
+            log.Testa.Descrizione = "Documenti importati: Fatture=" & totDoc(0).ToString & " Note di Credito=" & totDoc(1).ToString
+            OrdinaLog(log)
 
         End If
         stopwatch.Stop()
@@ -1950,7 +2047,7 @@ Module Fatture
             destinazione("TBModifiedID") = My.Settings.mLOGINID 'ID utente
         Catch ex As Exception
             Debug.Print(ex.Message)
-            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
         End Try
 
@@ -1960,7 +2057,7 @@ Module Fatture
     ''' <summary>
     ''' Classe dedicata ai logs. I Warning contengono modfiche che NON vengono salvate
     ''' </summary>
-    Private Class Mylogs
+    Private Class MyLogsString
         Public Property Avvisi As StringBuilder
         Public Property Warning As StringBuilder
         Public Sub New()
@@ -1974,10 +2071,10 @@ Module Fatture
     ''' <param name="origine">Riga della tabella di origina</param>
     ''' <param name="anagBranch">testat o sede del cliente</param>
     ''' <param name="opt">Altri dati / options</param>
-    Private Function AggiornaAnagraficaSede(origine As DataRow, clienord As DataRowView, testaCli As DataRowView, anagBranch As DataRowView, opt As DataRowView) As Mylogs
-        Dim avvisi As StringBuilder = New StringBuilder()
-        Dim warnings As StringBuilder = New StringBuilder()
-        Dim mlog As Mylogs = New Mylogs
+    Private Function AggiornaAnagraficaSede(origine As DataRow, clienord As DataRowView, testaCli As DataRowView, anagBranch As DataRowView, opt As DataRowView) As MyLogsString
+        Dim avvisi As New StringBuilder()
+        Dim warnings As New StringBuilder()
+        Dim mlog As New MyLogsString
 
         Try
             'Uso i dati FTPA300 ( fattura)
@@ -2130,7 +2227,7 @@ Module Fatture
             End With
         Catch ex As Exception
             Debug.Print(ex.Message)
-            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
         End Try
 
@@ -2138,15 +2235,15 @@ Module Fatture
     End Function
 
     ''' <summary>
-    ''' Aggiorna l'anagrafica del cliente
+    ''' Aggiorna l'anagrafica del cliente da FTPA300
     ''' </summary>
     ''' <param name="origine">Riga della tabella di origina</param>
     ''' <param name="anag">testat o sede del cliente</param>
     ''' <param name="opt">Altri dati / options</param>
-    Private Function AggiornaAnagraficaCliente(origine As DataRow, anag As DataRowView, opt As DataRowView) As Mylogs
-        Dim avvisi As StringBuilder = New StringBuilder()
-        Dim warnings As StringBuilder = New StringBuilder()
-        Dim mlog As Mylogs = New Mylogs
+    Private Function AggiornaAnagraficaCliente(origine As DataRow, anag As DataRowView, opt As DataRowView) As MyLogsString
+        Dim avvisi As New StringBuilder()
+        Dim warnings As New StringBuilder()
+        Dim mlog As New MyLogsString
 
         Try
             'Uso i dati FTPA300 ( fattura)
@@ -2237,7 +2334,7 @@ Module Fatture
             End With
         Catch ex As Exception
             Debug.Print(ex.Message)
-            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
         End Try
 
@@ -2249,10 +2346,10 @@ Module Fatture
     ''' <param name="origine">Riga della tabella di origina</param>
     ''' <param name="anag">Testata del cliente</param>
     ''' <param name="o">Altri dati / options</param>
-    Private Function AggiornaAnagraficaDaClienOrd(origine As DataRow, clienord As DataRowView, anag As DataRowView, o As DataRowView) As Mylogs
-        Dim avvisi As StringBuilder = New StringBuilder()
-        Dim warnings As StringBuilder = New StringBuilder()
-        Dim mlog As Mylogs = New Mylogs
+    Private Function AggiornaAnagraficaDaClienOrd(origine As DataRow, clienord As DataRowView, anag As DataRowView, o As DataRowView) As MyLogsString
+        Dim avvisi As New StringBuilder()
+        Dim warnings As New StringBuilder()
+        Dim mlog As New MyLogsString
 
         Try
             'Se ho il Flag useClienOrd aggiorno solo la testa del cliente con i dati CLIENORD
@@ -2386,7 +2483,7 @@ Module Fatture
 
         Catch ex As Exception
             Debug.Print(ex.Message)
-            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
         End Try
 
@@ -2396,10 +2493,10 @@ Module Fatture
 End Module
 Module MovimentiAnaliticiDaFatture
 
-    Public Function CreaAnaliticaDaFatture(filtri As FiltriAnalitici) As Boolean
-        Dim errori As StringBuilder = New StringBuilder()
-        Dim annidiversiP As StringBuilder = New StringBuilder()
-        Dim annidiversiS As StringBuilder = New StringBuilder()
+    Public Function CreaAnaliticaDaFatture(filtri As FiltroAnalitica) As Boolean
+        Dim errori As New StringBuilder()
+        Dim annidiversiP As New StringBuilder()
+        Dim annidiversiS As New StringBuilder()
 
         'dati succhiati dal filtro
         Dim fromDate As Date = filtri.DataDA
@@ -2412,10 +2509,10 @@ Module MovimentiAnaliticiDaFatture
 
         'variabili che lavorono a livello di documento
         Dim bIsAnnoPrecedente As Boolean
-        Dim errorAnniDiversi As StringBuilder = New StringBuilder()
+        Dim errorAnniDiversi As New StringBuilder()
         Dim bIsAnnoSuccessivo As Boolean
-        Dim warningAnniDiversi As StringBuilder = New StringBuilder()
-        Dim debugging As StringBuilder = New StringBuilder()
+        Dim warningAnniDiversi As New StringBuilder()
+        Dim debugging As New StringBuilder()
 
         'Testa Analitica - MA_CostAccEntries
         Dim okBulk As Boolean
@@ -2429,7 +2526,7 @@ Module MovimentiAnaliticiDaFatture
         Dim Annualita As Short
         Try
             ' Inizializzo una query tra MA_SaleDoc e le righe con le informazioni che mi servono delle sole merci e servizi
-            Using da As SqlDataAdapter = New SqlDataAdapter("SELECT MA_SaleDoc.DocNo, MA_SaleDoc.JournalEntryId, MA_SaleDoc.PostedToCostAccounting, MA_ChartOfAccounts.PostableInCostAcc,
+            Using da As New SqlDataAdapter("SELECT MA_SaleDoc.DocNo, MA_SaleDoc.JournalEntryId, MA_SaleDoc.PostedToCostAccounting, MA_ChartOfAccounts.PostableInCostAcc,
                                                             MA_SaleDocDetail.* FROM MA_SaleDoc LEFT JOIN MA_SaleDocDetail
                                                             ON MA_SaleDoc.SaleDocId = MA_SaleDocDetail.SaleDocId JOIN MA_ChartOfAccounts ON MA_SaleDocDetail.Offset =  MA_ChartOfAccounts.Account 
                                                             WHERE (MA_SaleDocDetail.LineType = " & LineType.Merce & " OR MA_SaleDocDetail.LineType = " & LineType.Servizio & ") 
@@ -2445,9 +2542,9 @@ Module MovimentiAnaliticiDaFatture
                 da.SelectCommand.Parameters.AddWithValue("@NrLast", nrLast)
                 da.SelectCommand.Parameters.AddWithValue("@GiaRegistrate", If(giaRegistrate, "1", "0"))
                 da.SelectCommand.Parameters.AddWithValue("@MovInAnalitica", If(soloMovimentabili, "1", "0"))
-                Dim dtFatt As DataTable = New DataTable("Fatture")
+                Dim dtFatt As New DataTable("Fatture")
                 da.Fill(dtFatt)
-                'Dim dvFatt As DataView = New DataView(dtFatt, "", "", DataViewRowState.CurrentRows)
+                'Dim dvFatt As New DataView(dtFatt, "", "", DataViewRowState.CurrentRows)
                 If dtFatt.Rows.Count > 0 Then
                     bIsSomething = True
                     EditTestoBarra("Creo Movimenti Analitici")
@@ -2456,12 +2553,12 @@ Module MovimentiAnaliticiDaFatture
                     FLogin.prgCopy.Step = 1
                     'Creo un adapter solo per aggiornare il flag di "Generato movimento analitico"
                     Dim sqry As String = "Select SaleDocId, PostedToCostAccounting FROM MA_SaleDoc WHERE (DocumentType=" & DocumentType.Fattura & " Or DocumentType=" & DocumentType.FatturaAcc & " Or DocumentType=" & DocumentType.NotaCredito & ")  AND ( DocumentDate >=@FromDate AND DocumentDate <=@ToDate ) "
-                    Using daSaleDoc As SqlDataAdapter = New SqlDataAdapter(sqry, Connection)
+                    Using daSaleDoc As New SqlDataAdapter(sqry, Connection)
                         daSaleDoc.SelectCommand.Parameters.AddWithValue("@FromDate", sFromDate)
                         daSaleDoc.SelectCommand.Parameters.AddWithValue("@ToDate", sToDate)
-                        Dim dtDoc As DataTable = New DataTable("SaleDoc")
+                        Dim dtDoc As New DataTable("SaleDoc")
                         daSaleDoc.Fill(dtDoc)
-                        Dim dvSaleDoc As DataView = New DataView(dtDoc, "", "SaleDocId", DataViewRowState.CurrentRows)
+                        Dim dvSaleDoc As New DataView(dtDoc, "", "SaleDocId", DataViewRowState.CurrentRows)
                         Dim cbSaleDoc = New SqlCommandBuilder(daSaleDoc)
                         daSaleDoc.UpdateCommand = cbSaleDoc.GetUpdateCommand(True)
 
@@ -2488,21 +2585,21 @@ Module MovimentiAnaliticiDaFatture
                             Using dtMovAnaD As DataTable = CaricaSchema("MA_CostAccEntriesDetail", True)
                                 Using dtCR As DataTable = CaricaSchema("MA_CrossReferences", True)
                                     sqry = "SELECT MA_SaleDocSummary.* FROM MA_SaleDocSummary JOIN MA_SaleDoc ON MA_SaleDoc.SaleDocId = MA_SaleDocSummary.SaleDocId WHERE (MA_SaleDoc.DocumentType=" & DocumentType.Fattura & " OR MA_SaleDoc.DocumentType=" & DocumentType.FatturaAcc & " OR MA_SaleDoc.DocumentType=" & DocumentType.NotaCredito & ")  AND ( MA_SaleDoc.DocumentDate >=@FromDate AND MA_SaleDoc.DocumentDate <=@ToDate ) "
-                                    Using daSaleDocSummary As SqlDataAdapter = New SqlDataAdapter(sqry, Connection)
+                                    Using daSaleDocSummary As New SqlDataAdapter(sqry, Connection)
                                         daSaleDocSummary.SelectCommand.Parameters.AddWithValue("@FromDate", sFromDate)
                                         daSaleDocSummary.SelectCommand.Parameters.AddWithValue("@ToDate", sToDate)
-                                        Dim dtSaleDocSummary As DataTable = New DataTable("MA_SaleDocSummary")
+                                        Dim dtSaleDocSummary As New DataTable("MA_SaleDocSummary")
                                         daSaleDocSummary.Fill(dtSaleDocSummary)
-                                        Dim dvSpese As DataView = New DataView(dtSaleDocSummary, "", "SaleDocId", DataViewRowState.CurrentRows)
+                                        Dim dvSpese As New DataView(dtSaleDocSummary, "", "SaleDocId", DataViewRowState.CurrentRows)
                                         Using dtDefUserVendite As DataTable = CaricaSchema("MA_UserDefaultSales", True, True, "SELECT * FROM MA_UserDefaultSales WHERE Branch ='*' AND WorkerID = 0")
                                             Using dtDefContab As DataTable = CaricaSchema("MA_AccountingDefaults", True, True, "SELECT * FROM MA_AccountingDefaults WHERE AccountingDefaultsId =0")
                                                 Dim qrySaldi As String = "SELECT * FROM MA_CostCentersBalances WHERE BalanceType=3145730"  ' AND BalanceYear = " & Year(currentDocDate) & " AND BalanceMonth = " & Month(currentDocDate)
-                                                Using adpMovAnaSaldi As SqlDataAdapter = New SqlDataAdapter(qrySaldi, Connection)
+                                                Using adpMovAnaSaldi As New SqlDataAdapter(qrySaldi, Connection)
                                                     Dim cbMar = New SqlCommandBuilder(adpMovAnaSaldi)
                                                     adpMovAnaSaldi.UpdateCommand = cbMar.GetUpdateCommand(True)
-                                                    Dim dtMovAnaSaldi As DataTable = New DataTable("MA_CostCentersBalances")
+                                                    Dim dtMovAnaSaldi As New DataTable("MA_CostCentersBalances")
                                                     adpMovAnaSaldi.Fill(dtMovAnaSaldi)
-                                                    Dim dvMovAnaSaldi As DataView = New DataView(dtMovAnaSaldi, "", "CostCenter,Account,BalanceYear,BalanceMonth", DataViewRowState.CurrentRows)
+                                                    Dim dvMovAnaSaldi As New DataView(dtMovAnaSaldi, "", "CostCenter,Account,BalanceYear,BalanceMonth", DataViewRowState.CurrentRows)
                                                     Dim drAna As DataRow = dtMovAna.NewRow
                                                     ' Dim drCR As DataRow = dtCR.NewRow
                                                     Dim iNrOffsetAna As Integer = 0
@@ -2587,7 +2684,7 @@ Module MovimentiAnaliticiDaFatture
                                                                         drAnaD("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                                                                         debugging.AppendLine("D7(drAnaD): ID:" & currentSaleDocId & " DocNo:" & currentDocNo & " Line:" & dtFatt.Rows(irow - 1).Item("Line") & " Offset:" & dtDefUserVendite(0).Item("StampsCharges").ToString)
                                                                         dtMovAnaD.Rows.Add(drAnaD)
-                                                                        Dim wAnarow As MyAnaRow = New MyAnaRow With {
+                                                                        Dim wAnarow As New MyAnaRow With {
                                                                                 .Conto = drAnaD("Account").ToString,
                                                                                 .Centro = drAnaD("CostCenter").ToString,
                                                                                 .Anno = Year(dtadecorr),
@@ -2661,7 +2758,7 @@ Module MovimentiAnaliticiDaFatture
                                                                         drAnaD("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                                                                         debugging.AppendLine("D9(drAnaD): ID:" & currentSaleDocId & " DocNo:" & currentDocNo & " Line:" & dtFatt.Rows(irow - 1).Item("Line") & " Offset:" & drAnaD("Account"))
                                                                         dtMovAnaD.Rows.Add(drAnaD)
-                                                                        Dim wAnarow As MyAnaRow = New MyAnaRow With {
+                                                                        Dim wAnarow As New MyAnaRow With {
                                                                                 .Conto = drAnaD("Account").ToString,
                                                                                 .Centro = drAnaD("CostCenter").ToString,
                                                                                 .Anno = Year(dtadecorr),
@@ -2834,7 +2931,7 @@ Module MovimentiAnaliticiDaFatture
                                                                 drAnaD("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                                                                 debugging.AppendLine("D4(drAnaD): ID:" & dtFatt.Rows(irow).Item("SaleDocId") & " DocNo:" & .Item("DocNo") & " Line:" & .Item("Line") & " Offset:" & .Item("Offset"))
                                                                 dtMovAnaD.Rows.Add(drAnaD)
-                                                                Dim wAnarow As MyAnaRow = New MyAnaRow With {
+                                                                Dim wAnarow As New MyAnaRow With {
                                                             .Conto = drAnaD("Account").ToString,
                                                             .Centro = CdC,
                                                             .Anno = Year(dataMensile),
@@ -2927,7 +3024,7 @@ Module MovimentiAnaliticiDaFatture
                                                             drAnaD("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                                                             debugging.AppendLine("D7(drAnaD): ID:" & currentSaleDocId & " DocNo:" & currentDocNo & " Line:" & dtFatt.Rows(iLastRow).Item("Line") & " Offset:" & dtDefUserVendite(0).Item("StampsCharges").ToString)
                                                             dtMovAnaD.Rows.Add(drAnaD)
-                                                            Dim wAnarow As MyAnaRow = New MyAnaRow With {
+                                                            Dim wAnarow As New MyAnaRow With {
                                                                                 .Conto = drAnaD("Account").ToString,
                                                                                 .Centro = drAnaD("CostCenter").ToString,
                                                                                 .Anno = Year(dtadecorr),
@@ -3001,7 +3098,7 @@ Module MovimentiAnaliticiDaFatture
                                                             drAnaD("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                                                             debugging.AppendLine("D9(drAnaD): ID:" & currentSaleDocId & " DocNo:" & currentDocNo & " Line:" & dtFatt.Rows(iLastRow).Item("Line") & " Offset:" & drAnaD("Account"))
                                                             dtMovAnaD.Rows.Add(drAnaD)
-                                                            Dim wAnarow As MyAnaRow = New MyAnaRow With {
+                                                            Dim wAnarow As New MyAnaRow With {
                                                                                 .Conto = drAnaD("Account").ToString,
                                                                                 .Centro = drAnaD("CostCenter").ToString,
                                                                                 .Anno = Year(dtadecorr),
@@ -3080,7 +3177,7 @@ Module MovimentiAnaliticiDaFatture
             End Using
         Catch ex As Exception
             Debug.Print(ex.Message)
-            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
         End Try
         If bIsSomething AndAlso Not someTrouble Then
@@ -3163,14 +3260,14 @@ Module MovimentiAnaliticiDaFatture
             End If
         Catch ex As Exception
             Debug.Print(ex.Message)
-            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
         End Try
 
         Return result
     End Function
     Private Sub RicalcolaPerc(dt As DataTable, id As Integer, tot As Double)
-        Dim dvDoc As DataView = New DataView(dt, "EntryId=" & id, "Line", DataViewRowState.CurrentRows)
+        Dim dvDoc As New DataView(dt, "EntryId=" & id, "Line", DataViewRowState.CurrentRows)
         Dim pSum As Double
         Try
             For i = 0 To dvDoc.Count - 1
@@ -3182,7 +3279,7 @@ Module MovimentiAnaliticiDaFatture
                 pSum += Math.Round(p, 2)
             Next
         Catch ex As Exception
-            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
         End Try
 
@@ -3214,10 +3311,10 @@ Module SEPA
             Try
                 'Creo Datatable con valori di DEFAULT nelle colonne
                 EditTestoBarra("Carico Schema: Fatture")
-                Using da As SqlDataAdapter = New SqlDataAdapter("SELECT Saledocid, DocNo, DocumentType, BankAuthorization FROM MA_SaleDoc Where  (DocumentType=" & DocumentType.Fattura & " Or DocumentType=" & DocumentType.FatturaAcc & " Or DocumentType=" & DocumentType.NotaCredito & ")", Connection)
-                    Dim dtDoc As DataTable = New DataTable("Doc")
+                Using da As New SqlDataAdapter("SELECT Saledocid, DocNo, DocumentType, BankAuthorization FROM MA_SaleDoc Where  (DocumentType=" & DocumentType.Fattura & " Or DocumentType=" & DocumentType.FatturaAcc & " Or DocumentType=" & DocumentType.NotaCredito & ")", Connection)
+                    Dim dtDoc As New DataTable("Doc")
                     da.Fill(dtDoc)
-                    Dim dvDoc As DataView = New DataView(dtDoc, "", "DocNo", DataViewRowState.CurrentRows)
+                    Dim dvDoc As New DataView(dtDoc, "", "DocNo", DataViewRowState.CurrentRows)
                     Dim cbMar = New SqlCommandBuilder(da)
                     da.UpdateCommand = cbMar.GetUpdateCommand(True)
 
@@ -3261,7 +3358,7 @@ Module SEPA
 
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
 
@@ -3276,9 +3373,9 @@ Module SEPA
     End Function
 
     Public Function InsertSepaOnFox(dts As DataSet, creaMandato As Boolean, Optional bConIntestazione As Boolean = False) As Boolean
-        Dim errori As StringBuilder = New StringBuilder()
+        Dim errori As New StringBuilder()
         Dim loggingTxt As String = "Si"
-        Dim bulkMessage As StringBuilder = New StringBuilder()
+        Dim bulkMessage As New StringBuilder()
         Dim okBulk As Boolean
         Dim stopwatch As New System.Diagnostics.Stopwatch
         stopwatch.Start()
@@ -3295,16 +3392,16 @@ Module SEPA
             FLogin.prgCopy.Step = 1
             Try
                 EditTestoBarra("Carico Dati: Fatture")
-                Using da As SqlDataAdapter = New SqlDataAdapter("SELECT SaleDocId, DocNo, DocumentType, ALL_UMRCode, ALL_IBAN FROM MA_SaleDoc Where  (DocumentType=" & DocumentType.Fattura & " Or DocumentType=" & DocumentType.FatturaAcc & " Or DocumentType=" & DocumentType.NotaCredito & ")", Connection)
-                    Dim dtDoc As DataTable = New DataTable("Doc")
+                Using da As New SqlDataAdapter("SELECT SaleDocId, DocNo, DocumentType, ALL_UMRCode, ALL_IBAN FROM MA_SaleDoc Where  (DocumentType=" & DocumentType.Fattura & " Or DocumentType=" & DocumentType.FatturaAcc & " Or DocumentType=" & DocumentType.NotaCredito & ")", Connection)
+                    Dim dtDoc As New DataTable("Doc")
                     da.Fill(dtDoc)
-                    Dim dvDoc As DataView = New DataView(dtDoc, "", "DocNo", DataViewRowState.CurrentRows)
+                    Dim dvDoc As New DataView(dtDoc, "", "DocNo", DataViewRowState.CurrentRows)
                     Dim cbMar = New SqlCommandBuilder(da)
                     da.UpdateCommand = cbMar.GetUpdateCommand(True)
                     'Per i Mandati SSD/RID
                     EditTestoBarra("Carico Schema: Mandati SSD")
                     Using dtSSDNew As DataTable = CaricaSchema("MA_SDDMandate", True, True, "SELECT * FROM MA_SDDMandate")
-                        Dim dvSSD As DataView = New DataView(dtSSDNew, "", "Customer", DataViewRowState.CurrentRows)
+                        Dim dvSSD As New DataView(dtSSDNew, "", "Customer", DataViewRowState.CurrentRows)
 
                         EditTestoBarra("Aggiornamento documenti in corso...")
                         For irxls = i To drXLS.Length - 1
@@ -3352,7 +3449,7 @@ Module SEPA
                                                     End If
                                                 End If
                                             Else
-                                                errori.AppendLine("E10: Documento non trovato: " & .Item("O").ToString)
+                                                errori.AppendLine("E04: Documento non trovato: " & .Item("O").ToString)
 
                                             End If
                                         End If
@@ -3388,7 +3485,7 @@ Module SEPA
 
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
 

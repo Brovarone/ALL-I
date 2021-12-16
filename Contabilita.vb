@@ -176,18 +176,18 @@ Public Module Paghe
                     Using dtPND As DataTable = CaricaSchema("MA_JournalEntriesGLDetail", True)
                         Debug.Print("Popolo tabella saldi")
                         Dim qrySaldi As String = "SELECT * FROM MA_ChartOfAccountsBalances WHERE BalanceYear = " & Year(DataRiga) & " AND BalanceMonth = " & Month(DataRiga)
-                        Using adpPNSaldi As SqlDataAdapter = New SqlDataAdapter(qrySaldi, Connection)
+                        Using adpPNSaldi As New SqlDataAdapter(qrySaldi, Connection)
                             Dim cbMar = New SqlCommandBuilder(adpPNSaldi)
                             adpPNSaldi.UpdateCommand = cbMar.GetUpdateCommand(True)
                             Dim dtPNSaldi As DataTable = CaricaSchema("MA_ChartOfAccountsBalances", True, True, qrySaldi)
                             adpPNSaldi.Fill(dtPNSaldi)
-                            Dim dvPNSaldi As DataView = New DataView(dtPNSaldi, "", "Account", DataViewRowState.CurrentRows)
+                            Dim dvPNSaldi As New DataView(dtPNSaldi, "", "Account", DataViewRowState.CurrentRows)
                             'per le contropartite 
                             Debug.Print("Popolo tabella contropartite")
-                            Using adp As SqlDataAdapter = New SqlDataAdapter("Select Account, ACGCode, PostableInCostAcc FROM MA_ChartOfAccounts", Connection)
-                                Dim dtCntrp As DataTable = New DataTable("Contropartita")
+                            Using adp As New SqlDataAdapter("Select Account, ACGCode, PostableInCostAcc FROM MA_ChartOfAccounts", Connection)
+                                Dim dtCntrp As New DataTable("Contropartita")
                                 adp.Fill(dtCntrp)
-                                Dim dvCntrp As DataView = New DataView(dtCntrp, "", "ACGCode", DataViewRowState.CurrentRows)
+                                Dim dvCntrp As New DataView(dtCntrp, "", "ACGCode", DataViewRowState.CurrentRows)
 
                                 Dim isQDare As Boolean
                                 Dim drPn As DataRow = dtPN.NewRow
@@ -366,7 +366,7 @@ Public Module Paghe
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
             'Scrivi Gli ID ( faccio solo a fine elaborazione)
@@ -408,17 +408,17 @@ Public Module Paghe
                 Using dtMovAnaD As DataTable = CaricaSchema("MA_CostAccEntriesDetail", True)
                     Using dtCR As DataTable = CaricaSchema("MA_CrossReferences", True)
                         Dim qrySaldi As String = "SELECT * FROM MA_CostCentersBalances WHERE BalanceYear = " & Year(DataRiga) & " AND BalanceMonth = " & Month(DataRiga)
-                        Using adpMovAnaSaldi As SqlDataAdapter = New SqlDataAdapter(qrySaldi, Connection)
+                        Using adpMovAnaSaldi As New SqlDataAdapter(qrySaldi, Connection)
                             Dim cbMar = New SqlCommandBuilder(adpMovAnaSaldi)
                             adpMovAnaSaldi.UpdateCommand = cbMar.GetUpdateCommand(True)
-                            Dim dtMovAnaSaldi As DataTable = New DataTable("MA_CostCentersBalances")
+                            Dim dtMovAnaSaldi As New DataTable("MA_CostCentersBalances")
                             adpMovAnaSaldi.Fill(dtMovAnaSaldi)
-                            Dim dvMovAnaSaldi As DataView = New DataView(dtMovAnaSaldi, "", "CostCenter,Account", DataViewRowState.CurrentRows)
+                            Dim dvMovAnaSaldi As New DataView(dtMovAnaSaldi, "", "CostCenter,Account", DataViewRowState.CurrentRows)
 
-                            Using adp As SqlDataAdapter = New SqlDataAdapter("Select Account, PostableInCostAcc FROM MA_ChartOfAccounts", Connection)
-                                Dim dtCntrp As DataTable = New DataTable("Contropartita")
+                            Using adp As New SqlDataAdapter("Select Account, PostableInCostAcc FROM MA_ChartOfAccounts", Connection)
+                                Dim dtCntrp As New DataTable("Contropartita")
                                 adp.Fill(dtCntrp)
-                                Dim dvCntrp As DataView = New DataView(dtCntrp, "", "Account", DataViewRowState.CurrentRows)
+                                Dim dvCntrp As New DataView(dtCntrp, "", "Account", DataViewRowState.CurrentRows)
 
                                 Dim drAna As DataRow = dtMovAna.NewRow
                                 Dim drAnaD As DataRow = dtMovAnaD.NewRow
@@ -426,7 +426,7 @@ Public Module Paghe
                                 For irow = 0 To TestePN.Rows.Count - 1
                                     'Ciclo sulle teste PN
                                     'Filtro sull' id pnota
-                                    Dim rv As DataView = New DataView(RighePN, "JournalEntryId=" & TestePN.Rows(irow).Item("JournalEntryId"), "Line", DataViewRowState.CurrentRows)
+                                    Dim rv As New DataView(RighePN, "JournalEntryId=" & TestePN.Rows(irow).Item("JournalEntryId"), "Line", DataViewRowState.CurrentRows)
                                     For ir = 0 To rv.Count - 1
                                         'Ciclo sulle righe
                                         With rv(ir)
@@ -533,7 +533,7 @@ Public Module Paghe
             End Using
         Catch ex As Exception
             Debug.Print(ex.Message)
-            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
         End Try
         If Not someTrouble Then
@@ -593,7 +593,7 @@ Public Module Analitica
             End If
         Catch ex As Exception
             Debug.Print(ex.Message)
-            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
         End Try
 
@@ -653,31 +653,31 @@ Public Module Contabilita
                                     Debug.Print("Popolo tabella saldi")
                                     'Saldi Contabili 
                                     Dim qrySaldi As String = "SELECT * FROM MA_ChartOfAccountsBalances WHERE BalanceYear = " & Year(DataRiga) & " AND BalanceMonth = " & Month(DataRiga)
-                                    Using adpPNSaldi As SqlDataAdapter = New SqlDataAdapter(qrySaldi, Connection)
+                                    Using adpPNSaldi As New SqlDataAdapter(qrySaldi, Connection)
                                         Dim cbMar = New SqlCommandBuilder(adpPNSaldi)
                                         adpPNSaldi.UpdateCommand = cbMar.GetUpdateCommand(True)
                                         Dim dtPNSaldi As DataTable = CaricaSchema("MA_ChartOfAccountsBalances", True, True, qrySaldi)
                                         adpPNSaldi.Fill(dtPNSaldi)
-                                        Dim dvPNSaldi As DataView = New DataView(dtPNSaldi, "", "Account", DataViewRowState.CurrentRows)
+                                        Dim dvPNSaldi As New DataView(dtPNSaldi, "", "Account", DataViewRowState.CurrentRows)
                                         'Saldi Analitici 
                                         qrySaldi = "SELECT * FROM MA_CostCentersBalances WHERE BalanceYear = " & Year(DataRiga) & " AND BalanceMonth = " & Month(DataRiga)
-                                        Using adpMovAnaSaldi As SqlDataAdapter = New SqlDataAdapter(qrySaldi, Connection)
+                                        Using adpMovAnaSaldi As New SqlDataAdapter(qrySaldi, Connection)
                                             cbMar = New SqlCommandBuilder(adpMovAnaSaldi)
                                             adpMovAnaSaldi.UpdateCommand = cbMar.GetUpdateCommand(True)
-                                            Dim dtMovAnaSaldi As DataTable = New DataTable("MA_CostCentersBalances")
+                                            Dim dtMovAnaSaldi As New DataTable("MA_CostCentersBalances")
                                             adpMovAnaSaldi.Fill(dtMovAnaSaldi)
-                                            Dim dvMovAnaSaldi As DataView = New DataView(dtMovAnaSaldi, "", "CostCenter,Account", DataViewRowState.CurrentRows)
+                                            Dim dvMovAnaSaldi As New DataView(dtMovAnaSaldi, "", "CostCenter,Account", DataViewRowState.CurrentRows)
 
                                             'per le contropartite 
                                             Debug.Print("Popolo tabella contropartite")
-                                            Using adp As SqlDataAdapter = New SqlDataAdapter("Select Account, ACGCode, PostableInCostAcc FROM MA_ChartOfAccounts", Connection)
-                                                Dim dtCntrp As DataTable = New DataTable("Contropartita")
+                                            Using adp As New SqlDataAdapter("Select Account, ACGCode, PostableInCostAcc FROM MA_ChartOfAccounts", Connection)
+                                                Dim dtCntrp As New DataTable("Contropartita")
                                                 adp.Fill(dtCntrp)
-                                                Dim dvCntrp As DataView = New DataView(dtCntrp, "", "ACGCode", DataViewRowState.CurrentRows)
-                                                Using adpCdC As SqlDataAdapter = New SqlDataAdapter("Select * FROM MA_CostCenters", Connection)
-                                                    Dim dtCdc As DataTable = New DataTable("Centri")
+                                                Dim dvCntrp As New DataView(dtCntrp, "", "ACGCode", DataViewRowState.CurrentRows)
+                                                Using adpCdC As New SqlDataAdapter("Select * FROM MA_CostCenters", Connection)
+                                                    Dim dtCdc As New DataTable("Centri")
                                                     adpCdC.Fill(dtCdc)
-                                                    Dim dvCdC As DataView = New DataView(dtCdc, "", "CostCenter", DataViewRowState.CurrentRows)
+                                                    Dim dvCdC As New DataView(dtCdc, "", "CostCenter", DataViewRowState.CurrentRows)
 
                                                     Dim isQDare As Boolean
                                                     Dim drPn As DataRow = dtPN.NewRow
@@ -854,7 +854,7 @@ Public Module Contabilita
 
                                                             Catch ex As Exception
                                                                 Debug.Print(ex.Message)
-                                                                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                                                                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                                                                 mb.ShowDialog()
                                                             End Try
 
@@ -960,7 +960,7 @@ Public Module Contabilita
             Catch ex As Exception
                 Debug.Print(ex.Message)
                 My.Application.Log.WriteEntry(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
 
@@ -978,7 +978,7 @@ Public Module Contabilita
 
     End Function
     Private Sub RicalcolaPerc(dt As DataTable, id As Integer, tot As Double)
-        Dim dvDoc As DataView = New DataView(dt, "EntryId=" & id, "Line", DataViewRowState.CurrentRows)
+        Dim dvDoc As New DataView(dt, "EntryId=" & id, "Line", DataViewRowState.CurrentRows)
         Dim pSum As Double
         Try
             For i = 0 To dvDoc.Count - 1
@@ -991,7 +991,7 @@ Public Module Contabilita
             Next
         Catch ex As Exception
             Debug.Print(ex.Message)
-            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
         End Try
 
@@ -1030,7 +1030,7 @@ Public Module Contabilita
             End If
         Catch ex As Exception
             Debug.Print(ex.Message)
-            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
         End Try
 

@@ -1,0 +1,165 @@
+﻿using System;
+using System.Collections.Generic;
+
+// Code scaffolded by EF Core assumes nullable reference types (NRTs) are not used or disabled.
+// If you have enabled NRTs for your project, then un-comment the following line:
+// #nullable disable
+
+namespace EFMago.Models
+{
+    public partial class MaPurchaseDocDetail
+    {
+        public int PurchaseDocId { get; set; }
+        public short Line { get; set; }
+        public int? DocumentType { get; set; }
+        public DateTime? DocumentDate { get; set; }
+        public string DocNo { get; set; }
+        public string Supplier { get; set; }
+        public int? LineType { get; set; }
+        public string Description { get; set; }
+        public string NoPrint { get; set; }
+        public string NoInvoice { get; set; }
+        public string Item { get; set; }
+        public int? ItemStatus { get; set; }
+        public string Department { get; set; }
+        public string UoM { get; set; }
+        public double? Qty { get; set; }
+        public double? AdditionalQty1 { get; set; }
+        public double? AdditionalQty2 { get; set; }
+        public double? AdditionalQty3 { get; set; }
+        public double? AdditionalQty4 { get; set; }
+        public double? UnitValue { get; set; }
+        public double? TaxableAmount { get; set; }
+        public double? TaxAmount { get; set; }
+        public double? UndeductibleAmount { get; set; }
+        public string TaxCode { get; set; }
+        public double? TotalAmount { get; set; }
+        public double? Discount1 { get; set; }
+        public double? Discount2 { get; set; }
+        public string DiscountFormula { get; set; }
+        public double? DiscountAmount { get; set; }
+        public string Offset { get; set; }
+        public int? PurchaseType { get; set; }
+        public short? NoOfPacks { get; set; }
+        public string PacksUoM { get; set; }
+        public double? GrossWeight { get; set; }
+        public double? NetWeight { get; set; }
+        public double? GrossVolume { get; set; }
+        public string InternalIdNo { get; set; }
+        public string ExternalIdNo { get; set; }
+        public string IncludedInTurnover { get; set; }
+        public int? PurchaseOrdId { get; set; }
+        public string PurchaseOrdNo { get; set; }
+        public short? PurchaseOrdPos { get; set; }
+        public string ClosePurchaseOrd { get; set; }
+        public int? InspectionOrdId { get; set; }
+        public string InspectionOrdNo { get; set; }
+        public short? InspectionOrdPos { get; set; }
+        public int? InspectionBillId { get; set; }
+        public string InspectionBillNo { get; set; }
+        public short? InspectionBillPos { get; set; }
+        public int? Rmaid { get; set; }
+        public string Rmano { get; set; }
+        public short? Rmapos { get; set; }
+        public int? BillOfLadingId { get; set; }
+        public string BillOfLadingNo { get; set; }
+        public short? BillOfLadingLine { get; set; }
+        public short? KitNo { get; set; }
+        public double? KitQty { get; set; }
+        public string Lot { get; set; }
+        public string Job { get; set; }
+        public string CostCenter { get; set; }
+        public string ProductLine { get; set; }
+        public string Packing { get; set; }
+        public double? DistributedDiscount { get; set; }
+        public double? InvoicedQty { get; set; }
+        public string Invoiced { get; set; }
+        public DateTime? ExpectedDeliveryDate { get; set; }
+        public DateTime? ActualDeliveryDate { get; set; }
+        public double? OrderedQty { get; set; }
+        public string Inspected { get; set; }
+        public double? ConformingQty { get; set; }
+        public double? NotConformingQty { get; set; }
+        public double? ScrapQty { get; set; }
+        public string Location { get; set; }
+        public DateTime? OrderDate { get; set; }
+        public int? SubId { get; set; }
+        public string StoragePhase1 { get; set; }
+        public string StoragePhase2 { get; set; }
+        public string SpecificatorPhase1 { get; set; }
+        public string SpecificatorPhase2 { get; set; }
+        public short? ExternalLineReference { get; set; }
+        public int? Moid { get; set; }
+        public string Mono { get; set; }
+        public double? SpecWeightNetMass { get; set; }
+        public double? SpecWeightNetMassSuppUnit { get; set; }
+        public int? ReferenceDocId { get; set; }
+        public string ReferenceDocNo { get; set; }
+        public string CombinedNomenclature { get; set; }
+        public string CountyOfOrigin { get; set; }
+        public string IsoofOrigin { get; set; }
+        public int? DefaultValueType { get; set; }
+        public int? DiscountDefaultType { get; set; }
+        public string Drawing { get; set; }
+        public short? RtgStep { get; set; }
+        public string Alternate { get; set; }
+        public short? AltRtgStep { get; set; }
+        public string Moconfirmed { get; set; }
+        public string Notes { get; set; }
+        public string FixedCost { get; set; }
+        public int? SaleDocId { get; set; }
+        public short? SaleDocLine { get; set; }
+        public string SupplierCode { get; set; }
+        public string CorrectionDocChargeLine { get; set; }
+        public string CorrectedDocumentLine { get; set; }
+        public int? ReferenceDocumentId { get; set; }
+        public int? ReferenceDocSubId { get; set; }
+        public short? ReferenceDocLine { get; set; }
+        public double? ReturnToSupplierQty { get; set; }
+        public string ReturnReason { get; set; }
+        public DateTime? DepartureDate { get; set; }
+        public double? CorrectionQty { get; set; }
+        public double? OriginalQty { get; set; }
+        public double? OriginalUnitValue { get; set; }
+        public string CorrectionDocument { get; set; }
+        public string CancelledInCd { get; set; }
+        public string NotPostableInInventory { get; set; }
+        public string InvoiceForAdvanceLinked { get; set; }
+        public double? InvoiceAmount { get; set; }
+        public int? InvoiceForAdvanceId { get; set; }
+        public int? InvoiceForAdvanceSubId { get; set; }
+        public int? DbcrLineCalcProp { get; set; }
+        public double? ActualRetailPrice { get; set; }
+        public string ActualRetailPriceWithTax { get; set; }
+        public string Cpacode { get; set; }
+        public string ServiceToIncludeInIntrastat { get; set; }
+        public int? IntrastatSupplyType { get; set; }
+        public string SupplierLotNo { get; set; }
+        public DateTime? SupplierLotExpiryDate { get; set; }
+        public int? NewField { get; set; }
+        public string NotInReverseCharge { get; set; }
+        public int? CrrefType { get; set; }
+        public int? CrrefId { get; set; }
+        public int? CrrefSubId { get; set; }
+        public double? ActualRetailPricePhase2 { get; set; }
+        public double? DistributedShipCharges { get; set; }
+        public double? DistributedAdditionalCharges { get; set; }
+        public double? DistributedInsuranceCharges { get; set; }
+        public string DistributeCharges { get; set; }
+        public string TaxRuleCode { get; set; }
+        public string TaxRuleCodeCompany { get; set; }
+        public string ExcludeIcmsst { get; set; }
+        public string ExcludeFromTot { get; set; }
+        public int? SuppQuotaId { get; set; }
+        public short? SuppQuotaLine { get; set; }
+        public DateTime Tbcreated { get; set; }
+        public DateTime Tbmodified { get; set; }
+        public int TbcreatedId { get; set; }
+        public int TbmodifiedId { get; set; }
+        public int? ImSubcontractOrdId { get; set; }
+        public int? ImSubcontractWprid { get; set; }
+        public string ImJobWorkingStep { get; set; }
+
+        public virtual MaPurchaseDoc PurchaseDoc { get; set; }
+    }
+}

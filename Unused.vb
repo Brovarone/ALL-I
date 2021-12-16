@@ -1,12 +1,19 @@
 ﻿Imports System.Text
 Imports System.Reflection.MethodBase
+Imports System.Linq
 
+'Studiare questo
+'https://github.com/CollaboratingPlatypus/PetaPoco
+'Valori default con linQ
+'https://weblogs.asp.net/stefansedich/handling-default-values-with-linq-to-sql
+'bulk insert 
+'https://stackoverflow.com/questions/9220901/bulk-insert-with-linq-to-sql
 Module Unused
 
     Private Function UNUSEDAggiornaAnagraficaCliente(ByVal origine As DataRow, clienord As DataRowView, ByVal anag As DataRowView, ByVal o As DataRowView, ByVal isSede As Boolean, useClienOrd As Boolean) As String ' Mylogs
-        Dim avvisi As StringBuilder = New StringBuilder()
-        Dim warnings As StringBuilder = New StringBuilder()
-        'Dim mlog As Mylogs = New Mylogs
+        Dim avvisi As New StringBuilder()
+        Dim warnings As New StringBuilder()
+        'Dim mlog As New MyLogs
 
         Try
             With origine
@@ -158,7 +165,7 @@ Module Unused
             End With
         Catch ex As Exception
             Debug.Print(ex.Message)
-            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
 
         End Try
@@ -511,7 +518,7 @@ Module Unused
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
             'Scrivi Gli ID ( faccio solo a fine elaborazione)
@@ -524,4 +531,57 @@ Module Unused
         Return okBulk
 
     End Function
+End Module
+
+Module LINQ
+    ''https://newbedev.com/how-to-convert-datatable-to-Class-object
+    'Public Shared connectionString As String = ConfigurationManager.ConnectionStrings("YourWebConfigConnection").ConnectionString
+
+    'Function CreateListFromTable(Of T As New)(ByVal tbl As DataTable) As List(Of T)
+    '    Dim lst As List(Of T) = New List(Of T)()
+
+    '    For Each r As DataRow In tbl.Rows
+    '        lst.Add(CreateItemFromRow(Of T)(r))
+    '    Next
+
+    '    Return lst
+    'End Function
+
+    'Function CreateItemFromRow(Of T As New)(ByVal row As DataRow) As T
+    '    Dim item As T = New T()
+    '    SetItemFromRow(item, row)
+    '    Return item
+    'End Function
+
+    'Sub SetItemFromRow(Of T As New)(ByVal item As T, ByVal row As DataRow)
+    '    For Each c As DataColumn In row.Table.Columns
+    '        Dim p As PropertyInfo = item.[GetType]().GetProperty(c.ColumnName)
+
+    '        If p IsNot Nothing AndAlso row(c) <> DBNull.Value Then
+    '            p.SetValue(item, row(c), Nothing)
+    '        End If
+    '    Next
+    'End Sub
+
+    'Function GetRecordWithExtendedTimeOut(ByVal SPName As String, ParamArray SqlPrms As SqlParameter()) As DataSet
+    '    Dim ds As New DataSet()
+    '    Dim cmd As New SqlCommand()
+    '    Dim da As New SqlDataAdapter()
+    '    Dim con As SqlConnection = New SqlConnection(connectionString)
+
+    '    Try
+    '        cmd = New SqlCommand(SPName, con)
+    '        cmd.Parameters.AddRange(SqlPrms)
+    '        cmd.CommandTimeout = 240
+    '        cmd.CommandType = CommandType.StoredProcedure
+    '        da.SelectCommand = cmd
+    '        da.Fill(ds)
+    '    Catch ex As Exception
+    '        Return ex
+    '    End Try
+
+    '    Return ds
+    'End Function
+    'End Class
+
 End Module

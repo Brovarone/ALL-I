@@ -5,9 +5,33 @@ Imports System.Globalization
 Imports ExcelDataReader
 Imports CsvHelper
 Imports CsvHelper.Configuration
+'dipendeza system.valuetuple
 Imports FileHelpers
 Imports System.Reflection
 Imports System.Reflection.MethodBase
+'Classe BBALogger
+Imports System.Xml
+Imports System.Xml.Serialization
+Imports System.Threading
+
+Imports EFMago.Models
+
+' Per file Excel
+' https://github.com/ExcelDataReader/ExcelDataReader
+' OTTIMO.
+
+' Per file CSV  - CSVHELPER
+' Non funziona l'import senza la riga di intestazione
+' .HasHeaderRecord = hasHeader non funziona
+
+' Entity Framework Core versione 3.1
+' Il contesto EFMago usa come riferimenti 
+'.net4.7.2 ! che e' quello che uso 
+' e .net standard 2.0
+
+'BULK Insert per Entity Framework
+'https://github.com/borisdj/EFCore.BulkExtensions
+
 Module Variabili
     ' Definisco variabili connessione e tabelle
     Public Connection As SqlConnection
@@ -20,20 +44,17 @@ Module Variabili
     Public Const IsDeprecated As Boolean = False ' Da utilizzare per funzioni DEPRECATE da All-System
     Public FolderPath As String ' percorso globale
 
+    'Contesto LINQ2EF Core
+    'Public InitialMagoContext As MagoContext
+    Public OrdContext As OrdiniContext
+
+    'Public ftDC As FattDataContext
     Public Sub EditTestoBarra(ByVal testo As String)
         FLogin.prgCopy.Text = testo
         FLogin.prgCopy.Update()
         Application.DoEvents()
     End Sub
 End Module
-
-' Per file Excel
-' https://github.com/ExcelDataReader/ExcelDataReader
-' OTTIMO.
-
-' Per file CSV  - CSVHELPER
-' Non funziona l'import senza la riga di intestazione
-' .HasHeaderRecord = hasHeader non funziona
 
 Module CSV
     Public Function LoadCsvDataFH(ByVal refPath As String, Optional hasHeader As Boolean = False, Optional ByVal sheetname As String = "", Optional delimiter As String = ",") As DataTable
@@ -74,7 +95,7 @@ Module CSV
         ' .HasHeaderRecord = hasHeader non funziona
         Dim stopwatch As New Stopwatch
         stopwatch.Start()
-        Dim cfg As CsvConfiguration = New CsvConfiguration(CultureInfo.InvariantCulture) With {
+        Dim cfg As New CsvConfiguration(CultureInfo.InvariantCulture) With {
             .Delimiter = delimiter
         }
 
@@ -90,13 +111,13 @@ Module CSV
                     csv.ReadHeader()
                     Dim fRow As DataRow = dt.NewRow
                     'Creo le colonne
-                    For id As Integer = 0 To csv.Context.HeaderRecord.Length - 1
+                    For id As Integer = 0 To csv.HeaderRecord.Length - 1
                         'id += 1
                         dt.Columns.Add(ColumnIndexToColumnLetter(id + 1))
                     Next
 
                     For Each c As DataColumn In dt.Columns
-                        fRow(c.ColumnName) = csv.Context.HeaderRecord(c.Ordinal)
+                        fRow(c.ColumnName) = csv.HeaderRecord(c.Ordinal)
                     Next
                     dt.Rows.Add(fRow)
 
@@ -126,7 +147,7 @@ Module CSV
         ' .HasHeaderRecord = hasHeader non funziona
         Dim stopwatch As New Stopwatch
         stopwatch.Start()
-        Dim cfg As CsvConfiguration = New CsvConfiguration(CultureInfo.InvariantCulture) With {
+        Dim cfg As New CsvConfiguration(CultureInfo.InvariantCulture) With {
             .Delimiter = delimiter,
             .HasHeaderRecord = hasHeader
         }
@@ -581,7 +602,7 @@ Module MagoNet
     End Sub
     Public Function LeggiRegistriIva(ByVal Year As Short, Optional ByRef MyReturnString As String = "") As String(,)
         Dim result(2, 0) As String
-        Dim s As StringBuilder = New StringBuilder
+        Dim s As New StringBuilder
         s.AppendLine("Ultimo Fiscal Number letto")
         Using cmd = New SqlCommand("SELECT TaxJournal FROM MA_TaxJournals WHERE Disabled = 0 AND CodeType=131073", Connection)
             Dim reader As SqlDataReader
@@ -620,7 +641,7 @@ Module MagoNet
         Return id
     End Function
     Public Sub AggiornaFiscalNumber(ByVal year As Short, ByVal registri As String(,), Optional ByRef MyReturnString As String = "")
-        Dim s As StringBuilder = New StringBuilder
+        Dim s As New StringBuilder
         s.AppendLine("Ultimo Fiscal Number scritto")
         For i As Short = 0 To UBound(registri, 2)
             Dim taxJournal As String = registri(0, i)
@@ -675,7 +696,7 @@ Module MagoNet
         .INTero = 0,
         .MONey = 0
         }
-        Dim ITCult As CultureInfo = New CultureInfo("it-IT")
+        Dim ITCult As New CultureInfo("it-IT")
 
         Try
 
@@ -704,7 +725,7 @@ Module MagoNet
                     res.sDataSlash = res.DataTempo.ToString("dd/MM/yyyy")
             End Select
         Catch ex As Exception
-            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
         End Try
         Return res
@@ -719,7 +740,7 @@ Module MagoNet
         Dim esito As Boolean
         Dim logTxt As String
         If dt.Rows.Count > 0 Then
-            Using bulkCopy As SqlBulkCopy = New SqlBulkCopy(Connection, SqlBulkCopyOptions.KeepIdentity, tr)
+            Using bulkCopy As New SqlBulkCopy(Connection, SqlBulkCopyOptions.KeepIdentity, tr)
                 bulkCopy.BatchSize = If(dt.Rows.Count < 5000, 0, dt.Rows.Count / 10)
                 bulkCopy.BulkCopyTimeout = 0
                 bulkCopy.NotifyAfter = dt.Rows.Count / 10
@@ -734,7 +755,7 @@ Module MagoNet
                 Debug.Print("Scrivo in Bulk Copy : " & TableName & " , " & dt.Rows.Count.ToString & " record totali.")
                 bulkCopy.DestinationTableName = TableName
                 Try
-                    'Dim cmd As SqlCommand = New SqlCommand("", Connection)
+                    'Dim cmd As New SqlCommand("", Connection)
                     'cmd.Transaction = Trans
                     'cmd.CommandText = "ALTER INDEX ALL ON " & TableName & " DISABLE"
                     ' cmd.ExecuteNonQuery()
@@ -756,7 +777,7 @@ Module MagoNet
                     Debug.Print("NON OK la scrittura in Bulk Copy di : " & TableName & " , " & dt.Rows.Count.ToString & " record.")
                     logTxt = "ERRORE SU INSERIMENTO : " & TableName & " , " & dt.Rows.Count.ToString & " record." & vbCrLf & ex.Message.ToString
                     esito = False
-                    Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                    Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                     mb.ShowDialog()
                 End Try
                 RemoveHandler bulkCopy.SqlRowsCopied, AddressOf BulkBar
@@ -777,20 +798,20 @@ Module MagoNet
     End Function
 
     Public Function CaricaSchema(TableName As String, Optional withConstraint As Boolean = True, Optional ByVal withData As Boolean = False, Optional query As String = "") As DataTable
-        Dim result As StringBuilder = New StringBuilder()
+        Dim result As New StringBuilder()
         Dim stopwatch As New Stopwatch
         Dim stopwatch2 As New Stopwatch
         stopwatch.Start()
         stopwatch2.Start()
         Debug.Print("Carico schema: " & TableName)
-        Dim dt As DataTable = New DataTable(TableName)
+        Dim dt As New DataTable(TableName)
         Dim SQLquery As String
         If withData Then
             SQLquery = If(String.IsNullOrWhiteSpace(query), "SELECT * FROM " & TableName, query)
         Else
             SQLquery = "SELECT * FROM " & TableName & " where 1=2"
         End If
-        Using da As SqlDataAdapter = New SqlDataAdapter(SQLquery, Connection)
+        Using da As New SqlDataAdapter(SQLquery, Connection)
             da.FillSchema(dt, SchemaType.Source)
             'Debug.Print("Creazione fillschema : " & stopwatch2.Elapsed.ToString)
             stopwatch2.Restart()
@@ -799,7 +820,7 @@ Module MagoNet
             'Debug.Print("Creazione fill : " & stopwatch2.Elapsed.ToString)
             stopwatch2.Restart()
             If withConstraint Then
-                Using cmd As SqlCommand = New SqlCommand("sys.sp_recompile", Connection)
+                Using cmd As New SqlCommand("sys.sp_recompile", Connection)
                     cmd.CommandTimeout = 0
                     cmd.CommandType = CommandType.StoredProcedure
                     cmd.Parameters.Add("@objname", SqlDbType.NVarChar, 776)
@@ -867,7 +888,7 @@ Module MagoNet
                             End If
                         Catch ex As Exception
                             Debug.Print(ex.Message)
-                            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                             mb.ShowDialog()
                         End Try
                         Application.DoEvents()
@@ -885,8 +906,8 @@ Module MagoNet
         Return dt
     End Function
 End Module
-Public Module FiltriAnalitica
-    Public Class FiltriAnalitici
+Public Module FiltriAnalitici
+    Public Class FiltroAnalitica
         Public Property DataDA As Date
         Public Property DataA As Date
         Public Property GiaRegistrati As Boolean
@@ -906,9 +927,9 @@ Public Module FiltriAnalitica
     End Class
     Public NotInheritable Class DareAvereIgnora
         'Dare Avere ignora - segno analitica 125
-        Public Shared Dare As Integer = 8192000
-        Public Shared Avere As Integer = 8192001
-        Public Shared Ignora As Integer = 8192002
+        Public Const Dare As Integer = 8192000
+        Public Const Avere As Integer = 8192001
+        Public Const Ignora As Integer = 8192002
     End Class
 End Module
 
@@ -919,7 +940,7 @@ Public Module Common
 
     End Sub
     Public Sub ScriviLogESposta()
-        Dim s As List(Of String) = New List(Of String)
+        Dim s As New List(Of String)
         ScriviLogESposta(s)
     End Sub
     Public Sub ScriviLogESposta(lista As List(Of String))
@@ -942,7 +963,7 @@ Public Module Common
         Try
             Directory.CreateDirectory(newFolder)
         Catch ex As Exception
-            Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
         End Try
 
@@ -958,5 +979,202 @@ Public Module Common
         My.Settings.Save()
 
     End Sub
+
+End Module
+Public Module LogTools
+
+    Public Sub OrdinaLog(log As MyLogs)
+        log.Corpo.Sort()
+
+        For Each r As MyLogRegistry In log.Corpo
+            If r.Dettagli.Count > 0 AndAlso r.DaOrdinare Then
+                r.Dettagli.Sort()
+            End If
+        Next
+
+    End Sub
+    Public Sub ScriviLogToXml(log As MyLogs)
+        Dim XmlRoot As New XmlRootAttribute(log.Nome)
+        Dim attrs As New XmlAttributes
+        XmlRoot.Namespace = "http://brovarone"
+        attrs.XmlRoot = XmlRoot
+        Dim xOver As New XmlAttributeOverrides
+        xOver.Add(GetType(MyLogs), attrs)
+        'Escludo il tag
+        attrs = New XmlAttributes
+        attrs.XmlIgnore = True
+        xOver.Add(log.GetType, "Versione", attrs)
+        xOver.Add(log.Testa.GetType, "Origine", attrs)
+
+        Dim ser As New XmlSerializer(log.[GetType](), xOver)
+
+        Dim LogFileName As String = "AA" & DateTime.Now.ToString("dd-MM-yyyy") & ".xml"
+        Dim LogPath As String = "C:\Users\Cristiano\Desktop\MIGRAZIONE ALLSYSTEM\"
+
+        Dim path As String = LogPath & LogFileName
+        Dim file As System.IO.FileStream = System.IO.File.Create(path)
+        ser.Serialize(New StreamWriter(file, New System.Text.UTF8Encoding()), log)
+        file.Close()
+
+        'LINQ
+        Dim xdoc = XDocument.Load(path)
+        Dim xn As XNamespace = "http://brovarone"
+
+        Dim xCorpo As XElement = xdoc.Root.Descendants(xn + "Corpo").First
+        'Dim xMylog As XElement = xCorpo.Descendants("Corpo").First
+        Dim xMylogggg As XElement = xdoc.Root.Descendants(xn + "MyLogRegistry").First
+        ' FIX    Dim yyy As XElement = xdoc.Elements(xn + "MyLogRegistry").Where(Function(yyy) xdoc.Root.Elements(xn + "Codice")).Any
+
+
+        'Sposto i codici su di un livello
+        Dim doc = New XmlDocument()
+        doc.Load(path)
+        Dim nsmgr = New XmlNamespaceManager(doc.NameTable)
+        nsmgr.AddNamespace("brovarone", "http://")
+        Dim ll As XmlNodeList = doc.SelectNodes("//brovarone:MyLogRegistry", nsmgr)
+        Dim RegToModify As XmlNode = doc.SelectSingleNode("//brovarone:MyLogRegistry")
+        For i As Integer = 1 To 50
+
+            Dim NewNode As XmlNode = doc.CreateElement("NewDett" & i.ToString)
+            RegToModify.AppendChild(NewNode)
+            For Each node As XmlNode In RegToModify.SelectNodes("Descrizione | Codice")
+                node.ParentNode.RemoveChild(node)
+                NewNode.AppendChild(node)
+            Next
+        Next
+
+        LogFileName = "aanew.xml"
+        path = LogPath & LogFileName
+        doc.Save(path)
+
+        ' ------------------------------------------------------------------------------------------
+        ' IMPOSTO A NOTHING TUTTI I VALORI VUOTI "" PER EVITARE FILE LUNGHI CON CAMPI VUOTI CHE POSSONO VENIRE SCARTATI DA SDI
+        ' ------------------------------------------------------------------------------------------
+        Dim myXML As XElement
+        myXML = XElement.Parse(System.IO.File.ReadAllText(path, System.Text.Encoding.UTF8))
+        RemoveEmptyNodes2(myXML)
+        myXML.Save(path)
+    End Sub
+    Private Sub SetAsFirstChild(node As XmlNode, Optional parent As XmlNode = Nothing)
+        If node Is Nothing Then Exit Sub
+        If parent Is Nothing Then parent = node.ParentNode
+        If parent Is Nothing Then Exit Sub
+        parent.InsertBefore(node, parent.FirstChild)
+    End Sub
+    Private Sub RemoveEmptyNodes2(ByVal elem As XElement)
+        Dim cntElems As Integer = elem.Descendants().Count()
+        Dim cntPrev As Integer
+
+        Do
+            cntPrev = cntElems
+            elem.Descendants().Where(Function(e) String.IsNullOrEmpty(e.Value.Trim()) AndAlso Not e.HasAttributes).Remove()
+            cntElems = elem.Descendants().Count()
+        Loop While cntPrev <> cntElems
+    End Sub
+    Public Class BBALogger
+        '   BBALogger.Write("pp1", BBALogger.MsgType.Error);
+        '   BBALogger.Write("pp2", BBALogger.MsgType.Error);
+        '   BBALogger.Write("pp3", BBALogger.MsgType.Info);
+        '   MessageBox.Show("done");
+
+        Public Enum MsgType
+            [Error]
+            Info
+        End Enum
+
+        Public Shared ReadOnly Property Instance As BBALogger
+            Get
+
+                If _Instance Is Nothing Then
+
+                    SyncLock _SyncRoot
+                        If _Instance Is Nothing Then _Instance = New BBALogger()
+                    End SyncLock
+                End If
+
+                Return _Instance
+            End Get
+        End Property
+
+        Private Shared _Instance As BBALogger
+        Private Shared _SyncRoot As New Object()
+        Private Shared _readWriteLock As New ReaderWriterLockSlim()
+
+        Private Sub New()
+            LogFileName = DateTime.Now.ToString("dd-MM-yyyy")
+            LogFileExtension = ".xml"
+            LogPath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) & "\Log"
+        End Sub
+
+        Public Property Writer As StreamWriter
+        Public Property LogPath As String
+        Public Property LogFileName As String
+        Public Property LogFileExtension As String
+
+        Public ReadOnly Property LogFile As String
+            Get
+                Return LogFileName & LogFileExtension
+            End Get
+        End Property
+
+        Public ReadOnly Property LogFullPath As String
+            Get
+                Return Path.Combine(LogPath, LogFile)
+            End Get
+        End Property
+
+        Public ReadOnly Property LogExists As Boolean
+            Get
+                Return File.Exists(LogFullPath)
+            End Get
+        End Property
+
+        Public Sub WriteToLog(ByVal inLogMessage As String, ByVal msgtype As MsgType)
+            _readWriteLock.EnterWriteLock()
+
+            Try
+                LogFileName = DateTime.Now.ToString("dd-MM-yyyy")
+
+                If Not Directory.Exists(LogPath) Then
+                    Directory.CreateDirectory(LogPath)
+                End If
+
+                Dim settings = New System.Xml.XmlWriterSettings With {
+                    .OmitXmlDeclaration = True,
+                    .Indent = True
+                }
+                Dim sbuilder As New StringBuilder()
+
+                Using sw As New StringWriter(sbuilder)
+
+                    Using w As XmlWriter = XmlWriter.Create(sw, settings)
+                        w.WriteStartElement("LogInfo")
+                        w.WriteElementString("Time", DateTime.Now.ToString())
+
+                        If msgtype = MsgType.[Error] Then
+                            w.WriteElementString("Error", inLogMessage)
+                        ElseIf msgtype = MsgType.Info Then
+                            w.WriteElementString("Info", inLogMessage)
+                        End If
+
+                        w.WriteEndElement()
+                    End Using
+                End Using
+
+                Using Writer As New StreamWriter(LogFullPath, True, Encoding.UTF8)
+                    Writer.WriteLine(sbuilder.ToString())
+                End Using
+
+            Catch ex As Exception
+            Finally
+                _readWriteLock.ExitWriteLock()
+            End Try
+        End Sub
+
+        Public Shared Sub Write(ByVal inLogMessage As String, ByVal msgtype As MsgType)
+            Instance.WriteToLog(inLogMessage, msgtype)
+        End Sub
+    End Class
+
 
 End Module

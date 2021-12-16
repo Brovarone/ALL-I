@@ -1,0 +1,72 @@
+﻿Da eseguire al Contesto MagoContext PER ELIMINARE L'ERRORE DI IDENTITY
+	IM_JobsDetails.Line  IM_JobsDetails.Section
+	ImJobsDetailsVcl.JobSection', 'ImJobsDetailsVcl.JobLine', 'ImJobsDetailsVcl.Line'
+AGGIUNGERE
+  entity.Property(e => e.xxx).ValueGeneratedNever();
+   IM_JobsDetails
+   entity.Property(e => e.Line).ValueGeneratedNever();
+   entity.Property(e => e.Section).ValueGeneratedNever();
+   ImJobsDetailsVcl
+   entity.Property(e => e.Line).ValueGeneratedNever();
+   entity.Property(e => e.JobSection).ValueGeneratedNever();
+   entity.Property(e => e.JobLine).ValueGeneratedNever();
+                   
+Ho creato il mio context !!!
+Devo solo ridurlo ancora
+ 
+Ho creato una classe MaCustSupp senza i riferimenti di Impianti che rompono solo
+
+Aggiunto nei file delle tabelle:
+public class xxx {
+	 [DatabaseGenerated(System.ComponentModel.DataAnnotations.Schema.DatabaseGeneratedOption.None)]
+     [DatabaseGenerated(DatabaseGeneratedOption.None)]
+public int Id { get; set; }
+...etc...
+	}	
+   
+Relazioni aggiuntive
+1-n
+ALLCespiti
+AllordCliAttivita
+ALLordCliContratto
+ALLordCliDescrizioni
+ALLordCliTipologiaServizi ( nome chiave diverso ??)
+AllordFiglio
+AllordPadre
+1-1
+ALLOrdCliAcc ?? foreing key
+
+Aggiungere alle classi delle varie tabelle
+questo in modo da relazionare le tabelle
+    public virtual MaSaleOrd SaleOrd { get; set; }
+ 
+Aggiungere a MaSaleOrd
+	il riferimento agli oggetti figli ( le stesse tabelle di cui sopra)
+		public virtual AllordCliAcc ALLOrdCliAcc { get; set; }
+        public virtual ICollection<Allcespiti> ALLCespiti { get; set; }
+		public virtual ICollection<AllordCliAttivita> AllordCliAttivita { get; set; }
+		public virtual ICollection<AllordCliContratto> ALLordCliContratto { get; set; }
+		public virtual ICollection<AllordCliDescrizioni> ALLordCliDescrizioni { get; set; }
+		public virtual ICollection<AllordCliTipologiaServizi> ALLordCliTipologiaServizi { get; set; }
+		public virtual ICollection<AllordPadre> AllordPadre { get; set; }
+		public virtual ICollection<AllordFiglio> AllordFiglio { get; set; }
+		
+Ordini -> note 1-1
+entity.HasOne(d => d.SaleOrd)
+  .WithOne(p => p.MaSaleOrdNotes)
+  .HasForeignKey<MaSaleOrdNotes>(d => d.[key id])
+  .OnDelete(DeleteBehavior.ClientSetNull)
+  .HasConstraintName("FK_SaleOrdNot_SaleOrd_00");
+Ordini -> righe 1-n
+entity.HasOne(d => d.SaleOrd)
+  .WithMany(p => p.MaSaleOrdDetails)
+  .HasForeignKey(d => d.SaleOrdId)
+  .OnDelete(DeleteBehavior.ClientSetNull)
+  .HasConstraintName("FK_SaleOrdDet_SaleOrd_00");
+
+Aggiungere in testa
+  using System.ComponentModel.DataAnnotations.Schema;
+  [NotMapped] ai campi non richiesti tipo gli ntext delle tabelle
+  MASaleord
+  MaGoodsItemxxx 
+  e togliere nel onCreated del context i riferimenti

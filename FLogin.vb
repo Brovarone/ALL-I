@@ -1,7 +1,13 @@
-﻿Imports System.Text
+﻿Imports System
+Imports System.Text
 Imports System.Data.SqlClient
 Imports System.IO
 Imports System.Reflection.MethodBase
+Imports System.Xml
+Imports System.Threading
+Imports EFMago.Models
+
+Imports Microsoft.EntityFrameworkCore
 
 'parametri publish locale che funziona
 'folder:C:\inetpub\wwwroot\ALL-I\
@@ -23,6 +29,10 @@ Imports System.Reflection.MethodBase
 ' DEPRECATE IN QUANTO TROPPO LENTE SU FILE GROSSI
 'Imports NPOI.SS
 'Imports NPOI.HSSF
+
+
+'LINQ 2 Entity framework 
+'scaffold-dbcontext "Server=ACERBO\SQLEXPRESS; Database=DEMON;User Id=sa;Password=euroufficio" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Context MagoContext -Project EFMago  -StartupProject ALL-I -Force
 Public Class FLogin
     'Ma_Saledoc  / Doc
     Public AdpDoc As SqlDataAdapter
@@ -31,6 +41,14 @@ Public Class FLogin
     Public prgCopy As New CustomProgress
 
     Const adminPsw = "123456"
+    Public Sub New()
+
+        ' This call is required by the designer.
+        InitializeComponent()
+
+        ' Add any initialization after the InitializeComponent() call.
+
+    End Sub
 
     Private Sub BtnConnetti_Click(sender As Object, e As EventArgs) Handles BtnConnetti.Click
         SUBConnetti()
@@ -53,6 +71,7 @@ Public Class FLogin
             BtnFatture.Enabled = yes
             BtnAnalitica.Enabled = yes
             BtnPaghe.Enabled = yes
+            BtnOrdini.Enabled = yes
             ToolsToolStripMenuItem.Enabled = yes
             SettingsToolStripMenuItem.Enabled = yes
             BtnApriLog.Enabled = yes
@@ -78,7 +97,7 @@ Public Class FLogin
         Connection.Open()
         BtnConnetti.Text = Connection.State.ToString()
         If Connection.State = ConnectionState.Open Then
-            Using comm As SqlCommand = New SqlCommand("SELECT  @@OPTIONS", Connection)
+            Using comm As New SqlCommand("SELECT  @@OPTIONS", Connection)
                 'Imposto questo flag per velocizzare se StoredProcedure
                 comm.CommandText = "SET ARITHABORT ON"
                 'comm.CommandText = "SET QUOTED_IDENTIFIER ON" già presente
@@ -100,7 +119,7 @@ Public Class FLogin
 
         Me.Cursor = Cursors.Default
     End Sub
-    Private Sub SUBConnetti(Optional ByVal DB As String = "")
+    Private Sub SUBConnetti(ByVal DB As String)
         Cursor = Cursors.WaitCursor
         BtnConnetti.Enabled = False
         If String.IsNullOrWhiteSpace(DB) Then DB = txtDATABASE.Text
@@ -110,7 +129,7 @@ Public Class FLogin
         Connection.Open()
         BtnConnetti.Text = Connection.State.ToString()
         If Connection.State = ConnectionState.Open Then
-            Using comm As SqlCommand = New SqlCommand("SELECT  @@OPTIONS", Connection)
+            Using comm As New SqlCommand("SELECT  @@OPTIONS", Connection)
                 'Imposto questo flag per velocizzare se StoredProcedure
                 comm.CommandText = "SET ARITHABORT ON"
                 'comm.CommandText = "SET QUOTED_IDENTIFIER ON" già presente
@@ -132,6 +151,41 @@ Public Class FLogin
 
         Me.Cursor = Cursors.Default
     End Sub
+    Private Function LINQConnetti(Optional DB As String = "") As Boolean
+        Dim bStatus As Boolean = False
+        If String.IsNullOrWhiteSpace(DB) Then DB = txtDATABASE.Text
+        'Dim cs As String = "Server=" & txtSERVER.Text & "; Database=DEMON;User Id=" & txtID.Text & ";Password=" & txtPSW.Text & ";"
+        Dim cs As String = "Server=" & txtSERVER.Text & "; Database=" & DB & "; User Id=" & txtID.Text & "; Password=" & txtPSW.Text & ";TrustServerCertificate=True"
+
+        Cursor = Cursors.WaitCursor
+        BtnConnetti.Enabled = False
+
+        'Associo la connection string corretta
+        Dim dbcb As New DbContextOptionsBuilder(Of OrdiniContext)
+        dbcb.UseSqlServer(cs)
+        lstStatoConnessione.Items.Add("Connessione al database: " & DB)
+        OrdContext = New OrdiniContext(dbcb.Options)
+        Debug.Print("Connessione a Context EF: " & OrdContext.Database.CanConnect.ToString & " Su DB:" & DB)
+
+        'BtnConnetti.Text = OrdContext.Database.ToString()
+        If OrdContext.Database.CanConnect Then ' connection ok
+            lstStatoConnessione.Items.Add("Connessione riuscita")
+            OrdContext.Database.ExecuteSqlRaw("SET ARITHABORT ON")
+            BtnProcessa.Enabled = True
+            TabControl1.Enabled = True
+            txtDATABASE.Enabled = False
+            txtID.Enabled = False
+            txtPSW.Enabled = False
+            txtSERVER.Enabled = False
+            BtnProcessa.BackColor = BtnConnetti.BackColor
+            BtnConnetti.BackColor = BtnPath.BackColor
+            BackupDatabaseToolStripMenuItem.Enabled = True
+            bStatus = True
+        End If
+
+        Me.Cursor = Cursors.Default
+        Return bStatus
+    End Function
     Private Sub FLogin_Load(sender As Object, e As EventArgs) Handles MyBase.Load
 
         'aggiungo controllo progressbar
@@ -156,6 +210,7 @@ Public Class FLogin
         txtPSW.Text = My.Settings.mPSW
         txtPath.Text = My.Settings.mPATH
         txtLoginId.Text = My.Settings.mLOGINID
+        TxtTMPDB.Text = My.Settings.mDBTEMP
         FolderPath = txtPath.Text
         'Aggiungo la possibilità di eseguire il mio textChanged ( SULL'EVENTO LEAVE)
         For Each tx As TextBox In Me.PanelAdmin.Controls.OfType(Of TextBox)()
@@ -190,6 +245,8 @@ Public Class FLogin
                 My.Settings.mLOGINID = tb.Text
             Case "TXTPATH"
                 My.Settings.mPATH = tb.Text
+            Case "TXTTMPDB"
+                My.Settings.mDBTEMP = tb.Text
 
         End Select
     End Sub
@@ -273,8 +330,8 @@ Public Class FLogin
 
     Private Sub BtnCancellaClienti_Click(sender As Object, e As EventArgs) Handles BtnCancellaClienti.Click
         Me.Cursor = Cursors.WaitCursor
-        Dim result As StringBuilder = New StringBuilder("Clienti:" & vbCrLf)
-        Using comm As SqlCommand = New SqlCommand("DELETE MA_CustSuppCustomerOptions WHERE CustSuppType=" & CustSuppType.Cliente & " AND TBCreatedID=" & My.Settings.mLOGINID, Connection)
+        Dim result As New StringBuilder("Clienti:" & vbCrLf)
+        Using comm As New SqlCommand("DELETE MA_CustSuppCustomerOptions WHERE CustSuppType=" & CustSuppType.Cliente & " AND TBCreatedID=" & My.Settings.mLOGINID, Connection)
             comm.CommandTimeout = 0
             result.Append(" MA_CustSuppCustomerOptions: " & comm.ExecuteNonQuery().ToString)
             comm.CommandText = "DELETE MA_CustSuppNaturalPerson WHERE CustSuppType=" & CustSuppType.Cliente & " AND TBCreatedID=" & My.Settings.mLOGINID
@@ -297,18 +354,18 @@ Public Class FLogin
 
     Private Sub BtnCancellaPartitCliente_Click(sender As Object, e As EventArgs) Handles BtnCancellaPartite.Click
         Me.Cursor = Cursors.WaitCursor
-        Dim result As StringBuilder = New StringBuilder("Partite Clienti:" & vbCrLf)
+        Dim result As New StringBuilder("Partite Clienti:" & vbCrLf)
         Dim b As DialogResult = MessageBox.Show("Si=Solo Importate ,  No=Tutte", My.Application.Info.Title, MessageBoxButtons.YesNo)
 
         If b = DialogResult.Yes Then
-            Using comm As SqlCommand = New SqlCommand("DELETE MA_PyblsRcvblsDetails WHERE CustSuppType=" & CustSuppType.Cliente & " AND TBCreatedID=" & My.Settings.mLOGINID, Connection)
+            Using comm As New SqlCommand("DELETE MA_PyblsRcvblsDetails WHERE CustSuppType=" & CustSuppType.Cliente & " AND TBCreatedID=" & My.Settings.mLOGINID, Connection)
                 comm.CommandTimeout = 0
                 result.Append(" MA_PyblsRcvblsDetails: " & comm.ExecuteNonQuery().ToString)
                 comm.CommandText = "DELETE MA_PyblsRcvbls WHERE CustSuppType=" & CustSuppType.Cliente & " AND TBCreatedID=" & My.Settings.mLOGINID
                 result.Append(" MA_PyblsRcvbls: " & comm.ExecuteNonQuery().ToString)
             End Using
         ElseIf b = DialogResult.No Then
-            Using comm As SqlCommand = New SqlCommand("DELETE MA_PyblsRcvblsDetails WHERE CustSuppType=" & CustSuppType.Cliente, Connection)
+            Using comm As New SqlCommand("DELETE MA_PyblsRcvblsDetails WHERE CustSuppType=" & CustSuppType.Cliente, Connection)
                 comm.CommandTimeout = 0
                 result.Append(" MA_PyblsRcvblsDetails: " & comm.ExecuteNonQuery().ToString)
                 comm.CommandText = "DELETE MA_PyblsRcvbls WHERE CustSuppType=" & CustSuppType.Cliente
@@ -321,8 +378,8 @@ Public Class FLogin
 
     Private Sub BtnCancellaPartiteFornitore_Click(sender As Object, e As EventArgs) Handles BtnCancellaPartiteFornitore.Click
         Me.Cursor = Cursors.WaitCursor
-        Dim result As StringBuilder = New StringBuilder("Partite Fornitori:" & vbCrLf)
-        Using comm As SqlCommand = New SqlCommand("DELETE MA_PyblsRcvblsDetails WHERE CustSuppType=" & CustSuppType.Fornitore & " AND TBCreatedID=" & My.Settings.mLOGINID, Connection)
+        Dim result As New StringBuilder("Partite Fornitori:" & vbCrLf)
+        Using comm As New SqlCommand("DELETE MA_PyblsRcvblsDetails WHERE CustSuppType=" & CustSuppType.Fornitore & " AND TBCreatedID=" & My.Settings.mLOGINID, Connection)
             comm.CommandTimeout = 0
             result.Append(" MA_PyblsRcvblsDetails: " & comm.ExecuteNonQuery().ToString)
             comm.CommandText = "DELETE MA_PyblsRcvbls WHERE CustSuppType=" & CustSuppType.Fornitore & " AND TBCreatedID=" & My.Settings.mLOGINID
@@ -340,11 +397,11 @@ Public Class FLogin
         prgCopy.Maximum = 8
         prgCopy.Update()
         Application.DoEvents()
-        Dim result As StringBuilder = New StringBuilder("Fatture:" & vbCrLf)
+        Dim result As New StringBuilder("Fatture:" & vbCrLf)
         Dim s As String = InputBox("Indicare la data di import nel formato AAAAMMGG" & vbCrLf & " Se lasciato AAAMMGG verranno cancellate tutte le fatture importate", "", "AAAAMMGG")
         Dim wCrID As String = " WHERE TBCreatedID=" & My.Settings.mLOGINID
         'Dim wCr_Mod As String = " WHERE TBCreatedID=" & My.Settings.mLOGINID & " AND TBModifiedID=" & My.Settings.mLOGINID
-        Using comm As SqlCommand = New SqlCommand("DELETE MA_SaleDocDetail WHERE CustSuppType=" & CustSuppType.Cliente & " And TBCreatedID=" & My.Settings.mLOGINID, Connection)
+        Using comm As New SqlCommand("DELETE MA_SaleDocDetail WHERE CustSuppType=" & CustSuppType.Cliente & " And TBCreatedID=" & My.Settings.mLOGINID, Connection)
             comm.CommandTimeout = 0
             'Dim b As DialogResult = MessageBox.Show("Si=Tutte ,  No=Indicare data", My.Application.Info.Title, MessageBoxButtons.YesNo)
             If String.IsNullOrWhiteSpace(s) Then
@@ -408,8 +465,8 @@ Public Class FLogin
 
     Private Sub BtnCancellaRID_Click(sender As Object, e As EventArgs) Handles BtnCancellaRID.Click
         Me.Cursor = Cursors.WaitCursor
-        Dim result As StringBuilder = New StringBuilder("Rid:" & vbCrLf)
-        Using comm As SqlCommand = New SqlCommand("DELETE MA_SDDMandate WHERE TBCreatedID=" & My.Settings.mLOGINID, Connection)
+        Dim result As New StringBuilder("Rid:" & vbCrLf)
+        Using comm As New SqlCommand("DELETE MA_SDDMandate WHERE TBCreatedID=" & My.Settings.mLOGINID, Connection)
             comm.CommandTimeout = 0
             result.Append(" MA_SDDMandate: " & comm.ExecuteNonQuery().ToString)
         End Using
@@ -419,8 +476,8 @@ Public Class FLogin
 
     Private Sub BtnCancellaPNota_Click(sender As Object, e As EventArgs) Handles BtnCancellaPNota.Click
         Me.Cursor = Cursors.WaitCursor
-        Dim result As StringBuilder = New StringBuilder("Prima Nota:" & vbCrLf)
-        Using comm As SqlCommand = New SqlCommand("DELETE MA_JournalEntriesTaxDetail", Connection)
+        Dim result As New StringBuilder("Prima Nota:" & vbCrLf)
+        Using comm As New SqlCommand("DELETE MA_JournalEntriesTaxDetail", Connection)
             comm.CommandTimeout = 0
             result.Append(" MA_JournalEntriesTaxDetail: " & comm.ExecuteNonQuery().ToString)
             comm.CommandText = "DELETE MA_JournalEntriesTax"
@@ -447,7 +504,7 @@ Public Class FLogin
         lstStatoConnessione.Items.Add("Attendere... il processo potrebbe durare qualche minuto")
         'INIZIALIZZO NUOVO LOG
         My.Application.Log.DefaultFileLogWriter.BaseFileName += "-" & DateTime.Now.ToString("dd-MM-yyyy--HH-mm-ss")
-        Dim lista As List(Of String) = New List(Of String)
+        Dim lista As New List(Of String)
 
         If ChkClienti.Checked Then
             Dim bFound As Boolean
@@ -556,7 +613,7 @@ Public Class FLogin
             ' Fatture elettroniche CSV 
             lstStatoConnessione.Items.Add("Inserisco i SEPA su bank Auth.")
             EditTestoBarra("Caricamento file in corso...")
-            Dim dsXLS As DataSet = New DataSet
+            Dim dsXLS As New DataSet
             dsXLS.Tables.Add(LoadCsvData(FolderPath & "\FTPA300F.CSV", False, "", ","))
             InsertSepaOnBankAuth(dsXLS, False)
         End If
@@ -586,7 +643,7 @@ Public Class FLogin
             ' Fatture elettroniche CSV 
             lstStatoConnessione.Items.Add("Inserisco i SEPA sui campi Fox")
             EditTestoBarra("Caricamento file in corso...")
-            Dim dsXLS As DataSet = New DataSet
+            Dim dsXLS As New DataSet
             dsXLS.Tables.Add(LoadCsvData(FolderPath & "\FTPA300F.CSV", False, "", ","))
             InsertSepaOnFox(dsXLS, ChkCreaSDD.Checked, False)
 
@@ -962,8 +1019,8 @@ Public Class FLogin
 
     Private Sub BtnCancellaFornitori_Click_1(sender As Object, e As EventArgs) Handles BtnCancellaFornitori.Click
         Me.Cursor = Cursors.WaitCursor
-        Dim result As StringBuilder = New StringBuilder("Fornitori:" & vbCrLf)
-        Using comm As SqlCommand = New SqlCommand("DELETE MA_CustSuppSupplierOptions WHERE CustSuppType=" & CustSuppType.Fornitore & " AND TBCreatedID=" & My.Settings.mLOGINID, Connection)
+        Dim result As New StringBuilder("Fornitori:" & vbCrLf)
+        Using comm As New SqlCommand("DELETE MA_CustSuppSupplierOptions WHERE CustSuppType=" & CustSuppType.Fornitore & " AND TBCreatedID=" & My.Settings.mLOGINID, Connection)
             comm.CommandTimeout = 0
             result.Append(" MA_CustSuppSupplierOptions: " & comm.ExecuteNonQuery().ToString)
             comm.CommandText = "DELETE MA_CustSuppNaturalPerson WHERE CustSuppType=" & CustSuppType.Fornitore & " AND TBCreatedID=" & My.Settings.mLOGINID
@@ -1072,7 +1129,7 @@ Public Class FLogin
                     If Integer.TryParse(Mid(sNomeFile, 4), r) Then
                         pagheFound(i) = True
                         paghe(i) = sFile
-                        Dim sB As StringBuilder = New StringBuilder(BtnPaghe.Text)
+                        Dim sB As New StringBuilder(BtnPaghe.Text)
                         sB.Append(": " & DateAndTime.MonthName(Mid(sNomeFile, 4, 2)) & " 20" & Mid(sNomeFile, 6, 2))
                         BtnPaghe.Text = sB.ToString
                         Exit For
@@ -1118,8 +1175,8 @@ Public Class FLogin
         Process.Start(My.Application.Log.DefaultFileLogWriter.CustomLocation)
     End Sub
     Private Sub SUBAnalitica()
-        Dim f As FiltriAnalitici = New FiltriAnalitici
-        Using frm As FAskFiltriAnalitica = New FAskFiltriAnalitica
+        Dim f As New FiltroAnalitica
+        Using frm As New FAskFiltriAnalitica
             Dim result As DialogResult = frm.ShowDialog
             If result = DialogResult.OK Then
                 f = frm.f
@@ -1182,11 +1239,11 @@ Public Class FLogin
     Private Sub BtnCancellaAnaliticaDaFatt_Click(sender As Object, e As EventArgs) Handles BtnCancellaAnaliticaDaFatt.Click
         Dim res As Integer
         Me.Cursor = Cursors.WaitCursor
-        Dim result As StringBuilder = New StringBuilder("Analitica:" & vbCrLf)
+        Dim result As New StringBuilder("Analitica:" & vbCrLf)
         Dim s As String = InputBox("Indicare la data di import nel formato AAAAMMGG" & vbCrLf & " Se lasciato AAAMMGG verranno cancellate tutte le fatture importate", "", "AAAAMMGG")
         'Dim wCrID As String = " WHERE TBCreatedID=" & My.Settings.mLOGINID
         Dim wCr_Mod As String = " WHERE TBCreatedID=" & My.Settings.mLOGINID & " AND TBModifiedID=" & My.Settings.mLOGINID
-        Using comm As SqlCommand = New SqlCommand("DELETE MA_CostAccEntriesDetail " & wCr_Mod, Connection)
+        Using comm As New SqlCommand("DELETE MA_CostAccEntriesDetail " & wCr_Mod, Connection)
             comm.CommandTimeout = 0
             'Dim b As DialogResult = MessageBox.Show("Si=Tutte ,  No=Indicare data", My.Application.Info.Title, MessageBoxButtons.YesNo)
             If String.IsNullOrWhiteSpace(s) Then
@@ -1238,7 +1295,7 @@ Public Class FLogin
                 Dim fName As String = Strings.Left(Path.GetFileName(f), 10)
                 If DateTime.TryParse(fName, d) Then
                     Dim dest As String = p & sl & d.ToString("yyyy") & sl & d.ToString("MMMM", New Globalization.CultureInfo("it-IT")).ToUpper & sl & Path.GetFileName(f)
-                    moveDirectory(f, dest, True)
+                    MoveDirectory(f, dest, True)
                 End If
             Next
         End If
@@ -1288,11 +1345,11 @@ Public Class FLogin
         prgCopy.Maximum = 8
         prgCopy.Update()
         Application.DoEvents()
-        Dim result As StringBuilder = New StringBuilder("Saldi Cespiti:" & vbCrLf)
+        Dim result As New StringBuilder("Saldi Cespiti:" & vbCrLf)
         Dim s As String = InputBox("Indicare la data di import nel formato AAAAMMGG" & vbCrLf & " Se lasciato AAAMMGG verranno cancellate tutti", "", "AAAAMMGG")
         Dim wCrID As String = " WHERE TBCreatedID=" & My.Settings.mLOGINID
         'Dim wCr_Mod As String = " WHERE TBCreatedID=" & My.Settings.mLOGINID & " AND TBModifiedID=" & My.Settings.mLOGINID
-        Using comm As SqlCommand = New SqlCommand("DELETE MA_FixedAssetsBalance" & wCrID, Connection)
+        Using comm As New SqlCommand("DELETE MA_FixedAssetsBalance" & wCrID, Connection)
             comm.CommandTimeout = 0
             'Dim b As DialogResult = MessageBox.Show("Si=Tutte ,  No=Indicare data", My.Application.Info.Title, MessageBoxButtons.YesNo)
             If String.IsNullOrWhiteSpace(s) Then
@@ -1340,4 +1397,125 @@ Public Class FLogin
         Me.Cursor = Cursors.Default
     End Sub
 
+    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+        Dim logs As New MyLogs
+        'Dim l_Bulk As MyLogRegistry = New logs.Add("Bulk", "Inserimento Dati", 1)
+        Dim b As New MyLogRegistry With {.Nome = " bulk", .Ordine = 1, .Descrizione = "bulk vari"}
+        Dim w As New MyLogRegistry With {.Nome = " Warning", .Ordine = 6, .Descrizione = "messaggi di warnign vari", .DaOrdinare = True}
+        w.Add("A01", "ciao bello")
+        w.Add("A01", "ciao bello 1")
+        w.Add("A02", "ciao bello a2")
+        w.Add("A02", "ciao bello a2 bis")
+        w.Add("A01", "ciao bello di nuovo 1")
+        w.Add("A03", "ciao bello a3")
+        logs.Corpo.Add(w)
+        w.Add("A02", "2ciao bello a2 bis")
+        w.Add("A01", "1ciao bello di nuovo 1")
+        w.Add("A03", "3ciao bello a3")
+
+        logs.Corpo.Add(b)
+        b.Add("B01", "ciao", "magari")
+
+        OrdinaLog(logs)
+        ScriviLogToXml(logs)
+
+
+    End Sub
+
+    Public Sub OrdinaLog1(log As MyLogs)
+        log.Corpo.Sort()
+
+        For Each r As MyLogRegistry In log.Corpo
+            If r.Dettagli.Count > 0 AndAlso r.DaOrdinare Then
+                r.Dettagli.Sort()
+                For Each l As MyLogEntry In r.Dettagli
+
+                    'Scrivo il file
+                    WriteToXML1(l.Descrizione, l.Codice)
+                Next
+            End If
+        Next
+
+    End Sub
+    Public Sub WriteToXML1(ByVal inLogMessage As String, padre As String)
+        '_readWriteLock.EnterWriteLock()
+
+        Try
+            Dim LogFileName As String = "AA" & DateTime.Now.ToString("dd-MM-yyyy") & ".xml"
+            Dim LogPath As String = "C:\Users\Cristiano\Desktop\MIGRAZIONE ALLSYSTEM\"
+
+            If Not Directory.Exists(LogPath) Then
+                Directory.CreateDirectory(LogPath)
+            End If
+
+            Dim settings = New System.Xml.XmlWriterSettings With {
+                .OmitXmlDeclaration = True,
+                .Indent = True
+            }
+            Dim sbuilder As New StringBuilder()
+
+            Using sw As New StringWriter(sbuilder)
+
+                Using w As XmlWriter = XmlWriter.Create(sw, settings)
+                    w.WriteStartElement("LogInfo")
+                    w.WriteElementString("Time", DateTime.Now.ToString())
+
+
+                    w.WriteElementString(padre, inLogMessage)
+
+
+                    w.WriteEndElement()
+                End Using
+            End Using
+
+            Using Writer As New StreamWriter(Path.Combine(LogPath, (LogFileName & ".xml")), True, Encoding.UTF8)
+                Writer.WriteLine(sbuilder.ToString())
+            End Using
+
+        Catch ex As Exception
+        Finally
+            '_readWriteLock.ExitWriteLock()
+        End Try
+    End Sub
+
+
+    Private Sub BtnOrdini_Click(sender As Object, e As EventArgs) Handles BtnOrdini.Click
+        Dim r As DialogResult = MessageBox.Show("Generazione ordini su azienda DEMO:" & TxtTMPDB.Text, "Gestione Ordini", MessageBoxButtons.OKCancel)
+        'Dim r As DialogResult = MessageBox.Show("Temporaneo [" & TxtTMPDB.Text & "] (SI) o definitivo [" & txtDATABASE.Text & "] (NO)?", "Gestione Ordini", MessageBoxButtons.YesNoCancel)
+        If r = DialogResult.Cancel Then Return
+        ' Dim bok As Boolean = r = DialogResult.Yes
+        Dim bok As Boolean = r = DialogResult.OK
+        If LINQConnetti(If(bok, TxtTMPDB.Text, "")) Then
+
+            Me.Cursor = Cursors.WaitCursor
+            En_Dis_Controls(False, False, True)
+            lstStatoConnessione.Items.Add("   ---   Generazione Righe Ordini   ---")
+            lstStatoConnessione.Items.Add("Attendere... il processo potrebbe durare qualche minuto")
+            'INIZIALIZZO NUOVO LOG
+            My.Application.Log.DefaultFileLogWriter.BaseFileName += "-" & DateTime.Now.ToString("dd-MM-yyyy--HH-mm-ss")
+            My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Generazione Righe Ordine  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
+
+            'ESEGUO LA PROCEDURA
+            Dim esito As Boolean
+            esito = GeneraRigheOrdine()
+            OrdContext.Dispose()
+            lstStatoConnessione.Items.Add("Esito Generazione Righe Ordine " & If(esito, "OK", "Errore"))
+            lstStatoConnessione.Items.Add("   ---   Elaborazione completata   ---")
+            prgCopy.Value = 0
+            prgCopy.Text = "Elaborazione completata"
+            prgCopy.Refresh()
+            Application.DoEvents()
+            Me.Cursor = Cursors.Default
+            Me.Refresh()
+
+            'Salvo il log
+            ScriviLogESposta()
+        End If
+
+    End Sub
+
+    Private Sub TMPordiniToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles TMPordiniToolStripMenuItem.Click
+        BtnOrdini.Enabled = True
+        BtnOrdini.PerformClick()
+    End Sub
 End Class

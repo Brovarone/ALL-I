@@ -70,6 +70,8 @@ Partial Class FLogin
         Me.BtnCancellaClienti = New System.Windows.Forms.Button()
         Me.TabCespiti = New System.Windows.Forms.TabPage()
         Me.ChkCespiti = New System.Windows.Forms.CheckBox()
+        Me.TabOrdini = New System.Windows.Forms.TabPage()
+        Me.ChkOrdini = New System.Windows.Forms.CheckBox()
         Me.BtnProcessa = New System.Windows.Forms.Button()
         Me.lblDataInizio = New System.Windows.Forms.Label()
         Me.txtPath = New System.Windows.Forms.TextBox()
@@ -78,6 +80,8 @@ Partial Class FLogin
         Me.BtnPath = New System.Windows.Forms.Button()
         Me.lblPath = New System.Windows.Forms.Label()
         Me.PanelUser = New System.Windows.Forms.Panel()
+        Me.BtnOrdini = New System.Windows.Forms.Button()
+        Me.Button1 = New System.Windows.Forms.Button()
         Me.BtnAnalitica = New System.Windows.Forms.Button()
         Me.BtnLastLog = New System.Windows.Forms.Button()
         Me.BtnPaghe = New System.Windows.Forms.Button()
@@ -121,6 +125,7 @@ Partial Class FLogin
         Me.CespitiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ImportaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.CancellaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.TMPordiniToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.HelpToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ContentsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.IndexToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -136,6 +141,7 @@ Partial Class FLogin
         Me.TabPagePnota.SuspendLayout()
         Me.TabPageCancella.SuspendLayout()
         Me.TabCespiti.SuspendLayout()
+        Me.TabOrdini.SuspendLayout()
         Me.PanelUser.SuspendLayout()
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.MenuStrip1.SuspendLayout()
@@ -288,6 +294,7 @@ Partial Class FLogin
         Me.TabControl1.Controls.Add(Me.TabPagePnota)
         Me.TabControl1.Controls.Add(Me.TabPageCancella)
         Me.TabControl1.Controls.Add(Me.TabCespiti)
+        Me.TabControl1.Controls.Add(Me.TabOrdini)
         Me.TabControl1.Enabled = False
         Me.TabControl1.Location = New System.Drawing.Point(10, 113)
         Me.TabControl1.Name = "TabControl1"
@@ -639,6 +646,27 @@ Partial Class FLogin
         Me.ChkCespiti.Text = "Cespiti"
         Me.ChkCespiti.UseVisualStyleBackColor = True
         '
+        'TabOrdini
+        '
+        Me.TabOrdini.BackColor = System.Drawing.SystemColors.Control
+        Me.TabOrdini.Controls.Add(Me.ChkOrdini)
+        Me.TabOrdini.Location = New System.Drawing.Point(4, 22)
+        Me.TabOrdini.Name = "TabOrdini"
+        Me.TabOrdini.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabOrdini.Size = New System.Drawing.Size(322, 101)
+        Me.TabOrdini.TabIndex = 7
+        Me.TabOrdini.Text = "Ordini"
+        '
+        'ChkOrdini
+        '
+        Me.ChkOrdini.AutoSize = True
+        Me.ChkOrdini.Location = New System.Drawing.Point(6, 6)
+        Me.ChkOrdini.Name = "ChkOrdini"
+        Me.ChkOrdini.Size = New System.Drawing.Size(122, 17)
+        Me.ChkOrdini.TabIndex = 0
+        Me.ChkOrdini.Text = "Genera Righe Ordini"
+        Me.ChkOrdini.UseVisualStyleBackColor = True
+        '
         'BtnProcessa
         '
         Me.BtnProcessa.Enabled = False
@@ -701,22 +729,47 @@ Partial Class FLogin
         '
         'PanelUser
         '
+        Me.PanelUser.Controls.Add(Me.BtnOrdini)
+        Me.PanelUser.Controls.Add(Me.Button1)
         Me.PanelUser.Controls.Add(Me.BtnAnalitica)
         Me.PanelUser.Controls.Add(Me.BtnLastLog)
         Me.PanelUser.Controls.Add(Me.BtnPaghe)
         Me.PanelUser.Controls.Add(Me.BtnFatture)
-        Me.PanelUser.Location = New System.Drawing.Point(348, 296)
+        Me.PanelUser.Location = New System.Drawing.Point(312, 309)
         Me.PanelUser.Name = "PanelUser"
         Me.PanelUser.Size = New System.Drawing.Size(395, 295)
         Me.PanelUser.TabIndex = 46
+        '
+        'BtnOrdini
+        '
+        Me.BtnOrdini.BackColor = System.Drawing.Color.Moccasin
+        Me.BtnOrdini.Image = Global.ALLSystemTools.My.Resources.Resources.navigate_48
+        Me.BtnOrdini.ImageAlign = System.Drawing.ContentAlignment.TopCenter
+        Me.BtnOrdini.Location = New System.Drawing.Point(195, 17)
+        Me.BtnOrdini.Name = "BtnOrdini"
+        Me.BtnOrdini.Size = New System.Drawing.Size(84, 84)
+        Me.BtnOrdini.TabIndex = 5
+        Me.BtnOrdini.Text = "Ordini"
+        Me.BtnOrdini.TextAlign = System.Drawing.ContentAlignment.BottomCenter
+        Me.BtnOrdini.UseVisualStyleBackColor = False
+        '
+        'Button1
+        '
+        Me.Button1.Location = New System.Drawing.Point(0, 4)
+        Me.Button1.Name = "Button1"
+        Me.Button1.Size = New System.Drawing.Size(75, 23)
+        Me.Button1.TabIndex = 4
+        Me.Button1.Text = "XML Log"
+        Me.Button1.UseVisualStyleBackColor = True
+        Me.Button1.Visible = False
         '
         'BtnAnalitica
         '
         Me.BtnAnalitica.Image = Global.ALLSystemTools.My.Resources.Resources.pie_chart_48
         Me.BtnAnalitica.ImageAlign = System.Drawing.ContentAlignment.TopCenter
-        Me.BtnAnalitica.Location = New System.Drawing.Point(152, 17)
+        Me.BtnAnalitica.Location = New System.Drawing.Point(105, 17)
         Me.BtnAnalitica.Name = "BtnAnalitica"
-        Me.BtnAnalitica.Size = New System.Drawing.Size(131, 84)
+        Me.BtnAnalitica.Size = New System.Drawing.Size(84, 84)
         Me.BtnAnalitica.TabIndex = 3
         Me.BtnAnalitica.Text = "Analitica"
         Me.BtnAnalitica.TextAlign = System.Drawing.ContentAlignment.BottomCenter
@@ -749,7 +802,7 @@ Partial Class FLogin
         Me.BtnFatture.ImageAlign = System.Drawing.ContentAlignment.TopCenter
         Me.BtnFatture.Location = New System.Drawing.Point(15, 17)
         Me.BtnFatture.Name = "BtnFatture"
-        Me.BtnFatture.Size = New System.Drawing.Size(131, 84)
+        Me.BtnFatture.Size = New System.Drawing.Size(84, 84)
         Me.BtnFatture.TabIndex = 0
         Me.BtnFatture.Text = "Fatture"
         Me.BtnFatture.TextAlign = System.Drawing.ContentAlignment.BottomCenter
@@ -795,7 +848,7 @@ Partial Class FLogin
         Me.NewToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta
         Me.NewToolStripMenuItem.Name = "NewToolStripMenuItem"
         Me.NewToolStripMenuItem.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.N), System.Windows.Forms.Keys)
-        Me.NewToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
+        Me.NewToolStripMenuItem.Size = New System.Drawing.Size(154, 22)
         Me.NewToolStripMenuItem.Text = "&New"
         '
         'OpenToolStripMenuItem
@@ -804,13 +857,13 @@ Partial Class FLogin
         Me.OpenToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta
         Me.OpenToolStripMenuItem.Name = "OpenToolStripMenuItem"
         Me.OpenToolStripMenuItem.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.O), System.Windows.Forms.Keys)
-        Me.OpenToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
+        Me.OpenToolStripMenuItem.Size = New System.Drawing.Size(154, 22)
         Me.OpenToolStripMenuItem.Text = "&Open"
         '
         'toolStripSeparator
         '
         Me.toolStripSeparator.Name = "toolStripSeparator"
-        Me.toolStripSeparator.Size = New System.Drawing.Size(143, 6)
+        Me.toolStripSeparator.Size = New System.Drawing.Size(151, 6)
         '
         'SaveToolStripMenuItem
         '
@@ -818,19 +871,19 @@ Partial Class FLogin
         Me.SaveToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta
         Me.SaveToolStripMenuItem.Name = "SaveToolStripMenuItem"
         Me.SaveToolStripMenuItem.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.S), System.Windows.Forms.Keys)
-        Me.SaveToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
+        Me.SaveToolStripMenuItem.Size = New System.Drawing.Size(154, 22)
         Me.SaveToolStripMenuItem.Text = "&Save"
         '
         'SaveAsToolStripMenuItem
         '
         Me.SaveAsToolStripMenuItem.Name = "SaveAsToolStripMenuItem"
-        Me.SaveAsToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
+        Me.SaveAsToolStripMenuItem.Size = New System.Drawing.Size(154, 22)
         Me.SaveAsToolStripMenuItem.Text = "Save &As"
         '
         'toolStripSeparator1
         '
         Me.toolStripSeparator1.Name = "toolStripSeparator1"
-        Me.toolStripSeparator1.Size = New System.Drawing.Size(143, 6)
+        Me.toolStripSeparator1.Size = New System.Drawing.Size(151, 6)
         '
         'PrintToolStripMenuItem
         '
@@ -838,7 +891,7 @@ Partial Class FLogin
         Me.PrintToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta
         Me.PrintToolStripMenuItem.Name = "PrintToolStripMenuItem"
         Me.PrintToolStripMenuItem.ShortcutKeys = CType((System.Windows.Forms.Keys.Control Or System.Windows.Forms.Keys.P), System.Windows.Forms.Keys)
-        Me.PrintToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
+        Me.PrintToolStripMenuItem.Size = New System.Drawing.Size(154, 22)
         Me.PrintToolStripMenuItem.Text = "&Print"
         '
         'PrintPreviewToolStripMenuItem
@@ -846,18 +899,18 @@ Partial Class FLogin
         Me.PrintPreviewToolStripMenuItem.Image = CType(resources.GetObject("PrintPreviewToolStripMenuItem.Image"), System.Drawing.Image)
         Me.PrintPreviewToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Magenta
         Me.PrintPreviewToolStripMenuItem.Name = "PrintPreviewToolStripMenuItem"
-        Me.PrintPreviewToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
+        Me.PrintPreviewToolStripMenuItem.Size = New System.Drawing.Size(154, 22)
         Me.PrintPreviewToolStripMenuItem.Text = "Print Pre&view"
         '
         'toolStripSeparator2
         '
         Me.toolStripSeparator2.Name = "toolStripSeparator2"
-        Me.toolStripSeparator2.Size = New System.Drawing.Size(143, 6)
+        Me.toolStripSeparator2.Size = New System.Drawing.Size(151, 6)
         '
         'ExitToolStripMenuItem
         '
         Me.ExitToolStripMenuItem.Name = "ExitToolStripMenuItem"
-        Me.ExitToolStripMenuItem.Size = New System.Drawing.Size(146, 22)
+        Me.ExitToolStripMenuItem.Size = New System.Drawing.Size(154, 22)
         Me.ExitToolStripMenuItem.Text = "E&xit"
         '
         'ToolsToolStripMenuItem
@@ -999,7 +1052,7 @@ Partial Class FLogin
         '
         'CespitiToolStripMenuItem
         '
-        Me.CespitiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ImportaToolStripMenuItem, Me.CancellaToolStripMenuItem})
+        Me.CespitiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ImportaToolStripMenuItem, Me.CancellaToolStripMenuItem, Me.TMPordiniToolStripMenuItem})
         Me.CespitiToolStripMenuItem.Name = "CespitiToolStripMenuItem"
         Me.CespitiToolStripMenuItem.Size = New System.Drawing.Size(55, 20)
         Me.CespitiToolStripMenuItem.Text = "Cespiti"
@@ -1007,14 +1060,20 @@ Partial Class FLogin
         'ImportaToolStripMenuItem
         '
         Me.ImportaToolStripMenuItem.Name = "ImportaToolStripMenuItem"
-        Me.ImportaToolStripMenuItem.Size = New System.Drawing.Size(119, 22)
+        Me.ImportaToolStripMenuItem.Size = New System.Drawing.Size(129, 22)
         Me.ImportaToolStripMenuItem.Text = "Importa"
         '
         'CancellaToolStripMenuItem
         '
         Me.CancellaToolStripMenuItem.Name = "CancellaToolStripMenuItem"
-        Me.CancellaToolStripMenuItem.Size = New System.Drawing.Size(119, 22)
+        Me.CancellaToolStripMenuItem.Size = New System.Drawing.Size(129, 22)
         Me.CancellaToolStripMenuItem.Text = "Cancella"
+        '
+        'TMPordiniToolStripMenuItem
+        '
+        Me.TMPordiniToolStripMenuItem.Name = "TMPordiniToolStripMenuItem"
+        Me.TMPordiniToolStripMenuItem.Size = New System.Drawing.Size(129, 22)
+        Me.TMPordiniToolStripMenuItem.Text = "TMPordini"
         '
         'HelpToolStripMenuItem
         '
@@ -1086,6 +1145,8 @@ Partial Class FLogin
         Me.TabPageCancella.ResumeLayout(False)
         Me.TabCespiti.ResumeLayout(False)
         Me.TabCespiti.PerformLayout()
+        Me.TabOrdini.ResumeLayout(False)
+        Me.TabOrdini.PerformLayout()
         Me.PanelUser.ResumeLayout(False)
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.MenuStrip1.ResumeLayout(False)
@@ -1199,4 +1260,9 @@ Partial Class FLogin
     Friend WithEvents CespitiToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ImportaToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents CancellaToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents Button1 As Button
+    Friend WithEvents TabOrdini As TabPage
+    Friend WithEvents ChkOrdini As CheckBox
+    Friend WithEvents BtnOrdini As Button
+    Friend WithEvents TMPordiniToolStripMenuItem As ToolStripMenuItem
 End Class

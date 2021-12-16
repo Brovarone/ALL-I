@@ -16,9 +16,9 @@ Module Partite
         'description, notes, ADVANCE (ACCONTO), Area?
         'Righe - MA_PyblsRcvblsDetails
 
-        Dim result As StringBuilder = New StringBuilder()
+        Dim result As New StringBuilder()
         Dim okBulk As Boolean
-        Dim incongruenze As StringBuilder = New StringBuilder()
+        Dim incongruenze As New StringBuilder()
         Dim NUMOV As String = ""
         Dim stopwatch As New System.Diagnostics.Stopwatch
         stopwatch.Start()
@@ -55,11 +55,11 @@ Module Partite
                             }
                         dtPartita.Columns.Add(newC)
                     End If
-                    Dim dvPartita As DataView = New DataView(dtPartita, "", "Notes", DataViewRowState.CurrentRows)
+                    Dim dvPartita As New DataView(dtPartita, "", "Notes", DataViewRowState.CurrentRows)
                     EditTestoBarra("Carico Schema: Righe")
                     sQry = "SELECT * FROM MA_PyblsRcvblsDetails WHERE CustSuppType=" & cliForType
                     Using dtDettPartita As DataTable = CaricaSchema("MA_PyblsRcvblsDetails", True, isDiff, sQry)
-                        Dim dvDettPartite As DataView = New DataView(dtDettPartita, "", "PymtSchedId", DataViewRowState.CurrentRows)
+                        Dim dvDettPartite As New DataView(dtDettPartita, "", "PymtSchedId", DataViewRowState.CurrentRows)
                         EditTestoBarra("Scrittura partite")
                         Dim stopwatch1 As New System.Diagnostics.Stopwatch
                         stopwatch1.Start()
@@ -81,16 +81,16 @@ Module Partite
                         Dim drPar As DataRow = dtPartita.NewRow
                         Dim drParDet As DataRow = dtDettPartita.NewRow
 
-                        Dim da As SqlDataAdapter = New SqlDataAdapter("SELECT Payment, ACGCode FROM MA_PaymentTerms", Connection)
+                        Dim da As New SqlDataAdapter("SELECT Payment, ACGCode FROM MA_PaymentTerms", Connection)
                         'per le condizioni di pagamento 
-                        Dim dtCP As DataTable = New DataTable("CondPag")
+                        Dim dtCP As New DataTable ("CondPag")
                         da.Fill(dtCP)
-                        Dim dvCP As DataView = New DataView(dtCP, "", "ACGCode", DataViewRowState.CurrentRows)
+                        Dim dvCP As New DataView(dtCP, "", "ACGCode", DataViewRowState.CurrentRows)
 
                         'popolo un Datatable con la tabella di transcodifica
                         'Dim dtCondPag As DataTable = dts.Tables("transcode")
                         'creo la dataview associata per le ricerche
-                        Dim dvTranscode As DataView = New DataView(dts.Tables("transcode"), "", "A", DataViewRowState.CurrentRows)
+                        Dim dvTranscode As New DataView(dts.Tables("transcode"), "", "A", DataViewRowState.CurrentRows)
                         For irxls = i To drXLS.Length - 1
                             ' accorcio per comodità di scrittura
                             With drXLS(irxls)
@@ -298,7 +298,7 @@ Module Partite
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
             'Scrivi Gli ID ( faccio solo a fine elaborazione)
@@ -416,14 +416,14 @@ Module Partite
         'Righe - MA_JournalEntriesGLDetail
         Dim okBulk As Boolean
 
-        Dim dtPartite As DataTable = New DataTable
+        Dim dtPartite As New DataTable 
         'Creo una vista con le righe delle partite che mi servono e poi le ciclo creando la scrittura di apertura
         Dim sqry As String = "SELECT T.PymtSchedId, T.CustSuppType, T.CustSupp, Left(T.CustSupp,1) as Filiale, C.Account, T.DocNo , T.LogNo, T.DocumentDate, T.TotalAmount,  D.DebitCreditSign, D.Amount " &
                             "FROM MA_PyblsRcvblsDetails AS D  JOIN MA_PyblsRcvbls AS T ON d.PymtSchedId = t.PymtSchedId JOIN MA_CustSupp AS C ON T.CustSuppType = C.CustSuppType AND T.CustSupp = C.CustSupp " &
                             "WHERE T.CustSuppType=" & TipoClifor & " And D.InstallmentType=5505024 And t.TBCreatedID=" & My.Settings.mLOGINID
-        Using da As SqlDataAdapter = New SqlDataAdapter(sqry, Connection)
+        Using da As New SqlDataAdapter(sqry, Connection)
             da.Fill(dtPartite)
-            Dim dvPartite As DataView = New DataView(dtPartite, "", "CustSupp", DataViewRowState.CurrentRows)
+            Dim dvPartite As New DataView(dtPartite, "", "CustSupp", DataViewRowState.CurrentRows)
 
             'Identificatore Prima Nota
             Dim idPn As Integer = LeggiID(IdType.PNota)
@@ -592,7 +592,7 @@ Module Partite
                     End Using
                 Catch ex As Exception
                     Debug.Print(ex.Message)
-                    Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                    Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                     mb.ShowDialog()
                 End Try
                 'Scrivi Gli ID ( faccio solo a fine elaborazione)

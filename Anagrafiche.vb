@@ -6,7 +6,7 @@ Module Anagrafiche
     Public Function ClentiXLS(ByVal dts As DataSet, Optional ByVal bConIntestazione As Boolean = True) As Boolean
         'Clienti - MA_CustSupp
         Dim stopwatch As New System.Diagnostics.Stopwatch
-        Dim result As StringBuilder = New StringBuilder()
+        Dim result As New StringBuilder()
         Dim bDuplicate As Boolean
         Dim okBulk As Boolean
 
@@ -17,8 +17,8 @@ Module Anagrafiche
         'Assegno un datatable al file xls e un datarow con tutte le righe
         Dim dtXLS As DataTable = dts.Tables("ANCL200F")
         Dim drXLS As DataRow() = dtXLS.Select()
-        If drXLS.Count > 0 Then
-            FLogin.prgCopy.Maximum = drXLS.Count
+        If drXLS.Length > 0 Then
+            FLogin.prgCopy.Maximum = drXLS.Length
             FLogin.prgCopy.Step = 1
             Try
                 'Creo Datatable con valori di DEFAULT nelle colonne
@@ -29,29 +29,29 @@ Module Anagrafiche
                         EditTestoBarra("Scrittura Anagrafica")
                         'popolo un Datatable con i soli codici
                         Dim adpClienti As SqlDataAdapter
-                        Dim ds As DataSet = New DataSet
+                        Dim ds As New DataSet
                         adpClienti = New SqlDataAdapter("SELECT CustSupp FROM MA_CustSupp WHERE CustSuppType=" & CustSuppType.Cliente, Connection)
                         adpClienti.Fill(ds, "Clienti")
                         'creo la dataview associata per le ricerche
-                        Dim dvClienti As DataView = New DataView(ds.Tables("Clienti"), "", "CustSupp", DataViewRowState.CurrentRows)
+                        Dim dvClienti As New DataView(ds.Tables("Clienti"), "", "CustSupp", DataViewRowState.CurrentRows)
                         'per le condizioni di pagamento 
-                        Dim cmd As SqlCommand = New SqlCommand("SELECT Payment, ACGCode FROM MA_PaymentTerms", Connection)
+                        Dim cmd As New SqlCommand("SELECT Payment, ACGCode FROM MA_PaymentTerms", Connection)
                         adpClienti.SelectCommand = cmd
-                        Dim dtCP As DataTable = New DataTable("CondPag")
+                        Dim dtCP As New DataTable("CondPag")
                         adpClienti.Fill(dtCP)
-                        Dim dvCP As DataView = New DataView(dtCP, "", "ACGCode", DataViewRowState.CurrentRows)
+                        Dim dvCP As New DataView(dtCP, "", "ACGCode", DataViewRowState.CurrentRows)
                         'per le contropartite 
                         cmd = New SqlCommand("Select Account, ACGCode FROM MA_ChartOfAccounts", Connection)
                         adpClienti.SelectCommand = cmd
-                        Dim dtCntrp As DataTable = New DataTable("Contropartita")
+                        Dim dtCntrp As New DataTable("Contropartita")
                         adpClienti.Fill(dtCntrp)
-                        Dim dvCntrp As DataView = New DataView(dtCntrp, "", "ACGCode", DataViewRowState.CurrentRows)
+                        Dim dvCntrp As New DataView(dtCntrp, "", "ACGCode", DataViewRowState.CurrentRows)
                         'Per le banche Azienda
                         cmd = New SqlCommand("Select * FROM MA_Banks where IsACompanyBank=1", Connection)
                         adpClienti.SelectCommand = cmd
-                        Dim dtBanche As DataTable = New DataTable("Banche")
+                        Dim dtBanche As New DataTable("Banche")
                         adpClienti.Fill(dtBanche)
-                        Dim dvBanche As DataView = New DataView(dtBanche, "", "ABI,CAB", DataViewRowState.CurrentRows)
+                        Dim dvBanche As New DataView(dtBanche, "", "ABI,CAB", DataViewRowState.CurrentRows)
                         Dim aBanca(1) As String
 
                         Dim stopwatch1 As New System.Diagnostics.Stopwatch
@@ -68,9 +68,9 @@ Module Anagrafiche
                         'popolo un Datatable con la tabella di transcodifica
                         'Dim dtCondPag As DataTable = dts.Tables("transcode")
                         'creo la dataview associata per le ricerche
-                        'Dim dvCondPag As DataView = New DataView(dts.Tables("transcode"), "", "A", DataViewRowState.CurrentRows)
+                        'Dim dvCondPag As New DataView(dts.Tables("transcode"), "", "A", DataViewRowState.CurrentRows)
 
-                        For irxls = i To drXLS.Count - 1
+                        For irxls = i To drXLS.Length - 1
                             'Devo controllare che il cliente non esista già
                             If dvClienti.Find(drXLS(irxls).Item("D").ToString) = -1 Then
 
@@ -194,7 +194,7 @@ Module Anagrafiche
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
 
@@ -208,7 +208,7 @@ Module Anagrafiche
         'Clienti Persone Fisiche- MA_CustSupp
         'effettua sempre insert ( POSSIBILE SCONTRO DI CHIAVI)
         Dim stopwatch As New System.Diagnostics.Stopwatch
-        Dim result As StringBuilder = New StringBuilder()
+        Dim result As New StringBuilder()
         Dim bDuplicate As Boolean
         Dim okBulk As Boolean
 
@@ -219,8 +219,8 @@ Module Anagrafiche
         'Assegno un datatable al file xls e un datarow con tutte le righe
         Dim dtXLS As DataTable = dts.Tables("ANFC200F")
         Dim drXLS As DataRow() = dtXLS.Select()
-        If drXLS.Count > 0 Then
-            FLogin.prgCopy.Maximum = drXLS.Count
+        If drXLS.Length > 0 Then
+            FLogin.prgCopy.Maximum = drXLS.Length
             FLogin.prgCopy.Step = 1
             Try
                 'Creo Datatable con valori di DEFAULT nelle colonne
@@ -229,11 +229,11 @@ Module Anagrafiche
                     EditTestoBarra("Scrittura Anagrafica")
                     'popolo un Datatable con i soli codici
                     Dim adpClienti As SqlDataAdapter
-                    Dim ds As DataSet = New DataSet
+                    Dim ds As New DataSet
                     adpClienti = New SqlDataAdapter("SELECT CustSupp, NaturalPerson FROM MA_CustSupp WHERE CustSuppType=" & CustSuppType.Cliente, Connection)
                     adpClienti.Fill(ds, "Clienti")
                     'creo la dataview associata per le ricerche
-                    Dim dvClienti As DataView = New DataView(ds.Tables("Clienti"), "", "CustSupp", DataViewRowState.CurrentRows)
+                    Dim dvClienti As New DataView(ds.Tables("Clienti"), "", "CustSupp", DataViewRowState.CurrentRows)
 
                     Dim stopwatch1 As New System.Diagnostics.Stopwatch
                     stopwatch1.Start()
@@ -244,7 +244,7 @@ Module Anagrafiche
                     If bConIntestazione Then i = 1
                     Dim drCF As DataRow
 
-                    For irxls = i To drXLS.Count - 1
+                    For irxls = i To drXLS.Length - 1
                         'Devo controllare che il codice esista già altrimenti lo segnalo
                         If dvClienti.Find(drXLS(irxls).Item("D").ToString) = -1 Then
                             bDuplicate = True
@@ -287,19 +287,19 @@ Module Anagrafiche
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
             Debug.Print("Creazione Clienti Persone Fisiche" & " " & stopwatch.Elapsed.ToString)
         End If
         stopwatch.Stop()
-        Return okbulk
+        Return okBulk
     End Function
     Public Function SEPA_RID_XLS(ByVal dts As DataSet, Optional ByVal bConIntestazione As Boolean = True) As Boolean
         'SEPA/RID
         'effettua sempre insert ( POSSIBILE SCONTRO DI CHIAVI)
         Dim stopwatch As New System.Diagnostics.Stopwatch
-        Dim result As StringBuilder = New StringBuilder()
+        Dim result As New StringBuilder()
         Dim bExixts As Boolean
         Dim aIBAN(5) As String
         Dim okBulk As Boolean
@@ -311,8 +311,8 @@ Module Anagrafiche
         'Assegno un datatable al file xls e un datarow con tutte le righe
         Dim dtXLS As DataTable = dts.Tables("ACGSEP00F")
         Dim drXLS As DataRow() = dtXLS.Select()
-        If drXLS.Count > 0 Then
-            FLogin.prgCopy.Maximum = drXLS.Count
+        If drXLS.Length > 0 Then
+            FLogin.prgCopy.Maximum = drXLS.Length
             FLogin.prgCopy.Step = 1
             Try
                 'Creo Datatable con valori di DEFAULT nelle colonne
@@ -321,12 +321,12 @@ Module Anagrafiche
                     EditTestoBarra("Scrittura Mandati")
                     'popolo un Datatable con i soli codici
                     Dim adpRID As SqlDataAdapter
-                    Dim ds As DataSet = New DataSet
+                    Dim ds As New DataSet
                     adpRID = New SqlDataAdapter("SELECT * FROM MA_SDDMandate", Connection)
                     adpRID.Fill(ds, "RID")
                     'creo la dataview associata per le ricerche
-                    Dim dvRID As DataView = New DataView(ds.Tables("RID"), "", "Customer", DataViewRowState.CurrentRows)
-                    Dim dvRIDXls As DataView = New DataView(dtRID, "", "Customer", DataViewRowState.CurrentRows)
+                    Dim dvRID As New DataView(ds.Tables("RID"), "", "Customer", DataViewRowState.CurrentRows)
+                    Dim dvRIDXls As New DataView(dtRID, "", "Customer", DataViewRowState.CurrentRows)
 
                     Dim stopwatch1 As New System.Diagnostics.Stopwatch
                     stopwatch1.Start()
@@ -337,7 +337,7 @@ Module Anagrafiche
                     If bConIntestazione Then i = 1
                     Dim drRID As DataRow
 
-                    For irxls = i To drXLS.Count - 1
+                    For irxls = i To drXLS.Length - 1
                         'Devo controllare se il codice esista già 
                         'Il campo MandateCode e' univoco, loro mi lo passsano UMRCode
                         'Controllo sul campo codice che valorizzo con il codice Cliente + un contatore
@@ -394,7 +394,7 @@ Module Anagrafiche
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
             Debug.Print("Creazione Mandati" & " " & stopwatch.Elapsed.ToString)
@@ -405,8 +405,8 @@ Module Anagrafiche
 
     Public Function DichIntentoCSV(ByVal dts As DataSet, Optional ByVal bConIntestazione As Boolean = True) As Boolean
         Dim stopwatch As New System.Diagnostics.Stopwatch
-        Dim result As StringBuilder = New StringBuilder()
-        'Dim result As StringBuilder = New StringBuilder("Clienti con dich Intento duplicata:")
+        Dim result As New StringBuilder()
+        'Dim result As  New StringBuilder("Clienti con dich Intento duplicata:")
         Dim bExixts As Boolean
         Dim newInsert As Boolean
         Dim okBulk As Boolean
@@ -418,13 +418,13 @@ Module Anagrafiche
         'Assegno un datatable al file xls e un datarow con tutte le righe
         Dim dtXLS As DataTable = dts.Tables(0)
         Dim drXLS As DataRow() = dtXLS.Select()
-        If drXLS.Count > 0 Then
+        If drXLS.Length > 0 Then
             'Identificatore  Documento
             Debug.Print("Estraggo ID")
             EditTestoBarra("Estraggo gli ID")
             Dim idDich As Integer = LeggiID(IdType.DicIntento)
             Dim nrProt As String(,) = LeggiDichInt()
-            FLogin.prgCopy.Maximum = drXLS.Count
+            FLogin.prgCopy.Maximum = drXLS.Length
             FLogin.prgCopy.Step = 1
             Try
                 'Creo Datatable con valori di DEFAULT nelle colonne
@@ -432,20 +432,20 @@ Module Anagrafiche
                 Using dtInt As DataTable = CaricaSchema("MA_DeclarationOfIntent")
                     'Creo Datatable e vista per gli altri dati dei clienti, mi serve per gestire il flag esente iva
                     Dim dtCliOpt = CaricaSchema("MA_CustSuppCustomerOptions", True, True, "SELECT * FROM MA_CustSuppCustomerOptions Where CustSuppType=" & CustSuppType.Cliente)
-                    Using adpCliOpt As SqlDataAdapter = New SqlDataAdapter("Select * FROM MA_CustSuppCustomerOptions Where CustSuppType=" & CustSuppType.Cliente, Connection)
+                    Using adpCliOpt As New SqlDataAdapter("Select * FROM MA_CustSuppCustomerOptions Where CustSuppType=" & CustSuppType.Cliente, Connection)
                         Dim cbMar = New SqlCommandBuilder(adpCliOpt)
                         adpCliOpt.UpdateCommand = cbMar.GetUpdateCommand(True)
-                        Dim dvCliOpt As DataView = New DataView(dtCliOpt, "", "Customer", DataViewRowState.CurrentRows)
+                        Dim dvCliOpt As New DataView(dtCliOpt, "", "Customer", DataViewRowState.CurrentRows)
 
                         Dim dtIntNr As DataTable = CaricaSchema("MA_DeclarationOfIntentNumbers")
                         EditTestoBarra("Scrittura Dichiarazioni di intento")
                         'popolo un Datatable con i soli codici
                         Dim adpInt As SqlDataAdapter
-                        Dim ds As DataSet = New DataSet
+                        Dim ds As New DataSet
                         adpInt = New SqlDataAdapter("SELECT * FROM MA_DeclarationOfIntent WHERE CustSuppType=" & CustSuppType.Cliente, Connection)
                         adpInt.Fill(ds, "MA_DeclarationOfIntent")
                         'creo la dataview associata per le ricerche
-                        Dim dvInt As DataView = New DataView(ds.Tables("MA_DeclarationOfIntent"), "", "CustSupp", DataViewRowState.CurrentRows)
+                        Dim dvInt As New DataView(ds.Tables("MA_DeclarationOfIntent"), "", "CustSupp", DataViewRowState.CurrentRows)
 
                         Dim stopwatch1 As New System.Diagnostics.Stopwatch
                         stopwatch1.Start()
@@ -456,7 +456,7 @@ Module Anagrafiche
                         If bConIntestazione Then i = 1
                         Dim drInt As DataRow
 
-                        For irxls = i To drXLS.Count - 1
+                        For irxls = i To drXLS.Length - 1
                             'lavoro solo sulla prima riga
                             If drXLS(irxls).Item("J").ToString = 1 Then
                                 Dim dichFound As Integer
@@ -575,7 +575,7 @@ Module Anagrafiche
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
             'Scrivi Gli ID ( faccio solo a fine elaborazione)
@@ -590,7 +590,7 @@ Module Anagrafiche
         'Note ClientiFoxpre- ALLNoteFoxPro
         'effettua sempre insert ( POSSIBILE SCONTRO DI CHIAVI)
         Dim stopwatch As New System.Diagnostics.Stopwatch
-        Dim result As StringBuilder = New StringBuilder()
+        Dim result As New StringBuilder()
         Dim bAbsent As Boolean
         Dim okBulk As Boolean
 
@@ -601,8 +601,8 @@ Module Anagrafiche
         'Assegno un datatable al file xls e un datarow con tutte le righe
         Dim dtXLS As DataTable = dts.Tables("CLI_NOTE")
         Dim drXLS As DataRow() = dtXLS.Select()
-        If drXLS.Count > 0 Then
-            FLogin.prgCopy.Maximum = drXLS.Count
+        If drXLS.Length > 0 Then
+            FLogin.prgCopy.Maximum = drXLS.Length
             FLogin.prgCopy.Step = 1
             Try
                 'Creo Datatable con valori di DEFAULT nelle colonne
@@ -611,11 +611,11 @@ Module Anagrafiche
                     EditTestoBarra("Scrittura Note")
                     'popolo un Datatable con i soli codici
                     Dim adpClienti As SqlDataAdapter
-                    Dim ds As DataSet = New DataSet
+                    Dim ds As New DataSet
                     adpClienti = New SqlDataAdapter("SELECT CustSupp FROM MA_CustSupp WHERE CustSuppType=" & CustSuppType.Cliente, Connection)
                     adpClienti.Fill(ds, "Clienti")
                     'creo la dataview associata per le ricerche
-                    Dim dvClienti As DataView = New DataView(ds.Tables("Clienti"), "", "CustSupp", DataViewRowState.CurrentRows)
+                    Dim dvClienti As New DataView(ds.Tables("Clienti"), "", "CustSupp", DataViewRowState.CurrentRows)
 
                     Dim stopwatch1 As New System.Diagnostics.Stopwatch
                     stopwatch1.Start()
@@ -626,7 +626,7 @@ Module Anagrafiche
                     If bConIntestazione Then i = 1
                     Dim drCF As DataRow
 
-                    For irxls = i To drXLS.Count - 1
+                    For irxls = i To drXLS.Length - 1
                         If Not String.IsNullOrWhiteSpace(drXLS(irxls).Item("B").ToString) Then
                             'Devo controllare che il codice esista già altrimenti lo segnalo
                             If dvClienti.Find(drXLS(irxls).Item("A").ToString) = -1 Then
@@ -672,7 +672,7 @@ Module Anagrafiche
             Debug.Print("Creazione Note Clienti da Foxpro" & " " & stopwatch.Elapsed.ToString)
         End If
         stopwatch.Stop()
-        Return okbulk
+        Return okBulk
     End Function
 
     Public Function EstrapolaIBAN(IBAN As String) As String()
@@ -690,7 +690,7 @@ Module Anagrafiche
     Public Function FornitoriXLS(ByVal dts As DataSet, Optional ByVal bConIntestazione As Boolean = True) As Boolean
         'Fornitori - MA_CustSupp
         Dim stopwatch As New System.Diagnostics.Stopwatch
-        Dim result As StringBuilder = New StringBuilder()
+        Dim result As New StringBuilder()
         Dim bDuplicate As Boolean
         Dim okBulk As Boolean
 
@@ -701,8 +701,8 @@ Module Anagrafiche
         'Assegno un datatable al file xls e un datarow con tutte le righe
         Dim dtXLS As DataTable = dts.Tables("ANFO200F")
         Dim drXLS As DataRow() = dtXLS.Select()
-        If drXLS.Count > 0 Then
-            FLogin.prgCopy.Maximum = drXLS.Count
+        If drXLS.Length > 0 Then
+            FLogin.prgCopy.Maximum = drXLS.Length
             FLogin.prgCopy.Step = 1
             Try
                 'Creo Datatable con valori di DEFAULT nelle colonne
@@ -713,23 +713,23 @@ Module Anagrafiche
                         EditTestoBarra("Scrittura Anagrafica")
                         'popolo un Datatable con i soli codici
                         Dim adpFor As SqlDataAdapter
-                        Dim ds As DataSet = New DataSet
+                        Dim ds As New DataSet
                         adpFor = New SqlDataAdapter("SELECT CustSupp FROM MA_CustSupp WHERE CustSuppType=" & CustSuppType.Fornitore, Connection)
                         adpFor.Fill(ds, "Fornitori")
                         'creo la dataview associata per le ricerche
-                        Dim dvFornitori As DataView = New DataView(ds.Tables("Fornitori"), "", "CustSupp", DataViewRowState.CurrentRows)
+                        Dim dvFornitori As New DataView(ds.Tables("Fornitori"), "", "CustSupp", DataViewRowState.CurrentRows)
                         'per le condizioni di pagamento 
-                        Dim cmd As SqlCommand = New SqlCommand("SELECT Payment, ACGCode FROM MA_PaymentTerms", Connection)
+                        Dim cmd As New SqlCommand("SELECT Payment, ACGCode FROM MA_PaymentTerms", Connection)
                         adpFor.SelectCommand = cmd
-                        Dim dtCP As DataTable = New DataTable("CondPag")
+                        Dim dtCP As New DataTable("CondPag")
                         adpFor.Fill(dtCP)
-                        Dim dvCP As DataView = New DataView(dtCP, "", "ACGCode", DataViewRowState.CurrentRows)
+                        Dim dvCP As New DataView(dtCP, "", "ACGCode", DataViewRowState.CurrentRows)
                         'per le contropartite 
                         cmd = New SqlCommand("Select Account, ACGCode FROM MA_ChartOfAccounts", Connection)
                         adpFor.SelectCommand = cmd
-                        Dim dtCntrp As DataTable = New DataTable("Contropartita")
+                        Dim dtCntrp As New DataTable("Contropartita")
                         adpFor.Fill(dtCntrp)
-                        Dim dvCntrp As DataView = New DataView(dtCntrp, "", "ACGCode", DataViewRowState.CurrentRows)
+                        Dim dvCntrp As New DataView(dtCntrp, "", "ACGCode", DataViewRowState.CurrentRows)
 
                         Dim stopwatch1 As New System.Diagnostics.Stopwatch
                         stopwatch1.Start()
@@ -745,8 +745,8 @@ Module Anagrafiche
                         'popolo un Datatable con la tabella di transcodifica
                         'Dim dtCondPag As DataTable = dts.Tables("transcode")
                         'creo la dataview associata per le ricerche
-                        'Dim dvCondPag As DataView = New DataView(dts.Tables("transcode"), "", "A", DataViewRowState.CurrentRows)
-                        For irxls = i To drXLS.Count - 1
+                        'Dim dvCondPag As New DataView(dts.Tables("transcode"), "", "A", DataViewRowState.CurrentRows)
+                        For irxls = i To drXLS.Length - 1
                             'Devo controllare che il cliente non esista già
                             If dvFornitori.Find(drXLS(irxls).Item("D").ToString) = -1 Then
 
@@ -861,19 +861,19 @@ Module Anagrafiche
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
             Debug.Print("Creazione Fornitori" & " " & stopwatch.Elapsed.ToString)
         End If
         stopwatch.Stop()
-        Return okbulk
+        Return okBulk
     End Function
     Public Function FornitoriPFXLS(ByVal dts As DataSet, Optional ByVal bConIntestazione As Boolean = True) As Boolean
         'Fornitori Persone Fisiche- MA_CustSupp
         'effettua sempre insert ( POSSIBILE SCONTRO DI CHIAVI)
         Dim stopwatch As New System.Diagnostics.Stopwatch
-        Dim result As StringBuilder = New StringBuilder()
+        Dim result As New StringBuilder()
         Dim bDuplicate As Boolean
         Dim okBulk As Boolean
 
@@ -884,8 +884,8 @@ Module Anagrafiche
         'Assegno un datatable al file xls e un datarow con tutte le righe
         Dim dtXLS As DataTable = dts.Tables("ANFF200F")
         Dim drXLS As DataRow() = dtXLS.Select()
-        If drXLS.Count > 0 Then
-            FLogin.prgCopy.Maximum = drXLS.Count
+        If drXLS.Length > 0 Then
+            FLogin.prgCopy.Maximum = drXLS.Length
             FLogin.prgCopy.Step = 1
             Try
                 'Creo Datatable con valori di DEFAULT nelle colonne
@@ -894,11 +894,11 @@ Module Anagrafiche
                     EditTestoBarra("Scrittura Anagrafica")
                     'popolo un Datatable con i soli codici
                     Dim adpFornitori As SqlDataAdapter
-                    Dim ds As DataSet = New DataSet
+                    Dim ds As New DataSet
                     adpFornitori = New SqlDataAdapter("SELECT CustSupp, NaturalPerson FROM MA_CustSupp WHERE CustSuppType=" & CustSuppType.Fornitore, Connection)
                     adpFornitori.Fill(ds, "Fornitori")
                     'creo la dataview associata per le ricerche
-                    Dim dvFornitore As DataView = New DataView(ds.Tables("Fornitori"), "", "CustSupp", DataViewRowState.CurrentRows)
+                    Dim dvFornitore As New DataView(ds.Tables("Fornitori"), "", "CustSupp", DataViewRowState.CurrentRows)
 
                     Dim stopwatch1 As New System.Diagnostics.Stopwatch
                     stopwatch1.Start()
@@ -909,7 +909,7 @@ Module Anagrafiche
                     If bConIntestazione Then i = 1
                     Dim drCF As DataRow
 
-                    For irxls = i To drXLS.Count - 1
+                    For irxls = i To drXLS.Length - 1
                         'Devo controllare che il codice esista già altrimenti lo segnalo
                         If dvFornitore.Find(drXLS(irxls).Item("D").ToString) = -1 Then
                             bDuplicate = True
@@ -954,7 +954,7 @@ Module Anagrafiche
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
             Debug.Print("Creazione Fornitori Persone Fisiche" & " " & stopwatch.Elapsed.ToString)
@@ -966,7 +966,7 @@ Module Anagrafiche
         'Condizioni di pagamento - MA_PaymentTerms
         'effettua solo UPDATE
         Dim stopwatch As New System.Diagnostics.Stopwatch
-        Dim result As StringBuilder = New StringBuilder()
+        Dim result As New StringBuilder()
         Dim bAssente As Boolean
 
         stopwatch.Start()
@@ -976,8 +976,8 @@ Module Anagrafiche
         'Assegno un datatable al file xls e un datarow con tutte le righe
         Dim dtXLS As DataTable = dts.Tables(0) 'dts.Tables("CPAG_ALL1")
         Dim drXLS As DataRow() = dtXLS.Select()
-        If drXLS.Count > 0 Then
-            FLogin.prgCopy.Maximum = drXLS.Count
+        If drXLS.Length > 0 Then
+            FLogin.prgCopy.Maximum = drXLS.Length
             FLogin.prgCopy.Step = 1
             Try
                 'Creo Datatable con valori di DEFAULT nelle colonne
@@ -986,14 +986,14 @@ Module Anagrafiche
                     EditTestoBarra("Aggiornamento condizioni di pagamento")
                     'popolo un Datatable con i soli codici
                     Dim adpCondPag As SqlDataAdapter
-                    Dim ds As DataSet = New DataSet
+                    Dim ds As New DataSet
                     adpCondPag = New SqlDataAdapter("SELECT Payment, ACGCode, TBModifiedID FROM MA_PaymentTerms", Connection)
                     adpCondPag.Fill(ds, "CondPag")
                     Dim cbMar = New SqlCommandBuilder(adpCondPag)
                     'adpCondPag.InsertCommand = cbMar.GetInsertCommand(True)
                     adpCondPag.UpdateCommand = cbMar.GetUpdateCommand(True)
                     'creo la dataview associata per le ricerche
-                    Dim dvCondPag As DataView = New DataView(ds.Tables("CondPag"), "", "Payment", DataViewRowState.CurrentRows)
+                    Dim dvCondPag As New DataView(ds.Tables("CondPag"), "", "Payment", DataViewRowState.CurrentRows)
                     'dvCondPag.AllowEdit = True
 
                     Dim stopwatch1 As New System.Diagnostics.Stopwatch
@@ -1004,7 +1004,7 @@ Module Anagrafiche
                     Dim i As Byte = 0
                     If bConIntestazione Then i = 1
 
-                    For irxls = i To drXLS.Count - 1
+                    For irxls = i To drXLS.Length - 1
                         'Devo controllare che il codice esista già altrimenti lo segnalo
                         Dim ir As Integer = dvCondPag.Find(drXLS(irxls).Item("B").ToString)
                         If ir = -1 Then
@@ -1032,7 +1032,7 @@ Module Anagrafiche
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
             Debug.Print("Aggiornamento condizioni di pagamento" & " " & stopwatch.Elapsed.ToString)
@@ -1044,7 +1044,7 @@ Module Anagrafiche
         'Piano dei Conti - MA_PaymentTerms
         'effettua solo UPDATE
         Dim stopwatch As New System.Diagnostics.Stopwatch
-        Dim result As StringBuilder = New StringBuilder()
+        Dim result As New StringBuilder()
         Dim bExist As Boolean
         Dim okBulk As Boolean
 
@@ -1055,8 +1055,8 @@ Module Anagrafiche
         'Assegno un datatable al file xls e un datarow con tutte le righe
         Dim dtXLS As DataTable = dts.Tables(0) 'dts.Tables("ACGPC12")
         Dim drXLS As DataRow() = dtXLS.Select()
-        If drXLS.Count > 0 Then
-            FLogin.prgCopy.Maximum = drXLS.Count
+        If drXLS.Length > 0 Then
+            FLogin.prgCopy.Maximum = drXLS.Length
             FLogin.prgCopy.Step = 1
             Try
                 'Creo Datatable con valori di DEFAULT nelle colonne
@@ -1065,16 +1065,16 @@ Module Anagrafiche
                     EditTestoBarra("Aggiornamento Piano dei Conti")
                     'popolo un Datatable con i soli codici
                     Dim aspPdc As SqlDataAdapter
-                    Dim ds As DataSet = New DataSet
+                    Dim ds As New DataSet
                     aspPdc = New SqlDataAdapter("SELECT Account, ACGCode, TBModifiedID FROM MA_ChartOfAccounts", Connection)
                     aspPdc.Fill(ds, "Pdc")
                     Dim cbMar = New SqlCommandBuilder(aspPdc)
                     'adpCondPag.InsertCommand = cbMar.GetInsertCommand(True)
                     aspPdc.UpdateCommand = cbMar.GetUpdateCommand(True)
                     'creo la dataview associata per le ricerche su Tabella mago
-                    Dim dvPdc As DataView = New DataView(ds.Tables("Pdc"), "", "Account", DataViewRowState.CurrentRows)
+                    Dim dvPdc As New DataView(ds.Tables("Pdc"), "", "Account", DataViewRowState.CurrentRows)
                     'creo la dataview associata per le ricerche su xls ( non posso avere doppi)
-                    Dim dvPdcXls As DataView = New DataView(dtPdc, "", "Account", DataViewRowState.CurrentRows)
+                    Dim dvPdcXls As New DataView(dtPdc, "", "Account", DataViewRowState.CurrentRows)
 
                     Dim stopwatch1 As New System.Diagnostics.Stopwatch
                     stopwatch1.Start()
@@ -1085,7 +1085,7 @@ Module Anagrafiche
                     If bConIntestazione Then i = 1
                     Dim drPdc As DataRow
 
-                    For irxls = i To drXLS.Count - 1
+                    For irxls = i To drXLS.Length - 1
                         If String.IsNullOrWhiteSpace(drXLS(irxls).Item("B").ToString) Then Continue For
                         'Devo controllare che il codice esista già altrimenti lo inserisco
                         Dim ir As Integer = dvPdc.Find(drXLS(irxls).Item("B").ToString)
@@ -1130,19 +1130,19 @@ Module Anagrafiche
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
             Debug.Print("Aggiornamento Piano dei Conti" & " " & stopwatch.Elapsed.ToString)
         End If
         stopwatch.Stop()
-        Return okbulk
+        Return okBulk
     End Function
     Public Function UpdClientiFE(ByVal dts As DataSet, Optional ByVal bConIntestazione As Boolean = True) As Boolean
         'MA_CustSupp - Dati fatturazion elettronica
         'effettua solo UPDATE
         Dim stopwatch As New System.Diagnostics.Stopwatch
-        Dim result As StringBuilder = New StringBuilder()
+        Dim result As New StringBuilder()
         Dim bAssente As Boolean
         Dim okBulk As Boolean
 
@@ -1153,26 +1153,26 @@ Module Anagrafiche
         'Assegno un datatable al file xls e un datarow con tutte le righe
         Dim dtXLS As DataTable = dts.Tables(0) 'dts.Tables("FTEU400F")
         Dim drXLS As DataRow() = dtXLS.Select("", "F")
-        If drXLS.Count > 0 Then
-            FLogin.prgCopy.Maximum = drXLS.Count
+        If drXLS.Length > 0 Then
+            FLogin.prgCopy.Maximum = drXLS.Length
             FLogin.prgCopy.Step = 1
             Try
                 EditTestoBarra("Aggiornamento Clienti")
                 'popolo un Datatable con i soli codici
-                Using adpCli As SqlDataAdapter = New SqlDataAdapter("SELECT CustSupp ,CustSuppType, CompanyName, Address, City, County , ZIPCode, ElectronicInvoicing, IPACode, AdministrationReference, SendByCertifiedEmail, EICertifiedEMail, TBModifiedID FROM MA_CustSupp WHERE CustSuppType=" & CustSuppType.Cliente, Connection)
-                    Dim ds As DataSet = New DataSet
+                Using adpCli As New SqlDataAdapter("SELECT CustSupp ,CustSuppType, CompanyName, Address, City, County , ZIPCode, ElectronicInvoicing, IPACode, AdministrationReference, SendByCertifiedEmail, EICertifiedEMail, TBModifiedID FROM MA_CustSupp WHERE CustSuppType=" & CustSuppType.Cliente, Connection)
+                    Dim ds As New DataSet
                     adpCli.Fill(ds, "MA_CustSupp")
                     Dim cbMar = New SqlCommandBuilder(adpCli)
                     adpCli.UpdateCommand = cbMar.GetUpdateCommand(True)
                     'creo la dataview associata per le ricerche
-                    Dim dvCli As DataView = New DataView(ds.Tables("MA_CustSupp"), "", "CustSupp", DataViewRowState.CurrentRows)
+                    Dim dvCli As New DataView(ds.Tables("MA_CustSupp"), "", "CustSupp", DataViewRowState.CurrentRows)
                     'per gli Altri Dati 
-                    Using adpOpt As SqlDataAdapter = New SqlDataAdapter("SELECT Customer, CustSuppType, SuspendedTax, PublicAuthority, PASplitPayment FROM MA_CustSuppCustomerOptions WHERE CustSuppType=" & CustSuppType.Cliente, Connection)
+                    Using adpOpt As New SqlDataAdapter("SELECT Customer, CustSuppType, SuspendedTax, PublicAuthority, PASplitPayment FROM MA_CustSuppCustomerOptions WHERE CustSuppType=" & CustSuppType.Cliente, Connection)
                         adpOpt.Fill(ds, "MA_CustSuppCustomerOptions")
                         'Rigenero script di aggiornamento tabella per gli Altri dati
                         cbMar = New SqlCommandBuilder(adpOpt)
                         adpOpt.UpdateCommand = cbMar.GetUpdateCommand(True)
-                        Dim dvOpt As DataView = New DataView(ds.Tables("MA_CustSuppCustomerOptions"), "", "Customer", DataViewRowState.CurrentRows)
+                        Dim dvOpt As New DataView(ds.Tables("MA_CustSuppCustomerOptions"), "", "Customer", DataViewRowState.CurrentRows)
                         ' Carico tabelle per sedi Clienti
                         Using dtCustSede As DataTable = CaricaSchema("MA_CustSuppBranches")
                             Dim stopwatch1 As New System.Diagnostics.Stopwatch
@@ -1186,7 +1186,7 @@ Module Anagrafiche
                             Dim bDoppione As Byte
                             Dim iSede As Integer
 
-                            For irxls = i To drXLS.Count - 1
+                            For irxls = i To drXLS.Length - 1
                                 'Devo controllare che il codice esista già altrimenti lo segnalo
                                 Dim ir As Integer = dvCli.Find(drXLS(irxls).Item("F").ToString)
                                 If ir = -1 Then
@@ -1254,7 +1254,7 @@ Module Anagrafiche
                             Debug.Print(result.ToString)
                             If bAssente Then MessageBox.Show(result.ToString)
                             My.Application.Log.WriteEntry(result.ToString)
-                            Debug.Print("Elaborazione Clienti fatt. elettroniche: " & drXLS.Count.ToString & " in " & stopwatch1.Elapsed.ToString())
+                            Debug.Print("Elaborazione Clienti fatt. elettroniche: " & drXLS.Length.ToString & " in " & stopwatch1.Elapsed.ToString())
                             EditTestoBarra("Salvataggio ")
                             adpCli.Update(ds, "MA_CustSupp")
                             adpOpt.Update(ds, "MA_CustSuppCustomerOptions")
@@ -1275,13 +1275,13 @@ Module Anagrafiche
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
             Debug.Print("Aggiornamento Clienti" & " " & stopwatch.Elapsed.ToString)
         End If
         stopwatch.Stop()
-        Return okbulk
+        Return okBulk
     End Function
     Public Function InsUpdBancheCli(ByVal dts As DataSet, Optional ByVal bConIntestazione As Boolean = True) As Boolean
         'Banche Clienti INSERT-UPDATE
@@ -1297,19 +1297,19 @@ Module Anagrafiche
         'Assegno un datatable al file xls e un datarow con tutte le righe
         Dim dtXLS As DataTable = dts.Tables(0) 'dts.Tables("ANAB201L")
         Dim drXLS As DataRow() = dtXLS.Select()
-        If drXLS.Count > 0 Then
-            FLogin.prgCopy.Maximum = drXLS.Count
+        If drXLS.Length > 0 Then
+            FLogin.prgCopy.Maximum = drXLS.Length
             FLogin.prgCopy.Step = 1
             Try
                 EditTestoBarra("Aggiornamento Banche")
                 'popolo un Datatable con i soli codici
-                Using adpBanche As SqlDataAdapter = New SqlDataAdapter("SELECT * FROM MA_Banks WHERE IsACompanyBank=0", Connection)
-                    Dim ds As DataSet = New DataSet
+                Using adpBanche As New SqlDataAdapter("SELECT * FROM MA_Banks WHERE IsACompanyBank=0", Connection)
+                    Dim ds As New DataSet
                     adpBanche.Fill(ds, "MA_Banks")
                     Dim cbMar = New SqlCommandBuilder(adpBanche)
                     adpBanche.UpdateCommand = cbMar.GetUpdateCommand(True)
                     'creo la dataview associata per le ricerche
-                    Dim dvbanche As DataView = New DataView(ds.Tables("MA_Banks"), "", "ABI,CAB", DataViewRowState.CurrentRows)
+                    Dim dvbanche As New DataView(ds.Tables("MA_Banks"), "", "ABI,CAB", DataViewRowState.CurrentRows)
                     ' Carico tabelle per INSERT
                     Using dtBanche As DataTable = CaricaSchema("MA_Banks")
                         Dim stopwatch1 As New System.Diagnostics.Stopwatch
@@ -1320,7 +1320,7 @@ Module Anagrafiche
                         Dim i As Byte = 0
                         If bConIntestazione Then i = 1
 
-                        For irxls = i To drXLS.Count - 1
+                        For irxls = i To drXLS.Length - 1
                             With drXLS(irxls)
                                 'Devo controllare che la banca esista già altrimenti la inserisco
                                 Erase aBanca
@@ -1357,7 +1357,7 @@ Module Anagrafiche
                             FLogin.prgCopy.Update()
                             Application.DoEvents()
                         Next
-                        Debug.Print("Inserimento Banche Clienti: " & drXLS.Count.ToString & " in " & stopwatch1.Elapsed.ToString())
+                        Debug.Print("Inserimento Banche Clienti: " & drXLS.Length.ToString & " in " & stopwatch1.Elapsed.ToString())
                         EditTestoBarra("Salvataggio ")
                         adpBanche.Update(ds, "MA_Banks")
                         'Scrivo le altre sedi
@@ -1376,7 +1376,7 @@ Module Anagrafiche
                 End Using
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
             Debug.Print("Aggiornamento Banche" & " " & stopwatch.Elapsed.ToString)
@@ -1461,7 +1461,7 @@ Module ProcessaAnagrafiche
 
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
         End If
@@ -1516,7 +1516,7 @@ Module ProcessaAnagrafiche
 
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
         End If
@@ -1560,7 +1560,7 @@ Module ProcessaAnagrafiche
 
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
         End If
@@ -1674,7 +1674,7 @@ Module ProcessaAnagrafiche
 
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                Dim mb As MessageBoxWithDetails = New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End Try
         End If
