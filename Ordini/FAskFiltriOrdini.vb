@@ -1,6 +1,8 @@
 ﻿Imports System.Windows.Forms
 
 Public Class FAskFiltriOrdini
+    Public IsIstat As Boolean
+    Private perc As Double
     Public Sub New()
 
         ' This call is required by the designer.
@@ -8,6 +10,8 @@ Public Class FAskFiltriOrdini
 
         ' Add any initialization after the InitializeComponent() call.
         'DtaPickDA.Value = New DateTime(2021, 3, 19)
+        DtaCompA.Value = Now
+
     End Sub
     Private Sub OK_Button_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles OK_Button.Click
         Me.DialogResult = System.Windows.Forms.DialogResult.OK
@@ -46,7 +50,27 @@ Public Class FAskFiltriOrdini
     End Sub
 
     Private Sub FAskFiltriOrdini_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        DtaCompA.Value = Now
+        If IsIstat Then
+            Me.Size = New Size(262, 445)
+            'GroupCompetenza.Visible = False
+            GroupPeriodo.Visible = False
+            GroupIstat.Location = GroupPeriodo.Location
+            GroupIstat.Visible = True
+            AssignValidation(Me.TxtPercIstat, ValidationType.Only_Numbers)
+            'AssignValidation(Me.TextBox2, ValidationType.Only_Characters)
+            'AssignValidation(Me.TextBox3, ValidationType.No_Blank)
+            'AssignValidation(Me.TextBox4, ValidationType.Only_Email)
+
+        End If
     End Sub
 
+    Private Sub TxtPercIstat_TextChanged(sender As Object, e As EventArgs) Handles TxtPercIstat.TextChanged
+        Dim ok As Boolean = Double.TryParse(TxtPercIstat.Text, perc)
+    End Sub
+
+    'Private Sub TxtPercIstat_KeyPress(sender As Object, e As KeyPressEventArgs) Handles TxtPercIstat.KeyPress
+    '    If Not Char.IsNumber(e.KeyChar) AndAlso Not Char.IsControl(e.KeyChar) AndAlso Not e.KeyChar = "." AndAlso Not e.KeyChar = "," AndAlso Not e.KeyChar = "-" Then
+    '        e.Handled = True
+    '    End If
+    'End Sub
 End Class

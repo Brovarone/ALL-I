@@ -31,7 +31,13 @@
 &lt;/SerializableConnectionString&gt;</DesignTimeValue>
       <Value Profile="(Default)">Data Source=ACERBO\SQLEXPRESS;Initial Catalog=ALLSPA;Persist Security Info=True;User ID=sa</Value>
     </Setting>
-    <Setting Name="mDBTEMP" Type="System.String" Scope="User">
+    <Setting Name="mDBTEMPUNO" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="mDBTEMPSPA" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="mDATABASE_SPA" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

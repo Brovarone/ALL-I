@@ -10,7 +10,7 @@ namespace EFMago.Models
     public partial class AllordCliAcc
     {
         public int IdOrdCli { get; set; }
-       public string ApplicoIstat { get; set; }
+        public string ApplicoIstat { get; set; }
         public short? MesiDurata { get; set; }
         public short? MesiRinnovo { get; set; }
         public short? Ggdisdetta { get; set; }
@@ -41,6 +41,8 @@ namespace EFMago.Models
         public DateTime Tbmodified { get; set; }
         public int TbcreatedId { get; set; }
         public int TbmodifiedId { get; set; }
+        public string CdC { get; set; }
+        public string Vettore { get; set; }
 
         public virtual MaSaleOrd SaleOrd { get; set; }
     }

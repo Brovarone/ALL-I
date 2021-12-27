@@ -56,6 +56,7 @@ Public Class FLogin
     Private Sub MostraNascondi(ByVal admin As Boolean)
         isAdmin = admin
         PanelUser.Visible = Not admin
+        PanelDB.Visible = Not admin
         PanelAdmin.Visible = admin
         ComandiToolStripMenuItem.Visible = admin
         DisconnettiAdminToolStripMenuItem.Visible = admin
@@ -72,8 +73,10 @@ Public Class FLogin
             BtnAnalitica.Enabled = yes
             BtnPaghe.Enabled = yes
             BtnOrdini.Enabled = yes
+            BtnOrdiniISTAT.Enabled = yes
             ToolsToolStripMenuItem.Enabled = yes
             SettingsToolStripMenuItem.Enabled = yes
+            CespitiToolStripMenuItem.Enabled = yes
             BtnApriLog.Enabled = yes
 
         End If
@@ -88,41 +91,12 @@ Public Class FLogin
         Me.Refresh()
     End Sub
     Private Sub SUBConnetti()
-        Cursor = Cursors.WaitCursor
-        BtnConnetti.Enabled = False
-
-        Connection = New SqlConnection With {
-            .ConnectionString = "Data Source=" & txtSERVER.Text & "; Database=" & txtDATABASE.Text & ";User Id=" & txtID.Text & ";Password=" & txtPSW.Text & ";"
-            }
-        Connection.Open()
-        BtnConnetti.Text = Connection.State.ToString()
-        If Connection.State = ConnectionState.Open Then
-            Using comm As New SqlCommand("SELECT  @@OPTIONS", Connection)
-                'Imposto questo flag per velocizzare se StoredProcedure
-                comm.CommandText = "SET ARITHABORT ON"
-                'comm.CommandText = "SET QUOTED_IDENTIFIER ON" già presente
-                'comm.CommandText = "SET ANSI_NULLS ON" già presente
-                comm.ExecuteNonQuery()
-                'comm.CommandText = "SELECT  @@OPTIONS"
-            End Using
-            BtnProcessa.Enabled = True
-            TabControl1.Enabled = True
-            txtDATABASE.Enabled = False
-            txtID.Enabled = False
-            txtPSW.Enabled = False
-            txtSERVER.Enabled = False
-            BtnProcessa.BackColor = BtnConnetti.BackColor
-            BtnConnetti.BackColor = BtnPath.BackColor
-            BackupDatabaseToolStripMenuItem.Enabled = True
-
-        End If
-
-        Me.Cursor = Cursors.Default
+        SUBConnetti(DBInUse)
     End Sub
     Private Sub SUBConnetti(ByVal DB As String)
         Cursor = Cursors.WaitCursor
         BtnConnetti.Enabled = False
-        If String.IsNullOrWhiteSpace(DB) Then DB = txtDATABASE.Text
+        If String.IsNullOrWhiteSpace(DB) Then DB = DBInUse
         Connection = New SqlConnection With {
             .ConnectionString = "Data Source=" & txtSERVER.Text & "; Database=" & DB & ";User Id=" & txtID.Text & ";Password=" & txtPSW.Text & ";"
             }
@@ -137,12 +111,7 @@ Public Class FLogin
                 comm.ExecuteNonQuery()
                 'comm.CommandText = "SELECT  @@OPTIONS"
             End Using
-            BtnProcessa.Enabled = True
-            TabControl1.Enabled = True
-            txtDATABASE.Enabled = False
-            txtID.Enabled = False
-            txtPSW.Enabled = False
-            txtSERVER.Enabled = False
+            DisabilitaTxt(True)
             BtnProcessa.BackColor = BtnConnetti.BackColor
             BtnConnetti.BackColor = BtnPath.BackColor
             BackupDatabaseToolStripMenuItem.Enabled = True
@@ -153,8 +122,7 @@ Public Class FLogin
     End Sub
     Private Function LINQConnetti(Optional DB As String = "") As Boolean
         Dim bStatus As Boolean = False
-        If String.IsNullOrWhiteSpace(DB) Then DB = txtDATABASE.Text
-        'Dim cs As String = "Server=" & txtSERVER.Text & "; Database=DEMON;User Id=" & txtID.Text & ";Password=" & txtPSW.Text & ";"
+        If String.IsNullOrWhiteSpace(DB) Then DB = DBInUse
         Dim cs As String = "Server=" & txtSERVER.Text & "; Database=" & DB & "; User Id=" & txtID.Text & "; Password=" & txtPSW.Text & ";TrustServerCertificate=True"
 
         Cursor = Cursors.WaitCursor
@@ -171,12 +139,7 @@ Public Class FLogin
         If OrdContext.Database.CanConnect Then ' connection ok
             lstStatoConnessione.Items.Add("Connessione riuscita")
             OrdContext.Database.ExecuteSqlRaw("SET ARITHABORT ON")
-            BtnProcessa.Enabled = True
-            TabControl1.Enabled = True
-            txtDATABASE.Enabled = False
-            txtID.Enabled = False
-            txtPSW.Enabled = False
-            txtSERVER.Enabled = False
+            DisabilitaTxt(True)
             BtnProcessa.BackColor = BtnConnetti.BackColor
             BtnConnetti.BackColor = BtnPath.BackColor
             BackupDatabaseToolStripMenuItem.Enabled = True
@@ -204,13 +167,15 @@ Public Class FLogin
         Me.DtDataInizio.Text = (New DateTime(anno, mese, 1)).ToString("d")
         DataInizio = DtDataInizio.Value.ToString("yyyy-MM-dd")
         'Carico dal file config
-        txtDATABASE.Text = My.Settings.mDATABASE
+        TxtDB_UNO.Text = My.Settings.mDATABASE
+        TxtDB_SPA.Text = My.Settings.mDATABASE_SPA
         txtSERVER.Text = My.Settings.mSQLSERVER
         txtID.Text = My.Settings.mID
         txtPSW.Text = My.Settings.mPSW
         txtPath.Text = My.Settings.mPATH
         txtLoginId.Text = My.Settings.mLOGINID
-        TxtTMPDB.Text = My.Settings.mDBTEMP
+        TxtTmpDB_UNO.Text = My.Settings.mDBTEMPUNO
+        TxtTmpDB_SPA.Text = My.Settings.mDBTEMPSPA
         FolderPath = txtPath.Text
         'Aggiungo la possibilità di eseguire il mio textChanged ( SULL'EVENTO LEAVE)
         For Each tx As TextBox In Me.PanelAdmin.Controls.OfType(Of TextBox)()
@@ -222,9 +187,9 @@ Public Class FLogin
         'Controllo quali pulsanti abilitare in base all'esistenza o meno del file
         ControllaEAbilita()
 
-        'Posiziono il pannello Utente
-        PanelUser.Location = PanelAdmin.Location
-        PanelUser.Size = PanelAdmin.Size
+        'Posiziono il pannello DB
+        PanelDB.Location = PanelAdmin.Location
+        PanelDB.Size = PanelAdmin.Size
         lstStatoConnessione.Top = 170
         lstStatoConnessione.Size = New Size(429, 170)
         lstStatoConnessione.BringToFront()
@@ -233,8 +198,10 @@ Public Class FLogin
         Dim tb As TextBox = DirectCast(sender, TextBox)
         Select Case tb.Name.ToUpper()
 
-            Case "TXTDATABASE"
+            Case "TXTDB_UNO"
                 My.Settings.mDATABASE = tb.Text
+            Case "TXTDB_SPA"
+                My.Settings.mDATABASE_SPA = tb.Text
             Case "TXTSERVER"
                 My.Settings.mSQLSERVER = tb.Text
             Case "TXTID"
@@ -245,9 +212,10 @@ Public Class FLogin
                 My.Settings.mLOGINID = tb.Text
             Case "TXTPATH"
                 My.Settings.mPATH = tb.Text
-            Case "TXTTMPDB"
-                My.Settings.mDBTEMP = tb.Text
-
+            Case "TXTTMPDB_UNO"
+                My.Settings.mDBTEMPUNO = tb.Text
+            Case "TXTTMPDB_SPA"
+                My.Settings.mDBTEMPSPA = tb.Text
         End Select
     End Sub
     Private Sub DtDataInizio_ValueChanged(sender As Object, e As EventArgs) Handles DtDataInizio.ValueChanged
@@ -996,7 +964,7 @@ Public Class FLogin
                         'Paghe
                         'ALL???
                         If Len(filename) = 7 AndAlso filename Like "ALL????" Then
-                            lstStatoConnessione.Items.Add("Paghe")
+                            lstStatoConnessione.Items.Add("Importazione Paghe")
                             esito = CaricaFlussoPaghe(spath)
                             ' dsXLS.Tables.Add(LoadCsvData(spath, False, "", ","))
                             ' esito = DichIntentoCSV(dsXLS, False)
@@ -1283,7 +1251,61 @@ Public Class FLogin
         Me.Cursor = Cursors.Default
 
     End Sub
+    Private Sub BtnCancellaRigheOrdini_Click_1(sender As Object, e As EventArgs) Handles BtnCancellaRigheOrdini.Click
 
+        Dim res As Integer
+        Me.Cursor = Cursors.WaitCursor
+        Dim result As New StringBuilder("Righe ordini:" & vbCrLf)
+        Dim s As String = InputBox("Indicare la data di generazione nel formato AAAAMMGG") '& vbCrLf & " Se lasciato AAAMMGG verranno cancellate tutte le righe generate", "", "AAAAMMGG")
+        Dim wCr_Mod As String = " WHERE TBCreatedID=" & My.Settings.mLOGINID & " AND TBModifiedID=" & My.Settings.mLOGINID
+        Using comm As New SqlCommand("DELETE MA_SaleOrdDetails " & wCr_Mod, Connection)
+            comm.CommandTimeout = 0
+            If String.IsNullOrWhiteSpace(s) Then
+                'Ho premuto annulla
+            ElseIf s = "AAAAMMGG" Then
+                'Ho premuto ok ma senza inserire data
+                'LOW reimposta flag su documento
+                'result.Append(" MA_CostAccEntriesDetail: " & comm.ExecuteNonQuery().ToString)
+                'prgCopy.PerformStep()
+                'Dim wCross As String = " WHERE DerivedDocType=" & CrossReference.MovimentoAnalitico & " AND TBCreatedID=" & My.Settings.mLOGINID
+                'comm.CommandText = "DELETE MA_CrossReferences" & wCross
+                'result.Append(" MA_CrossReferences: " & comm.ExecuteNonQuery().ToString)
+                'prgCopy.PerformStep()
+                'comm.CommandText = "DELETE MA_CostAccEntries" & wCr_Mod
+                'result.Append(" MA_CostAccEntries: " & comm.ExecuteNonQuery().ToString)
+                'prgCopy.PerformStep()
+                'prgCopy.Update()
+            ElseIf Integer.TryParse(s, res) Then
+                'se ho una data valida cancello solo quella data
+                If Len(s) = 8 Then
+                    Dim wCr_Mod_CrDt As String = " WHERE TBCreatedID=" & My.Settings.mLOGINID & " AND TBModifiedID=" & My.Settings.mLOGINID & " AND TBCreated BETWEEN '" & s & " 00:00:00' AND '" & s & " 23:59:59' "
+                    Dim wMod_ModDt As String = " TBModifiedID=" & My.Settings.mLOGINID & " AND TBModified BETWEEN '" & s & " 00:00:00' AND '" & s & " 23:59:59' "
+
+                    comm.CommandText = "UPDATE ALLOrdCliContratto  
+                                        SET DataProssimaFatt =  DET.ExpectedDeliveryDate 
+                                        FROM ALLOrdCliContratto CON , (SELECT  SaleOrdId, Item, max(ExpectedDeliveryDate) AS ExpectedDeliveryDate FROM MA_SaleOrdDetails GROUP BY SaleOrdId, Item) DET 
+                                        WHERE CON.IdOrdCli = DET.SaleOrdId AND CON.Servizio = DET.Item  AND 
+                                        CON.Fatturato ='0' AND 
+                                        CON.IdOrdCli IN ( SELECT DISTINCT SaleOrdId FROM MA_SaleOrdDetails WHERE" & wMod_ModDt & ") AND " & wMod_ModDt
+                    result.Append(" Update ALLOrdCliContratto: " & comm.ExecuteNonQuery().ToString)
+                    comm.CommandText = "UPDATE ALLOrdCliContratto SET Fatturato ='0' WHERE Fatturato='1' and IdOrdCli IN ( SELECT DISTINCT SaleOrdId FROM MA_SaleOrdDetails WHERE" & wMod_ModDt & ") AND " & wMod_ModDt
+                    result.Append(" Update ALLOrdCliContratto(unatantum): " & comm.ExecuteNonQuery().ToString)
+                    comm.CommandText = "UPDATE ALLOrdCliAttivita SET Fatturata ='0' WHERE Fatturata='1' and IdOrdCli IN ( SELECT DISTINCT SaleOrdId FROM MA_SaleOrdDetails WHERE" & wMod_ModDt & ") AND " & wMod_ModDt
+                    result.Append(" Update ALLOrdCliAttivita(riprese): " & comm.ExecuteNonQuery().ToString)
+                    comm.CommandText = "SELECT count(SaleOrdId) FROM MA_SaleOrd" & wCr_Mod_CrDt
+                    result.Append(" Ordini Estratti: " & comm.ExecuteNonQuery().ToString)
+                    comm.CommandText = "DELETE MA_SaleOrdDetails" & wCr_Mod_CrDt
+                    result.Append(" MA_SaleOrdDetails: " & comm.ExecuteNonQuery().ToString)
+                    result.Append(Environment.NewLine & "Controllare Ordini con data cessazione!")
+
+
+                End If
+            End If
+        End Using
+        MessageBox.Show(result.ToString)
+        Me.Cursor = Cursors.Default
+
+    End Sub
     Private Sub RiorganizzaCartelleToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles RiorganizzaCartelleToolStripMenuItem.Click
         If (FolderBrowserDialog1.ShowDialog() = DialogResult.OK) Then
             Const sl As String = "\"
@@ -1319,24 +1341,23 @@ Public Class FLogin
         If withDelete Then Directory.Delete(origine, True)
     End Sub
 
-    Private Sub TestRiscontiToolStripMenuItem_Click_1(sender As Object, e As EventArgs) Handles TestRiscontiToolStripMenuItem.Click
+    Private Sub TestRiscontiToolStripMenuItem1_Click(sender As Object, e As EventArgs) Handles TestRiscontiToolStripMenuItem.Click
         ChkRisconti.Checked = True
         SUBConnetti()
         SUBProcessa()
     End Sub
-
     Private Sub ImportaToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles ImportaToolStripMenuItem.Click
         'Processa Cespiti
         ChkCespiti.Checked = True
-        Dim bok As Boolean = MessageBox.Show("Temporaneo [" & TxtTMPDB.Text & "] (SI) o definitivo [" & txtDATABASE.Text & "] (NO)?", "Import Cespiti", MessageBoxButtons.YesNoCancel) = DialogResult.Yes
-        SUBConnetti(If(bok, TxtTMPDB.Text, ""))
+        Dim bok As Boolean = MessageBox.Show("Temporaneo [" & TxtTmpDB_UNO.Text & "] (SI) o definitivo [" & TxtDB_UNO.Text & "] (NO)?", "Import Cespiti", MessageBoxButtons.YesNoCancel) = DialogResult.Yes
+        SUBConnetti(If(bok, TxtTmpDB_UNO.Text, ""))
         SUBProcessa()
     End Sub
 
     Private Sub CancellaToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles CancellaToolStripMenuItem.Click
         'Elimina cespiti
-        Dim bok As Boolean = MessageBox.Show("Temporaneo [" & TxtTMPDB.Text & "] (SI) o definitivo [" & txtDATABASE.Text & "] (NO)?", "Import Cespiti", MessageBoxButtons.YesNoCancel) = DialogResult.Yes
-        SUBConnetti(If(bok, TxtTMPDB.Text, ""))
+        Dim bok As Boolean = MessageBox.Show("Temporaneo [" & TxtTmpDB_UNO.Text & "] (SI) o definitivo [" & TxtDB_UNO.Text & "] (NO)?", "Import Cespiti", MessageBoxButtons.YesNoCancel) = DialogResult.Yes
+        SUBConnetti(If(bok, TxtTmpDB_UNO.Text, ""))
         SUBConnetti()
         Dim res As Integer
         Me.Cursor = Cursors.WaitCursor
@@ -1480,15 +1501,10 @@ Public Class FLogin
 
 
     Private Sub BtnOrdini_Click(sender As Object, e As EventArgs) Handles BtnOrdini.Click
-        Dim r As DialogResult = MessageBox.Show("Generazione ordini su azienda DEMO:" & TxtTMPDB.Text, "Gestione Ordini", MessageBoxButtons.OKCancel)
-        'Dim r As DialogResult = MessageBox.Show("Temporaneo [" & TxtTMPDB.Text & "] (SI) o definitivo [" & txtDATABASE.Text & "] (NO)?", "Gestione Ordini", MessageBoxButtons.YesNoCancel)
-        If r = DialogResult.Cancel Then Return
-        ' Dim bok As Boolean = r = DialogResult.Yes
-        Dim bok As Boolean = r = DialogResult.OK
-        If LINQConnetti(If(bok, TxtTMPDB.Text, "")) Then
+        En_Dis_Controls(False, True, True)
+        If LINQConnetti() Then
 
             Me.Cursor = Cursors.WaitCursor
-            En_Dis_Controls(False, False, True)
             lstStatoConnessione.Items.Add("   ---   Generazione Righe Ordini   ---")
             lstStatoConnessione.Items.Add("Attendere... il processo potrebbe durare qualche minuto")
             'INIZIALIZZO NUOVO LOG
@@ -1513,9 +1529,95 @@ Public Class FLogin
         End If
 
     End Sub
+    Private Sub BtnOrdiniISTAT_Click(sender As Object, e As EventArgs) Handles BtnOrdiniISTAT.Click
+        En_Dis_Controls(False, True, True)
+        If LINQConnetti() Then
+            Me.Cursor = Cursors.WaitCursor
+            lstStatoConnessione.Items.Add("   ---   Adeguamento ISTAT su Ordini   ---")
+            lstStatoConnessione.Items.Add("Attendere... il processo potrebbe durare qualche minuto")
+            'INIZIALIZZO NUOVO LOG
+            My.Application.Log.DefaultFileLogWriter.BaseFileName += "-" & DateTime.Now.ToString("dd-MM-yyyy--HH-mm-ss")
+            My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Adeguamento ISTAT su ordini  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
 
-    Private Sub TMPordiniToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles TMPordiniToolStripMenuItem.Click
+            'ESEGUO LA PROCEDURA
+            Dim esito As Boolean
+            esito = AdeguaIstatOrdine()
+            OrdContext.Dispose()
+            lstStatoConnessione.Items.Add("Esito Adeguamento ISTAT su Ordini " & If(esito, "OK", "Errore"))
+            lstStatoConnessione.Items.Add("   ---   Elaborazione completata   ---")
+            prgCopy.Value = 0
+            prgCopy.Text = "Elaborazione completata"
+            prgCopy.Refresh()
+            Application.DoEvents()
+            Me.Cursor = Cursors.Default
+            Me.Refresh()
+
+            'Salvo il log
+            ScriviLogESposta()
+        End If
+    End Sub
+
+    Private Sub BtnSelUNO_Click(sender As Object, e As EventArgs) Handles BtnSelUNO.Click
+        If CheckDB(TxtDB_UNO.Text, TxtTmpDB_UNO.Text) Then MostraPannelloUtente("UNO")
+        If DBisTMP Then
+            TxtTmpDB_UNO.BackColor = Color.FromArgb(255, 152, 251, 152)
+        Else
+            TxtDB_UNO.BackColor = Color.FromArgb(255, 152, 251, 152)
+        End If
+    End Sub
+
+    Private Sub BtnSelSPA_Click(sender As Object, e As EventArgs) Handles BtnSelSPA.Click
+        If CheckDB(TxtDB_SPA.Text, TxtTmpDB_SPA.Text) Then MostraPannelloUtente("SPA")
+        If DBisTMP Then
+            TxtTmpDB_SPA.BackColor = Color.FromArgb(255, 152, 251, 152)
+        Else
+            TxtDB_SPA.BackColor = Color.FromArgb(255, 152, 251, 152)
+        End If
+    End Sub
+    Private Shared Function CheckDB(ByVal azienda As String, temp As String) As Boolean
+        If String.IsNullOrWhiteSpace(azienda) OrElse String.IsNullOrWhiteSpace(temp) Then
+            MessageBox.Show("Dati database mancanti! Inserirli tramite password di amministratore")
+            Return False
+        End If
+        If FLogin.CHKDBTemporaneo.Checked Then
+            DBisTMP = True
+        End If
+        DBInUse = If(DBisTMP, azienda, temp)
+        Return True
+    End Function
+    Private Sub MostraPannelloUtente(ByVal azienda As String)
+        PanelUser.Location = PanelAdmin.Location
+        PanelUser.Size = PanelAdmin.Size
+        If DBisTMP Then
+            PanelUser.BackColor = Color.FromArgb(255, 255, 228, 181)
+            Me.BackColor = Color.FromArgb(255, 255, 228, 181)
+        End If
+
+        PanelUser.Visible = True
+        PanelDB.Visible = False
+        lstStatoConnessione.Items.Add(If(DBisTMP, "Azienda test: ", "Azienda: ") & azienda & " - Database : " & DBInUse)
+    End Sub
+    Private Sub DisabilitaTxt(ByVal ny As Boolean)
+        BtnProcessa.Enabled = ny
+        TabControl1.Enabled = ny
+        TxtDB_UNO.Enabled = Not ny
+        TxtDB_SPA.Enabled = Not ny
+        TxtTmpDB_UNO.Enabled = Not ny
+        TxtTmpDB_SPA.Enabled = Not ny
+        txtID.Enabled = Not ny
+        txtPSW.Enabled = Not ny
+        txtSERVER.Enabled = Not ny
+    End Sub
+
+    Private Sub TestOrdiniToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles TestOrdiniToolStripMenuItem.Click
         BtnOrdini.Enabled = True
         BtnOrdini.PerformClick()
     End Sub
+
+    Private Sub TestISTATToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles TestISTATToolStripMenuItem.Click
+        BtnOrdiniISTAT.Enabled = True
+        BtnOrdiniISTAT.PerformClick()
+    End Sub
+
+
 End Class

@@ -206,6 +206,7 @@ namespace EFMago.Models
                 entity.Property(e => e.IdOrdCli).ValueGeneratedNever();
 
                 entity.Property(e => e.Agente)
+                    .HasColumnName("Agente")
                     .HasMaxLength(8)
                     .IsUnicode(false)
                     .HasDefaultValueSql("('')");
@@ -217,7 +218,14 @@ namespace EFMago.Models
                     .IsFixedLength()
                     .HasDefaultValueSql("('0')");
 
+                entity.Property(e => e.CdC)
+                    .HasColumnName("CdC")
+                    .HasMaxLength(8)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
                 entity.Property(e => e.CondPag)
+                    .HasColumnName("CondPag")
                     .HasMaxLength(8)
                     .IsUnicode(false)
                     .HasDefaultValueSql("('')");
@@ -320,6 +328,12 @@ namespace EFMago.Models
                 entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
 
                 entity.Property(e => e.TipoContratto).HasDefaultValueSql("((1108934656))");
+                
+                entity.Property(e => e.Vettore)
+                    .HasColumnName("Vettore")
+                    .HasMaxLength(8)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
 
                 entity.HasOne(d => d.SaleOrd)
                     .WithOne(p => p.ALLOrdCliAcc)
@@ -395,6 +409,10 @@ namespace EFMago.Models
 
                 entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
 
+                entity.Property(e => e.ValUnit)
+                    .HasColumnName("ValUnit")
+                    .HasDefaultValueSql("((0))");
+
                 // AGGIUNTO DA ME
                 entity.HasOne(d => d.SaleOrd)
                    .WithMany(p => p.AllordCliAttivita)
@@ -418,14 +436,17 @@ namespace EFMago.Models
                 entity.ToTable("ALLOrdCliContratto");
 
                 entity.Property(e => e.DataDecorrenza)
+                    .HasColumnName("DataDecorrenza")
                     .HasColumnType("datetime")
                     .HasDefaultValueSql("('17991231')");
 
                 entity.Property(e => e.DataFineElaborazione)
+                    .HasColumnName("DataFineElaborazione")
                     .HasColumnType("datetime")
                     .HasDefaultValueSql("('17991231')");
 
                 entity.Property(e => e.DataProssimaFatt)
+                    .HasColumnName("DataProssimaFatt")
                     .HasColumnType("datetime")
                     .HasDefaultValueSql("('17991231')");
 
@@ -435,32 +456,41 @@ namespace EFMago.Models
                     .HasDefaultValueSql("('17991231')");
 
                 entity.Property(e => e.Descrizione)
+                    .HasColumnName("Descrizione")
                     .HasMaxLength(128)
                     .IsUnicode(false)
                     .HasDefaultValueSql("('')");
 
                 entity.Property(e => e.Fatturato)
+                    .HasColumnName("Fatturato")
                     .HasMaxLength(1)
                     .IsUnicode(false)
                     .IsFixedLength()
                     .HasDefaultValueSql("('0')");
 
-                entity.Property(e => e.Franchigia).HasDefaultValueSql("((0))");
+                entity.Property(e => e.Franchigia)
+                    .HasColumnName("Franchigia")
+                    .HasDefaultValueSql("((0))");
 
                 entity.Property(e => e.NonRiportaInFatt)
+                    .HasColumnName("NonRiportaInFatt")
                     .HasMaxLength(1)
                     .IsUnicode(false)
                     .IsFixedLength()
                     .HasDefaultValueSql("('0')");
 
                 entity.Property(e => e.Nota)
+                    .HasColumnName("Nota")
                     .HasMaxLength(128)
                     .IsUnicode(false)
                     .HasDefaultValueSql("('')");
 
-                entity.Property(e => e.Qta).HasDefaultValueSql("((0))");
+                entity.Property(e => e.Qta)
+                    .HasColumnName("Qta")
+                    .HasDefaultValueSql("((0))");
 
                 entity.Property(e => e.Servizio)
+                    .HasColumnName("Servizio")
                     .HasMaxLength(21)
                     .IsUnicode(false)
                     .HasDefaultValueSql("('')");
@@ -480,6 +510,7 @@ namespace EFMago.Models
                 entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
 
                 entity.Property(e => e.TipoRigaServizio)
+                    .HasColumnName("TipoRigaServizio")
                     .HasMaxLength(12)
                     .IsUnicode(false)
                     .HasDefaultValueSql("('')");
@@ -490,7 +521,9 @@ namespace EFMago.Models
                     .IsUnicode(false)
                     .HasDefaultValueSql("('')");
 
-                entity.Property(e => e.ValUnit).HasDefaultValueSql("((0))");
+                entity.Property(e => e.ValUnit)
+                    .HasColumnName("ValUnit")
+                    .HasDefaultValueSql("((0))");
 
                 entity.Property(e => e.ValUnitIstat)
                     .HasColumnName("ValUnitISTAT")

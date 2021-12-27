@@ -53,7 +53,7 @@ Module Fatture
         log.Corpo.Add(l_NewSedi)
         log.Corpo.Add(l_ids)
 #End Region
-        Dim errori As New StringBuilder()  ' Ultimo = 19
+        Dim errori As New StringBuilder()  ' Ultimo = 21
         Dim avvisi As New StringBuilder()  ' Ultimo = 12  / 50
         Dim aggiornamenti As New StringBuilder()
         Dim sicuritalia As New StringBuilder()
@@ -693,7 +693,11 @@ Module Fatture
                                                                                 bContratto = True
                                                                                 sContratto(0) = RTrim(Mid(sDescri, 10, 12))
                                                                                 sContratto(1) = TrovaCdC(sDescri)
-                                                                                sContratto(2) = TrovaContropartita(sDescri, dvCntrp)
+                                                                                Dim sConto As String = ""
+                                                                                If Not TryTrovaContropartita(sDescri, dvCntrp, sConto) Then
+                                                                                    errori.AppendLine("E21: Doc: " & .Item("O").ToString & " senza corrispondenza di contropartita : " & sDescri)
+                                                                                End If
+                                                                                sContratto(2) = sConto
                                                                                 'drDocDet("Notes") = sContratto(0)
                                                                                 'drDocDet("CostCenter") = sContratto(1)
                                                                                 'drDocDet("Offset") = sContratto(2)

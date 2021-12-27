@@ -22,6 +22,7 @@ Partial Class FAskFiltriOrdini
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
+        Me.components = New System.ComponentModel.Container()
         Me.TableLayoutPanel1 = New System.Windows.Forms.TableLayoutPanel()
         Me.OK_Button = New System.Windows.Forms.Button()
         Me.Cancel_Button = New System.Windows.Forms.Button()
@@ -29,7 +30,7 @@ Partial Class FAskFiltriOrdini
         Me.DtaA = New System.Windows.Forms.DateTimePicker()
         Me.LblDallaData = New System.Windows.Forms.Label()
         Me.LblAlladata = New System.Windows.Forms.Label()
-        Me.GroupBox1 = New System.Windows.Forms.GroupBox()
+        Me.GroupOrdini = New System.Windows.Forms.GroupBox()
         Me.TxtOrdFiliale = New System.Windows.Forms.TextBox()
         Me.ChkFiliale = New System.Windows.Forms.CheckBox()
         Me.ChkCliente = New System.Windows.Forms.CheckBox()
@@ -39,8 +40,8 @@ Partial Class FAskFiltriOrdini
         Me.TxtOrdCliente = New System.Windows.Forms.TextBox()
         Me.TxtNrOrdine = New System.Windows.Forms.TextBox()
         Me.DtaCompA = New System.Windows.Forms.DateTimePicker()
-        Me.GroupBox2 = New System.Windows.Forms.GroupBox()
-        Me.GroupBox3 = New System.Windows.Forms.GroupBox()
+        Me.GroupCompetenza = New System.Windows.Forms.GroupBox()
+        Me.GroupPeriodo = New System.Windows.Forms.GroupBox()
         Me.ChkP_Tutti = New System.Windows.Forms.CheckBox()
         Me.ChkP_Mensili = New System.Windows.Forms.CheckBox()
         Me.ChkP_Bimestrali = New System.Windows.Forms.CheckBox()
@@ -48,10 +49,17 @@ Partial Class FAskFiltriOrdini
         Me.ChkP_Quadrimestrali = New System.Windows.Forms.CheckBox()
         Me.ChkP_Semestrali = New System.Windows.Forms.CheckBox()
         Me.ChkP_Annuali = New System.Windows.Forms.CheckBox()
+        Me.GroupIstat = New System.Windows.Forms.GroupBox()
+        Me.Label1 = New System.Windows.Forms.Label()
+        Me.TxtPercIstat = New System.Windows.Forms.TextBox()
+        Me.TxtIstatAttivita = New System.Windows.Forms.TextBox()
+        Me.Label2 = New System.Windows.Forms.Label()
+        Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
         Me.TableLayoutPanel1.SuspendLayout()
-        Me.GroupBox1.SuspendLayout()
-        Me.GroupBox2.SuspendLayout()
-        Me.GroupBox3.SuspendLayout()
+        Me.GroupOrdini.SuspendLayout()
+        Me.GroupCompetenza.SuspendLayout()
+        Me.GroupPeriodo.SuspendLayout()
+        Me.GroupIstat.SuspendLayout()
         Me.SuspendLayout()
         '
         'TableLayoutPanel1
@@ -62,7 +70,7 @@ Partial Class FAskFiltriOrdini
         Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
         Me.TableLayoutPanel1.Controls.Add(Me.OK_Button, 0, 0)
         Me.TableLayoutPanel1.Controls.Add(Me.Cancel_Button, 1, 0)
-        Me.TableLayoutPanel1.Location = New System.Drawing.Point(88, 428)
+        Me.TableLayoutPanel1.Location = New System.Drawing.Point(88, 398)
         Me.TableLayoutPanel1.Name = "TableLayoutPanel1"
         Me.TableLayoutPanel1.RowCount = 1
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
@@ -123,26 +131,26 @@ Partial Class FAskFiltriOrdini
         Me.LblAlladata.TabIndex = 4
         Me.LblAlladata.Text = "Alla data"
         '
-        'GroupBox1
+        'GroupOrdini
         '
-        Me.GroupBox1.Controls.Add(Me.TxtOrdFiliale)
-        Me.GroupBox1.Controls.Add(Me.ChkFiliale)
-        Me.GroupBox1.Controls.Add(Me.ChkCliente)
-        Me.GroupBox1.Controls.Add(Me.ChkNrOrdine)
-        Me.GroupBox1.Controls.Add(Me.RadFinoAllaData)
-        Me.GroupBox1.Controls.Add(Me.RadDalAl)
-        Me.GroupBox1.Controls.Add(Me.TxtOrdCliente)
-        Me.GroupBox1.Controls.Add(Me.TxtNrOrdine)
-        Me.GroupBox1.Controls.Add(Me.DtaA)
-        Me.GroupBox1.Controls.Add(Me.DtaDA)
-        Me.GroupBox1.Controls.Add(Me.LblAlladata)
-        Me.GroupBox1.Controls.Add(Me.LblDallaData)
-        Me.GroupBox1.Location = New System.Drawing.Point(6, 3)
-        Me.GroupBox1.Name = "GroupBox1"
-        Me.GroupBox1.Size = New System.Drawing.Size(228, 215)
-        Me.GroupBox1.TabIndex = 7
-        Me.GroupBox1.TabStop = False
-        Me.GroupBox1.Text = "Ordini Ciente"
+        Me.GroupOrdini.Controls.Add(Me.TxtOrdFiliale)
+        Me.GroupOrdini.Controls.Add(Me.ChkFiliale)
+        Me.GroupOrdini.Controls.Add(Me.ChkCliente)
+        Me.GroupOrdini.Controls.Add(Me.ChkNrOrdine)
+        Me.GroupOrdini.Controls.Add(Me.RadFinoAllaData)
+        Me.GroupOrdini.Controls.Add(Me.RadDalAl)
+        Me.GroupOrdini.Controls.Add(Me.TxtOrdCliente)
+        Me.GroupOrdini.Controls.Add(Me.TxtNrOrdine)
+        Me.GroupOrdini.Controls.Add(Me.DtaA)
+        Me.GroupOrdini.Controls.Add(Me.DtaDA)
+        Me.GroupOrdini.Controls.Add(Me.LblAlladata)
+        Me.GroupOrdini.Controls.Add(Me.LblDallaData)
+        Me.GroupOrdini.Location = New System.Drawing.Point(6, 3)
+        Me.GroupOrdini.Name = "GroupOrdini"
+        Me.GroupOrdini.Size = New System.Drawing.Size(228, 215)
+        Me.GroupOrdini.TabIndex = 7
+        Me.GroupOrdini.TabStop = False
+        Me.GroupOrdini.Text = "Ordini Ciente"
         '
         'TxtOrdFiliale
         '
@@ -228,32 +236,32 @@ Partial Class FAskFiltriOrdini
         Me.DtaCompA.Size = New System.Drawing.Size(96, 20)
         Me.DtaCompA.TabIndex = 11
         '
-        'GroupBox2
+        'GroupCompetenza
         '
-        Me.GroupBox2.Controls.Add(Me.DtaCompA)
-        Me.GroupBox2.Location = New System.Drawing.Point(6, 244)
-        Me.GroupBox2.Name = "GroupBox2"
-        Me.GroupBox2.Size = New System.Drawing.Size(228, 46)
-        Me.GroupBox2.TabIndex = 14
-        Me.GroupBox2.TabStop = False
-        Me.GroupBox2.Text = "Competenza"
+        Me.GroupCompetenza.Controls.Add(Me.DtaCompA)
+        Me.GroupCompetenza.Location = New System.Drawing.Point(6, 224)
+        Me.GroupCompetenza.Name = "GroupCompetenza"
+        Me.GroupCompetenza.Size = New System.Drawing.Size(228, 46)
+        Me.GroupCompetenza.TabIndex = 14
+        Me.GroupCompetenza.TabStop = False
+        Me.GroupCompetenza.Text = "Competenza"
         '
-        'GroupBox3
+        'GroupPeriodo
         '
-        Me.GroupBox3.Controls.Add(Me.ChkP_Tutti)
-        Me.GroupBox3.Controls.Add(Me.ChkP_Mensili)
-        Me.GroupBox3.Controls.Add(Me.ChkP_Bimestrali)
-        Me.GroupBox3.Controls.Add(Me.ChkP_Trimestrali)
-        Me.GroupBox3.Controls.Add(Me.ChkP_Quadrimestrali)
-        Me.GroupBox3.Controls.Add(Me.ChkP_Semestrali)
-        Me.GroupBox3.Controls.Add(Me.ChkP_Annuali)
-        Me.GroupBox3.Enabled = False
-        Me.GroupBox3.Location = New System.Drawing.Point(6, 296)
-        Me.GroupBox3.Name = "GroupBox3"
-        Me.GroupBox3.Size = New System.Drawing.Size(228, 114)
-        Me.GroupBox3.TabIndex = 15
-        Me.GroupBox3.TabStop = False
-        Me.GroupBox3.Text = "Periodo"
+        Me.GroupPeriodo.Controls.Add(Me.ChkP_Tutti)
+        Me.GroupPeriodo.Controls.Add(Me.ChkP_Mensili)
+        Me.GroupPeriodo.Controls.Add(Me.ChkP_Bimestrali)
+        Me.GroupPeriodo.Controls.Add(Me.ChkP_Trimestrali)
+        Me.GroupPeriodo.Controls.Add(Me.ChkP_Quadrimestrali)
+        Me.GroupPeriodo.Controls.Add(Me.ChkP_Semestrali)
+        Me.GroupPeriodo.Controls.Add(Me.ChkP_Annuali)
+        Me.GroupPeriodo.Enabled = False
+        Me.GroupPeriodo.Location = New System.Drawing.Point(6, 276)
+        Me.GroupPeriodo.Name = "GroupPeriodo"
+        Me.GroupPeriodo.Size = New System.Drawing.Size(228, 114)
+        Me.GroupPeriodo.TabIndex = 15
+        Me.GroupPeriodo.TabStop = False
+        Me.GroupPeriodo.Text = "Periodo"
         '
         'ChkP_Tutti
         '
@@ -333,17 +341,65 @@ Partial Class FAskFiltriOrdini
         Me.ChkP_Annuali.Text = "Annuali"
         Me.ChkP_Annuali.UseVisualStyleBackColor = True
         '
+        'GroupIstat
+        '
+        Me.GroupIstat.Controls.Add(Me.Label2)
+        Me.GroupIstat.Controls.Add(Me.TxtIstatAttivita)
+        Me.GroupIstat.Controls.Add(Me.Label1)
+        Me.GroupIstat.Controls.Add(Me.TxtPercIstat)
+        Me.GroupIstat.Location = New System.Drawing.Point(12, 430)
+        Me.GroupIstat.Name = "GroupIstat"
+        Me.GroupIstat.Size = New System.Drawing.Size(228, 76)
+        Me.GroupIstat.TabIndex = 15
+        Me.GroupIstat.TabStop = False
+        Me.GroupIstat.Text = "ISTAT"
+        Me.GroupIstat.Visible = False
+        '
+        'Label1
+        '
+        Me.Label1.AutoSize = True
+        Me.Label1.Location = New System.Drawing.Point(31, 23)
+        Me.Label1.Name = "Label1"
+        Me.Label1.Size = New System.Drawing.Size(64, 13)
+        Me.Label1.TabIndex = 1
+        Me.Label1.Text = "Percentuale"
+        '
+        'TxtPercIstat
+        '
+        Me.TxtPercIstat.Location = New System.Drawing.Point(110, 20)
+        Me.TxtPercIstat.Name = "TxtPercIstat"
+        Me.TxtPercIstat.Size = New System.Drawing.Size(100, 20)
+        Me.TxtPercIstat.TabIndex = 0
+        '
+        'TxtIstatAttivita
+        '
+        Me.TxtIstatAttivita.Location = New System.Drawing.Point(110, 46)
+        Me.TxtIstatAttivita.Name = "TxtIstatAttivita"
+        Me.TxtIstatAttivita.Size = New System.Drawing.Size(100, 20)
+        Me.TxtIstatAttivita.TabIndex = 21
+        Me.TxtIstatAttivita.Text = "ISTAT"
+        '
+        'Label2
+        '
+        Me.Label2.AutoSize = True
+        Me.Label2.Location = New System.Drawing.Point(31, 49)
+        Me.Label2.Name = "Label2"
+        Me.Label2.Size = New System.Drawing.Size(39, 13)
+        Me.Label2.TabIndex = 22
+        Me.Label2.Text = "Attività"
+        '
         'FAskFiltriOrdini
         '
         Me.AcceptButton = Me.OK_Button
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.CancelButton = Me.Cancel_Button
-        Me.ClientSize = New System.Drawing.Size(246, 469)
-        Me.Controls.Add(Me.GroupBox3)
-        Me.Controls.Add(Me.GroupBox2)
+        Me.ClientSize = New System.Drawing.Size(246, 439)
+        Me.Controls.Add(Me.GroupPeriodo)
+        Me.Controls.Add(Me.GroupIstat)
+        Me.Controls.Add(Me.GroupCompetenza)
         Me.Controls.Add(Me.TableLayoutPanel1)
-        Me.Controls.Add(Me.GroupBox1)
+        Me.Controls.Add(Me.GroupOrdini)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
         Me.MaximizeBox = False
         Me.MinimizeBox = False
@@ -352,11 +408,13 @@ Partial Class FAskFiltriOrdini
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
         Me.Text = "Filtri"
         Me.TableLayoutPanel1.ResumeLayout(False)
-        Me.GroupBox1.ResumeLayout(False)
-        Me.GroupBox1.PerformLayout()
-        Me.GroupBox2.ResumeLayout(False)
-        Me.GroupBox3.ResumeLayout(False)
-        Me.GroupBox3.PerformLayout()
+        Me.GroupOrdini.ResumeLayout(False)
+        Me.GroupOrdini.PerformLayout()
+        Me.GroupCompetenza.ResumeLayout(False)
+        Me.GroupPeriodo.ResumeLayout(False)
+        Me.GroupPeriodo.PerformLayout()
+        Me.GroupIstat.ResumeLayout(False)
+        Me.GroupIstat.PerformLayout()
         Me.ResumeLayout(False)
 
     End Sub
@@ -367,7 +425,7 @@ Partial Class FAskFiltriOrdini
     Friend WithEvents DtaA As DateTimePicker
     Friend WithEvents LblDallaData As Label
     Friend WithEvents LblAlladata As Label
-    Friend WithEvents GroupBox1 As GroupBox
+    Friend WithEvents GroupOrdini As GroupBox
     Friend WithEvents TxtOrdCliente As TextBox
     Friend WithEvents TxtNrOrdine As TextBox
     Friend WithEvents DtaCompA As DateTimePicker
@@ -375,8 +433,8 @@ Partial Class FAskFiltriOrdini
     Friend WithEvents RadFinoAllaData As RadioButton
     Friend WithEvents ChkCliente As CheckBox
     Friend WithEvents ChkNrOrdine As CheckBox
-    Friend WithEvents GroupBox2 As GroupBox
-    Friend WithEvents GroupBox3 As GroupBox
+    Friend WithEvents GroupCompetenza As GroupBox
+    Friend WithEvents GroupPeriodo As GroupBox
     Friend WithEvents ChkP_Tutti As CheckBox
     Friend WithEvents ChkP_Mensili As CheckBox
     Friend WithEvents ChkP_Bimestrali As CheckBox
@@ -386,4 +444,10 @@ Partial Class FAskFiltriOrdini
     Friend WithEvents ChkP_Annuali As CheckBox
     Friend WithEvents TxtOrdFiliale As TextBox
     Friend WithEvents ChkFiliale As CheckBox
+    Friend WithEvents GroupIstat As GroupBox
+    Friend WithEvents Label1 As Label
+    Friend WithEvents TxtPercIstat As TextBox
+    Friend WithEvents Label2 As Label
+    Friend WithEvents TxtIstatAttivita As TextBox
+    Friend WithEvents ToolTip1 As ToolTip
 End Class

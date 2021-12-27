@@ -25,6 +25,8 @@ namespace EFMago.Models
         public DateTime Tbmodified { get; set; }
         public int TbcreatedId { get; set; }
         public int TbmodifiedId { get; set; }
+        public double? ValUnit { get; set; }
+
 
         // Creato da me
         [NotMapped]

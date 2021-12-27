@@ -38,7 +38,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>1</ApplicationRevision>
+    <ApplicationRevision>2</ApplicationRevision>
     <ApplicationVersion>3.1.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -478,7 +478,7 @@
     <None Include="packages.config" />
     <Content Include="Logs\Legenda.txt" />
     <Content Include="Ordini\Istruzioni_ordini.txt" />
-    <Content Include="Tools\ALL-I_Key.pfx" />
+    <None Include="Tools\ALL-I_Key.pfx" />
     <Content Include="Tools\PostDeploy.ps1" />
     <None Include="PostBuildScripts\AutoUpdateProjectsMinimumRequiredClickOnceVersion.ps1" />
   </ItemGroup>

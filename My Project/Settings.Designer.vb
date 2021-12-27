@@ -152,12 +152,36 @@ Namespace My
         <Global.System.Configuration.UserScopedSettingAttribute(),  _
          Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
          Global.System.Configuration.DefaultSettingValueAttribute("")>  _
-        Public Property mDBTEMP() As String
+        Public Property mDBTEMPUNO() As String
             Get
-                Return CType(Me("mDBTEMP"),String)
+                Return CType(Me("mDBTEMPUNO"),String)
             End Get
             Set
-                Me("mDBTEMP") = value
+                Me("mDBTEMPUNO") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+        Public Property mDBTEMPSPA() As String
+            Get
+                Return CType(Me("mDBTEMPSPA"),String)
+            End Get
+            Set
+                Me("mDBTEMPSPA") = value
+            End Set
+        End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+        Public Property mDATABASE_SPA() As String
+            Get
+                Return CType(Me("mDATABASE_SPA"),String)
+            End Get
+            Set
+                Me("mDATABASE_SPA") = value
             End Set
         End Property
     End Class

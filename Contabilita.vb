@@ -278,7 +278,15 @@ Public Module Paghe
                                         'drPnD ("CodeType")= 5177344 ' Normale / Apertura / Assestamento
                                         Dim isDare As Boolean = .Item("ContoDare") <> ContoTransitorioACG
                                         Dim c As String = If(isDare, .Item("ContoDare"), .Item("ContoAvere"))
-                                        drPnD("Account") = TrovaContropartita(c, dvCntrp)
+                                        Dim sConto As String = ""
+                                        If TryTrovaContropartita(c, dvCntrp, sConto) Then
+                                            drPnD("Account") = sConto
+                                        Else
+                                            Debug.Print("Conto senza corrispondenza: " & c)
+                                            My.Application.Log.WriteEntry("Conto senza corrispondenza: " & c & "f iliale: " & filToReg)
+                                            MessageBox.Show("Conto senza corrispondenza: " & c & Environment.NewLine & "Su Filiale: " & filToReg & Environment.NewLine & "Impossibile continuare!", "Importazione Paghe - Errore", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                                            End
+                                        End If
                                         If String.IsNullOrWhiteSpace(drPnD("Account").ToString) Then
                                             Debug.Print("Conto senza corrispondenza " & c)
                                             My.Application.Log.WriteEntry("Conto senza corrispondenza " & c)

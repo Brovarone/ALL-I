@@ -31,10 +31,14 @@ Partial Class FLogin
         Me.txtID = New System.Windows.Forms.TextBox()
         Me.txtPSW = New System.Windows.Forms.TextBox()
         Me.txtSERVER = New System.Windows.Forms.TextBox()
-        Me.txtDATABASE = New System.Windows.Forms.TextBox()
+        Me.TxtDB_UNO = New System.Windows.Forms.TextBox()
         Me.PanelAdmin = New System.Windows.Forms.Panel()
+        Me.Label7 = New System.Windows.Forms.Label()
+        Me.TxtDB_SPA = New System.Windows.Forms.TextBox()
+        Me.Label6 = New System.Windows.Forms.Label()
+        Me.TxtTmpDB_SPA = New System.Windows.Forms.TextBox()
         Me.Label1 = New System.Windows.Forms.Label()
-        Me.TxtTMPDB = New System.Windows.Forms.TextBox()
+        Me.TxtTmpDB_UNO = New System.Windows.Forms.TextBox()
         Me.BtnApriLog = New System.Windows.Forms.Button()
         Me.DtDataInizio = New System.Windows.Forms.DateTimePicker()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
@@ -71,7 +75,7 @@ Partial Class FLogin
         Me.TabCespiti = New System.Windows.Forms.TabPage()
         Me.ChkCespiti = New System.Windows.Forms.CheckBox()
         Me.TabOrdini = New System.Windows.Forms.TabPage()
-        Me.ChkOrdini = New System.Windows.Forms.CheckBox()
+        Me.BtnCancellaRigheOrdini = New System.Windows.Forms.Button()
         Me.BtnProcessa = New System.Windows.Forms.Button()
         Me.lblDataInizio = New System.Windows.Forms.Label()
         Me.txtPath = New System.Windows.Forms.TextBox()
@@ -80,6 +84,7 @@ Partial Class FLogin
         Me.BtnPath = New System.Windows.Forms.Button()
         Me.lblPath = New System.Windows.Forms.Label()
         Me.PanelUser = New System.Windows.Forms.Panel()
+        Me.BtnOrdiniISTAT = New System.Windows.Forms.Button()
         Me.BtnOrdini = New System.Windows.Forms.Button()
         Me.Button1 = New System.Windows.Forms.Button()
         Me.BtnAnalitica = New System.Windows.Forms.Button()
@@ -109,9 +114,15 @@ Partial Class FLogin
         Me.ToolStripSeparator7 = New System.Windows.Forms.ToolStripSeparator()
         Me.UserSettingToolStripMenu = New System.Windows.Forms.ToolStripMenuItem()
         Me.AppLogToolStripMenu = New System.Windows.Forms.ToolStripMenuItem()
+        Me.CespitiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ImportaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.CancellaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SettingsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripTracciatoVecchio = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItemDebugging = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ComandiToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem()
+        Me.TestOrdiniToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.TestISTATToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.TestRiscontiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ComandiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.IDToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -122,16 +133,17 @@ Partial Class FLogin
         Me.TestPagheToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.AnaliticaDaFattureToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.RiorganizzaCartelleToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.CespitiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ImportaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.CancellaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.TMPordiniToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.HelpToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ContentsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.IndexToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SearchToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.toolStripSeparator5 = New System.Windows.Forms.ToolStripSeparator()
         Me.AboutToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.PanelDB = New System.Windows.Forms.Panel()
+        Me.CHKDBTemporaneo = New System.Windows.Forms.CheckBox()
+        Me.BtnSelSPA = New System.Windows.Forms.Button()
+        Me.BtnSelUNO = New System.Windows.Forms.Button()
+        Me.Label8 = New System.Windows.Forms.Label()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabPageFatture.SuspendLayout()
@@ -145,6 +157,7 @@ Partial Class FLogin
         Me.PanelUser.SuspendLayout()
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.MenuStrip1.SuspendLayout()
+        Me.PanelDB.SuspendLayout()
         Me.SuspendLayout()
         '
         'BtnConnetti
@@ -178,7 +191,7 @@ Partial Class FLogin
         'Label4
         '
         Me.Label4.AutoSize = True
-        Me.Label4.Location = New System.Drawing.Point(246, 34)
+        Me.Label4.Location = New System.Drawing.Point(233, 6)
         Me.Label4.Name = "Label4"
         Me.Label4.Size = New System.Drawing.Size(38, 13)
         Me.Label4.TabIndex = 4
@@ -187,17 +200,17 @@ Partial Class FLogin
         'Label5
         '
         Me.Label5.AutoSize = True
-        Me.Label5.Location = New System.Drawing.Point(231, 58)
+        Me.Label5.Location = New System.Drawing.Point(218, 30)
         Me.Label5.Name = "Label5"
-        Me.Label5.Size = New System.Drawing.Size(53, 13)
+        Me.Label5.Size = New System.Drawing.Size(28, 13)
         Me.Label5.TabIndex = 5
-        Me.Label5.Text = "Database"
+        Me.Label5.Text = "DB1"
         '
         'txtID
         '
         Me.txtID.Location = New System.Drawing.Point(77, 31)
         Me.txtID.Name = "txtID"
-        Me.txtID.Size = New System.Drawing.Size(100, 20)
+        Me.txtID.Size = New System.Drawing.Size(34, 20)
         Me.txtID.TabIndex = 3
         Me.txtID.Text = "sa"
         '
@@ -211,22 +224,26 @@ Partial Class FLogin
         '
         'txtSERVER
         '
-        Me.txtSERVER.Location = New System.Drawing.Point(296, 31)
+        Me.txtSERVER.Location = New System.Drawing.Point(283, 3)
         Me.txtSERVER.Name = "txtSERVER"
         Me.txtSERVER.Size = New System.Drawing.Size(130, 20)
         Me.txtSERVER.TabIndex = 5
         '
-        'txtDATABASE
+        'TxtDB_UNO
         '
-        Me.txtDATABASE.Location = New System.Drawing.Point(296, 55)
-        Me.txtDATABASE.Name = "txtDATABASE"
-        Me.txtDATABASE.Size = New System.Drawing.Size(130, 20)
-        Me.txtDATABASE.TabIndex = 6
+        Me.TxtDB_UNO.Location = New System.Drawing.Point(251, 27)
+        Me.TxtDB_UNO.Name = "TxtDB_UNO"
+        Me.TxtDB_UNO.Size = New System.Drawing.Size(56, 20)
+        Me.TxtDB_UNO.TabIndex = 6
         '
         'PanelAdmin
         '
+        Me.PanelAdmin.Controls.Add(Me.Label7)
+        Me.PanelAdmin.Controls.Add(Me.TxtDB_SPA)
+        Me.PanelAdmin.Controls.Add(Me.Label6)
+        Me.PanelAdmin.Controls.Add(Me.TxtTmpDB_SPA)
         Me.PanelAdmin.Controls.Add(Me.Label1)
-        Me.PanelAdmin.Controls.Add(Me.TxtTMPDB)
+        Me.PanelAdmin.Controls.Add(Me.TxtTmpDB_UNO)
         Me.PanelAdmin.Controls.Add(Me.BtnApriLog)
         Me.PanelAdmin.Controls.Add(Me.BtnConnetti)
         Me.PanelAdmin.Controls.Add(Me.DtDataInizio)
@@ -244,29 +261,60 @@ Partial Class FLogin
         Me.PanelAdmin.Controls.Add(Me.Label5)
         Me.PanelAdmin.Controls.Add(Me.txtID)
         Me.PanelAdmin.Controls.Add(Me.txtPSW)
-        Me.PanelAdmin.Controls.Add(Me.txtDATABASE)
+        Me.PanelAdmin.Controls.Add(Me.TxtDB_UNO)
         Me.PanelAdmin.Controls.Add(Me.txtSERVER)
         Me.PanelAdmin.Location = New System.Drawing.Point(0, 24)
         Me.PanelAdmin.Name = "PanelAdmin"
         Me.PanelAdmin.Size = New System.Drawing.Size(456, 240)
         Me.PanelAdmin.TabIndex = 18
         '
+        'Label7
+        '
+        Me.Label7.AutoSize = True
+        Me.Label7.Location = New System.Drawing.Point(334, 32)
+        Me.Label7.Name = "Label7"
+        Me.Label7.Size = New System.Drawing.Size(43, 13)
+        Me.Label7.TabIndex = 47
+        Me.Label7.Text = "DBSPA"
+        '
+        'TxtDB_SPA
+        '
+        Me.TxtDB_SPA.Location = New System.Drawing.Point(383, 29)
+        Me.TxtDB_SPA.Name = "TxtDB_SPA"
+        Me.TxtDB_SPA.Size = New System.Drawing.Size(56, 20)
+        Me.TxtDB_SPA.TabIndex = 48
+        '
+        'Label6
+        '
+        Me.Label6.AutoSize = True
+        Me.Label6.Location = New System.Drawing.Point(313, 58)
+        Me.Label6.Name = "Label6"
+        Me.Label6.Size = New System.Drawing.Size(64, 13)
+        Me.Label6.TabIndex = 46
+        Me.Label6.Text = "TmpDBSPA"
+        '
+        'TxtTmpDB_SPA
+        '
+        Me.TxtTmpDB_SPA.Location = New System.Drawing.Point(383, 55)
+        Me.TxtTmpDB_SPA.Name = "TxtTmpDB_SPA"
+        Me.TxtTmpDB_SPA.Size = New System.Drawing.Size(56, 20)
+        Me.TxtTmpDB_SPA.TabIndex = 45
+        '
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(325, 8)
+        Me.Label1.Location = New System.Drawing.Point(196, 58)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(43, 13)
+        Me.Label1.Size = New System.Drawing.Size(49, 13)
         Me.Label1.TabIndex = 44
-        Me.Label1.Text = "TmpDB"
+        Me.Label1.Text = "TmpDB1"
         '
-        'TxtTMPDB
+        'TxtTmpDB_UNO
         '
-        Me.TxtTMPDB.Location = New System.Drawing.Point(370, 5)
-        Me.TxtTMPDB.Name = "TxtTMPDB"
-        Me.TxtTMPDB.Size = New System.Drawing.Size(56, 20)
-        Me.TxtTMPDB.TabIndex = 43
-        Me.TxtTMPDB.Text = "TMPSPA"
+        Me.TxtTmpDB_UNO.Location = New System.Drawing.Point(251, 55)
+        Me.TxtTmpDB_UNO.Name = "TxtTmpDB_UNO"
+        Me.TxtTmpDB_UNO.Size = New System.Drawing.Size(56, 20)
+        Me.TxtTmpDB_UNO.TabIndex = 43
         '
         'BtnApriLog
         '
@@ -287,14 +335,14 @@ Partial Class FLogin
         '
         'TabControl1
         '
+        Me.TabControl1.Controls.Add(Me.TabPageCancella)
+        Me.TabControl1.Controls.Add(Me.TabOrdini)
         Me.TabControl1.Controls.Add(Me.TabPageFatture)
         Me.TabControl1.Controls.Add(Me.TabPagePaghe)
         Me.TabControl1.Controls.Add(Me.TabPageAnagrafiche)
         Me.TabControl1.Controls.Add(Me.TabPagePartite)
         Me.TabControl1.Controls.Add(Me.TabPagePnota)
-        Me.TabControl1.Controls.Add(Me.TabPageCancella)
         Me.TabControl1.Controls.Add(Me.TabCespiti)
-        Me.TabControl1.Controls.Add(Me.TabOrdini)
         Me.TabControl1.Enabled = False
         Me.TabControl1.Location = New System.Drawing.Point(10, 113)
         Me.TabControl1.Name = "TabControl1"
@@ -649,7 +697,7 @@ Partial Class FLogin
         'TabOrdini
         '
         Me.TabOrdini.BackColor = System.Drawing.SystemColors.Control
-        Me.TabOrdini.Controls.Add(Me.ChkOrdini)
+        Me.TabOrdini.Controls.Add(Me.BtnCancellaRigheOrdini)
         Me.TabOrdini.Location = New System.Drawing.Point(4, 22)
         Me.TabOrdini.Name = "TabOrdini"
         Me.TabOrdini.Padding = New System.Windows.Forms.Padding(3)
@@ -657,15 +705,15 @@ Partial Class FLogin
         Me.TabOrdini.TabIndex = 7
         Me.TabOrdini.Text = "Ordini"
         '
-        'ChkOrdini
+        'BtnCancellaRigheOrdini
         '
-        Me.ChkOrdini.AutoSize = True
-        Me.ChkOrdini.Location = New System.Drawing.Point(6, 6)
-        Me.ChkOrdini.Name = "ChkOrdini"
-        Me.ChkOrdini.Size = New System.Drawing.Size(122, 17)
-        Me.ChkOrdini.TabIndex = 0
-        Me.ChkOrdini.Text = "Genera Righe Ordini"
-        Me.ChkOrdini.UseVisualStyleBackColor = True
+        Me.BtnCancellaRigheOrdini.BackColor = System.Drawing.Color.Firebrick
+        Me.BtnCancellaRigheOrdini.Location = New System.Drawing.Point(17, 7)
+        Me.BtnCancellaRigheOrdini.Name = "BtnCancellaRigheOrdini"
+        Me.BtnCancellaRigheOrdini.Size = New System.Drawing.Size(139, 23)
+        Me.BtnCancellaRigheOrdini.TabIndex = 0
+        Me.BtnCancellaRigheOrdini.Text = "Cancella righe Ordini"
+        Me.BtnCancellaRigheOrdini.UseVisualStyleBackColor = False
         '
         'BtnProcessa
         '
@@ -696,7 +744,7 @@ Partial Class FLogin
         'LblLoginId
         '
         Me.LblLoginId.AutoSize = True
-        Me.LblLoginId.Location = New System.Drawing.Point(237, 8)
+        Me.LblLoginId.Location = New System.Drawing.Point(123, 34)
         Me.LblLoginId.Name = "LblLoginId"
         Me.LblLoginId.Size = New System.Drawing.Size(47, 13)
         Me.LblLoginId.TabIndex = 38
@@ -704,7 +752,7 @@ Partial Class FLogin
         '
         'txtLoginId
         '
-        Me.txtLoginId.Location = New System.Drawing.Point(296, 5)
+        Me.txtLoginId.Location = New System.Drawing.Point(176, 31)
         Me.txtLoginId.Name = "txtLoginId"
         Me.txtLoginId.Size = New System.Drawing.Size(26, 20)
         Me.txtLoginId.TabIndex = 2
@@ -729,25 +777,37 @@ Partial Class FLogin
         '
         'PanelUser
         '
+        Me.PanelUser.Controls.Add(Me.BtnOrdiniISTAT)
         Me.PanelUser.Controls.Add(Me.BtnOrdini)
         Me.PanelUser.Controls.Add(Me.Button1)
         Me.PanelUser.Controls.Add(Me.BtnAnalitica)
         Me.PanelUser.Controls.Add(Me.BtnLastLog)
         Me.PanelUser.Controls.Add(Me.BtnPaghe)
         Me.PanelUser.Controls.Add(Me.BtnFatture)
-        Me.PanelUser.Location = New System.Drawing.Point(312, 309)
+        Me.PanelUser.Location = New System.Drawing.Point(316, 345)
         Me.PanelUser.Name = "PanelUser"
         Me.PanelUser.Size = New System.Drawing.Size(395, 295)
         Me.PanelUser.TabIndex = 46
+        Me.PanelUser.Visible = False
+        '
+        'BtnOrdiniISTAT
+        '
+        Me.BtnOrdiniISTAT.BackColor = System.Drawing.SystemColors.Control
+        Me.BtnOrdiniISTAT.Location = New System.Drawing.Point(195, 79)
+        Me.BtnOrdiniISTAT.Name = "BtnOrdiniISTAT"
+        Me.BtnOrdiniISTAT.Size = New System.Drawing.Size(84, 23)
+        Me.BtnOrdiniISTAT.TabIndex = 6
+        Me.BtnOrdiniISTAT.Text = "ISTAT"
+        Me.BtnOrdiniISTAT.UseVisualStyleBackColor = False
         '
         'BtnOrdini
         '
-        Me.BtnOrdini.BackColor = System.Drawing.Color.Moccasin
+        Me.BtnOrdini.BackColor = System.Drawing.SystemColors.Control
         Me.BtnOrdini.Image = Global.ALLSystemTools.My.Resources.Resources.navigate_48
         Me.BtnOrdini.ImageAlign = System.Drawing.ContentAlignment.TopCenter
         Me.BtnOrdini.Location = New System.Drawing.Point(195, 17)
         Me.BtnOrdini.Name = "BtnOrdini"
-        Me.BtnOrdini.Size = New System.Drawing.Size(84, 84)
+        Me.BtnOrdini.Size = New System.Drawing.Size(84, 64)
         Me.BtnOrdini.TabIndex = 5
         Me.BtnOrdini.Text = "Ordini"
         Me.BtnOrdini.TextAlign = System.Drawing.ContentAlignment.BottomCenter
@@ -827,7 +887,7 @@ Partial Class FLogin
         '
         'MenuStrip1
         '
-        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem, Me.ToolsToolStripMenuItem, Me.SettingsToolStripMenuItem, Me.ComandiToolStripMenuItem, Me.CespitiToolStripMenuItem, Me.HelpToolStripMenuItem})
+        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.FileToolStripMenuItem, Me.ToolsToolStripMenuItem, Me.CespitiToolStripMenuItem, Me.SettingsToolStripMenuItem, Me.ComandiToolStripMenuItem, Me.HelpToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip1.Name = "MenuStrip1"
         Me.MenuStrip1.Size = New System.Drawing.Size(456, 24)
@@ -964,9 +1024,28 @@ Partial Class FLogin
         Me.AppLogToolStripMenu.Size = New System.Drawing.Size(180, 22)
         Me.AppLogToolStripMenu.Text = "App Log Folder"
         '
+        'CespitiToolStripMenuItem
+        '
+        Me.CespitiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ImportaToolStripMenuItem, Me.CancellaToolStripMenuItem})
+        Me.CespitiToolStripMenuItem.Name = "CespitiToolStripMenuItem"
+        Me.CespitiToolStripMenuItem.Size = New System.Drawing.Size(55, 20)
+        Me.CespitiToolStripMenuItem.Text = "Cespiti"
+        '
+        'ImportaToolStripMenuItem
+        '
+        Me.ImportaToolStripMenuItem.Name = "ImportaToolStripMenuItem"
+        Me.ImportaToolStripMenuItem.Size = New System.Drawing.Size(119, 22)
+        Me.ImportaToolStripMenuItem.Text = "Importa"
+        '
+        'CancellaToolStripMenuItem
+        '
+        Me.CancellaToolStripMenuItem.Name = "CancellaToolStripMenuItem"
+        Me.CancellaToolStripMenuItem.Size = New System.Drawing.Size(119, 22)
+        Me.CancellaToolStripMenuItem.Text = "Cancella"
+        '
         'SettingsToolStripMenuItem
         '
-        Me.SettingsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripTracciatoVecchio, Me.ToolStripMenuItemDebugging, Me.TestRiscontiToolStripMenuItem})
+        Me.SettingsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripTracciatoVecchio, Me.ToolStripMenuItemDebugging, Me.ComandiToolStripMenuItem1})
         Me.SettingsToolStripMenuItem.Name = "SettingsToolStripMenuItem"
         Me.SettingsToolStripMenuItem.Size = New System.Drawing.Size(61, 20)
         Me.SettingsToolStripMenuItem.Text = "Settings"
@@ -986,11 +1065,30 @@ Partial Class FLogin
         Me.ToolStripMenuItemDebugging.Size = New System.Drawing.Size(151, 22)
         Me.ToolStripMenuItemDebugging.Text = "Debugging"
         '
+        'ComandiToolStripMenuItem1
+        '
+        Me.ComandiToolStripMenuItem1.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.TestOrdiniToolStripMenuItem, Me.TestISTATToolStripMenuItem, Me.TestRiscontiToolStripMenuItem})
+        Me.ComandiToolStripMenuItem1.Name = "ComandiToolStripMenuItem1"
+        Me.ComandiToolStripMenuItem1.Size = New System.Drawing.Size(151, 22)
+        Me.ComandiToolStripMenuItem1.Text = "Comandi"
+        '
+        'TestOrdiniToolStripMenuItem
+        '
+        Me.TestOrdiniToolStripMenuItem.Name = "TestOrdiniToolStripMenuItem"
+        Me.TestOrdiniToolStripMenuItem.Size = New System.Drawing.Size(141, 22)
+        Me.TestOrdiniToolStripMenuItem.Text = "Test_Ordini"
+        '
+        'TestISTATToolStripMenuItem
+        '
+        Me.TestISTATToolStripMenuItem.Name = "TestISTATToolStripMenuItem"
+        Me.TestISTATToolStripMenuItem.Size = New System.Drawing.Size(141, 22)
+        Me.TestISTATToolStripMenuItem.Text = "Test_ISTAT"
+        '
         'TestRiscontiToolStripMenuItem
         '
         Me.TestRiscontiToolStripMenuItem.Name = "TestRiscontiToolStripMenuItem"
-        Me.TestRiscontiToolStripMenuItem.Size = New System.Drawing.Size(151, 22)
-        Me.TestRiscontiToolStripMenuItem.Text = "TestRisconti"
+        Me.TestRiscontiToolStripMenuItem.Size = New System.Drawing.Size(141, 22)
+        Me.TestRiscontiToolStripMenuItem.Text = "Test_Risconti"
         '
         'ComandiToolStripMenuItem
         '
@@ -1050,31 +1148,6 @@ Partial Class FLogin
         Me.RiorganizzaCartelleToolStripMenuItem.Size = New System.Drawing.Size(177, 22)
         Me.RiorganizzaCartelleToolStripMenuItem.Text = "Riorganizza Cartelle"
         '
-        'CespitiToolStripMenuItem
-        '
-        Me.CespitiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ImportaToolStripMenuItem, Me.CancellaToolStripMenuItem, Me.TMPordiniToolStripMenuItem})
-        Me.CespitiToolStripMenuItem.Name = "CespitiToolStripMenuItem"
-        Me.CespitiToolStripMenuItem.Size = New System.Drawing.Size(55, 20)
-        Me.CespitiToolStripMenuItem.Text = "Cespiti"
-        '
-        'ImportaToolStripMenuItem
-        '
-        Me.ImportaToolStripMenuItem.Name = "ImportaToolStripMenuItem"
-        Me.ImportaToolStripMenuItem.Size = New System.Drawing.Size(129, 22)
-        Me.ImportaToolStripMenuItem.Text = "Importa"
-        '
-        'CancellaToolStripMenuItem
-        '
-        Me.CancellaToolStripMenuItem.Name = "CancellaToolStripMenuItem"
-        Me.CancellaToolStripMenuItem.Size = New System.Drawing.Size(129, 22)
-        Me.CancellaToolStripMenuItem.Text = "Cancella"
-        '
-        'TMPordiniToolStripMenuItem
-        '
-        Me.TMPordiniToolStripMenuItem.Name = "TMPordiniToolStripMenuItem"
-        Me.TMPordiniToolStripMenuItem.Size = New System.Drawing.Size(129, 22)
-        Me.TMPordiniToolStripMenuItem.Text = "TMPordini"
-        '
         'HelpToolStripMenuItem
         '
         Me.HelpToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ContentsToolStripMenuItem, Me.IndexToolStripMenuItem, Me.SearchToolStripMenuItem, Me.toolStripSeparator5, Me.AboutToolStripMenuItem})
@@ -1115,11 +1188,60 @@ Partial Class FLogin
         Me.AboutToolStripMenuItem.Size = New System.Drawing.Size(122, 22)
         Me.AboutToolStripMenuItem.Text = "&About..."
         '
+        'PanelDB
+        '
+        Me.PanelDB.Controls.Add(Me.CHKDBTemporaneo)
+        Me.PanelDB.Controls.Add(Me.BtnSelSPA)
+        Me.PanelDB.Controls.Add(Me.BtnSelUNO)
+        Me.PanelDB.Controls.Add(Me.Label8)
+        Me.PanelDB.Location = New System.Drawing.Point(2, 345)
+        Me.PanelDB.Name = "PanelDB"
+        Me.PanelDB.Size = New System.Drawing.Size(200, 234)
+        Me.PanelDB.TabIndex = 47
+        '
+        'CHKDBTemporaneo
+        '
+        Me.CHKDBTemporaneo.AutoSize = True
+        Me.CHKDBTemporaneo.Location = New System.Drawing.Point(162, 114)
+        Me.CHKDBTemporaneo.Name = "CHKDBTemporaneo"
+        Me.CHKDBTemporaneo.Size = New System.Drawing.Size(121, 17)
+        Me.CHKDBTemporaneo.TabIndex = 3
+        Me.CHKDBTemporaneo.Text = "Azienda Demo/Test"
+        Me.CHKDBTemporaneo.UseVisualStyleBackColor = True
+        '
+        'BtnSelSPA
+        '
+        Me.BtnSelSPA.Location = New System.Drawing.Point(233, 40)
+        Me.BtnSelSPA.Name = "BtnSelSPA"
+        Me.BtnSelSPA.Size = New System.Drawing.Size(117, 68)
+        Me.BtnSelSPA.TabIndex = 2
+        Me.BtnSelSPA.Text = "SPA"
+        Me.BtnSelSPA.UseVisualStyleBackColor = True
+        '
+        'BtnSelUNO
+        '
+        Me.BtnSelUNO.Location = New System.Drawing.Point(90, 40)
+        Me.BtnSelUNO.Name = "BtnSelUNO"
+        Me.BtnSelUNO.Size = New System.Drawing.Size(117, 68)
+        Me.BtnSelUNO.TabIndex = 1
+        Me.BtnSelUNO.Text = "UNO"
+        Me.BtnSelUNO.UseVisualStyleBackColor = True
+        '
+        'Label8
+        '
+        Me.Label8.AutoSize = True
+        Me.Label8.Location = New System.Drawing.Point(92, 16)
+        Me.Label8.Name = "Label8"
+        Me.Label8.Size = New System.Drawing.Size(271, 13)
+        Me.Label8.TabIndex = 0
+        Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
+        '
         'FLogin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(456, 371)
+        Me.Controls.Add(Me.PanelDB)
         Me.Controls.Add(Me.PanelUser)
         Me.Controls.Add(Me.DataGridView1)
         Me.Controls.Add(Me.lstStatoConnessione)
@@ -1146,11 +1268,12 @@ Partial Class FLogin
         Me.TabCespiti.ResumeLayout(False)
         Me.TabCespiti.PerformLayout()
         Me.TabOrdini.ResumeLayout(False)
-        Me.TabOrdini.PerformLayout()
         Me.PanelUser.ResumeLayout(False)
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.MenuStrip1.ResumeLayout(False)
         Me.MenuStrip1.PerformLayout()
+        Me.PanelDB.ResumeLayout(False)
+        Me.PanelDB.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -1164,7 +1287,7 @@ Partial Class FLogin
     Friend WithEvents txtID As TextBox
     Friend WithEvents txtPSW As TextBox
     Friend WithEvents txtSERVER As TextBox
-    Friend WithEvents txtDATABASE As TextBox
+    Friend WithEvents TxtDB_UNO As TextBox
     Friend WithEvents PanelAdmin As Panel
     Friend WithEvents DtDataInizio As DateTimePicker
     Friend WithEvents lblDataInizio As Label
@@ -1252,17 +1375,29 @@ Partial Class FLogin
     Friend WithEvents BtnCancellaAnaliticaDaFatt As Button
     Friend WithEvents RiorganizzaCartelleToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ChkRisconti As CheckBox
-    Friend WithEvents TestRiscontiToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents TabCespiti As TabPage
     Friend WithEvents ChkCespiti As CheckBox
     Friend WithEvents Label1 As Label
-    Friend WithEvents TxtTMPDB As TextBox
+    Friend WithEvents TxtTmpDB_UNO As TextBox
     Friend WithEvents CespitiToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ImportaToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents CancellaToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents Button1 As Button
     Friend WithEvents TabOrdini As TabPage
-    Friend WithEvents ChkOrdini As CheckBox
     Friend WithEvents BtnOrdini As Button
-    Friend WithEvents TMPordiniToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents BtnOrdiniISTAT As Button
+    Friend WithEvents Label6 As Label
+    Friend WithEvents TxtTmpDB_SPA As TextBox
+    Friend WithEvents Label7 As Label
+    Friend WithEvents TxtDB_SPA As TextBox
+    Friend WithEvents PanelDB As Panel
+    Friend WithEvents BtnSelSPA As Button
+    Friend WithEvents BtnSelUNO As Button
+    Friend WithEvents Label8 As Label
+    Friend WithEvents ComandiToolStripMenuItem1 As ToolStripMenuItem
+    Friend WithEvents TestOrdiniToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents TestISTATToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents TestRiscontiToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents CHKDBTemporaneo As CheckBox
+    Friend WithEvents BtnCancellaRigheOrdini As Button
 End Class

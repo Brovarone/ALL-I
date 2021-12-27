@@ -124,7 +124,8 @@ Module Anagrafiche
                                         'bNoBanca = True
                                     End If
                                     drCF("CustSuppBank") = If(sbanca = "-", "", sbanca)
-                                    drCF("Account") = TrovaContropartita(.Item("AC").ToString & "01", dvCntrp)
+                                    Dim sConto As String = ""
+                                    drCF("Account") = If(TryTrovaContropartita(.Item("AC").ToString & "01", dvCntrp, sConto), sConto, .Item("AC").ToString)
                                     drCF("LinkedCustSupp") = .Item("AD").ToString
                                     drCF("Fax") = Left(.Item("BX").ToString, 15)
                                     drCF("CA") = .Item("BY").ToString
@@ -786,7 +787,8 @@ Module Anagrafiche
                                         Double.TryParse(.Item("AD").ToString, cc)
                                         If cc > 0 Then drCF("CA") = .Item("AD").ToString
                                     End If
-                                    drCF("Account") = TrovaContropartita(.Item("Z").ToString & "01", dvCntrp)
+                                    Dim sConto As String = ""
+                                    drCF("Account") = If(TryTrovaContropartita(.Item("Z").ToString & "01", dvCntrp, sConto), sConto, .Item("Z").ToString)
                                     drCF("LinkedCustSupp") = .Item("AA").ToString
                                     'AddF(Of String)(cmd, sInsert, "Dove?", .Item("AC").ToString) 'FOPAR (Fornitore contrassegnato)
                                     'se non e' escluso = Inntax =si
@@ -824,7 +826,7 @@ Module Anagrafiche
                                     drCFOpt("Category") = .Item("X").ToString 'CATEG
                                     drCFOpt("SupplierClassification") = .Item("AC").ToString 'FOPAR
                                     drCFOpt("BlockPayments") = If((String.IsNullOrEmpty(.Item("AB").ToString) OrElse .Item("AB").ToString = "N"), "0", "1")
-                                    drCFOpt("ServicesOffset") = TrovaContropartita(.Item("AS").ToString, dvCntrp)
+                                    drCFOpt("ServicesOffset") = If(TryTrovaContropartita(.Item("AS").ToString, dvCntrp, sConto), sConto, .Item("AS").ToString)
                                     drCFOpt("TBCreatedID") = My.Settings.mLOGINID 'ID utente
                                     drCFOpt("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                                     'controllare
