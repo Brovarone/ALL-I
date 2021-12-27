@@ -1582,7 +1582,7 @@ Public Class FLogin
         If FLogin.CHKDBTemporaneo.Checked Then
             DBisTMP = True
         End If
-        DBInUse = If(DBisTMP, azienda, temp)
+        DBInUse = If(DBisTMP, temp, azienda)
         Return True
     End Function
     Private Sub MostraPannelloUtente(ByVal azienda As String)
