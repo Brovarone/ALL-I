@@ -334,12 +334,18 @@ Module Ordini
 #Region "Controllo su prima riga bianca"
                             If o.MaSaleOrdDetails.Any AndAlso o.MaSaleOrdDetails.Count = 1 Then
 
+                                'Controllo sull'inserimento automatico da Mago ( Articolo=vuoto + merce + line e pos = 1)
                                 If String.IsNullOrWhiteSpace(o.MaSaleOrdDetails.First.Item) AndAlso o.MaSaleOrdDetails.First.LineType = LineType.Merce AndAlso o.MaSaleOrdDetails.First.Line = 1 AndAlso o.MaSaleOrdDetails.First.Position = 1 Then
                                     ' Faccio in modo di sovrascivere
                                     curLastLine = 0
                                     curLastPosition = 0
                                 End If
-
+                                'Controllo sull'inserimento a Mano Valunit=0 + line e pos= 1
+                                If (o.MaSaleOrdDetails.First.LineType = LineType.Merce OrElse o.MaSaleOrdDetails.First.LineType = LineType.Servizio) AndAlso o.MaSaleOrdDetails.First.UnitValue = 0 AndAlso o.MaSaleOrdDetails.First.Line = 1 AndAlso o.MaSaleOrdDetails.First.Position = 1 Then
+                                    ' Faccio in modo di sovrascivere
+                                    curLastLine = 0
+                                    curLastPosition = 0
+                                End If
                             End If
 #End Region
 #Region "Scrivo Testo descrittivo su MaSaleOrdDetails"
@@ -361,7 +367,7 @@ Module Ordini
                                         .Description = d.Descrizione,
                                         .InEi = "1",
                                         .ExpectedDeliveryDate = curDate.DataPrevistaConsegna,
-                                        .ConfirmedDeliveryDate = sDataNulla, ' curDate.DataConfermaConsegna
+                                        .ConfirmedDeliveryDate = curDate.DataConfermaConsegna, ' sDataNulla
                                         .InternalOrdNo = curOrdNo,
                                         .Customer = curCliente,
                                         .OrderDate = curOrdDate,
