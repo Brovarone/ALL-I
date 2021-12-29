@@ -103,6 +103,12 @@ namespace EFMago.Models
                     .IsUnicode(false)
                     .HasDefaultValueSql("('')");
 
+                entity.Property(e => e.Istat)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
                 entity.Property(e => e.Sospensione)
                     .HasMaxLength(1)
                     .IsUnicode(false)
@@ -387,6 +393,11 @@ namespace EFMago.Models
                     .HasMaxLength(128)
                     .IsUnicode(false)
                     .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.TestoFattura)
+                  .HasMaxLength(128)
+                  .IsUnicode(false)
+                  .HasDefaultValueSql("('')");
 
                 entity.Property(e => e.RifLinea).HasDefaultValueSql("((0))");
 

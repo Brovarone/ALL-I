@@ -13,6 +13,7 @@ namespace EFMago.Models
         public string Descrizione { get; set; }
         public string Sospensione { get; set; }
         public string Annullamento { get; set; }
+        public string Istat { get; set; }
         public DateTime Tbcreated { get; set; }
         public DateTime Tbmodified { get; set; }
         public int TbcreatedId { get; set; }

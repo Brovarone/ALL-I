@@ -50,11 +50,17 @@ Partial Class FAskFiltriOrdini
         Me.ChkP_Semestrali = New System.Windows.Forms.CheckBox()
         Me.ChkP_Annuali = New System.Windows.Forms.CheckBox()
         Me.GroupIstat = New System.Windows.Forms.GroupBox()
+        Me.Label4 = New System.Windows.Forms.Label()
+        Me.TxtIstatTesto = New System.Windows.Forms.TextBox()
+        Me.Label3 = New System.Windows.Forms.Label()
+        Me.DtaIstatRifatt = New System.Windows.Forms.DateTimePicker()
+        Me.Label2 = New System.Windows.Forms.Label()
+        Me.TxtIstatAttivita = New System.Windows.Forms.TextBox()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.TxtPercIstat = New System.Windows.Forms.TextBox()
-        Me.TxtIstatAttivita = New System.Windows.Forms.TextBox()
-        Me.Label2 = New System.Windows.Forms.Label()
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
+        Me.TxtNextFtYear = New System.Windows.Forms.TextBox()
+        Me.Label5 = New System.Windows.Forms.Label()
         Me.TableLayoutPanel1.SuspendLayout()
         Me.GroupOrdini.SuspendLayout()
         Me.GroupCompetenza.SuspendLayout()
@@ -70,7 +76,7 @@ Partial Class FAskFiltriOrdini
         Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
         Me.TableLayoutPanel1.Controls.Add(Me.OK_Button, 0, 0)
         Me.TableLayoutPanel1.Controls.Add(Me.Cancel_Button, 1, 0)
-        Me.TableLayoutPanel1.Location = New System.Drawing.Point(88, 398)
+        Me.TableLayoutPanel1.Location = New System.Drawing.Point(350, 398)
         Me.TableLayoutPanel1.Name = "TableLayoutPanel1"
         Me.TableLayoutPanel1.RowCount = 1
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
@@ -83,7 +89,7 @@ Partial Class FAskFiltriOrdini
         Me.OK_Button.Location = New System.Drawing.Point(3, 3)
         Me.OK_Button.Name = "OK_Button"
         Me.OK_Button.Size = New System.Drawing.Size(67, 23)
-        Me.OK_Button.TabIndex = 18
+        Me.OK_Button.TabIndex = 22
         Me.OK_Button.Text = "OK"
         '
         'Cancel_Button
@@ -93,7 +99,7 @@ Partial Class FAskFiltriOrdini
         Me.Cancel_Button.Location = New System.Drawing.Point(76, 3)
         Me.Cancel_Button.Name = "Cancel_Button"
         Me.Cancel_Button.Size = New System.Drawing.Size(67, 23)
-        Me.Cancel_Button.TabIndex = 19
+        Me.Cancel_Button.TabIndex = 23
         Me.Cancel_Button.Text = "Cancel"
         '
         'DtaDA
@@ -343,22 +349,79 @@ Partial Class FAskFiltriOrdini
         '
         'GroupIstat
         '
+        Me.GroupIstat.Controls.Add(Me.Label5)
+        Me.GroupIstat.Controls.Add(Me.TxtNextFtYear)
+        Me.GroupIstat.Controls.Add(Me.Label4)
+        Me.GroupIstat.Controls.Add(Me.TxtIstatTesto)
         Me.GroupIstat.Controls.Add(Me.Label2)
         Me.GroupIstat.Controls.Add(Me.TxtIstatAttivita)
         Me.GroupIstat.Controls.Add(Me.Label1)
         Me.GroupIstat.Controls.Add(Me.TxtPercIstat)
-        Me.GroupIstat.Location = New System.Drawing.Point(12, 430)
+        Me.GroupIstat.Location = New System.Drawing.Point(255, 12)
         Me.GroupIstat.Name = "GroupIstat"
-        Me.GroupIstat.Size = New System.Drawing.Size(228, 76)
+        Me.GroupIstat.Size = New System.Drawing.Size(228, 131)
         Me.GroupIstat.TabIndex = 15
         Me.GroupIstat.TabStop = False
         Me.GroupIstat.Text = "ISTAT"
         Me.GroupIstat.Visible = False
         '
+        'Label4
+        '
+        Me.Label4.AutoSize = True
+        Me.Label4.Location = New System.Drawing.Point(6, 72)
+        Me.Label4.Name = "Label4"
+        Me.Label4.Size = New System.Drawing.Size(34, 13)
+        Me.Label4.TabIndex = 26
+        Me.Label4.Text = "Testo"
+        '
+        'TxtIstatTesto
+        '
+        Me.TxtIstatTesto.Location = New System.Drawing.Point(46, 72)
+        Me.TxtIstatTesto.Multiline = True
+        Me.TxtIstatTesto.Name = "TxtIstatTesto"
+        Me.TxtIstatTesto.Size = New System.Drawing.Size(176, 44)
+        Me.TxtIstatTesto.TabIndex = 21
+        Me.TxtIstatTesto.Text = "Il canone è aggiornato sulla base dell'indice ISTAT relativo al mese di novembre " &
+    "2021"
+        '
+        'Label3
+        '
+        Me.Label3.AutoSize = True
+        Me.Label3.Location = New System.Drawing.Point(264, 156)
+        Me.Label3.Name = "Label3"
+        Me.Label3.Size = New System.Drawing.Size(61, 13)
+        Me.Label3.TabIndex = 24
+        Me.Label3.Text = "Data Rifatt."
+        '
+        'DtaIstatRifatt
+        '
+        Me.DtaIstatRifatt.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
+        Me.DtaIstatRifatt.Location = New System.Drawing.Point(343, 152)
+        Me.DtaIstatRifatt.Name = "DtaIstatRifatt"
+        Me.DtaIstatRifatt.Size = New System.Drawing.Size(96, 20)
+        Me.DtaIstatRifatt.TabIndex = 20
+        '
+        'Label2
+        '
+        Me.Label2.AutoSize = True
+        Me.Label2.Location = New System.Drawing.Point(137, 16)
+        Me.Label2.Name = "Label2"
+        Me.Label2.Size = New System.Drawing.Size(39, 13)
+        Me.Label2.TabIndex = 22
+        Me.Label2.Text = "Attività"
+        '
+        'TxtIstatAttivita
+        '
+        Me.TxtIstatAttivita.Location = New System.Drawing.Point(182, 13)
+        Me.TxtIstatAttivita.Name = "TxtIstatAttivita"
+        Me.TxtIstatAttivita.Size = New System.Drawing.Size(40, 20)
+        Me.TxtIstatAttivita.TabIndex = 19
+        Me.TxtIstatAttivita.Text = "ISTAT"
+        '
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(31, 23)
+        Me.Label1.Location = New System.Drawing.Point(6, 16)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(64, 13)
         Me.Label1.TabIndex = 1
@@ -366,27 +429,32 @@ Partial Class FAskFiltriOrdini
         '
         'TxtPercIstat
         '
-        Me.TxtPercIstat.Location = New System.Drawing.Point(110, 20)
+        Me.TxtPercIstat.Location = New System.Drawing.Point(85, 13)
         Me.TxtPercIstat.Name = "TxtPercIstat"
-        Me.TxtPercIstat.Size = New System.Drawing.Size(100, 20)
-        Me.TxtPercIstat.TabIndex = 0
+        Me.TxtPercIstat.Size = New System.Drawing.Size(36, 20)
+        Me.TxtPercIstat.TabIndex = 18
         '
-        'TxtIstatAttivita
+        'ToolTip1
         '
-        Me.TxtIstatAttivita.Location = New System.Drawing.Point(110, 46)
-        Me.TxtIstatAttivita.Name = "TxtIstatAttivita"
-        Me.TxtIstatAttivita.Size = New System.Drawing.Size(100, 20)
-        Me.TxtIstatAttivita.TabIndex = 21
-        Me.TxtIstatAttivita.Text = "ISTAT"
+        Me.ToolTip1.AutoPopDelay = 5000
+        Me.ToolTip1.InitialDelay = 250
+        Me.ToolTip1.ReshowDelay = 100
         '
-        'Label2
+        'TxtNextFtYear
         '
-        Me.Label2.AutoSize = True
-        Me.Label2.Location = New System.Drawing.Point(31, 49)
-        Me.Label2.Name = "Label2"
-        Me.Label2.Size = New System.Drawing.Size(39, 13)
-        Me.Label2.TabIndex = 22
-        Me.Label2.Text = "Attività"
+        Me.TxtNextFtYear.Location = New System.Drawing.Point(182, 40)
+        Me.TxtNextFtYear.Name = "TxtNextFtYear"
+        Me.TxtNextFtYear.Size = New System.Drawing.Size(40, 20)
+        Me.TxtNextFtYear.TabIndex = 27
+        '
+        'Label5
+        '
+        Me.Label5.AutoSize = True
+        Me.Label5.Location = New System.Drawing.Point(46, 43)
+        Me.Label5.Name = "Label5"
+        Me.Label5.Size = New System.Drawing.Size(130, 13)
+        Me.Label5.TabIndex = 28
+        Me.Label5.Text = "Prossima Fattura nell'anno"
         '
         'FAskFiltriOrdini
         '
@@ -394,9 +462,11 @@ Partial Class FAskFiltriOrdini
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.CancelButton = Me.Cancel_Button
-        Me.ClientSize = New System.Drawing.Size(246, 439)
-        Me.Controls.Add(Me.GroupPeriodo)
+        Me.ClientSize = New System.Drawing.Size(508, 439)
         Me.Controls.Add(Me.GroupIstat)
+        Me.Controls.Add(Me.GroupPeriodo)
+        Me.Controls.Add(Me.Label3)
+        Me.Controls.Add(Me.DtaIstatRifatt)
         Me.Controls.Add(Me.GroupCompetenza)
         Me.Controls.Add(Me.TableLayoutPanel1)
         Me.Controls.Add(Me.GroupOrdini)
@@ -416,6 +486,7 @@ Partial Class FAskFiltriOrdini
         Me.GroupIstat.ResumeLayout(False)
         Me.GroupIstat.PerformLayout()
         Me.ResumeLayout(False)
+        Me.PerformLayout()
 
     End Sub
     Friend WithEvents TableLayoutPanel1 As System.Windows.Forms.TableLayoutPanel
@@ -450,4 +521,10 @@ Partial Class FAskFiltriOrdini
     Friend WithEvents Label2 As Label
     Friend WithEvents TxtIstatAttivita As TextBox
     Friend WithEvents ToolTip1 As ToolTip
+    Friend WithEvents Label3 As Label
+    Friend WithEvents DtaIstatRifatt As DateTimePicker
+    Friend WithEvents Label4 As Label
+    Friend WithEvents TxtIstatTesto As TextBox
+    Friend WithEvents Label5 As Label
+    Friend WithEvents TxtNextFtYear As TextBox
 End Class

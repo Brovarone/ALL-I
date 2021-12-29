@@ -472,6 +472,8 @@ Public Class FLogin
         lstStatoConnessione.Items.Add("Attendere... il processo potrebbe durare qualche minuto")
         'INIZIALIZZO NUOVO LOG
         My.Application.Log.DefaultFileLogWriter.BaseFileName += "-" & DateTime.Now.ToString("dd-MM-yyyy--HH-mm-ss")
+        My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Azienda: " & DBInUse & "  ---  ")
+
         Dim lista As New List(Of String)
 
         If ChkClienti.Checked Then
@@ -1160,6 +1162,7 @@ Public Class FLogin
             lstStatoConnessione.Items.Add("Attendere... il processo potrebbe durare qualche minuto")
             'INIZIALIZZO NUOVO LOG
             My.Application.Log.DefaultFileLogWriter.BaseFileName += "-" & DateTime.Now.ToString("dd-MM-yyyy--HH-mm-ss")
+            My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Azienda: " & DBInUse & "  ---  ")
             My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Movimenti Analitici  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
 
             'ESEGUO LA PROCEDURA
@@ -1509,6 +1512,7 @@ Public Class FLogin
             lstStatoConnessione.Items.Add("Attendere... il processo potrebbe durare qualche minuto")
             'INIZIALIZZO NUOVO LOG
             My.Application.Log.DefaultFileLogWriter.BaseFileName += "-" & DateTime.Now.ToString("dd-MM-yyyy--HH-mm-ss")
+            My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Azienda: " & DBInUse & "  ---  ")
             My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Generazione Righe Ordine  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
 
             'ESEGUO LA PROCEDURA
@@ -1537,6 +1541,7 @@ Public Class FLogin
             lstStatoConnessione.Items.Add("Attendere... il processo potrebbe durare qualche minuto")
             'INIZIALIZZO NUOVO LOG
             My.Application.Log.DefaultFileLogWriter.BaseFileName += "-" & DateTime.Now.ToString("dd-MM-yyyy--HH-mm-ss")
+            My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Azienda: " & DBInUse & "  ---  ")
             My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Adeguamento ISTAT su ordini  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
 
             'ESEGUO LA PROCEDURA

@@ -42,6 +42,17 @@ Partial Class FLogin
         Me.BtnApriLog = New System.Windows.Forms.Button()
         Me.DtDataInizio = New System.Windows.Forms.DateTimePicker()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
+        Me.TabPageCancella = New System.Windows.Forms.TabPage()
+        Me.BtnCancellaAnaliticaDaFatt = New System.Windows.Forms.Button()
+        Me.BtnCancellaPNota = New System.Windows.Forms.Button()
+        Me.BtnCancellaRID = New System.Windows.Forms.Button()
+        Me.BtnCancellaFatture = New System.Windows.Forms.Button()
+        Me.BtnCancellaPartiteFornitore = New System.Windows.Forms.Button()
+        Me.BtnCancellaPartite = New System.Windows.Forms.Button()
+        Me.BtnCancellaFornitori = New System.Windows.Forms.Button()
+        Me.BtnCancellaClienti = New System.Windows.Forms.Button()
+        Me.TabOrdini = New System.Windows.Forms.TabPage()
+        Me.BtnCancellaRigheOrdini = New System.Windows.Forms.Button()
         Me.TabPageFatture = New System.Windows.Forms.TabPage()
         Me.ChkCreaSDD = New System.Windows.Forms.CheckBox()
         Me.ChkInsertSepaOnFoxFields = New System.Windows.Forms.CheckBox()
@@ -63,19 +74,8 @@ Partial Class FLogin
         Me.ChkRisconti = New System.Windows.Forms.CheckBox()
         Me.ChkPNotaForDaPartitario = New System.Windows.Forms.CheckBox()
         Me.ChkPNotaCliDaPartitario = New System.Windows.Forms.CheckBox()
-        Me.TabPageCancella = New System.Windows.Forms.TabPage()
-        Me.BtnCancellaAnaliticaDaFatt = New System.Windows.Forms.Button()
-        Me.BtnCancellaPNota = New System.Windows.Forms.Button()
-        Me.BtnCancellaRID = New System.Windows.Forms.Button()
-        Me.BtnCancellaFatture = New System.Windows.Forms.Button()
-        Me.BtnCancellaPartiteFornitore = New System.Windows.Forms.Button()
-        Me.BtnCancellaPartite = New System.Windows.Forms.Button()
-        Me.BtnCancellaFornitori = New System.Windows.Forms.Button()
-        Me.BtnCancellaClienti = New System.Windows.Forms.Button()
         Me.TabCespiti = New System.Windows.Forms.TabPage()
         Me.ChkCespiti = New System.Windows.Forms.CheckBox()
-        Me.TabOrdini = New System.Windows.Forms.TabPage()
-        Me.BtnCancellaRigheOrdini = New System.Windows.Forms.Button()
         Me.BtnProcessa = New System.Windows.Forms.Button()
         Me.lblDataInizio = New System.Windows.Forms.Label()
         Me.txtPath = New System.Windows.Forms.TextBox()
@@ -146,14 +146,14 @@ Partial Class FLogin
         Me.Label8 = New System.Windows.Forms.Label()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
+        Me.TabPageCancella.SuspendLayout()
+        Me.TabOrdini.SuspendLayout()
         Me.TabPageFatture.SuspendLayout()
         Me.TabPagePaghe.SuspendLayout()
         Me.TabPageAnagrafiche.SuspendLayout()
         Me.TabPagePartite.SuspendLayout()
         Me.TabPagePnota.SuspendLayout()
-        Me.TabPageCancella.SuspendLayout()
         Me.TabCespiti.SuspendLayout()
-        Me.TabOrdini.SuspendLayout()
         Me.PanelUser.SuspendLayout()
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.MenuStrip1.SuspendLayout()
@@ -349,6 +349,125 @@ Partial Class FLogin
         Me.TabControl1.SelectedIndex = 0
         Me.TabControl1.Size = New System.Drawing.Size(330, 127)
         Me.TabControl1.TabIndex = 42
+        '
+        'TabPageCancella
+        '
+        Me.TabPageCancella.BackColor = System.Drawing.SystemColors.Control
+        Me.TabPageCancella.Controls.Add(Me.BtnCancellaAnaliticaDaFatt)
+        Me.TabPageCancella.Controls.Add(Me.BtnCancellaPNota)
+        Me.TabPageCancella.Controls.Add(Me.BtnCancellaRID)
+        Me.TabPageCancella.Controls.Add(Me.BtnCancellaFatture)
+        Me.TabPageCancella.Controls.Add(Me.BtnCancellaPartiteFornitore)
+        Me.TabPageCancella.Controls.Add(Me.BtnCancellaPartite)
+        Me.TabPageCancella.Controls.Add(Me.BtnCancellaFornitori)
+        Me.TabPageCancella.Controls.Add(Me.BtnCancellaClienti)
+        Me.TabPageCancella.Location = New System.Drawing.Point(4, 22)
+        Me.TabPageCancella.Name = "TabPageCancella"
+        Me.TabPageCancella.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabPageCancella.Size = New System.Drawing.Size(322, 101)
+        Me.TabPageCancella.TabIndex = 1
+        Me.TabPageCancella.Text = "Cancella"
+        '
+        'BtnCancellaAnaliticaDaFatt
+        '
+        Me.BtnCancellaAnaliticaDaFatt.BackColor = System.Drawing.Color.SandyBrown
+        Me.BtnCancellaAnaliticaDaFatt.Location = New System.Drawing.Point(207, 38)
+        Me.BtnCancellaAnaliticaDaFatt.Name = "BtnCancellaAnaliticaDaFatt"
+        Me.BtnCancellaAnaliticaDaFatt.Size = New System.Drawing.Size(97, 24)
+        Me.BtnCancellaAnaliticaDaFatt.TabIndex = 54
+        Me.BtnCancellaAnaliticaDaFatt.Text = "Analitica da fatt."
+        Me.BtnCancellaAnaliticaDaFatt.UseVisualStyleBackColor = False
+        '
+        'BtnCancellaPNota
+        '
+        Me.BtnCancellaPNota.BackColor = System.Drawing.Color.OrangeRed
+        Me.BtnCancellaPNota.Location = New System.Drawing.Point(209, 70)
+        Me.BtnCancellaPNota.Name = "BtnCancellaPNota"
+        Me.BtnCancellaPNota.Size = New System.Drawing.Size(97, 24)
+        Me.BtnCancellaPNota.TabIndex = 53
+        Me.BtnCancellaPNota.Text = "P.nota"
+        Me.BtnCancellaPNota.UseVisualStyleBackColor = False
+        '
+        'BtnCancellaRID
+        '
+        Me.BtnCancellaRID.BackColor = System.Drawing.Color.LightCoral
+        Me.BtnCancellaRID.Location = New System.Drawing.Point(3, 70)
+        Me.BtnCancellaRID.Name = "BtnCancellaRID"
+        Me.BtnCancellaRID.Size = New System.Drawing.Size(97, 27)
+        Me.BtnCancellaRID.TabIndex = 52
+        Me.BtnCancellaRID.Text = "Cancella RID"
+        Me.BtnCancellaRID.UseVisualStyleBackColor = False
+        '
+        'BtnCancellaFatture
+        '
+        Me.BtnCancellaFatture.BackColor = System.Drawing.Color.Firebrick
+        Me.BtnCancellaFatture.Location = New System.Drawing.Point(207, 7)
+        Me.BtnCancellaFatture.Name = "BtnCancellaFatture"
+        Me.BtnCancellaFatture.Size = New System.Drawing.Size(97, 24)
+        Me.BtnCancellaFatture.TabIndex = 51
+        Me.BtnCancellaFatture.Text = "Cancella Fatture"
+        Me.BtnCancellaFatture.UseVisualStyleBackColor = False
+        '
+        'BtnCancellaPartiteFornitore
+        '
+        Me.BtnCancellaPartiteFornitore.BackColor = System.Drawing.Color.RosyBrown
+        Me.BtnCancellaPartiteFornitore.Location = New System.Drawing.Point(106, 37)
+        Me.BtnCancellaPartiteFornitore.Name = "BtnCancellaPartiteFornitore"
+        Me.BtnCancellaPartiteFornitore.Size = New System.Drawing.Size(97, 27)
+        Me.BtnCancellaPartiteFornitore.TabIndex = 50
+        Me.BtnCancellaPartiteFornitore.Text = "Cancella Partite"
+        Me.BtnCancellaPartiteFornitore.UseVisualStyleBackColor = False
+        '
+        'BtnCancellaPartite
+        '
+        Me.BtnCancellaPartite.BackColor = System.Drawing.Color.LightCoral
+        Me.BtnCancellaPartite.Location = New System.Drawing.Point(3, 37)
+        Me.BtnCancellaPartite.Name = "BtnCancellaPartite"
+        Me.BtnCancellaPartite.Size = New System.Drawing.Size(97, 27)
+        Me.BtnCancellaPartite.TabIndex = 49
+        Me.BtnCancellaPartite.Text = "Cancella Partite"
+        Me.BtnCancellaPartite.UseVisualStyleBackColor = False
+        '
+        'BtnCancellaFornitori
+        '
+        Me.BtnCancellaFornitori.BackColor = System.Drawing.Color.RosyBrown
+        Me.BtnCancellaFornitori.Location = New System.Drawing.Point(106, 7)
+        Me.BtnCancellaFornitori.Name = "BtnCancellaFornitori"
+        Me.BtnCancellaFornitori.Size = New System.Drawing.Size(97, 24)
+        Me.BtnCancellaFornitori.TabIndex = 48
+        Me.BtnCancellaFornitori.Text = "Cancella Fornitori"
+        Me.BtnCancellaFornitori.UseVisualStyleBackColor = False
+        '
+        'BtnCancellaClienti
+        '
+        Me.BtnCancellaClienti.BackColor = System.Drawing.Color.LightCoral
+        Me.BtnCancellaClienti.Location = New System.Drawing.Point(3, 7)
+        Me.BtnCancellaClienti.Name = "BtnCancellaClienti"
+        Me.BtnCancellaClienti.Size = New System.Drawing.Size(97, 24)
+        Me.BtnCancellaClienti.TabIndex = 47
+        Me.BtnCancellaClienti.Text = "Cancella Clienti"
+        Me.BtnCancellaClienti.UseVisualStyleBackColor = False
+        '
+        'TabOrdini
+        '
+        Me.TabOrdini.BackColor = System.Drawing.SystemColors.Control
+        Me.TabOrdini.Controls.Add(Me.BtnCancellaRigheOrdini)
+        Me.TabOrdini.Location = New System.Drawing.Point(4, 22)
+        Me.TabOrdini.Name = "TabOrdini"
+        Me.TabOrdini.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabOrdini.Size = New System.Drawing.Size(322, 101)
+        Me.TabOrdini.TabIndex = 7
+        Me.TabOrdini.Text = "Ordini"
+        '
+        'BtnCancellaRigheOrdini
+        '
+        Me.BtnCancellaRigheOrdini.BackColor = System.Drawing.Color.Firebrick
+        Me.BtnCancellaRigheOrdini.Location = New System.Drawing.Point(17, 7)
+        Me.BtnCancellaRigheOrdini.Name = "BtnCancellaRigheOrdini"
+        Me.BtnCancellaRigheOrdini.Size = New System.Drawing.Size(139, 23)
+        Me.BtnCancellaRigheOrdini.TabIndex = 0
+        Me.BtnCancellaRigheOrdini.Text = "Cancella righe Ordini"
+        Me.BtnCancellaRigheOrdini.UseVisualStyleBackColor = False
         '
         'TabPageFatture
         '
@@ -575,104 +694,6 @@ Partial Class FLogin
         Me.ChkPNotaCliDaPartitario.Text = "Clienti da Partitario"
         Me.ChkPNotaCliDaPartitario.UseVisualStyleBackColor = True
         '
-        'TabPageCancella
-        '
-        Me.TabPageCancella.BackColor = System.Drawing.SystemColors.Control
-        Me.TabPageCancella.Controls.Add(Me.BtnCancellaAnaliticaDaFatt)
-        Me.TabPageCancella.Controls.Add(Me.BtnCancellaPNota)
-        Me.TabPageCancella.Controls.Add(Me.BtnCancellaRID)
-        Me.TabPageCancella.Controls.Add(Me.BtnCancellaFatture)
-        Me.TabPageCancella.Controls.Add(Me.BtnCancellaPartiteFornitore)
-        Me.TabPageCancella.Controls.Add(Me.BtnCancellaPartite)
-        Me.TabPageCancella.Controls.Add(Me.BtnCancellaFornitori)
-        Me.TabPageCancella.Controls.Add(Me.BtnCancellaClienti)
-        Me.TabPageCancella.Location = New System.Drawing.Point(4, 22)
-        Me.TabPageCancella.Name = "TabPageCancella"
-        Me.TabPageCancella.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabPageCancella.Size = New System.Drawing.Size(322, 101)
-        Me.TabPageCancella.TabIndex = 1
-        Me.TabPageCancella.Text = "Cancella"
-        '
-        'BtnCancellaAnaliticaDaFatt
-        '
-        Me.BtnCancellaAnaliticaDaFatt.BackColor = System.Drawing.Color.SandyBrown
-        Me.BtnCancellaAnaliticaDaFatt.Location = New System.Drawing.Point(207, 38)
-        Me.BtnCancellaAnaliticaDaFatt.Name = "BtnCancellaAnaliticaDaFatt"
-        Me.BtnCancellaAnaliticaDaFatt.Size = New System.Drawing.Size(97, 24)
-        Me.BtnCancellaAnaliticaDaFatt.TabIndex = 54
-        Me.BtnCancellaAnaliticaDaFatt.Text = "Analitica da fatt."
-        Me.BtnCancellaAnaliticaDaFatt.UseVisualStyleBackColor = False
-        '
-        'BtnCancellaPNota
-        '
-        Me.BtnCancellaPNota.BackColor = System.Drawing.Color.OrangeRed
-        Me.BtnCancellaPNota.Location = New System.Drawing.Point(209, 70)
-        Me.BtnCancellaPNota.Name = "BtnCancellaPNota"
-        Me.BtnCancellaPNota.Size = New System.Drawing.Size(97, 24)
-        Me.BtnCancellaPNota.TabIndex = 53
-        Me.BtnCancellaPNota.Text = "P.nota"
-        Me.BtnCancellaPNota.UseVisualStyleBackColor = False
-        '
-        'BtnCancellaRID
-        '
-        Me.BtnCancellaRID.BackColor = System.Drawing.Color.LightCoral
-        Me.BtnCancellaRID.Location = New System.Drawing.Point(3, 70)
-        Me.BtnCancellaRID.Name = "BtnCancellaRID"
-        Me.BtnCancellaRID.Size = New System.Drawing.Size(97, 27)
-        Me.BtnCancellaRID.TabIndex = 52
-        Me.BtnCancellaRID.Text = "Cancella RID"
-        Me.BtnCancellaRID.UseVisualStyleBackColor = False
-        '
-        'BtnCancellaFatture
-        '
-        Me.BtnCancellaFatture.BackColor = System.Drawing.Color.Firebrick
-        Me.BtnCancellaFatture.Location = New System.Drawing.Point(207, 7)
-        Me.BtnCancellaFatture.Name = "BtnCancellaFatture"
-        Me.BtnCancellaFatture.Size = New System.Drawing.Size(97, 24)
-        Me.BtnCancellaFatture.TabIndex = 51
-        Me.BtnCancellaFatture.Text = "Cancella Fatture"
-        Me.BtnCancellaFatture.UseVisualStyleBackColor = False
-        '
-        'BtnCancellaPartiteFornitore
-        '
-        Me.BtnCancellaPartiteFornitore.BackColor = System.Drawing.Color.RosyBrown
-        Me.BtnCancellaPartiteFornitore.Location = New System.Drawing.Point(106, 37)
-        Me.BtnCancellaPartiteFornitore.Name = "BtnCancellaPartiteFornitore"
-        Me.BtnCancellaPartiteFornitore.Size = New System.Drawing.Size(97, 27)
-        Me.BtnCancellaPartiteFornitore.TabIndex = 50
-        Me.BtnCancellaPartiteFornitore.Text = "Cancella Partite"
-        Me.BtnCancellaPartiteFornitore.UseVisualStyleBackColor = False
-        '
-        'BtnCancellaPartite
-        '
-        Me.BtnCancellaPartite.BackColor = System.Drawing.Color.LightCoral
-        Me.BtnCancellaPartite.Location = New System.Drawing.Point(3, 37)
-        Me.BtnCancellaPartite.Name = "BtnCancellaPartite"
-        Me.BtnCancellaPartite.Size = New System.Drawing.Size(97, 27)
-        Me.BtnCancellaPartite.TabIndex = 49
-        Me.BtnCancellaPartite.Text = "Cancella Partite"
-        Me.BtnCancellaPartite.UseVisualStyleBackColor = False
-        '
-        'BtnCancellaFornitori
-        '
-        Me.BtnCancellaFornitori.BackColor = System.Drawing.Color.RosyBrown
-        Me.BtnCancellaFornitori.Location = New System.Drawing.Point(106, 7)
-        Me.BtnCancellaFornitori.Name = "BtnCancellaFornitori"
-        Me.BtnCancellaFornitori.Size = New System.Drawing.Size(97, 24)
-        Me.BtnCancellaFornitori.TabIndex = 48
-        Me.BtnCancellaFornitori.Text = "Cancella Fornitori"
-        Me.BtnCancellaFornitori.UseVisualStyleBackColor = False
-        '
-        'BtnCancellaClienti
-        '
-        Me.BtnCancellaClienti.BackColor = System.Drawing.Color.LightCoral
-        Me.BtnCancellaClienti.Location = New System.Drawing.Point(3, 7)
-        Me.BtnCancellaClienti.Name = "BtnCancellaClienti"
-        Me.BtnCancellaClienti.Size = New System.Drawing.Size(97, 24)
-        Me.BtnCancellaClienti.TabIndex = 47
-        Me.BtnCancellaClienti.Text = "Cancella Clienti"
-        Me.BtnCancellaClienti.UseVisualStyleBackColor = False
-        '
         'TabCespiti
         '
         Me.TabCespiti.BackColor = System.Drawing.SystemColors.Control
@@ -693,27 +714,6 @@ Partial Class FLogin
         Me.ChkCespiti.TabIndex = 0
         Me.ChkCespiti.Text = "Cespiti"
         Me.ChkCespiti.UseVisualStyleBackColor = True
-        '
-        'TabOrdini
-        '
-        Me.TabOrdini.BackColor = System.Drawing.SystemColors.Control
-        Me.TabOrdini.Controls.Add(Me.BtnCancellaRigheOrdini)
-        Me.TabOrdini.Location = New System.Drawing.Point(4, 22)
-        Me.TabOrdini.Name = "TabOrdini"
-        Me.TabOrdini.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabOrdini.Size = New System.Drawing.Size(322, 101)
-        Me.TabOrdini.TabIndex = 7
-        Me.TabOrdini.Text = "Ordini"
-        '
-        'BtnCancellaRigheOrdini
-        '
-        Me.BtnCancellaRigheOrdini.BackColor = System.Drawing.Color.Firebrick
-        Me.BtnCancellaRigheOrdini.Location = New System.Drawing.Point(17, 7)
-        Me.BtnCancellaRigheOrdini.Name = "BtnCancellaRigheOrdini"
-        Me.BtnCancellaRigheOrdini.Size = New System.Drawing.Size(139, 23)
-        Me.BtnCancellaRigheOrdini.TabIndex = 0
-        Me.BtnCancellaRigheOrdini.Text = "Cancella righe Ordini"
-        Me.BtnCancellaRigheOrdini.UseVisualStyleBackColor = False
         '
         'BtnProcessa
         '
@@ -784,7 +784,7 @@ Partial Class FLogin
         Me.PanelUser.Controls.Add(Me.BtnLastLog)
         Me.PanelUser.Controls.Add(Me.BtnPaghe)
         Me.PanelUser.Controls.Add(Me.BtnFatture)
-        Me.PanelUser.Location = New System.Drawing.Point(316, 345)
+        Me.PanelUser.Location = New System.Drawing.Point(303, 345)
         Me.PanelUser.Name = "PanelUser"
         Me.PanelUser.Size = New System.Drawing.Size(395, 295)
         Me.PanelUser.TabIndex = 46
@@ -807,7 +807,7 @@ Partial Class FLogin
         Me.BtnOrdini.ImageAlign = System.Drawing.ContentAlignment.TopCenter
         Me.BtnOrdini.Location = New System.Drawing.Point(195, 17)
         Me.BtnOrdini.Name = "BtnOrdini"
-        Me.BtnOrdini.Size = New System.Drawing.Size(84, 64)
+        Me.BtnOrdini.Size = New System.Drawing.Size(84, 62)
         Me.BtnOrdini.TabIndex = 5
         Me.BtnOrdini.Text = "Ordini"
         Me.BtnOrdini.TextAlign = System.Drawing.ContentAlignment.BottomCenter
@@ -1254,6 +1254,8 @@ Partial Class FLogin
         Me.PanelAdmin.ResumeLayout(False)
         Me.PanelAdmin.PerformLayout()
         Me.TabControl1.ResumeLayout(False)
+        Me.TabPageCancella.ResumeLayout(False)
+        Me.TabOrdini.ResumeLayout(False)
         Me.TabPageFatture.ResumeLayout(False)
         Me.TabPageFatture.PerformLayout()
         Me.TabPagePaghe.ResumeLayout(False)
@@ -1264,10 +1266,8 @@ Partial Class FLogin
         Me.TabPagePartite.PerformLayout()
         Me.TabPagePnota.ResumeLayout(False)
         Me.TabPagePnota.PerformLayout()
-        Me.TabPageCancella.ResumeLayout(False)
         Me.TabCespiti.ResumeLayout(False)
         Me.TabCespiti.PerformLayout()
-        Me.TabOrdini.ResumeLayout(False)
         Me.PanelUser.ResumeLayout(False)
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.MenuStrip1.ResumeLayout(False)

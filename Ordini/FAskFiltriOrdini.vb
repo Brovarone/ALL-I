@@ -50,8 +50,9 @@ Public Class FAskFiltriOrdini
     End Sub
 
     Private Sub FAskFiltriOrdini_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+        Me.Size = New Size(262, 478) ' Misura standard
         If IsIstat Then
-            Me.Size = New Size(262, 445)
+            Me.Size = New Size(262, 498)
             'GroupCompetenza.Visible = False
             GroupPeriodo.Visible = False
             GroupIstat.Location = GroupPeriodo.Location
@@ -60,12 +61,18 @@ Public Class FAskFiltriOrdini
             'AssignValidation(Me.TextBox2, ValidationType.Only_Characters)
             'AssignValidation(Me.TextBox3, ValidationType.No_Blank)
             'AssignValidation(Me.TextBox4, ValidationType.Only_Email)
+            ToolTip1.SetToolTip(Me.DtaCompA, "Contratti con data decorrenza minore a questa data")
 
         End If
     End Sub
 
     Private Sub TxtPercIstat_TextChanged(sender As Object, e As EventArgs) Handles TxtPercIstat.TextChanged
         Dim ok As Boolean = Double.TryParse(TxtPercIstat.Text, perc)
+    End Sub
+
+    Private Sub DtaCompA_ValueChanged(sender As Object, e As EventArgs) Handles DtaCompA.ValueChanged
+        DtaIstatRifatt.Value = DtaCompA.Value.AddYears(1)
+        TxtNextFtYear.Text = DtaCompA.Value.AddYears(1).Year.ToString
     End Sub
 
     'Private Sub TxtPercIstat_KeyPress(sender As Object, e As KeyPressEventArgs) Handles TxtPercIstat.KeyPress

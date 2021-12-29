@@ -26,7 +26,7 @@ namespace EFMago.Models
         public int TbcreatedId { get; set; }
         public int TbmodifiedId { get; set; }
         public double? ValUnit { get; set; }
-
+        public string TestoFattura { get; set; }
 
         // Creato da me
         [NotMapped]

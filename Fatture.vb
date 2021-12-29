@@ -1005,7 +1005,7 @@ Module Fatture
                                                                             drEI("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                                                                             dtEI.Rows.Add(drEI)
 
-                                                                            'Ora devo correggere le righe di dettaglio già inserite per mettere il Flag "SubjectToWithholdingTax"
+                                                                            'Ora devo correggere le righe di dettaglio già inserite per mettere il Flag "SubjectToWithholdingTax" x la gestione della Ritenuta d'acconto
                                                                             dvDocDet.RowFilter = "(LineType= " & LineType.Servizio & " or LineType=" & LineType.Merce & ") AND SaleDocId=" & idDoc
                                                                             For Each drV As DataRowView In dvDocDet
                                                                                 drV.BeginEdit()

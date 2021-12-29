@@ -29,4 +29,9 @@ Per ogni ordini devo ciclare le righe contratto ( non fatturate = escludo già l
 			-Se canone Calcolare e aggiornare DataProssimaFatt
 				DataFineElaborazione: la scrivo sempre per determinare che ho processato la riga in quella data ( o fine competenza-> meglio di no)!
 
-			
+Fatturazione da MAGO
+	Data ordine da.. a..
+	Data prevista consegna solo un mese (o un giorno)
+	Data consegna confermata solo un mese (o un giorno)
+
+Data Sospensione in Info non viene utilizzata

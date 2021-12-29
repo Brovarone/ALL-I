@@ -88,6 +88,7 @@ Module Ordini
         Dim bulkMessage As New StringBuilder()
         Dim errori As New StringBuilder()
         Dim avvisi As New StringBuilder()
+        Dim msgLog As String
 
         Dim totOrdini As Integer
         Dim totOrdiniok As Integer
@@ -113,6 +114,7 @@ Module Ordini
                             .Include(Function(att) att.AllordCliAttivita) _
                                 .ThenInclude(Of Allattivita)(Function(at) at.Allattivita)) ' _
             'AGGIUNGO  FILTRI
+            'Vengono esclusi a priori gli ordini con data cessazione > di Data Competenza
             q = q.Where(Function(facc) facc.ALLOrdCliAcc.DataCessazione = sDataNulla OrElse facc.ALLOrdCliAcc.DataCessazione > compDate)
             If bFiltroDateOrdini Then
                 q = q.Where(Function(oDate) oDate.OrderDate >= fromDate And oDate.OrderDate <= todate)
@@ -179,7 +181,7 @@ Module Ordini
                     Dim bScrittoDescrizioni As Boolean = False
                     Dim iNrRigheNota As Integer = 0
                     Dim iNrRigheAValore As Integer = 0
-
+                    Dim isScadenzaFissa As Boolean = False
 #End Region
                     'STEP 1 : Ciclo le righe contratto
                     For Each c In o.ALLordCliContratto
@@ -232,12 +234,14 @@ Module Ordini
                         Dim isAnnullato As Boolean = False
                         Dim isDaRifatturare As Boolean = False
                         Dim attDaRifatturare As New List(Of AllordCliAttivita)
+                        Dim isISTAT As Boolean = False
+                        Dim attIstat As New List(Of AllordCliAttivita)
 
 #End Region
                         For Each att In c.AllordCliAttivita
-                            Debug.Print("## Attività:(" & att.Line & ") " & att.Attivita & " " & att.DataInizio.ToString & " " & att.RifServizio & " " & att.RifLinea & " " & att.Nota)
-                            debugging.AppendLine("## Attività:(" & att.Line & ") " & att.Attivita & " " & att.DataInizio.ToString & " " & att.RifServizio & " " & att.RifLinea & " " & att.Nota)
-                            'STEP 3 :Ciclo sulle Attività per Sospensione 
+                            Debug.Print("## Attività:(" & att.Line & ") " & att.Attivita & " " & att.DataInizio.Value.ToShortDateString & " " & att.RifServizio & " " & att.RifLinea & " " & att.Nota)
+                            debugging.AppendLine("## Attività:(" & att.Line & ") " & att.Attivita & " " & att.DataInizio.Value.ToShortDateString & " " & att.RifServizio & " " & att.RifLinea & " " & att.Nota)
+                            'STEP 3a: Ciclo sulle Attività per Sospensione 
                             If CBool(att.Allattivita.Sospensione) Then
                                 '--- Controllo Esclusioni di Sospensione---
 
@@ -253,8 +257,9 @@ Module Ordini
                                     isSospeso = True
                                     If dCanoniSospesi = c.Qta.Value Then isOk = False
                                     If dCanoniSospesi > 0 Then curQta -= dCanoniSospesi
-                                    Debug.Print("## [Sospensione] ## : dal " & att.DataInizio.ToString & " al " & att.DataFine.ToString)
-                                    debugging.AppendLine("## [Sospensione] ## : dal " & att.DataInizio.ToString & " al " & att.DataFine.ToString)
+                                    msgLog = "## [Sospensione] ## : Mesi " & dCanoniSospesi.ToString & " dal " & att.DataInizio.Value.ToShortDateString & " al " & att.DataFine.Value.ToShortDateString
+                                    Debug.Print(msgLog)
+                                    debugging.AppendLine(msgLog)
                                 End If
                                 'Mesi da rifatturare
                                 Dim dCanoniRipresi As Double
@@ -266,8 +271,9 @@ Module Ordini
                                         'att.CanoniRipresi = dCanoniRipresi
                                         attDaRifatturare.Add(att)
                                         isOk = True
-                                        Debug.Print("## [Ripresa] ## : il " & att.DataRifatturazione.ToString)
-                                        debugging.AppendLine("## [Ripresa] ## : il " & att.DataRifatturazione.ToString)
+                                        msgLog = "## [Ripresa] ## : il " & att.DataRifatturazione.ToString
+                                        Debug.Print(msgLog)
+                                        debugging.AppendLine(msgLog)
                                         'Segno la riga come Fatturata
                                         att.Fatturata = "1"
                                         att.Tbmodified = Now
@@ -276,7 +282,7 @@ Module Ordini
                                     End If
                                 End If
                             End If
-                            'STEP 4 :Ciclo sulle Attività per Annullamento 
+                            'STEP 3b: Ciclo sulle Attività per Annullamento 
                             If CBool(att.Allattivita.Annullamento) Then
                                 '--- Controllo Esclusioni di Annullamento---
 
@@ -301,11 +307,38 @@ Module Ordini
                                     Exit For
                                 End If
                             End If
+                            'STEP 3c: Ciclo sulle Attività per Istat 
+                            If CBool(att.Allattivita.Istat) Then
+                                '--- Controllo Esclusioni di ISTAT---
+
+                                'Fatturata
+                                If CBool(att.Fatturata) Then
+                                    Debug.Print("## [Fatturata] ##")
+                                    debugging.AppendLine("## [Fatturata] ##")
+                                    Continue For
+                                End If
+                                'E' nel range
+                                If CBool(att.DaFatturare) AndAlso IsBetweenIstat(att, curDate) Then
+                                    isISTAT = True
+                                    attIstat.Add(att)
+                                    isOk = True
+                                    msgLog = "## [ISTAT] ## : il " & att.DataRifatturazione.ToString
+                                    Debug.Print(msgLog)
+                                    debugging.AppendLine(msgLog)
+                                    'Segno la riga come Fatturata
+                                    att.Fatturata = "1"
+                                    att.Tbmodified = Now
+                                    att.TbmodifiedId = sLoginId
+                                    efAllordCliAttivita.Add(att)
+                                End If
+                            End If
                         Next
-                        'STEP 5 : Controllo Scadenza Fissa
-                        If curScadenzaFissa <> sDataNulla AndAlso curDate.CanoniDataFin > curScadenzaFissa Then
-                            avvisi.AppendLine("Ordine: " & curOrdNo & " Cliente: " & curCliente & " con scadenza fissa. Controllare canoni!")
-                            debugging.AppendLine("Ordine: " & curOrdNo & " Cliente: " & curCliente & " con scadenza fissa. Controllare canoni!")
+                        'STEP 4 : Controllo Scadenza Fissa
+                        If curScadenzaFissa <> sDataNulla AndAlso curDate.CanoniDataFin >= curScadenzaFissa Then
+                            isScadenzaFissa = True
+                            msgLog = "Ordine: " & curOrdNo & " Cliente: " & curCliente & " con scadenza fissa. Controllare canoni!"
+                            avvisi.AppendLine(msgLog)
+                            debugging.AppendLine(msgLog)
                             'Simile a Mesi annullati
                             Dim dCanoniFinoA As Double
                             If IsBetweenAnnullamento(curScadenzaFissa, curDate, dCanoniFinoA) Then
@@ -319,18 +352,20 @@ Module Ordini
                                     debugging.AppendLine("## Scadenza Fissa -> Totale ##")
                                 End If
                             End If
-                            'Aggiorno informazioni su data fine contratto 
+
                             If o.ALLOrdCliAcc.DataCessazione = sDataNulla Then
                                 o.ALLOrdCliAcc.DataCessazione = curScadenzaFissa
                                 o.ALLOrdCliAcc.MotivoCessazione = "[AUTO] Scadenza Fissa"
                                 o.ALLOrdCliAcc.Tbmodified = Now
                                 o.ALLOrdCliAcc.TbmodifiedId = sLoginId
-                                debugging.AppendLine("Ordine: " & curOrdNo & " Impostata chiusura: " & curScadenzaFissa.ToShortDateString)
+                                debugging.AppendLine("Ordine: " & curOrdNo & " Impostata cessazione: " & curScadenzaFissa.ToShortDateString)
                                 efAllordCliAcc.Add(o.ALLOrdCliAcc)
+                            Else
+                                errori.AppendLine("Ordine: " & curOrdNo & " Cliente: " & curCliente & " con data cessazione già valorizzata. Controllare scadenza fissa!")
                             End If
                         End If
                         'Se ok allora Creo nuova riga di dettaglio
-                        If isOk OrElse isDaRifatturare Then
+                        If isOk OrElse isDaRifatturare AndAlso curQta > 0 Then
 #Region "Controllo su prima riga bianca"
                             If o.MaSaleOrdDetails.Any AndAlso o.MaSaleOrdDetails.Count = 1 Then
 
@@ -353,8 +388,9 @@ Module Ordini
                             'STEP 6 : Ciclo le righe Descrizioni
                             If Not bScrittoDescrizioni Then
                                 For Each d In o.ALLordCliDescrizioni
-                                    Debug.Print("### Riga descrittiva:(" & d.Line & ") " & d.Descrizione)
-                                    debugging.AppendLine("### Riga descrittiva:(" & d.Line & ") " & d.Descrizione)
+                                    msgLog = "### Riga descrittiva:(" & d.Line & ") " & d.Descrizione
+                                    Debug.Print(msgLog)
+                                    debugging.AppendLine(msgLog)
                                     iNewRowsCount += 1
                                     iNrRigheNota += 1
                                     bScrittoDescrizioni = True
@@ -457,7 +493,6 @@ Module Ordini
                                 'OrdContext.MaSaleOrdDetails.Add(rRif)
                                 efMaSaleOrdDetails.Add(rRif)
                             Next
-
 #End Region
 #Region "Scrivo MaSaleOrdDetails"
                             Debug.Print("### Riga corpo:(" & c.Line & ") " & c.Servizio)
@@ -471,7 +506,7 @@ Module Ordini
                             r.SaleOrdId = curSaleOrdId
                             r.LineType = LineType.Servizio
                             r.Item = curItem
-                            Dim periodo As String = "Periodo dal " & curDate.CanoniDataIn.ToShortDateString & " al " & curDate.CanoniDataFin.ToShortDateString
+                            Dim periodo As String = "Periodo dal " & curDate.CanoniDataIn.ToShortDateString & " al " & If(isScadenzaFissa, curScadenzaFissa.ToShortDateString, curDate.CanoniDataFin.ToShortDateString)
                             If curDate.UnaTantum Then
                                 r.Description = curDescri
                                 'Segno come Fatturata
@@ -489,6 +524,8 @@ Module Ordini
                             r.TotalAmount = Math.Round((curQta * curValUnit) * ((100 + curPercIva) / 100), decTax)
                             r.ExpectedDeliveryDate = curDate.DataPrevistaConsegna
                             r.ConfirmedDeliveryDate = curDate.DataConfermaConsegna
+                            'TODO: chiedere se data fine competenza in caso di Scadenza fissa e' fine periodo o la data scadenza fissa
+                            'TODO: Idem per quantità
                             r.AllNrCanoni = curQta 'curDate.NrCanoni '-> visto che potrebbe variare uso curQta
                             r.AllCanoniDataI = curDate.CanoniDataIn
                             r.AllCanoniDataF = curDate.CanoniDataFin
@@ -515,15 +552,70 @@ Module Ordini
                             efMaSaleOrdDetails.Add(r)
 
 #End Region
+#Region "Righe ISTAT"
+                            For Each aIst In attIstat
+                                'todo : testare istat
+                                msgLog = "### Riga Istat:(" & aIst.Line & ") " & aIst.Attivita
+                                Debug.Print(msgLog)
+                                debugging.AppendLine(msgLog)
+
+                                iNewRowsCount += 1
+                                iNrRigheNota += 1
+                                'bScrittoDescrizioni = True
+                                Dim rd As New MaSaleOrdDetails With {
+                                    .Line = curLastLine + iNewRowsCount,
+                                    .Position = 0,
+                                    .SubId = curLastLine + iNewRowsCount,
+                                    .SaleOrdId = curSaleOrdId,
+                                    .LineType = LineType.Nota,
+                                    .Description = aIst.TestoFattura,
+                                    .InEi = "1",
+                                    .ExpectedDeliveryDate = curDate.DataPrevistaConsegna,
+                                    .ConfirmedDeliveryDate = curDate.DataConfermaConsegna, ' sDataNulla
+                                    .InternalOrdNo = curOrdNo,
+                                    .Customer = curCliente,
+                                    .OrderDate = curOrdDate,
+                                    .NoOfPacks = 0,
+                                    .ProductionPlanLine = 0,
+                                    .ExternalLineReference = 0,
+                                    .Tbcreated = Now,
+                                    .Tbmodified = Now,
+                                    .TbcreatedId = sLoginId,
+                                    .TbmodifiedId = sLoginId,
+                                    .Item = "",
+                                    .UoM = "",
+                                    .Qty = 0,
+                                    .UnitValue = 0,
+                                    .TaxableAmount = 0,
+                                    .TotalAmount = 0,
+                                    .PacksUoM = "",
+                                    .TaxCode = "",
+                                    .Job = "",
+                                    .CostCenter = "",
+                                    .Offset = "",
+                                    .Notes = "",
+                                    .NetPrice = 0,
+                                    .ContractCode = "",
+                                    .ProjectCode = "",
+                                    .AllNrCanoni = 0,
+                                    .AllCanoniDataI = sDataNulla,
+                                    .AllCanoniDataF = sDataNulla
+                                }
+                                'Aggiungo la riga alla collection
+                                efMaSaleOrdDetails.Add(rd)
+                            Next
+#End Region
+                        End If
 #Region "Aggiorno date prossima Fatturazione"
+                        If isOk OrElse isDaRifatturare OrElse isSospeso Then
                             If curDate.DataProssimaFattura < compDate Then avvisi.AppendLine("Ordine " & curOrdNo & " Servizio " & curItem & " con data prossima fatturazione antecedente alla data competenza !")
                             c.DataProssimaFatt = curDate.DataProssimaFattura
                             c.DataFineElaborazione = Now
                             c.Tbmodified = Now
                             c.TbmodifiedId = sLoginId
                             efAllordCliContratto.Add(c)
-#End Region
                         End If
+#End Region
                     Next
                     'Se ho scritto qualche riga svuoto il flag Consegnato, Fatturato etc. della testa
                     'Aggiorno il cotatore ordini Ok
@@ -535,8 +627,9 @@ Module Ordini
                         o.Tbmodified = Now
                         o.TbmodifiedId = sLoginId
                         totOrdiniok += 1
-                        Debug.Print("#### Ordine: " & o.InternalOrdNo & " Nuove righe N:" & iNrRigheNota.ToString & " S:" & iNrRigheAValore.ToString)
-                        debugging.Append("#### Ordine: " & o.InternalOrdNo & " Nuove righe N:" & iNrRigheNota.ToString & " S:" & iNrRigheAValore.ToString)
+                        msgLog = "#### Ordine: " & o.InternalOrdNo & " Nuove righe N:" & iNrRigheNota.ToString & " S:" & iNrRigheAValore.ToString
+                        Debug.Print(msgLog)
+                        debugging.Append(msgLog)
                         efMaSaleOrd.Add(o)
                     End If
                     'PROVA : Salvo una sola volta qui' !!
@@ -686,8 +779,14 @@ Module Ordini
 
         'Scrivo i LOG
         If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Inserimento Dati ---" & vbCrLf & bulkMessage.ToString)
-        If errori.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & vbCrLf & errori.ToString)
-        If avvisi.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Avvisi ---" & vbCrLf & avvisi.ToString)
+        If errori.Length > 0 Then
+            My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & vbCrLf & errori.ToString)
+            FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati (" & errori.Length & ") errori : Controllare file di Log")
+        End If
+        If avvisi.Length > 0 Then
+            My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Avvisi ---" & vbCrLf & avvisi.ToString)
+            FLogin.lstStatoConnessione.Items.Add("Presenti (" & avvisi.Length & ") avvisi : Controllare file di Log")
+        End If
         If bIsDebugging AndAlso debugging.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Debugging ---" & vbCrLf & debugging.ToString)
 
         Return Not someTrouble
@@ -709,6 +808,8 @@ Module Ordini
         Dim compDate As Date
         Dim percIstat As Double = 0
         Dim cauAttivita As String = ""
+        Dim nextFtYear As Integer = 0
+        Dim testoFattura As String = ""
 
         Dim debugging As New StringBuilder()
 
@@ -735,7 +836,10 @@ Module Ordini
                 filiale = ff.TxtOrdFiliale.Text
                 compDate = ff.DtaCompA.Value 'Data giorno di fatturazione
                 cauAttivita = ff.TxtIstatAttivita.Text
-                debugging.AppendLine("Filtri")
+                'dataRifatturazione = ff.DtaIstatRifatt.Value 'Data giorno di fatturazione
+                nextFtYear = CInt(ff.TxtNextFtYear.Text)
+                testoFattura = ff.TxtIstatTesto.Text
+                'debugging.AppendLine("Filtri")
                 debugging.AppendLine(If(bFiltroDateOrdini, "Dal " & fromDate.ToShortDateString & " al " & todate.ToShortDateString, "Fino al " & todate.ToShortDateString))
                 debugging.AppendLine("Ordine : " & If(bSingoloOrdine, nrOrd, "TUTTI"))
                 debugging.AppendLine("Cliente : " & If(bSingoloCliente, cliente, "TUTTI"))
@@ -743,6 +847,9 @@ Module Ordini
                 debugging.AppendLine("Data Competenza :" & compDate.ToShortDateString)
                 debugging.AppendLine("Percentuale ISTAT : " & percIstat.ToString)
                 debugging.AppendLine("Causale Attvità : " & cauAttivita)
+                'debugging.AppendLine("Data rifatturazione : " & dataRifatturazione.ToShortDateString)
+                debugging.AppendLine("Anno prossima Fatt. : " & nextFtYear)
+                debugging.AppendLine("Testo : " & testoFattura)
             ElseIf result = DialogResult.Cancel Then
                 Return False
                 Exit Function
@@ -754,6 +861,7 @@ Module Ordini
         Dim bulkMessage As New StringBuilder()
         Dim errori As New StringBuilder()
         Dim avvisi As New StringBuilder()
+        Dim msgLog As String
 
         Dim totOrdini As Integer
         Dim totOrdiniok As Integer
@@ -870,17 +978,36 @@ Module Ordini
                         Dim isSospeso As Boolean = False
                         Dim isAnnullato As Boolean = False
                         Dim isDaRifatturare As Boolean = False
-                        Dim attDaRifatturare As New List(Of AllordCliAttivita)
-
+                        Dim attDaAdeguare As New List(Of AllordCliAttivita)
+                        Dim isIstat As Boolean = False
 #End Region
                         For Each att In c.AllordCliAttivita
-                            Debug.Print("## Attività:(" & att.Line & ") " & att.Attivita & " " & att.DataInizio.ToString & " " & att.RifServizio & " " & att.RifLinea & " " & att.Nota)
-                            debugging.AppendLine("## Attività:(" & att.Line & ") " & att.Attivita & " " & att.DataInizio.ToString & " " & att.RifServizio & " " & att.RifLinea & " " & att.Nota)
-                            'STEP 3 :Ciclo sulle Attività per Sospensione 
-                            'Nulla da considerare
+                            Debug.Print("## Attività:(" & att.Line & ") " & att.Attivita & " " & att.DataInizio.Value.ToShortDateString & " " & att.RifServizio & " " & att.RifLinea & " " & att.Nota)
+                            debugging.AppendLine("## Attività:(" & att.Line & ") " & att.Attivita & " " & att.DataInizio.Value.ToShortDateString & " " & att.RifServizio & " " & att.RifLinea & " " & att.Nota)
+                            'STEP 3a: Ciclo sulle Attività per Sospensione 
+                            If CBool(att.Allattivita.Sospensione) Then
+                                '--- Controllo Esclusioni di Sospensione---
 
-                            'STEP 4 :Ciclo sulle Attività per Annullamento 
-                            If CBool(att.Allattivita.Annullamento) Then
+                                'Fatturata
+                                If CBool(att.Fatturata) Then
+                                    Debug.Print("## [Fatturata] ##")
+                                    debugging.AppendLine("## [Fatturata] ##")
+                                    Continue For
+                                End If
+                                'Mesi sospesi
+                                If att.DataInizio.Value.Year = nextFtYear OrElse att.DataFine.Value.Year = nextFtYear Then
+                                    isSospeso = True
+                                    msgLog = "## [Sospensione] ## : dal " & att.DataInizio.Value.ToShortDateString & " al " & att.DataFine.Value.ToShortDateString
+                                    Debug.Print(msgLog)
+                                    debugging.AppendLine(msgLog)
+                                    attDaAdeguare.Add(att)
+                                    isOk = True
+                                End If
+
+                            End If
+
+                                'STEP 3b: Ciclo sulle Attività per Annullamento 
+                                If CBool(att.Allattivita.Annullamento) Then
                                 '--- Controllo Esclusioni di Annullamento---
 
                                 isAnnullato = True
@@ -902,8 +1029,21 @@ Module Ordini
                                     Exit For
                                 End If
                             End If
+
+                            'STEP 3c: Ciclo sulle Attività per Istat 
+                            'Devo assicurarmi di non adeguare nuovamente all'istat quelli antecenti a xxxxx
+                            If CBool(att.Allattivita.Istat) Then
+                                '--- Controllo Esclusioni di ISTAT---
+
+                                'E' nel range
+                                If CBool(att.DaFatturare) AndAlso att.DataRifatturazione.Value.Year = nextFtYear Then
+                                    isIstat = True
+                                    errori.AppendLine("Ordine: " & curOrdNo & " con riga di adeguamento istat già presente per l'anno :" & nextFtYear.ToString)
+                                    isOk = False
+                                End If
+                            End If
                         Next
-                        'STEP 5 : Controllo Scadenza Fissa
+                        'STEP 4 : Controllo Scadenza Fissa
                         If curScadenzaFissa <> sDataNulla AndAlso curDate.CanoniDataFin > curScadenzaFissa Then
                             avvisi.AppendLine("Ordine: " & curOrdNo & " Cliente: " & curCliente & " con scadenza fissa. Controllare canoni!")
                             debugging.AppendLine("Ordine: " & curOrdNo & " Cliente: " & curCliente & " con scadenza fissa. Controllare canoni!")
@@ -920,7 +1060,7 @@ Module Ordini
                             End If
                         End If
                         'Se ok allora 
-                        If isOk Then
+                        If isOk AndAlso Not isIstat Then
 #Region "Adeguo AllordCliContratto"
                             'Adeguo riga di Canone
                             isNewRowsAtt = True
@@ -933,6 +1073,7 @@ Module Ordini
                             efAllordCliContratto.Add(c)
 #End Region
                             'Creo la riga di Attività
+                            '27/12/2021: Aggiunta possibilità di rifatturazione per creare riga di nota con scritta
                             iNewRowsAttCount += 1
                             Dim rAtt As New AllordCliAttivita With {
                                 .IdOrdCli = curSaleOrdId,
@@ -940,10 +1081,11 @@ Module Ordini
                                 .Attivita = "ISTAT",
                                 .DataInizio = compDate,
                                 .DataFine = sDataNulla,
-                                .DaFatturare = "0",
-                                .DataRifatturazione = sDataNulla,
+                                .DaFatturare = "1",
+                                .DataRifatturazione = curDate.DataPrevistaConsegna,
                                 .Fatturata = "0",
-                                .Nota = "Adeguamento ISTAT (" & percIstat.ToString & " %). Precedente: " & curValUnit.ToString,
+                                .Nota = "Adeguamento ISTAT (" & percIstat.ToString & "%). Precedente: " & curValUnit.ToString,
+                                .TestoFattura = testoFattura,
                                 .RifServizio = curItem,
                                 .RifLinea = curRifLinea,
                                 .ValUnit = newValUnit,
@@ -952,8 +1094,16 @@ Module Ordini
                                 .TbcreatedId = sLoginId,
                                 .TbmodifiedId = sLoginId
                                 }
-
                             efAllordCliAttivita.Add(rAtt)
+                            'Adeguo le righe di attività sospese
+                            For Each adeg In attDaAdeguare
+                                adeg.ValUnit = newValUnit
+                                adeg.TestoFattura = "Adguato a ISTAT"
+                                adeg.Tbmodified = DateAndTime.Now
+                                adeg.TbmodifiedId = sLoginId
+                                efAllordCliAttivita.Add(adeg)
+                            Next
+
                         End If
                     Next
                     If isNewRowsAtt Then
@@ -1047,8 +1197,14 @@ Module Ordini
 
         'Scrivo i LOG
         If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Inserimento Dati ---" & vbCrLf & bulkMessage.ToString)
-        If errori.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & vbCrLf & errori.ToString)
-        If avvisi.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Avvisi ---" & vbCrLf & avvisi.ToString)
+        If errori.Length > 0 Then
+            My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & vbCrLf & errori.ToString)
+            FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati (" & errori.Length & ") errori : Controllare file di Log")
+        End If
+        If avvisi.Length > 0 Then
+            My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Avvisi ---" & vbCrLf & avvisi.ToString)
+            FLogin.lstStatoConnessione.Items.Add("Presenti (" & avvisi.Length & ") avvisi : Controllare file di Log")
+        End If
         If bIsDebugging AndAlso debugging.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Debugging ---" & vbCrLf & debugging.ToString)
 
         Return Not someTrouble
@@ -1139,7 +1295,15 @@ Module Ordini
         canoniSospesi = 0
         If (dataInizio >= range.CanoniDataIn AndAlso dataInizio <= range.CanoniDataFin) AndAlso (dataFine >= range.CanoniDataIn AndAlso dataFine <= range.CanoniDataFin) Then
             result = True
-            canoniSospesi = CalcolaMesi(range.CanoniDataIn, dataInizio)
+            canoniSospesi = CalcolaMesi(dataInizio, dataFine)
+            'La sospensione inizia con la data di inizio periodo
+            ' If dataInizio = range.CanoniDataIn Then
+            'canoniSospesi = CalcolaMesi(dataInizio, dataFine)
+            'ElseIf dataFine = range.CanoniDataFin Then
+            'canoniSospesi = CalcolaMesi(dataInizio, dataFine)
+            'Else
+            'canoniSospesi = CalcolaMesi(range.CanoniDataIn, dataInizio)
+            'End If
         Else
             'Ci potrebbero essere date a cavallo del periodo di fatturazione
             'Data Inizio antecedente al periodo con ( Data Fine compresa)
@@ -1162,6 +1326,13 @@ Module Ordini
         End If
         Return result
     End Function
+    Private Function IsBetweenIstat(ByVal a As AllordCliAttivita, ByVal range As MyBloccoDate) As Boolean
+        Dim result As Boolean = False
+        If a.DataRifatturazione >= range.CanoniDataIn AndAlso a.DataRifatturazione <= range.CanoniDataFin Then
+            result = True
+        End If
+        Return result
+    End Function
     Private Function IsBetweenRipresi(ByVal a As AllordCliAttivita, ByVal range As MyBloccoDate, ByRef canoniRipresi As Double) As Boolean
         Dim result As Boolean = False
         canoniRipresi = 0
@@ -1171,9 +1342,26 @@ Module Ordini
         End If
         Return result
     End Function
-    Private Function CalcolaMesi(d1 As Date, d2 As Date) As Double
+    Private Function CalcolaMesi_Old(d1 As Date, d2 As Date) As Double
+        'Una volta usavo questo
         'Non lavora bene con month perche' non prende 1/1-31/1
         'canoniSospesi = DateAndTime.DateDiff(DateInterval.Month, dataInizio, range.CanoniDataFin)
         Return Math.Round(DateAndTime.DateDiff(DateInterval.Day, d1, d2) / (365.2425 / 12), 0)
+    End Function
+    Private Function CalcolaMesi(d1 As Date, d2 As Date) As Double
+        'Logica con date 1-8=0 // 9-23= 0,5 // 23-28(31) =1
+        Dim monthNr As Double = DateAndTime.DateDiff(DateInterval.Month, d1, d2)
+
+        'Controllo su giorno come da specifiche
+        Select Case d2.Day
+            Case 1 To 8
+                monthNr += 0
+            Case 9 To 23
+                monthNr += 0.5
+            Case 24 To 31
+                monthNr += 1
+        End Select
+        'canoniSospesi = DateAndTime.DateDiff(DateInterval.Month, dataInizio, range.CanoniDataFin)
+        Return monthNr
     End Function
 End Module
