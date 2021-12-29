@@ -492,6 +492,7 @@ Module MagoNet
             If result IsNot Nothing Then
                 For x As Short = 0 To result.GetUpperBound(1)
                     result(1, x) = LeggiDichIntNumber(result(0, x)).ToString
+                    result(2, x) = LeggiDichIntData(result(0, x))
                 Next
             End If
         End Using
@@ -501,12 +502,12 @@ Module MagoNet
         Dim id As Integer
         Using cmd = New SqlCommand("SELECT * FROM MA_DeclarationOfIntentNumbers WHERE BalanceYear=@BalanceYear AND Received=1", Connection)
             cmd.Parameters.AddWithValue("@BalanceYear", Year)
-            Dim reader As SqlDataReader
-            reader = cmd.ExecuteReader
-            While reader.Read()
-                id = reader.Item("LastLogNo")
-            End While
-            reader.Close()
+            Using reader As SqlDataReader = cmd.ExecuteReader
+                While reader.Read()
+                    id = reader.Item("LastLogNo")
+                End While
+                reader.Close()
+            End Using
         End Using
         If String.IsNullOrWhiteSpace(MyReturnString) Then
             My.Application.Log.WriteEntry("Ultimo protocollo Dich. Intento letto: " & id.ToString & " anno: " & Year.ToString)
@@ -515,13 +516,32 @@ Module MagoNet
         End If
         Return id
     End Function
+    Public Function LeggiDichIntData(ByVal Year As Short, Optional ByRef MyReturnString As String = "") As String
+        Dim dt As String = ""
+        Using cmd = New SqlCommand("SELECT * FROM MA_DeclarationOfIntentNumbers WHERE BalanceYear=@BalanceYear AND Received=1", Connection)
+            cmd.Parameters.AddWithValue("@BalanceYear", Year)
+            Using reader As SqlDataReader = cmd.ExecuteReader
+                While reader.Read()
+                    dt = reader.Item("LastDate")
+                    dt = MagoFormatta(dt, GetType(DateTime), True).STRinga
+                End While
+                reader.Close()
+            End Using
+        End Using
+        If String.IsNullOrWhiteSpace(MyReturnString) Then
+            My.Application.Log.WriteEntry("Ultimo data Dich. Intento letto: " & dt.ToString & " anno: " & Year.ToString)
+        Else
+            MyReturnString = "Ultimo data Dich. Intento letto: " & dt.ToString & " anno: " & Year.ToString
+        End If
+        Return dt
+    End Function
     Public Sub AggiornaDichIntNumber(ByVal anni As String(,), Optional ByRef MyReturnString As String = "")
-        For i As Short = 0 To UBound(anni, 2) - 1
+        For i As Short = 0 To UBound(anni, 2)
             Dim annualita As Short = anni(0, i)
-            Dim lastDate As String = anni(1, i)
             Dim value As Integer = anni(1, i)
+            Dim lastDate As String = MagoFormatta(anni(2, i), GetType(String)).DataTempo
             If Not String.IsNullOrWhiteSpace(value) AndAlso value > 0 Then
-                Using cmd = New SqlCommand("UPDATE MA_DeclarationOfIntentNumbers SET LastLogNo =@Value, LastDate=@LastdDate WHERE BalanceYear=@BalanceYear", Connection)
+                Using cmd = New SqlCommand("UPDATE MA_DeclarationOfIntentNumbers SET LastLogNo =@Value, LastDate=@LastDate WHERE BalanceYear=@BalanceYear", Connection)
                     cmd.Transaction = Trans
                     cmd.Parameters.AddWithValue("@Value", value)
                     cmd.Parameters.AddWithValue("@LastDate", lastDate)

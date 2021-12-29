@@ -39,7 +39,7 @@ Module Ordini
         Dim p_Bimestrali As Boolean
         Dim p_Mensili As Boolean
 
-        Dim debugging As New StringBuilder()
+        Dim filtri As New StringBuilder()
 
 #Region "Regole di richiesta "
         'Lancio la form con le regole di richiesta
@@ -63,19 +63,21 @@ Module Ordini
                 p_Trimestrali = ff.ChkP_Trimestrali.Checked
                 p_Bimestrali = ff.ChkP_Bimestrali.Checked
                 p_Mensili = ff.ChkP_Mensili.Checked
-                debugging.AppendLine("Filtri")
-                debugging.AppendLine(If(bFiltroDateOrdini, "Dal " & fromDate.ToShortDateString & " al " & todate.ToShortDateString, "Fino al " & todate.ToShortDateString))
-                debugging.AppendLine("Ordine : " & If(bSingoloOrdine, nrOrd, "TUTTI"))
-                debugging.AppendLine("Cliente : " & If(bSingoloCliente, cliente, "TUTTI"))
-                debugging.AppendLine("Filiale : " & If(bSingolaFiliale, filiale, "TUTTI"))
-                debugging.AppendLine("Data Competenza :" & compDate.ToShortDateString)
-                debugging.AppendLine("Periodo (Tutti) : " & p_Tutti.ToString)
-                debugging.AppendLine("Periodo (Annuali) : " & p_Annuali.ToString)
-                debugging.AppendLine("Periodo (Sem.) : " & p_Semestrali.ToString)
-                debugging.AppendLine("Periodo (Quadr.) : " & p_Quadrimestrali.ToString)
-                debugging.AppendLine("Periodo (Trim.) : " & p_Trimestrali.ToString)
-                debugging.AppendLine("Periodo (Bim.) : " & p_Bimestrali.ToString)
-                debugging.AppendLine("Periodo (Mensi) : " & p_Mensili.ToString)
+                filtri.AppendLine(" --- Filtri ---")
+                filtri.AppendLine(If(bFiltroDateOrdini, "Dal " & fromDate.ToShortDateString & " al " & todate.ToShortDateString, "Fino al " & todate.ToShortDateString))
+                filtri.AppendLine("Ordine : " & If(bSingoloOrdine, nrOrd, "TUTTI"))
+                filtri.AppendLine("Cliente : " & If(bSingoloCliente, cliente, "TUTTI"))
+                filtri.AppendLine("Filiale : " & If(bSingolaFiliale, filiale, "TUTTI"))
+                filtri.AppendLine("Data Competenza :" & compDate.ToShortDateString)
+                filtri.AppendLine("Periodo (Tutti) : " & p_Tutti.ToString)
+                filtri.AppendLine("Periodo (Annuali) : " & p_Annuali.ToString)
+                filtri.AppendLine("Periodo (Sem.) : " & p_Semestrali.ToString)
+                filtri.AppendLine("Periodo (Quadr.) : " & p_Quadrimestrali.ToString)
+                filtri.AppendLine("Periodo (Trim.) : " & p_Trimestrali.ToString)
+                filtri.AppendLine("Periodo (Bim.) : " & p_Bimestrali.ToString)
+                filtri.AppendLine("Periodo (Mensi) : " & p_Mensili.ToString)
+                My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & filtri.ToString)
+
             ElseIf result = DialogResult.Cancel Then
                 Return False
                 Exit Function
@@ -88,10 +90,12 @@ Module Ordini
         Dim bulkMessage As New StringBuilder()
         Dim errori As New StringBuilder()
         Dim avvisi As New StringBuilder()
+        Dim debugging As New StringBuilder()
         Dim msgLog As String
 
         Dim totOrdini As Integer
-        Dim totOrdiniok As Integer
+        Dim totOrdiniConNuoveRighe As Integer       ' Totale ordini con righe contratto che fatturate
+        Dim totOrdiniConRigheAggiornate As Integer  ' Totale ordini con righe contratto che vengono aggiorate
         Dim bIsSomething As Boolean
         Dim sLoginId As String = My.Settings.mLOGINID
 
@@ -141,7 +145,7 @@ Module Ordini
                 totOrdini = allOrders.Count
                 bIsSomething = True
                 Debug.Print("Ordini Estratti : " & totOrdini.ToString)
-                My.Application.Log.DefaultFileLogWriter.WriteLine("Ordini Estratti : " & totOrdini.ToString & vbCrLf)
+                My.Application.Log.DefaultFileLogWriter.WriteLine("Ordini Estratti : " & totOrdini.ToString)
                 FLogin.lstStatoConnessione.Items.Add("Ordini Estratti : " & totOrdini.ToString)
                 EditTestoBarra("Ordini Estratti : " & totOrdini.ToString)
                 FLogin.prgCopy.Value = 1
@@ -160,12 +164,16 @@ Module Ordini
 #End Region
                 'Ciclo su tutti gli ordini
                 For Each o In allOrders
+                    FLogin.prgCopy.PerformStep()
+                    FLogin.prgCopy.Update()
+                    Application.DoEvents()
                     Debug.Print("Ordine: " & o.InternalOrdNo)
                     debugging.AppendLine("Ordine: " & o.InternalOrdNo)
 #Region "Inizializzazione"
                     'Resetto alcune cose 
                     Dim iNewRowsCount As Integer = 0
-                    Dim isNewRows As Boolean = False
+                    Dim isNewRows As Boolean = False    ' Indica se ci sono righe contratto che vengono fatturate e quindi inserite nelle righe
+                    Dim isUpdateRows As Boolean = False ' Indica se ci sono righe contratto che vengono aggiorate
                     'Inizializzo alcuni valori
                     Dim curSaleOrdId As Integer = o.SaleOrdId
                     Dim curLastLine As Integer = If(o.MaSaleOrdDetails.Any, o.MaSaleOrdDetails.Max(Function(m) m.Line), 0)
@@ -185,9 +193,6 @@ Module Ordini
 #End Region
                     'STEP 1 : Ciclo le righe contratto
                     For Each c In o.ALLordCliContratto
-                        FLogin.prgCopy.PerformStep()
-                        FLogin.prgCopy.Update()
-                        Application.DoEvents()
 #Region "Controllo Esclusioni righe Contratto"
                         Dim sEx As String = c.Line & ") " & c.TipoRigaServizio & " " & c.Servizio
                         If c.AlltipoRigaServizio.Consuntivo Then
@@ -239,8 +244,9 @@ Module Ordini
 
 #End Region
                         For Each att In c.AllordCliAttivita
-                            Debug.Print("## Attività:(" & att.Line & ") " & att.Attivita & " " & att.DataInizio.Value.ToShortDateString & " " & att.RifServizio & " " & att.RifLinea & " " & att.Nota)
-                            debugging.AppendLine("## Attività:(" & att.Line & ") " & att.Attivita & " " & att.DataInizio.Value.ToShortDateString & " " & att.RifServizio & " " & att.RifLinea & " " & att.Nota)
+                            msgLog = "## Attività:(" & att.Line & ") " & att.Attivita & " " & att.DataInizio.Value.ToShortDateString & " " & att.RifServizio & " " & att.RifLinea & " " & att.Nota
+                            Debug.Print(msgLog)
+                            debugging.AppendLine(msgLog)
                             'STEP 3a: Ciclo sulle Attività per Sospensione 
                             If CBool(att.Allattivita.Sospensione) Then
                                 '--- Controllo Esclusioni di Sospensione---
@@ -320,7 +326,6 @@ Module Ordini
                                 'E' nel range
                                 If CBool(att.DaFatturare) AndAlso IsBetweenIstat(att, curDate) Then
                                     isISTAT = True
-                                    attIstat.Add(att)
                                     isOk = True
                                     msgLog = "## [ISTAT] ## : il " & att.DataRifatturazione.ToString
                                     Debug.Print(msgLog)
@@ -329,7 +334,7 @@ Module Ordini
                                     att.Fatturata = "1"
                                     att.Tbmodified = Now
                                     att.TbmodifiedId = sLoginId
-                                    efAllordCliAttivita.Add(att)
+                                    attIstat.Add(att) ' Non posso ancora metterla nell' efAllordCliAttivita perche' potrebbe essere tutto sospeso)
                                 End If
                             End If
                         Next
@@ -365,7 +370,7 @@ Module Ordini
                             End If
                         End If
                         'Se ok allora Creo nuova riga di dettaglio
-                        If isOk OrElse isDaRifatturare AndAlso curQta > 0 Then
+                        If (isOk OrElse isDaRifatturare) AndAlso curQta > 0 Then
 #Region "Controllo su prima riga bianca"
                             If o.MaSaleOrdDetails.Any AndAlso o.MaSaleOrdDetails.Count = 1 Then
 
@@ -603,6 +608,8 @@ Module Ordini
                                 }
                                 'Aggiungo la riga alla collection
                                 efMaSaleOrdDetails.Add(rd)
+                                'Aggiungo l'attività alla collection ( per aggionare il flag Fatturata)
+                                efAllordCliAttivita.Add(aIst)
                             Next
 #End Region
                         End If
@@ -614,6 +621,7 @@ Module Ordini
                             c.Tbmodified = Now
                             c.TbmodifiedId = sLoginId
                             efAllordCliContratto.Add(c)
+                            isUpdateRows = True
                         End If
 #End Region
                     Next
@@ -626,24 +634,26 @@ Module Ordini
                         o.LastSubId = curLastLine + iNewRowsCount
                         o.Tbmodified = Now
                         o.TbmodifiedId = sLoginId
-                        totOrdiniok += 1
+                        totOrdiniConNuoveRighe += 1
                         msgLog = "#### Ordine: " & o.InternalOrdNo & " Nuove righe N:" & iNrRigheNota.ToString & " S:" & iNrRigheAValore.ToString
                         Debug.Print(msgLog)
                         debugging.Append(msgLog)
                         efMaSaleOrd.Add(o)
                     End If
-                    'PROVA : Salvo una sola volta qui' !!
-                    'OrdContext.SaveChanges()
+                    If isUpdateRows Then totOrdiniConRigheAggiornate += 1
                 Next
 
 #Region "Bulk Insert"
-                My.Application.Log.DefaultFileLogWriter.WriteLine("Ordini con righe Contratto valide : " & totOrdiniok.ToString & vbCrLf)
-                FLogin.lstStatoConnessione.Items.Add("Ordini con righe Contratto valide : " & totOrdiniok.ToString)
+                msgLog = "Ordini con righe Contratto valide : " & totOrdiniConNuoveRighe.ToString
+                My.Application.Log.DefaultFileLogWriter.WriteLine(msgLog)
+                FLogin.lstStatoConnessione.Items.Add(msgLog)
+                msgLog = "Ordini con righe Contratto con data prossima fatturazione da adeguare : " & totOrdiniConRigheAggiornate.ToString
+                My.Application.Log.DefaultFileLogWriter.WriteLine(msgLog)
+                FLogin.lstStatoConnessione.Items.Add(msgLog)
 
-                If totOrdiniok > 0 Then
+                If totOrdiniConNuoveRighe > 0 OrElse totOrdiniConRigheAggiornate > 0 Then
                     'Parametri
                     'https://github.com/borisdj/EFCore.BulkExtensions
-                    Debug.Print("[RIASSUNTO] Ordini Estratti : " & totOrdini.ToString & " Ordini con Righe: " & totOrdiniok.ToString)
 
                     Using bulkTrans = OrdContext.Database.BeginTransaction
                         Dim iStep As Integer
@@ -666,7 +676,7 @@ Module Ordini
                                 bulkMessage.AppendLine("MaSaleOrd Ins:" & cfgOrd.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrd.StatsInfo.StatsNumberUpdated.ToString)
                             End If
                             iStep += 1
-                            EditTestoBarra("Salvataggio: Inserimento righe ordini")
+                            EditTestoBarra("Salvataggio: Inserimento/Aggiornamento righe ordini")
                             If efMaSaleOrdDetails.Any Then
                                 Dim t = efMaSaleOrdDetails.Count
                                 Dim cfgOrdDet As New BulkConfig With {
@@ -681,7 +691,7 @@ Module Ordini
                                 bulkMessage.AppendLine("MaSaleOrdDetails Ins:" & cfgOrdDet.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdDet.StatsInfo.StatsNumberUpdated.ToString) ' & " Canc:" & cfgOrdDet.StatsInfo.StatsNumberDeleted.ToString)
                             End If
                             iStep += 1
-                            EditTestoBarra("Salvataggio: Aggiornamento totali ordini")
+                            EditTestoBarra("Salvataggio: Inserimento/Aggiornamento totali ordini")
                             If efMaSaleOrdSummary.Any Then
                                 Dim t = efMaSaleOrdSummary.Count
                                 Dim cfgOrdTot As New BulkConfig With {
@@ -696,7 +706,7 @@ Module Ordini
                                 bulkMessage.AppendLine("MaSaleOrdSummary Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
                             End If
                             iStep += 1
-                            EditTestoBarra("Salvataggio: Aggiornamento dati accessori ordini")
+                            EditTestoBarra("Salvataggio: Inserimento/Aggiornamento dati accessori ordini")
                             If efAllordCliAcc.Any Then
                                 Dim t = efAllordCliAcc.Count
                                 Dim cfgOrdAcc As New BulkConfig With {
@@ -746,8 +756,11 @@ Module Ordini
                                 bulkMessage.AppendLine("[Salvataggio] Sono stati riscontrati degli errori. Eseguita rollback")
                             Else
                                 bulkTrans.Commit()
-                                bulkMessage.AppendLine("Ordini processati: " & totOrdiniok.ToString)
-                                FLogin.lstStatoConnessione.Items.Add("Ordini Processati: " & totOrdiniok.ToString)
+                                FLogin.lstStatoConnessione.Items.Add(" --- Inserimento Dati ---")
+                                msgLog = "Ordini Estratti : " & totOrdini.ToString & " ..con Righe: " & totOrdiniConNuoveRighe.ToString & " ..con Adeguamenti: " & totOrdiniConRigheAggiornate.ToString
+                                Debug.Print(msgLog)
+                                bulkMessage.AppendLine("[RIASSUNTO] " & msgLog)
+                                FLogin.lstStatoConnessione.Items.Add(msgLog)
                             End If
                             OrdContext.Database.ExecuteSqlRaw("DBCC TRACEOFF(610)")
 
@@ -778,16 +791,16 @@ Module Ordini
         OrdContext.Dispose()
 
         'Scrivo i LOG
-        If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Inserimento Dati ---" & vbCrLf & bulkMessage.ToString)
+        If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Inserimento Dati ---" & Environment.NewLine & bulkMessage.ToString)
         If errori.Length > 0 Then
-            My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & vbCrLf & errori.ToString)
-            FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati (" & errori.Length & ") errori : Controllare file di Log")
+            My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Errori ---" & Environment.NewLine & errori.ToString)
+            FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati errori : Controllare file di Log")
         End If
         If avvisi.Length > 0 Then
-            My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Avvisi ---" & vbCrLf & avvisi.ToString)
-            FLogin.lstStatoConnessione.Items.Add("Presenti (" & avvisi.Length & ") avvisi : Controllare file di Log")
+            My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Avvisi ---" & Environment.NewLine & avvisi.ToString)
+            FLogin.lstStatoConnessione.Items.Add("Presenti avvisi : Controllare file di Log")
         End If
-        If bIsDebugging AndAlso debugging.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Debugging ---" & vbCrLf & debugging.ToString)
+        If bIsDebugging AndAlso debugging.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Debugging ---" & Environment.NewLine & debugging.ToString)
 
         Return Not someTrouble
 
@@ -811,7 +824,7 @@ Module Ordini
         Dim nextFtYear As Integer = 0
         Dim testoFattura As String = ""
 
-        Dim debugging As New StringBuilder()
+        Dim filtri As New StringBuilder()
 
 #Region "Regole di richiesta "
         'Lancio la form con le regole di richiesta
@@ -839,17 +852,19 @@ Module Ordini
                 'dataRifatturazione = ff.DtaIstatRifatt.Value 'Data giorno di fatturazione
                 nextFtYear = CInt(ff.TxtNextFtYear.Text)
                 testoFattura = ff.TxtIstatTesto.Text
-                'debugging.AppendLine("Filtri")
-                debugging.AppendLine(If(bFiltroDateOrdini, "Dal " & fromDate.ToShortDateString & " al " & todate.ToShortDateString, "Fino al " & todate.ToShortDateString))
-                debugging.AppendLine("Ordine : " & If(bSingoloOrdine, nrOrd, "TUTTI"))
-                debugging.AppendLine("Cliente : " & If(bSingoloCliente, cliente, "TUTTI"))
-                debugging.AppendLine("Filiale : " & If(bSingolaFiliale, filiale, "TUTTI"))
-                debugging.AppendLine("Data Competenza :" & compDate.ToShortDateString)
-                debugging.AppendLine("Percentuale ISTAT : " & percIstat.ToString)
-                debugging.AppendLine("Causale Attvità : " & cauAttivita)
-                'debugging.AppendLine("Data rifatturazione : " & dataRifatturazione.ToShortDateString)
-                debugging.AppendLine("Anno prossima Fatt. : " & nextFtYear)
-                debugging.AppendLine("Testo : " & testoFattura)
+                filtri.AppendLine(" --- Filtri ---")
+                filtri.AppendLine(If(bFiltroDateOrdini, "Dal: " & fromDate.ToShortDateString & " al: " & todate.ToShortDateString, "Fino al: " & todate.ToShortDateString))
+                filtri.AppendLine("Ordine: " & If(bSingoloOrdine, nrOrd, "TUTTI"))
+                filtri.AppendLine("Cliente: " & If(bSingoloCliente, cliente, "TUTTI"))
+                filtri.AppendLine("Filiale: " & If(bSingolaFiliale, filiale, "TUTTI"))
+                filtri.AppendLine("Data Competenza: " & compDate.ToShortDateString)
+                filtri.AppendLine("Percentuale ISTAT: " & percIstat.ToString)
+                filtri.AppendLine("Causale Attvità: " & cauAttivita)
+                'filtri.AppendLine("Data rifatturazione : " & dataRifatturazione.ToShortDateString)
+                filtri.AppendLine("Anno prossima Fatt.: " & nextFtYear)
+                filtri.AppendLine("Testo: " & testoFattura)
+                My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & filtri.ToString)
+
             ElseIf result = DialogResult.Cancel Then
                 Return False
                 Exit Function
@@ -861,6 +876,7 @@ Module Ordini
         Dim bulkMessage As New StringBuilder()
         Dim errori As New StringBuilder()
         Dim avvisi As New StringBuilder()
+        Dim debugging As New StringBuilder()
         Dim msgLog As String
 
         Dim totOrdini As Integer
@@ -907,7 +923,7 @@ Module Ordini
                 totOrdini = allOrders.Count
                 bIsSomething = True
                 Debug.Print("Ordini Estratti : " & totOrdini.ToString)
-                My.Application.Log.DefaultFileLogWriter.WriteLine("Ordini Estratti : " & totOrdini.ToString & vbCrLf)
+                My.Application.Log.DefaultFileLogWriter.WriteLine("Ordini Estratti : " & totOrdini.ToString)
                 FLogin.lstStatoConnessione.Items.Add("Ordini Estratti : " & totOrdini.ToString)
                 EditTestoBarra("Ordini Estratti : " & totOrdini.ToString)
                 FLogin.prgCopy.Value = 1
@@ -916,6 +932,9 @@ Module Ordini
 
                 'Ciclo su tutti gli ordini
                 For Each o In allOrders
+                    FLogin.prgCopy.PerformStep()
+                    FLogin.prgCopy.Update()
+                    Application.DoEvents()
                     Debug.Print("Ordine: " & o.InternalOrdNo)
                     debugging.AppendLine("Ordine: " & o.InternalOrdNo)
 #Region "Inizializzazione"
@@ -932,9 +951,6 @@ Module Ordini
 #End Region
                     'STEP 1 : Ciclo le righe contratto
                     For Each c In o.ALLordCliContratto
-                        FLogin.prgCopy.PerformStep()
-                        FLogin.prgCopy.Update()
-                        Application.DoEvents()
 #Region "Esclusioni Righe Contratto"
                         Dim sEx As String = c.Line & ") " & c.TipoRigaServizio & " " & c.Servizio
                         'Controllo Esclusioni 
@@ -974,7 +990,7 @@ Module Ordini
                         Dim curItem As String = c.Servizio
                         Dim curRifLinea As Integer = c.Line
                         Dim curValUnit As Double = Math.Round(c.ValUnitIstat.Value, decValUnit)
-                        If curValUnit <= 0 Then errori.AppendLine("(Val Unit Att ) <= 0 // R. :(" & sEx)
+                        If curValUnit <= 0 Then errori.AppendLine("Ordine: " & curOrdNo & " Valore Unitario Att <= 0 // Riga: (" & sEx)
                         Dim isSospeso As Boolean = False
                         Dim isAnnullato As Boolean = False
                         Dim isDaRifatturare As Boolean = False
@@ -1006,8 +1022,8 @@ Module Ordini
 
                             End If
 
-                                'STEP 3b: Ciclo sulle Attività per Annullamento 
-                                If CBool(att.Allattivita.Annullamento) Then
+                            'STEP 3b: Ciclo sulle Attività per Annullamento 
+                            If CBool(att.Allattivita.Annullamento) Then
                                 '--- Controllo Esclusioni di Annullamento---
 
                                 isAnnullato = True
@@ -1038,7 +1054,7 @@ Module Ordini
                                 'E' nel range
                                 If CBool(att.DaFatturare) AndAlso att.DataRifatturazione.Value.Year = nextFtYear Then
                                     isIstat = True
-                                    errori.AppendLine("Ordine: " & curOrdNo & " con riga di adeguamento istat già presente per l'anno :" & nextFtYear.ToString)
+                                    errori.AppendLine("Ordine: " & curOrdNo & " con riga di adeguamento Istat già presente per l'anno: " & nextFtYear.ToString)
                                     isOk = False
                                 End If
                             End If
@@ -1098,7 +1114,7 @@ Module Ordini
                             'Adeguo le righe di attività sospese
                             For Each adeg In attDaAdeguare
                                 adeg.ValUnit = newValUnit
-                                adeg.TestoFattura = "Adguato a ISTAT"
+                                adeg.TestoFattura = "Adeguato a ISTAT"
                                 adeg.Tbmodified = DateAndTime.Now
                                 adeg.TbmodifiedId = sLoginId
                                 efAllordCliAttivita.Add(adeg)
@@ -1115,7 +1131,7 @@ Module Ordini
                 Next
 
 #Region "Bulk Insert"
-                My.Application.Log.DefaultFileLogWriter.WriteLine("Ordini con righe Contratto valide : " & totOrdiniok.ToString & vbCrLf)
+                My.Application.Log.DefaultFileLogWriter.WriteLine("Ordini con righe Contratto valide : " & totOrdiniok.ToString)
                 FLogin.lstStatoConnessione.Items.Add("Ordini con righe Contratto valide : " & totOrdiniok.ToString)
 
                 If totOrdiniok > 0 Then
@@ -1196,16 +1212,16 @@ Module Ordini
         OrdContext.Dispose()
 
         'Scrivo i LOG
-        If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Inserimento Dati ---" & vbCrLf & bulkMessage.ToString)
+        If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Inserimento Dati ---" & Environment.NewLine & bulkMessage.ToString)
         If errori.Length > 0 Then
-            My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & vbCrLf & errori.ToString)
-            FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati (" & errori.Length & ") errori : Controllare file di Log")
+            My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Errori ---" & Environment.NewLine & errori.ToString)
+            FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati errori : Controllare file di Log")
         End If
         If avvisi.Length > 0 Then
-            My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Avvisi ---" & vbCrLf & avvisi.ToString)
-            FLogin.lstStatoConnessione.Items.Add("Presenti (" & avvisi.Length & ") avvisi : Controllare file di Log")
+            My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Avvisi ---" & Environment.NewLine & avvisi.ToString)
+            FLogin.lstStatoConnessione.Items.Add("Presenti avvisi : Controllare file di Log")
         End If
-        If bIsDebugging AndAlso debugging.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Debugging ---" & vbCrLf & debugging.ToString)
+        If bIsDebugging AndAlso debugging.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Debugging ---" & Environment.NewLine & debugging.ToString)
 
         Return Not someTrouble
 
@@ -1328,6 +1344,7 @@ Module Ordini
     End Function
     Private Function IsBetweenIstat(ByVal a As AllordCliAttivita, ByVal range As MyBloccoDate) As Boolean
         Dim result As Boolean = False
+        'TODO: e' possibile che venga saltata in quanto la riga di istat non viene aggiornata dalla procedura e la data rifatturazione va impostata a mano nel caso di ripresa !
         If a.DataRifatturazione >= range.CanoniDataIn AndAlso a.DataRifatturazione <= range.CanoniDataFin Then
             result = True
         End If

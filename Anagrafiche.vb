@@ -408,7 +408,6 @@ Module Anagrafiche
         Dim stopwatch As New System.Diagnostics.Stopwatch
         Dim result As New StringBuilder()
         'Dim result As  New StringBuilder("Clienti con dich Intento duplicata:")
-        Dim bExixts As Boolean
         Dim newInsert As Boolean
         Dim okBulk As Boolean
 
@@ -499,16 +498,20 @@ Module Anagrafiche
                                         Dim codeFound As Boolean = False
                                         If nrProt IsNot Nothing Then
                                             For n As Short = 0 To nrProt.GetUpperBound(1)
+                                                'Cerco l'anno
                                                 If nrProt(0, n) = drInt("DeclYear").ToString Then
                                                     codeFound = True
-                                                    drInt("LogNo") = (Integer.Parse(nrProt(1, n)) + 1).ToString("000000")
+                                                    'Scrivo il nuovo Nr Protocollo
+                                                    Dim newProt As Integer = Integer.Parse(nrProt(1, n) + 1)
+                                                    drInt("LogNo") = newProt.ToString("000000")
+                                                    nrProt(1, n) = newProt.ToString
                                                     nrProt(2, n) = sOggi
                                                 End If
                                                 If codeFound Then Exit For
                                             Next
                                         End If
                                         If Not codeFound Then
-                                            'Devo creare una nuova riga
+                                            'Devo creare una nuova annualità
                                             newInsert = True
                                             Dim newI As Integer = If(nrProt Is Nothing, 0, nrProt.GetUpperBound(1) + 1)
                                             ReDim Preserve nrProt(2, newI)
@@ -527,7 +530,7 @@ Module Anagrafiche
 
                                         End If
 
-                                        drInt("CustomerNo") = .Item("G").ToString ' a volte e' il numero a volte e' incompleto.
+                                        drInt("CustomerNo") = .Item("G").ToString ' a volte e' il numero ,a volte e' incompleto.
                                         drInt("CustomerDate") = MagoFormatta("20" & .Item("C").ToString, GetType(DateTime)).DataTempo
                                         drInt("FromDate") = MagoFormatta("20" & .Item("D").ToString, GetType(DateTime)).DataTempo
                                         drInt("ToDate") = MagoFormatta("20" & .Item("E").ToString, GetType(DateTime)).DataTempo
@@ -554,9 +557,6 @@ Module Anagrafiche
                                 End If
                             End If
                         Next
-                        Debug.Print(result.ToString)
-                        If bExixts Then MessageBox.Show(result.ToString)
-                        My.Application.Log.WriteEntry(result.ToString)
                         Debug.Print("Elaborazione Dich. Intento: " & dtInt.Rows.Count.ToString & " in " & stopwatch1.Elapsed.ToString())
                         EditTestoBarra("Salvataggio ")
                         Using bulkTrans = Connection.BeginTransaction
@@ -581,7 +581,7 @@ Module Anagrafiche
             End Try
             'Scrivi Gli ID ( faccio solo a fine elaborazione)
             AggiornaID(IdType.DicIntento, idDich)
-
+            AggiornaDichIntNumber(nrProt)
             Debug.Print("Creazione Dich. intento" & " " & stopwatch.Elapsed.ToString)
         End If
         stopwatch.Stop()
