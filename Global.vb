@@ -986,6 +986,10 @@ Public Module Common
 
     End Sub
 
+    Public Function OnlyDate(ByVal d As Date) As Date
+        Dim nd As New Date(d.Year, d.Month, d.Day)
+        Return nd
+    End Function
 End Module
 Public Module LogTools
 

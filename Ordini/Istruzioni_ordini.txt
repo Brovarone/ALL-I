@@ -35,3 +35,14 @@ Fatturazione da MAGO
 	Data consegna confermata solo un mese (o un giorno)
 
 Data Sospensione in Info non viene utilizzata
+
+ISTAT
+ Per ogni ordine che corrisponde ai filtri superiori (Data, Cliente, Filiale)
+ Ciclo le righe di contratto e vengono escluse:
+	A consuntivo
+	Già Fatturate
+	DataDecorrenza Nulla ( non ancora operative)
+	DataDecorrenza > Decorrenza indicata nel filtro
+
+Se per l'anno indicato e' già stata eseguita 
+una rivalutazione la riga non verrà processata

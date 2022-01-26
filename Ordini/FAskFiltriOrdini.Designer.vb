@@ -26,8 +26,8 @@ Partial Class FAskFiltriOrdini
         Me.TableLayoutPanel1 = New System.Windows.Forms.TableLayoutPanel()
         Me.OK_Button = New System.Windows.Forms.Button()
         Me.Cancel_Button = New System.Windows.Forms.Button()
-        Me.DtaDA = New System.Windows.Forms.DateTimePicker()
-        Me.DtaA = New System.Windows.Forms.DateTimePicker()
+        Me.DtaOrdineDA = New System.Windows.Forms.DateTimePicker()
+        Me.DtaOrdineA = New System.Windows.Forms.DateTimePicker()
         Me.LblDallaData = New System.Windows.Forms.Label()
         Me.LblAlladata = New System.Windows.Forms.Label()
         Me.GroupOrdini = New System.Windows.Forms.GroupBox()
@@ -39,8 +39,11 @@ Partial Class FAskFiltriOrdini
         Me.RadDalAl = New System.Windows.Forms.RadioButton()
         Me.TxtOrdCliente = New System.Windows.Forms.TextBox()
         Me.TxtNrOrdine = New System.Windows.Forms.TextBox()
-        Me.DtaCompA = New System.Windows.Forms.DateTimePicker()
-        Me.GroupCompetenza = New System.Windows.Forms.GroupBox()
+        Me.DtaFattA = New System.Windows.Forms.DateTimePicker()
+        Me.GroupDataFatt = New System.Windows.Forms.GroupBox()
+        Me.Label6 = New System.Windows.Forms.Label()
+        Me.Label7 = New System.Windows.Forms.Label()
+        Me.DtaFattDa = New System.Windows.Forms.DateTimePicker()
         Me.GroupPeriodo = New System.Windows.Forms.GroupBox()
         Me.ChkP_Tutti = New System.Windows.Forms.CheckBox()
         Me.ChkP_Mensili = New System.Windows.Forms.CheckBox()
@@ -50,22 +53,25 @@ Partial Class FAskFiltriOrdini
         Me.ChkP_Semestrali = New System.Windows.Forms.CheckBox()
         Me.ChkP_Annuali = New System.Windows.Forms.CheckBox()
         Me.GroupIstat = New System.Windows.Forms.GroupBox()
+        Me.LblAnnoAdeguamento = New System.Windows.Forms.Label()
+        Me.TxtAnnoAdeguamento = New System.Windows.Forms.TextBox()
         Me.Label4 = New System.Windows.Forms.Label()
         Me.TxtIstatTesto = New System.Windows.Forms.TextBox()
-        Me.Label3 = New System.Windows.Forms.Label()
-        Me.DtaIstatRifatt = New System.Windows.Forms.DateTimePicker()
         Me.Label2 = New System.Windows.Forms.Label()
         Me.TxtIstatAttivita = New System.Windows.Forms.TextBox()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.TxtPercIstat = New System.Windows.Forms.TextBox()
+        Me.Label3 = New System.Windows.Forms.Label()
+        Me.DtaIstatRifatt = New System.Windows.Forms.DateTimePicker()
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
-        Me.TxtNextFtYear = New System.Windows.Forms.TextBox()
-        Me.Label5 = New System.Windows.Forms.Label()
+        Me.GroupDecorrenza = New System.Windows.Forms.GroupBox()
+        Me.DtaDecorrenza = New System.Windows.Forms.DateTimePicker()
         Me.TableLayoutPanel1.SuspendLayout()
         Me.GroupOrdini.SuspendLayout()
-        Me.GroupCompetenza.SuspendLayout()
+        Me.GroupDataFatt.SuspendLayout()
         Me.GroupPeriodo.SuspendLayout()
         Me.GroupIstat.SuspendLayout()
+        Me.GroupDecorrenza.SuspendLayout()
         Me.SuspendLayout()
         '
         'TableLayoutPanel1
@@ -76,7 +82,7 @@ Partial Class FAskFiltriOrdini
         Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
         Me.TableLayoutPanel1.Controls.Add(Me.OK_Button, 0, 0)
         Me.TableLayoutPanel1.Controls.Add(Me.Cancel_Button, 1, 0)
-        Me.TableLayoutPanel1.Location = New System.Drawing.Point(350, 398)
+        Me.TableLayoutPanel1.Location = New System.Drawing.Point(337, 436)
         Me.TableLayoutPanel1.Name = "TableLayoutPanel1"
         Me.TableLayoutPanel1.RowCount = 1
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
@@ -102,22 +108,22 @@ Partial Class FAskFiltriOrdini
         Me.Cancel_Button.TabIndex = 23
         Me.Cancel_Button.Text = "Cancel"
         '
-        'DtaDA
+        'DtaOrdineDA
         '
-        Me.DtaDA.Enabled = False
-        Me.DtaDA.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.DtaDA.Location = New System.Drawing.Point(96, 65)
-        Me.DtaDA.Name = "DtaDA"
-        Me.DtaDA.Size = New System.Drawing.Size(96, 20)
-        Me.DtaDA.TabIndex = 3
+        Me.DtaOrdineDA.Enabled = False
+        Me.DtaOrdineDA.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
+        Me.DtaOrdineDA.Location = New System.Drawing.Point(96, 65)
+        Me.DtaOrdineDA.Name = "DtaOrdineDA"
+        Me.DtaOrdineDA.Size = New System.Drawing.Size(96, 20)
+        Me.DtaOrdineDA.TabIndex = 3
         '
-        'DtaA
+        'DtaOrdineA
         '
-        Me.DtaA.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.DtaA.Location = New System.Drawing.Point(96, 94)
-        Me.DtaA.Name = "DtaA"
-        Me.DtaA.Size = New System.Drawing.Size(96, 20)
-        Me.DtaA.TabIndex = 4
+        Me.DtaOrdineA.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
+        Me.DtaOrdineA.Location = New System.Drawing.Point(96, 94)
+        Me.DtaOrdineA.Name = "DtaOrdineA"
+        Me.DtaOrdineA.Size = New System.Drawing.Size(96, 20)
+        Me.DtaOrdineA.TabIndex = 4
         '
         'LblDallaData
         '
@@ -147,8 +153,8 @@ Partial Class FAskFiltriOrdini
         Me.GroupOrdini.Controls.Add(Me.RadDalAl)
         Me.GroupOrdini.Controls.Add(Me.TxtOrdCliente)
         Me.GroupOrdini.Controls.Add(Me.TxtNrOrdine)
-        Me.GroupOrdini.Controls.Add(Me.DtaA)
-        Me.GroupOrdini.Controls.Add(Me.DtaDA)
+        Me.GroupOrdini.Controls.Add(Me.DtaOrdineA)
+        Me.GroupOrdini.Controls.Add(Me.DtaOrdineDA)
         Me.GroupOrdini.Controls.Add(Me.LblAlladata)
         Me.GroupOrdini.Controls.Add(Me.LblDallaData)
         Me.GroupOrdini.Location = New System.Drawing.Point(6, 3)
@@ -234,23 +240,52 @@ Partial Class FAskFiltriOrdini
         Me.TxtNrOrdine.Size = New System.Drawing.Size(96, 20)
         Me.TxtNrOrdine.TabIndex = 6
         '
-        'DtaCompA
+        'DtaFattA
         '
-        Me.DtaCompA.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.DtaCompA.Location = New System.Drawing.Point(110, 16)
-        Me.DtaCompA.Name = "DtaCompA"
-        Me.DtaCompA.Size = New System.Drawing.Size(96, 20)
-        Me.DtaCompA.TabIndex = 11
+        Me.DtaFattA.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
+        Me.DtaFattA.Location = New System.Drawing.Point(110, 45)
+        Me.DtaFattA.Name = "DtaFattA"
+        Me.DtaFattA.Size = New System.Drawing.Size(96, 20)
+        Me.DtaFattA.TabIndex = 11
         '
-        'GroupCompetenza
+        'GroupDataFatt
         '
-        Me.GroupCompetenza.Controls.Add(Me.DtaCompA)
-        Me.GroupCompetenza.Location = New System.Drawing.Point(6, 224)
-        Me.GroupCompetenza.Name = "GroupCompetenza"
-        Me.GroupCompetenza.Size = New System.Drawing.Size(228, 46)
-        Me.GroupCompetenza.TabIndex = 14
-        Me.GroupCompetenza.TabStop = False
-        Me.GroupCompetenza.Text = "Competenza"
+        Me.GroupDataFatt.Controls.Add(Me.Label6)
+        Me.GroupDataFatt.Controls.Add(Me.Label7)
+        Me.GroupDataFatt.Controls.Add(Me.DtaFattDa)
+        Me.GroupDataFatt.Controls.Add(Me.DtaFattA)
+        Me.GroupDataFatt.Location = New System.Drawing.Point(6, 224)
+        Me.GroupDataFatt.Name = "GroupDataFatt"
+        Me.GroupDataFatt.Size = New System.Drawing.Size(228, 81)
+        Me.GroupDataFatt.TabIndex = 14
+        Me.GroupDataFatt.TabStop = False
+        Me.GroupDataFatt.Text = "Data prossima fattura"
+        '
+        'Label6
+        '
+        Me.Label6.AutoSize = True
+        Me.Label6.Location = New System.Drawing.Point(44, 45)
+        Me.Label6.Name = "Label6"
+        Me.Label6.Size = New System.Drawing.Size(48, 13)
+        Me.Label6.TabIndex = 14
+        Me.Label6.Text = "Alla data"
+        '
+        'Label7
+        '
+        Me.Label7.AutoSize = True
+        Me.Label7.Location = New System.Drawing.Point(44, 19)
+        Me.Label7.Name = "Label7"
+        Me.Label7.Size = New System.Drawing.Size(55, 13)
+        Me.Label7.TabIndex = 13
+        Me.Label7.Text = "Dalla data"
+        '
+        'DtaFattDa
+        '
+        Me.DtaFattDa.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
+        Me.DtaFattDa.Location = New System.Drawing.Point(110, 19)
+        Me.DtaFattDa.Name = "DtaFattDa"
+        Me.DtaFattDa.Size = New System.Drawing.Size(96, 20)
+        Me.DtaFattDa.TabIndex = 12
         '
         'GroupPeriodo
         '
@@ -262,7 +297,7 @@ Partial Class FAskFiltriOrdini
         Me.GroupPeriodo.Controls.Add(Me.ChkP_Semestrali)
         Me.GroupPeriodo.Controls.Add(Me.ChkP_Annuali)
         Me.GroupPeriodo.Enabled = False
-        Me.GroupPeriodo.Location = New System.Drawing.Point(6, 276)
+        Me.GroupPeriodo.Location = New System.Drawing.Point(6, 311)
         Me.GroupPeriodo.Name = "GroupPeriodo"
         Me.GroupPeriodo.Size = New System.Drawing.Size(228, 114)
         Me.GroupPeriodo.TabIndex = 15
@@ -349,21 +384,38 @@ Partial Class FAskFiltriOrdini
         '
         'GroupIstat
         '
-        Me.GroupIstat.Controls.Add(Me.Label5)
-        Me.GroupIstat.Controls.Add(Me.TxtNextFtYear)
+        Me.GroupIstat.Controls.Add(Me.LblAnnoAdeguamento)
+        Me.GroupIstat.Controls.Add(Me.TxtAnnoAdeguamento)
         Me.GroupIstat.Controls.Add(Me.Label4)
         Me.GroupIstat.Controls.Add(Me.TxtIstatTesto)
         Me.GroupIstat.Controls.Add(Me.Label2)
         Me.GroupIstat.Controls.Add(Me.TxtIstatAttivita)
         Me.GroupIstat.Controls.Add(Me.Label1)
         Me.GroupIstat.Controls.Add(Me.TxtPercIstat)
-        Me.GroupIstat.Location = New System.Drawing.Point(255, 12)
+        Me.GroupIstat.Enabled = False
+        Me.GroupIstat.Location = New System.Drawing.Point(249, 279)
         Me.GroupIstat.Name = "GroupIstat"
         Me.GroupIstat.Size = New System.Drawing.Size(228, 131)
         Me.GroupIstat.TabIndex = 15
         Me.GroupIstat.TabStop = False
         Me.GroupIstat.Text = "ISTAT"
         Me.GroupIstat.Visible = False
+        '
+        'LblAnnoAdeguamento
+        '
+        Me.LblAnnoAdeguamento.AutoSize = True
+        Me.LblAnnoAdeguamento.Location = New System.Drawing.Point(43, 43)
+        Me.LblAnnoAdeguamento.Name = "LblAnnoAdeguamento"
+        Me.LblAnnoAdeguamento.Size = New System.Drawing.Size(134, 13)
+        Me.LblAnnoAdeguamento.TabIndex = 28
+        Me.LblAnnoAdeguamento.Text = "Anno adeguamento ISTAT"
+        '
+        'TxtAnnoAdeguamento
+        '
+        Me.TxtAnnoAdeguamento.Location = New System.Drawing.Point(182, 40)
+        Me.TxtAnnoAdeguamento.Name = "TxtAnnoAdeguamento"
+        Me.TxtAnnoAdeguamento.Size = New System.Drawing.Size(40, 20)
+        Me.TxtAnnoAdeguamento.TabIndex = 27
         '
         'Label4
         '
@@ -383,23 +435,6 @@ Partial Class FAskFiltriOrdini
         Me.TxtIstatTesto.TabIndex = 21
         Me.TxtIstatTesto.Text = "Il canone è aggiornato sulla base dell'indice ISTAT relativo al mese di novembre " &
     "2021"
-        '
-        'Label3
-        '
-        Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(264, 156)
-        Me.Label3.Name = "Label3"
-        Me.Label3.Size = New System.Drawing.Size(61, 13)
-        Me.Label3.TabIndex = 24
-        Me.Label3.Text = "Data Rifatt."
-        '
-        'DtaIstatRifatt
-        '
-        Me.DtaIstatRifatt.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.DtaIstatRifatt.Location = New System.Drawing.Point(343, 152)
-        Me.DtaIstatRifatt.Name = "DtaIstatRifatt"
-        Me.DtaIstatRifatt.Size = New System.Drawing.Size(96, 20)
-        Me.DtaIstatRifatt.TabIndex = 20
         '
         'Label2
         '
@@ -434,27 +469,45 @@ Partial Class FAskFiltriOrdini
         Me.TxtPercIstat.Size = New System.Drawing.Size(36, 20)
         Me.TxtPercIstat.TabIndex = 18
         '
+        'Label3
+        '
+        Me.Label3.AutoSize = True
+        Me.Label3.Location = New System.Drawing.Point(264, 156)
+        Me.Label3.Name = "Label3"
+        Me.Label3.Size = New System.Drawing.Size(61, 13)
+        Me.Label3.TabIndex = 24
+        Me.Label3.Text = "Data Rifatt."
+        '
+        'DtaIstatRifatt
+        '
+        Me.DtaIstatRifatt.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
+        Me.DtaIstatRifatt.Location = New System.Drawing.Point(343, 152)
+        Me.DtaIstatRifatt.Name = "DtaIstatRifatt"
+        Me.DtaIstatRifatt.Size = New System.Drawing.Size(96, 20)
+        Me.DtaIstatRifatt.TabIndex = 20
+        '
         'ToolTip1
         '
-        Me.ToolTip1.AutoPopDelay = 5000
-        Me.ToolTip1.InitialDelay = 250
-        Me.ToolTip1.ReshowDelay = 100
+        Me.ToolTip1.AutomaticDelay = 80
         '
-        'TxtNextFtYear
+        'GroupDecorrenza
         '
-        Me.TxtNextFtYear.Location = New System.Drawing.Point(182, 40)
-        Me.TxtNextFtYear.Name = "TxtNextFtYear"
-        Me.TxtNextFtYear.Size = New System.Drawing.Size(40, 20)
-        Me.TxtNextFtYear.TabIndex = 27
+        Me.GroupDecorrenza.Controls.Add(Me.DtaDecorrenza)
+        Me.GroupDecorrenza.Enabled = False
+        Me.GroupDecorrenza.Location = New System.Drawing.Point(249, 224)
+        Me.GroupDecorrenza.Name = "GroupDecorrenza"
+        Me.GroupDecorrenza.Size = New System.Drawing.Size(228, 49)
+        Me.GroupDecorrenza.TabIndex = 25
+        Me.GroupDecorrenza.TabStop = False
+        Me.GroupDecorrenza.Text = "Decorrenza inferiore a"
         '
-        'Label5
+        'DtaDecorrenza
         '
-        Me.Label5.AutoSize = True
-        Me.Label5.Location = New System.Drawing.Point(46, 43)
-        Me.Label5.Name = "Label5"
-        Me.Label5.Size = New System.Drawing.Size(130, 13)
-        Me.Label5.TabIndex = 28
-        Me.Label5.Text = "Prossima Fattura nell'anno"
+        Me.DtaDecorrenza.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
+        Me.DtaDecorrenza.Location = New System.Drawing.Point(110, 19)
+        Me.DtaDecorrenza.Name = "DtaDecorrenza"
+        Me.DtaDecorrenza.Size = New System.Drawing.Size(96, 20)
+        Me.DtaDecorrenza.TabIndex = 12
         '
         'FAskFiltriOrdini
         '
@@ -462,12 +515,13 @@ Partial Class FAskFiltriOrdini
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.CancelButton = Me.Cancel_Button
-        Me.ClientSize = New System.Drawing.Size(508, 439)
+        Me.ClientSize = New System.Drawing.Size(495, 477)
+        Me.Controls.Add(Me.GroupDecorrenza)
         Me.Controls.Add(Me.GroupIstat)
         Me.Controls.Add(Me.GroupPeriodo)
         Me.Controls.Add(Me.Label3)
         Me.Controls.Add(Me.DtaIstatRifatt)
-        Me.Controls.Add(Me.GroupCompetenza)
+        Me.Controls.Add(Me.GroupDataFatt)
         Me.Controls.Add(Me.TableLayoutPanel1)
         Me.Controls.Add(Me.GroupOrdini)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
@@ -480,11 +534,13 @@ Partial Class FAskFiltriOrdini
         Me.TableLayoutPanel1.ResumeLayout(False)
         Me.GroupOrdini.ResumeLayout(False)
         Me.GroupOrdini.PerformLayout()
-        Me.GroupCompetenza.ResumeLayout(False)
+        Me.GroupDataFatt.ResumeLayout(False)
+        Me.GroupDataFatt.PerformLayout()
         Me.GroupPeriodo.ResumeLayout(False)
         Me.GroupPeriodo.PerformLayout()
         Me.GroupIstat.ResumeLayout(False)
         Me.GroupIstat.PerformLayout()
+        Me.GroupDecorrenza.ResumeLayout(False)
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -492,19 +548,19 @@ Partial Class FAskFiltriOrdini
     Friend WithEvents TableLayoutPanel1 As System.Windows.Forms.TableLayoutPanel
     Friend WithEvents OK_Button As System.Windows.Forms.Button
     Friend WithEvents Cancel_Button As System.Windows.Forms.Button
-    Friend WithEvents DtaDA As DateTimePicker
-    Friend WithEvents DtaA As DateTimePicker
+    Friend WithEvents DtaOrdineDA As DateTimePicker
+    Friend WithEvents DtaOrdineA As DateTimePicker
     Friend WithEvents LblDallaData As Label
     Friend WithEvents LblAlladata As Label
     Friend WithEvents GroupOrdini As GroupBox
     Friend WithEvents TxtOrdCliente As TextBox
     Friend WithEvents TxtNrOrdine As TextBox
-    Friend WithEvents DtaCompA As DateTimePicker
+    Friend WithEvents DtaFattA As DateTimePicker
     Friend WithEvents RadDalAl As RadioButton
     Friend WithEvents RadFinoAllaData As RadioButton
     Friend WithEvents ChkCliente As CheckBox
     Friend WithEvents ChkNrOrdine As CheckBox
-    Friend WithEvents GroupCompetenza As GroupBox
+    Friend WithEvents GroupDataFatt As GroupBox
     Friend WithEvents GroupPeriodo As GroupBox
     Friend WithEvents ChkP_Tutti As CheckBox
     Friend WithEvents ChkP_Mensili As CheckBox
@@ -525,6 +581,11 @@ Partial Class FAskFiltriOrdini
     Friend WithEvents DtaIstatRifatt As DateTimePicker
     Friend WithEvents Label4 As Label
     Friend WithEvents TxtIstatTesto As TextBox
-    Friend WithEvents Label5 As Label
-    Friend WithEvents TxtNextFtYear As TextBox
+    Friend WithEvents LblAnnoAdeguamento As Label
+    Friend WithEvents TxtAnnoAdeguamento As TextBox
+    Friend WithEvents DtaFattDa As DateTimePicker
+    Friend WithEvents Label6 As Label
+    Friend WithEvents Label7 As Label
+    Friend WithEvents GroupDecorrenza As GroupBox
+    Friend WithEvents DtaDecorrenza As DateTimePicker
 End Class

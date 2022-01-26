@@ -1542,7 +1542,7 @@ Public Class FLogin
             'INIZIALIZZO NUOVO LOG
             My.Application.Log.DefaultFileLogWriter.BaseFileName += "-" & DateTime.Now.ToString("dd-MM-yyyy--HH-mm-ss")
             My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Azienda: " & DBInUse & "  ---  ")
-            My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Adeguamento ISTAT su ordini  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
+            My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Adeguamento ISTAT su Ordini  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
 
             'ESEGUO LA PROCEDURA
             Dim esito As Boolean

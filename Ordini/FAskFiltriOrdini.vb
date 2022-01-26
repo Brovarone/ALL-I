@@ -1,5 +1,5 @@
 ﻿Imports System.Windows.Forms
-
+Imports System.Globalization
 Public Class FAskFiltriOrdini
     Public IsIstat As Boolean
     Private perc As Double
@@ -10,8 +10,8 @@ Public Class FAskFiltriOrdini
 
         ' Add any initialization after the InitializeComponent() call.
         'DtaPickDA.Value = New DateTime(2021, 3, 19)
-        DtaCompA.Value = Now
-
+        DtaFattA.Value = Now
+        TxtAnnoAdeguamento.Text = Now.Year.ToString
     End Sub
     Private Sub OK_Button_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles OK_Button.Click
         Me.DialogResult = System.Windows.Forms.DialogResult.OK
@@ -24,8 +24,8 @@ Public Class FAskFiltriOrdini
     End Sub
 
     Private Sub RadFinoAllaData_CheckedChanged(sender As Object, e As EventArgs) Handles RadFinoAllaData.CheckedChanged
-        DtaDA.Enabled = Not RadFinoAllaData.Checked
-        DtaDA.Value = New Date(Year(DtaA.Value), 1, 1)
+        DtaOrdineDA.Enabled = Not RadFinoAllaData.Checked
+        DtaOrdineDA.Value = New Date(Year(DtaOrdineA.Value), 1, 1)
     End Sub
 
     Private Sub ChkNrOrdine_CheckedChanged(sender As Object, e As EventArgs) Handles ChkNrOrdine.CheckedChanged
@@ -50,18 +50,26 @@ Public Class FAskFiltriOrdini
     End Sub
 
     Private Sub FAskFiltriOrdini_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        Me.Size = New Size(262, 478) ' Misura standard
+        Me.Size = New Size(262, 516) ' Misura standard
+        ToolTip1 = New ToolTip()
         If IsIstat Then
             Me.Size = New Size(262, 498)
-            'GroupCompetenza.Visible = False
+            GroupDataFatt.Visible = False
             GroupPeriodo.Visible = False
-            GroupIstat.Location = GroupPeriodo.Location
+            GroupDecorrenza.Enabled = True
+            GroupDecorrenza.Location = GroupDataFatt.Location
+            GroupIstat.Enabled = True
+            GroupIstat.Location = New Point(6, 279)
             GroupIstat.Visible = True
             AssignValidation(Me.TxtPercIstat, ValidationType.Only_Numbers)
             'AssignValidation(Me.TextBox2, ValidationType.Only_Characters)
             'AssignValidation(Me.TextBox3, ValidationType.No_Blank)
             'AssignValidation(Me.TextBox4, ValidationType.Only_Email)
-            ToolTip1.SetToolTip(Me.DtaCompA, "Contratti con data decorrenza minore a questa data")
+            Dim s As String = "Contratti con data decorrenza minore a questa data"
+            ToolTip1.SetToolTip(Me.DtaFattA, s)
+            s = "Valorizzato con Anno della 'Data decorrenza' -1." & Environment.NewLine & "Se per l'anno indicato e' già stata eseguita" & Environment.NewLine & "una rivalutazione la riga non verrà processata."
+            ToolTip1.SetToolTip(Me.TxtAnnoAdeguamento, s)
+            ToolTip1.SetToolTip(Me.LblAnnoAdeguamento, s)
 
         End If
     End Sub
@@ -70,10 +78,18 @@ Public Class FAskFiltriOrdini
         Dim ok As Boolean = Double.TryParse(TxtPercIstat.Text, perc)
     End Sub
 
-    Private Sub DtaCompA_ValueChanged(sender As Object, e As EventArgs) Handles DtaCompA.ValueChanged
-        DtaIstatRifatt.Value = DtaCompA.Value.AddYears(1)
-        TxtNextFtYear.Text = DtaCompA.Value.AddYears(1).Year.ToString
+    Private Sub DtaDecorrenza_ValueChanged(sender As Object, e As EventArgs) Handles DtaDecorrenza.ValueChanged
+        DtaIstatRifatt.Value = DtaDecorrenza.Value.AddYears(1)
+        TxtAnnoAdeguamento.Text = DtaDecorrenza.Value.AddYears(1).Year.ToString
+        Dim s As String = "Il canone è aggiornato sulla base dell'indice ISTAT relativo al mese di "
+        s += DtaDecorrenza.Value.AddMonths(-2).ToString("MMMM", CultureInfo.CreateSpecificCulture("it-IT")) & " " & DtaIstatRifatt.Value.Year.ToString
+        TxtIstatTesto.Text = s
     End Sub
+
+    Private Sub DtaFattDa_ValueChanged(sender As Object, e As EventArgs) Handles DtaFattDa.ValueChanged
+        DtaFattA.Value = DtaFattDa.Value
+    End Sub
+
 
     'Private Sub TxtPercIstat_KeyPress(sender As Object, e As KeyPressEventArgs) Handles TxtPercIstat.KeyPress
     '    If Not Char.IsNumber(e.KeyChar) AndAlso Not Char.IsControl(e.KeyChar) AndAlso Not e.KeyChar = "." AndAlso Not e.KeyChar = "," AndAlso Not e.KeyChar = "-" Then
