@@ -784,7 +784,7 @@ Module Anagrafiche
                                     'A volte il c/c sono tutti zeri
                                     If Not String.IsNullOrWhiteSpace(.Item("AD").ToString) Then
                                         Dim cc As Double
-                                        Double.TryParse(.Item("AD").ToString, cc)
+                                        Dim v = Double.TryParse(.Item("AD").ToString, cc)
                                         If cc > 0 Then drCF("CA") = .Item("AD").ToString
                                     End If
                                     Dim sConto As String = ""
@@ -1199,7 +1199,7 @@ Module Anagrafiche
                                     dvCli(ir).BeginEdit()
                                     'dvCli(ir)("ACGCode") = drXLS(irxls)("A").ToString
                                     dvCli(ir)("ElectronicInvoicing") = "1"
-                                    Dim isPA As Boolean = If(Len(drXLS(irxls)("G").ToString) = 6, True, False)
+                                    Dim isPA As Boolean = Len(drXLS(irxls)("G").ToString) = 6
                                     If isPA Then
                                         Dim idOpt As Integer = dvOpt.Find(drXLS(irxls).Item("F").ToString)
                                         dvOpt(idOpt).BeginEdit()
