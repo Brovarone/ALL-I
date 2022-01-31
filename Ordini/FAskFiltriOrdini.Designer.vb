@@ -61,8 +61,6 @@ Partial Class FAskFiltriOrdini
         Me.TxtIstatAttivita = New System.Windows.Forms.TextBox()
         Me.Label1 = New System.Windows.Forms.Label()
         Me.TxtPercIstat = New System.Windows.Forms.TextBox()
-        Me.Label3 = New System.Windows.Forms.Label()
-        Me.DtaIstatRifatt = New System.Windows.Forms.DateTimePicker()
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
         Me.GroupDecorrenza = New System.Windows.Forms.GroupBox()
         Me.DtaDecorrenza = New System.Windows.Forms.DateTimePicker()
@@ -469,23 +467,6 @@ Partial Class FAskFiltriOrdini
         Me.TxtPercIstat.Size = New System.Drawing.Size(36, 20)
         Me.TxtPercIstat.TabIndex = 18
         '
-        'Label3
-        '
-        Me.Label3.AutoSize = True
-        Me.Label3.Location = New System.Drawing.Point(264, 156)
-        Me.Label3.Name = "Label3"
-        Me.Label3.Size = New System.Drawing.Size(61, 13)
-        Me.Label3.TabIndex = 24
-        Me.Label3.Text = "Data Rifatt."
-        '
-        'DtaIstatRifatt
-        '
-        Me.DtaIstatRifatt.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.DtaIstatRifatt.Location = New System.Drawing.Point(343, 152)
-        Me.DtaIstatRifatt.Name = "DtaIstatRifatt"
-        Me.DtaIstatRifatt.Size = New System.Drawing.Size(96, 20)
-        Me.DtaIstatRifatt.TabIndex = 20
-        '
         'ToolTip1
         '
         Me.ToolTip1.AutomaticDelay = 80
@@ -519,8 +500,6 @@ Partial Class FAskFiltriOrdini
         Me.Controls.Add(Me.GroupDecorrenza)
         Me.Controls.Add(Me.GroupIstat)
         Me.Controls.Add(Me.GroupPeriodo)
-        Me.Controls.Add(Me.Label3)
-        Me.Controls.Add(Me.DtaIstatRifatt)
         Me.Controls.Add(Me.GroupDataFatt)
         Me.Controls.Add(Me.TableLayoutPanel1)
         Me.Controls.Add(Me.GroupOrdini)
@@ -542,7 +521,6 @@ Partial Class FAskFiltriOrdini
         Me.GroupIstat.PerformLayout()
         Me.GroupDecorrenza.ResumeLayout(False)
         Me.ResumeLayout(False)
-        Me.PerformLayout()
 
     End Sub
     Friend WithEvents TableLayoutPanel1 As System.Windows.Forms.TableLayoutPanel
@@ -577,8 +555,6 @@ Partial Class FAskFiltriOrdini
     Friend WithEvents Label2 As Label
     Friend WithEvents TxtIstatAttivita As TextBox
     Friend WithEvents ToolTip1 As ToolTip
-    Friend WithEvents Label3 As Label
-    Friend WithEvents DtaIstatRifatt As DateTimePicker
     Friend WithEvents Label4 As Label
     Friend WithEvents TxtIstatTesto As TextBox
     Friend WithEvents LblAnnoAdeguamento As Label

@@ -46,14 +46,16 @@ Public Class MyLogRegistry
         'DatiRiepilogo = New List(Of DatiRiepilogo)()
     End Sub
 
-    Sub Add(codice As String, message As String, Optional tag As String = "")
+    Sub Add(codice As String, message As String, Optional minLevel As LogLevel = 0, Optional tag As String = "")
         Dim l As MyLogEntry = New MyLogEntry
         l.Codice = codice
         l.Ordinale = CShort(Mid(l.Codice, 2))
         l.Descrizione = message
         l.TAG = tag
         l.TimeStamp = DateAndTime.Now.ToString
+        l.LogLevel = minLevel
         Dettagli.Add(l)
+        If minLevel.HasFlag(LogLevel.Console) Then Debug.Print(message)
     End Sub
 
     Public Function CompareTo(ByVal other As MyLogRegistry) As Integer Implements System.IComparable(Of MyLogRegistry).CompareTo
@@ -67,4 +69,13 @@ Public Class MyLogRegistry
             End If
         End If
     End Function
+
 End Class
+<Flags()> Public Enum LogLevel As Integer
+    'Debugging + Console = 3
+    'Console + Standard = 5
+    None = 0
+    Console = 1
+    Debugging = 2
+    Standard = 4
+End Enum

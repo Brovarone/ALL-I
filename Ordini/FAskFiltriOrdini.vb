@@ -79,10 +79,11 @@ Public Class FAskFiltriOrdini
     End Sub
 
     Private Sub DtaDecorrenza_ValueChanged(sender As Object, e As EventArgs) Handles DtaDecorrenza.ValueChanged
-        DtaIstatRifatt.Value = DtaDecorrenza.Value.AddYears(1)
-        TxtAnnoAdeguamento.Text = DtaDecorrenza.Value.AddYears(1).Year.ToString
+        Dim DtaIstatRifatt As Date = DtaDecorrenza.Value.AddYears(1)
+        Dim sAnnoIstat As String = DtaIstatRifatt.AddMonths(-2).Year.ToString
+        TxtAnnoAdeguamento.Text = DtaIstatRifatt.Year.ToString
         Dim s As String = "Il canone è aggiornato sulla base dell'indice ISTAT relativo al mese di "
-        s += DtaDecorrenza.Value.AddMonths(-2).ToString("MMMM", CultureInfo.CreateSpecificCulture("it-IT")) & " " & DtaIstatRifatt.Value.Year.ToString
+        s += DtaDecorrenza.Value.AddMonths(-2).ToString("MMMM", CultureInfo.CreateSpecificCulture("it-IT")) & " " & sAnnoIstat
         TxtIstatTesto.Text = s
     End Sub
 

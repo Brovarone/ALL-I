@@ -30,6 +30,11 @@ Public Class MyLogEntry
     ''' </summary>
     Public TimeStamp As String
 
+    ''' <summary>
+    ''' Data/ora
+    ''' </summary>
+    Public LogLevel As Integer
+
     Public Function CompareTo(other As MyLogEntry) As Integer Implements IComparable(Of MyLogEntry).CompareTo
         If Ordinale = other.Ordinale Then
             Return 0
