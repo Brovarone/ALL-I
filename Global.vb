@@ -1011,8 +1011,9 @@ Public Module LogTools
         Dim xOver As New XmlAttributeOverrides
         xOver.Add(GetType(MyLogs), attrs)
         'Escludo il tag
-        attrs = New XmlAttributes
-        attrs.XmlIgnore = True
+        attrs = New XmlAttributes With {
+            .XmlIgnore = True
+            }
         xOver.Add(log.GetType, "Versione", attrs)
         xOver.Add(log.Testa.GetType, "Origine", attrs)
 
@@ -1107,8 +1108,8 @@ Public Module LogTools
         End Property
 
         Private Shared _Instance As BBALogger
-        Private Shared _SyncRoot As New Object()
-        Private Shared _readWriteLock As New ReaderWriterLockSlim()
+        Private Shared ReadOnly _SyncRoot As New Object()
+        Private Shared ReadOnly _readWriteLock As New ReaderWriterLockSlim()
 
         Private Sub New()
             LogFileName = DateTime.Now.ToString("dd-MM-yyyy")

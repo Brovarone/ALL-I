@@ -47,13 +47,14 @@ Public Class MyLogRegistry
     End Sub
 
     Sub Add(codice As String, message As String, Optional minLevel As LogLevel = 0, Optional tag As String = "")
-        Dim l As MyLogEntry = New MyLogEntry
-        l.Codice = codice
-        l.Ordinale = CShort(Mid(l.Codice, 2))
-        l.Descrizione = message
-        l.TAG = tag
-        l.TimeStamp = DateAndTime.Now.ToString
-        l.LogLevel = minLevel
+        Dim l As New MyLogEntry With {
+            .Codice = codice,
+            .Ordinale = CShort(Mid(codice, 2)),
+            .Descrizione = message,
+            .TAG = tag,
+            .TimeStamp = DateAndTime.Now.ToString,
+            .LogLevel = minLevel
+        }
         Dettagli.Add(l)
         If minLevel.HasFlag(LogLevel.Console) Then Debug.Print(message)
     End Sub

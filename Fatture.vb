@@ -31,7 +31,7 @@ Module Fatture
         Dim idAndNumber As New StringBuilder()
         Dim loggingTxt As String = "Si"
 #Region "Gestione Logs xml"
-        'Gestione Logs
+        'Gestione Logs xml
         Dim log As New MyLogs With {.Nome = "Importazione_Fatture"}
         Dim l_Bulk As New MyLogRegistry With {.Nome = "Bulk", .Descrizione = "Inserimento Dati", .Origine = 1}
         Dim l_Err As New MyLogRegistry With {.Nome = "Errori", .Descrizione = "Errori", .Ordine = 1, .StampaCodice = True}
@@ -42,7 +42,7 @@ Module Fatture
         Dim l_NewBankCli As New MyLogRegistry With {.Nome = "NewBankCli", .Descrizione = "Nuove Banche Clienti (completare le informazioni su Mago)", .Ordine = 2}
         Dim l_NewCli As New MyLogRegistry With {.Nome = "NewClienti", .Descrizione = "Nuovi clienti", .Ordine = 2}
         Dim l_NewSedi As New MyLogRegistry With {.Nome = "NewSedi", .Descrizione = "Nuove Sedi", .Ordine = 2}
-        Dim l_ids As New MyLogRegistry With {.Nome = "Ids", .Descrizione = "Id e Numeratri", .Origine = 1}
+        Dim l_Ids As New MyLogRegistry With {.Nome = "Ids", .Descrizione = "Id e Numeratri", .Origine = 1}
         log.Corpo.Add(l_Bulk)
         log.Corpo.Add(l_Err)
         log.Corpo.Add(l_Warn)
@@ -51,7 +51,7 @@ Module Fatture
         log.Corpo.Add(l_NewBankCli)
         log.Corpo.Add(l_NewCli)
         log.Corpo.Add(l_NewSedi)
-        log.Corpo.Add(l_ids)
+        log.Corpo.Add(l_Ids)
 #End Region
         Dim errori As New StringBuilder()  ' Ultimo = 21
         Dim avvisi As New StringBuilder()  ' Ultimo = 12  / 50
@@ -82,12 +82,12 @@ Module Fatture
             EditTestoBarra("Estraggo gli ID")
             Dim idDoc As Integer = LeggiID(IdType.DocVend, loggingTxt)
             idAndNumber.AppendLine(loggingTxt)
-            l_ids.Add("I01", loggingTxt)
+            l_Ids.Add("I01", loggingTxt)
             'Ritorna array con Ultimo numero Salvato, {numero da valorizzare a seguito lettura excel}, Codice registro
             Dim annualita As Short = Short.Parse(Left(drXLS(i).Item("Q").ToString, 4))
             Dim nrRegIva As String(,) = LeggiRegistriIva(annualita, loggingTxt)
             idAndNumber.AppendLine(loggingTxt)
-            l_ids.Add("I01", loggingTxt)
+            l_Ids.Add("I01", loggingTxt)
             FLogin.prgCopy.Maximum = drXLS.Length
             FLogin.prgCopy.Step = 1
             Dim idCausale As Integer = 0 ' usato per l'id riga della Causale nelle fatture elettroniche
@@ -217,7 +217,8 @@ Module Fatture
                                                                                 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
                                                                                 Debug.Print("Nuovo cliente: " & .Item("AA").ToString)
                                                                                 listOfNewClienti.Add(.Item("AA").ToString & ": " & .Item("AB").ToString)
-                                                                                l_NewCli.Add("N01", .Item("AA").ToString & ": " & .Item("AB").ToString, .Item("AA").ToString)
+                                                                                'TAG l_NewCli.Add("N01", .Item("AA").ToString & ": " & .Item("AB").ToString, LogLevel.None, .Item("AA").ToString)
+                                                                                l_NewCli.Add("N01", .Item("AA").ToString & ": " & .Item("AB").ToString)
                                                                                 drCli = dtClientiNew.NewRow
                                                                                 drCliOpt = dtCliOptNew.NewRow
                                                                                 drCli("CustSupp") = .Item("AA").ToString
@@ -629,7 +630,8 @@ Module Fatture
                                                                                                 End If
                                                                                             Else
                                                                                                 sicuritalia.AppendLine("Doc: " & drDoc("DocNo") & " numero ODA / NSO assente")
-                                                                                                l_Err.Add("E20", "Doc: " & drDoc("DocNo") & " numero ODA / NSO assente", "SICURITALIA")
+                                                                                                'TAG l_Err.Add("E20", "Doc: " & drDoc("DocNo") & " numero ODA / NSO assente", LogLevel.None, "SICURITALIA")
+                                                                                                l_Err.Add("E20", "Doc: " & drDoc("DocNo") & " numero ODA / NSO assente")
                                                                                             End If
                                                                                         End If
                                                                                         drDocDet("UoM") = .Item("BI").ToString
@@ -1161,7 +1163,7 @@ Module Fatture
                 Debug.Print(ex.Message)
                 Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
-
+                someTrouble = True
             End Try
             If Not someTrouble Then
                 'Scrivi Gli ID ( faccio solo a fine elaborazione)
@@ -1176,8 +1178,11 @@ Module Fatture
             My.Application.Log.DefaultFileLogWriter.WriteLine("Documenti importati: Fatture=" & totDoc(0).ToString & " Note di Credito=" & totDoc(1).ToString & vbCrLf)
             FLogin.lstStatoConnessione.Items.Add("Documenti importati: Fatture=" & totDoc(0).ToString & " Note di Credito=" & totDoc(1).ToString)
             If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Inserimento Dati ---" & vbCrLf & bulkMessage.ToString)
-            If errori.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & vbCrLf & errori.ToString)
-            Debug.Print(errori.ToString)
+            If errori.Length > 0 Then
+                My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & vbCrLf & errori.ToString)
+                FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati errori : Controllare file di Log")
+                Debug.Print(errori.ToString)
+            End If
             If sicuritalia.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Sicuritalia ---" & vbCrLf & sicuritalia.ToString)
             Debug.Print(sicuritalia.ToString)
             If warnings.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Warnings ---" & vbCrLf & " - Queste modifiche non vengono salvate - " & warnings.ToString)

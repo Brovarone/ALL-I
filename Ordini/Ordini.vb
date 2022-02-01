@@ -500,47 +500,48 @@ Module Ordini
 
                                 iNewRowsCount += 1
                                 iNrRigheAValore += 1
-                                Dim rRif As New MaSaleOrdDetails
-                                rRif.Line = cOrd.LastLine + iNewRowsCount
-                                rRif.Position = curLastPosition + iNrRigheAValore
-                                rRif.SubId = cOrd.LastLine + iNewRowsCount
-                                rRif.SaleOrdId = cOrd.SaleOrdId
-                                rRif.LineType = LineType.Servizio
-                                rRif.Item = cOrdRow.Item
                                 Dim periodoRif As String = "Periodo dal " & aDaRif.DataInizio.Value.ToString("dd/MM/yyyy") & " al " & aDaRif.DataFine.Value.ToString("dd/MM/yyyy")
-                                rRif.Description = If(String.IsNullOrWhiteSpace(cOrdRow.Description), periodoRif, cOrdRow.Description & " " & periodoRif)
-                                rRif.UoM = cOrdRow.UoM
-                                rRif.PacksUoM = cOrdRow.UoM
-                                rRif.Qty = aDaRif.CanoniRipresi.Value
-                                If aDaRif.ValUnit = 0 Then errori.AppendLine("Ordine: " & cOrd.OrdNo & " Pos.: " & rRif.Position & " Servizio: " & cOrdRow.Item & " con valore unitario di ripresa uguale a 0.00")
-                                rRif.UnitValue = Math.Round(aDaRif.ValUnit.Value, decValUnit) ' Pesco il valore unitario dall'attività
-                                rRif.NetPrice = cOrdRow.ValUnit
-                                rRif.TaxableAmount = Math.Round(aDaRif.CanoniRipresi.Value * cOrdRow.ValUnit, decValUnit)
-                                rRif.TaxCode = cOrdRow.CodIva
-                                rRif.TotalAmount = Math.Round((aDaRif.CanoniRipresi.Value * cOrdRow.ValUnit) * ((100 + cOrdRow.PercIva) / 100), decTax)
-                                rRif.ExpectedDeliveryDate = cOrdRow.DataPrevistaConsegna
-                                rRif.ConfirmedDeliveryDate = cOrdRow.DataConfermaConsegna
-                                rRif.AllNrCanoni = aDaRif.CanoniRipresi.Value
-                                rRif.AllCanoniDataI = aDaRif.DataInizio.Value
-                                rRif.AllCanoniDataF = aDaRif.DataFine.Value
-                                rRif.Invoiced = "0"
-                                rRif.Notes = Trim(Left(aDaRif.Nota.ToString, 32))
-                                rRif.Job = cOrd.Commessa
-                                rRif.CostCenter = cOrd.CdC
-                                rRif.ContractCode = cOrd.CIG
-                                rRif.ProjectCode = cOrd.CUP
-                                rRif.Offset = cOrdRow.Contropartita
-                                rRif.InternalOrdNo = cOrd.OrdNo
-                                rRif.Customer = cOrd.Cliente
-                                rRif.OrderDate = cOrd.OrdDate
-                                rRif.NoOfPacks = 0
-                                rRif.ProductionPlanLine = 0
-                                rRif.ExternalLineReference = 0
-                                rRif.InEi = 0
-                                rRif.Tbcreated = Now
-                                rRif.Tbmodified = Now
-                                rRif.TbcreatedId = sLoginId
-                                rRif.TbmodifiedId = sLoginId
+                                If aDaRif.ValUnit = 0 Then errori.AppendLine("Ordine: " & cOrd.OrdNo & " Pos.: " & (curLastPosition + iNrRigheAValore) & " Servizio: " & cOrdRow.Item & " con valore unitario di ripresa uguale a 0.00")
+                                Dim rRif As New MaSaleOrdDetails With {
+                                    .Line = cOrd.LastLine + iNewRowsCount,
+                                    .Position = curLastPosition + iNrRigheAValore,
+                                    .SubId = cOrd.LastLine + iNewRowsCount,
+                                    .SaleOrdId = cOrd.SaleOrdId,
+                                    .LineType = LineType.Servizio,
+                                    .Item = cOrdRow.Item,
+                                    .Description = If(String.IsNullOrWhiteSpace(cOrdRow.Description), periodoRif, cOrdRow.Description & " " & periodoRif),
+                                    .UoM = cOrdRow.UoM,
+                                    .PacksUoM = cOrdRow.UoM,
+                                    .Qty = aDaRif.CanoniRipresi.Value,
+                                    .UnitValue = Math.Round(aDaRif.ValUnit.Value, decValUnit), ' Pesco il valore unitario dall'attività
+                                    .NetPrice = cOrdRow.ValUnit,
+                                    .TaxableAmount = Math.Round(aDaRif.CanoniRipresi.Value * cOrdRow.ValUnit, decValUnit),
+                                    .TaxCode = cOrdRow.CodIva,
+                                    .TotalAmount = Math.Round((aDaRif.CanoniRipresi.Value * cOrdRow.ValUnit) * ((100 + cOrdRow.PercIva) / 100), decTax),
+                                    .ExpectedDeliveryDate = cOrdRow.DataPrevistaConsegna,
+                                    .ConfirmedDeliveryDate = cOrdRow.DataConfermaConsegna,
+                                    .AllNrCanoni = aDaRif.CanoniRipresi.Value,
+                                    .AllCanoniDataI = aDaRif.DataInizio.Value,
+                                    .AllCanoniDataF = aDaRif.DataFine.Value,
+                                    .Invoiced = "0",
+                                    .Notes = Trim(Left(aDaRif.Nota.ToString, 32)),
+                                    .Job = cOrd.Commessa,
+                                    .CostCenter = cOrd.CdC,
+                                    .ContractCode = cOrd.CIG,
+                                    .ProjectCode = cOrd.CUP,
+                                    .Offset = cOrdRow.Contropartita,
+                                    .InternalOrdNo = cOrd.OrdNo,
+                                    .Customer = cOrd.Cliente,
+                                    .OrderDate = cOrd.OrdDate,
+                                    .NoOfPacks = 0,
+                                    .ProductionPlanLine = 0,
+                                    .ExternalLineReference = 0,
+                                    .InEi = 0,
+                                    .Tbcreated = Now,
+                                    .Tbmodified = Now,
+                                    .TbcreatedId = sLoginId,
+                                    .TbmodifiedId = sLoginId
+                                }
 
                                 'Aggiungo la riga alla collection
                                 efMaSaleOrdDetails.Add(rRif)
@@ -553,13 +554,14 @@ Module Ordini
                                 debugging.AppendLine("### Riga corpo:(" & cOrdRow.Line & ") " & cOrdRow.Item)
                                 iNewRowsCount += 1
                                 iNrRigheAValore += 1
-                                Dim r As New MaSaleOrdDetails
-                                r.Line = cOrd.LastLine + iNewRowsCount
-                                r.Position = curLastPosition + iNrRigheAValore
-                                r.SubId = cOrd.LastLine + iNewRowsCount
-                                r.SaleOrdId = cOrd.SaleOrdId
-                                r.LineType = LineType.Servizio
-                                r.Item = cOrdRow.Item
+                                Dim r As New MaSaleOrdDetails With {
+                                    .Line = cOrd.LastLine + iNewRowsCount,
+                                    .Position = curLastPosition + iNrRigheAValore,
+                                    .SubId = cOrd.LastLine + iNewRowsCount,
+                                    .SaleOrdId = cOrd.SaleOrdId,
+                                    .LineType = LineType.Servizio,
+                                    .Item = cOrdRow.Item
+                                    }
                                 Dim perDataFine As String = If(cOrd.IsScadenzaFissa, cOrd.DataScadenzaFissa.ToShortDateString, cOrdRow.CanoniDataFin.ToShortDateString)
                                 perDataFine = If(cOrdRow.Annullato, cOrdRow.DataCessazione.ToShortDateString, perDataFine)
                                 perDataFine = If(isCessazione, cOrd.DataCessazione.ToShortDateString, perDataFine)
@@ -1046,7 +1048,7 @@ Module Ordini
 
                         'STEP 2: Determino date ( Consegna, nr canoni etc.)
                         cOrdRow.ValUnit = Math.Round(c.ValUnitIstat.Value, decValUnit)
-                        If cOrdRow.ValUnit <= 0 Then errori.AppendLine("Ordine: " & cOrd.ordNo & " Valore Unitario Att <= 0 // Riga: (" & sEx)
+                        If cOrdRow.ValUnit <= 0 Then errori.AppendLine("Ordine: " & cOrd.OrdNo & " Valore Unitario Att <= 0 // Riga: (" & sEx)
                         Dim isDaRifatturare As Boolean = False
                         Dim attDaAdeguare As New List(Of AllordCliAttivita)
                         Dim isIstat As Boolean = False
@@ -1109,18 +1111,18 @@ Module Ordini
                                 If CBool(att.DaFatturare) AndAlso att.DataRifatturazione.Value.Year = annoAdeguamento Then
                                     isIstat = True
                                     'TODO: Valutare se usare avvisi o debugging
-                                    avvisi.AppendLine("Ordine: " & cOrd.ordNo & " con riga di adeguamento Istat già presente per l'anno: " & annoAdeguamento.ToString)
+                                    avvisi.AppendLine("Ordine: " & cOrd.OrdNo & " con riga di adeguamento Istat già presente per l'anno: " & annoAdeguamento.ToString)
                                     cOrdRow.IsOk = False
                                 End If
                             End If
                         Next
                         'STEP 4 : Controllo Scadenza Fissa
-                        If cOrd.Datascadenzafissa <> sDataNulla AndAlso cOrdRow.CanoniDataFin > cOrd.Datascadenzafissa Then
-                            avvisi.AppendLine("Ordine: " & cOrd.ordNo & " Cliente: " & cOrd.Cliente & " con scadenza fissa. Controllare canoni!")
-                            debugging.AppendLine("Ordine: " & cOrd.ordNo & " Cliente: " & cOrd.Cliente & " con scadenza fissa. Controllare canoni!")
+                        If cOrd.DataScadenzaFissa <> sDataNulla AndAlso cOrdRow.CanoniDataFin > cOrd.DataScadenzaFissa Then
+                            avvisi.AppendLine("Ordine: " & cOrd.OrdNo & " Cliente: " & cOrd.Cliente & " con scadenza fissa. Controllare canoni!")
+                            debugging.AppendLine("Ordine: " & cOrd.OrdNo & " Cliente: " & cOrd.Cliente & " con scadenza fissa. Controllare canoni!")
                             'Simile a Mesi annullati
                             Dim dCanoniFinoA As Double
-                            If IsBetweenAnnullamento(cOrd.Datascadenzafissa, cOrdRow, dCanoniFinoA) Then
+                            If IsBetweenAnnullamento(cOrd.DataScadenzaFissa, cOrdRow, dCanoniFinoA) Then
                                 'In dcanoniFinoA ho i mesi da fatturare
                                 If dCanoniFinoA > 0 Then
                                     debugging.AppendLine("## Scadenza Fissa ##")
@@ -1262,6 +1264,7 @@ Module Ordini
             errori.AppendLine("[Procedura] Stack:" & ex.StackTrace)
             Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
+            someTrouble = True
         End Try
 
         OrdContext.Dispose()

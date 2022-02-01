@@ -970,6 +970,7 @@ Public Module Contabilita
                 My.Application.Log.WriteEntry(ex.Message)
                 Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
+                someTrouble = True
             End Try
 
             If Not someTrouble Then
