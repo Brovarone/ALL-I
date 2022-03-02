@@ -41,6 +41,8 @@ Public Class FLogin
     Public prgCopy As New CustomProgress
 
     Const adminPsw = "123456"
+
+    Private isDbUNO As Boolean = True ' mi serve per comandare i filtrianalitici in periodo transitorio per adeguamento fatture da ordini
     Public Sub New()
 
         ' This call is required by the designer.
@@ -1146,7 +1148,7 @@ Public Class FLogin
     End Sub
     Private Sub SUBAnalitica()
         Dim f As New FiltroAnalitica
-        Using frm As New FAskFiltriAnalitica
+        Using frm As New FAskFiltriAnalitica(isDbUNO)
             Dim result As DialogResult = frm.ShowDialog
             If result = DialogResult.OK Then
                 f = frm.f
@@ -1165,8 +1167,16 @@ Public Class FLogin
             My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Azienda: " & DBInUse & "  ---  ")
             My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Movimenti Analitici  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
 
-            'ESEGUO LA PROCEDURA
             Dim esito As Boolean
+            If f.AdeguaCanoniDate Then
+                'Adeguo le righe fatture con i dati dei canoni e date a partire dagli ordini 
+                lstStatoConnessione.Items.Add("Adeguamento righe fatture da ordini...")
+                Dim msg As String = ""
+                esito = AdeguaFattureDaOrdini(f, msg)
+                lstStatoConnessione.Items.Add(If(esito, "OK: " & msg, "Adeguamento: Errore " & msg))
+            End If
+            'ESEGUO LA PROCEDURA
+            lstStatoConnessione.Items.Add("Generazione Movimenti analitici...")
             esito = CreaAnaliticaDaFatture(f)
             lstStatoConnessione.Items.Add("Esito creazione Movimenti analitici " & If(esito, "OK", "Errore"))
 
@@ -1573,6 +1583,7 @@ Public Class FLogin
         Else
             TxtDB_UNO.BackColor = Color.FromArgb(255, 152, 251, 152)
         End If
+        isDbUNO = True
     End Sub
 
     Private Sub BtnSelSPA_Click(sender As Object, e As EventArgs) Handles BtnSelSPA.Click
@@ -1582,6 +1593,7 @@ Public Class FLogin
         Else
             TxtDB_SPA.BackColor = Color.FromArgb(255, 152, 251, 152)
         End If
+        isDbUNO = False
     End Sub
     Private Shared Function CheckDB(ByVal azienda As String, temp As String) As Boolean
         If String.IsNullOrWhiteSpace(azienda) OrElse String.IsNullOrWhiteSpace(temp) Then

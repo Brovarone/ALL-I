@@ -299,11 +299,6 @@ Module Unused
             writeSomething = True
             Dim newlineDDT As Integer
             'Id documento 2.1.8 DatiDDT
-            'FIX ScriviDatiAggiuntiviSicuritalia, colonne da fixare
-            'Colonna HK (F2132)	 	
-            'Colonna ID (C_DTAL)  Data AL
-            'Colonna HM (F2134)  NumItem
-
             Dim key As Object() = {id, 0, 0, "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiDDT.NumeroDDT"}
             dt.DefaultView.Sort = "DocId, DocSubID, SubLine, FieldName "
             Dim drv As DataRowView() = dt.DefaultView.FindRows(key)

@@ -8,7 +8,6 @@ Imports System.Collections.Generic
 Imports EFMago.Models
 Imports Microsoft.EntityFrameworkCore
 Imports EFCore.BulkExtensions
-'todo: aggiornamento righe fatture con dati All canoni etc. ( vedere se fare da mago o da programma)
 'TODO: valutare implementazioni Fattura elettronica 
 'Todo: Dichiarazione intento lettera W ( magari impostare un campo in anagrafica cliente/ordine) e aggiungerlo agli step di pre-invio( tipo quello dei dati canoni ) ma ne verrano fuori altri
 
@@ -210,6 +209,14 @@ Module Ordini
                             debugging.AppendLine("# [ESCLUSA] (Decorrenza non raggiunta) R.:(" & sEx)
                             Continue For
                         End If
+                        If c.DataProssimaFatt >= dataFattDa And c.DataProssimaFatt <= dataFattA Then
+                            Debug.Print("# [OK]")
+                        Else
+                            Debug.Print("# [ESCLUSA] (Fuori filtro data ) R.:(" & sEx)
+                            debugging.AppendLine("# [ESCLUSA] (Fuori filtro data) R.:(" & sEx)
+                            Continue For
+                        End If
+
                         If c.DataProssimaFatt > dataFattA Then
                             Debug.Print("# [ESCLUSA] (Prossima fattura non raggiunta) R.:(" & sEx)
                             debugging.AppendLine("# [ESCLUSA] (Prossima fattura non raggiunta) R.:(" & sEx)
@@ -1349,7 +1356,7 @@ Module Ordini
         Public Property QtaIniziale As Double
         Public Property NrCanoniIniziale As Integer
         Public Property QtaCorrente As Double
-        Public Property NrCanoniCorrente As Integer
+        ' Public Property NrCanoniCorrente As Integer
         Public Property QtaDaRifatturare As Double
         Public Property DaRifatturare As Boolean
         Public Property DataProssimaRifatturazione As Date
@@ -1380,7 +1387,7 @@ Module Ordini
             QtaIniziale = 0
             NrCanoniIniziale = 0
             QtaCorrente = 0
-            NrCanoniCorrente = 0
+            'NrCanoniCorrente = 0
             QtaDaRifatturare = 0
             DaRifatturare = False
             DataProssimaRifatturazione = d
@@ -1405,6 +1412,7 @@ Module Ordini
                         .Line = c.Line,
                         .DataPrevistaConsegna = nextDate,
                         .DataConfermaConsegna = nextDate,
+                        .DataDecorrenza = c.DataDecorrenza,
                         .UnaTantum = CBool(c.AlltipoRigaServizio.UnaTantum),
                         .Item = c.Servizio,
                         .Description = c.Descrizione,
@@ -1430,15 +1438,23 @@ Module Ordini
                 Case Periodo.Mensile
                     iNrCanoni = 1
             End Select
-            r.CanoniDataIn = If(bIsAnt, nextDate, nextDate.AddMonths(-(iNrCanoni)).AddDays(1))
+            '28/02/2022 : devono sempre essere primo del mese / fine mese
+            Dim postPrimoGiorno = nextDate.AddDays(1).AddMonths(-iNrCanoni)
+            postPrimoGiorno = New Date(postPrimoGiorno.Year, postPrimoGiorno.Month, 1)
+            r.CanoniDataIn = If(bIsAnt, nextDate, postPrimoGiorno)
             r.CanoniDataFin = If(bIsAnt, nextDate.AddMonths(iNrCanoni).AddDays(-1), nextDate)
-            r.DataProssimaFattura = nextDate.AddMonths(iNrCanoni)
+            'Devo portare sempre a fine mese
+            Dim postUltimoGiorno As Date = nextDate.AddMonths(iNrCanoni)
+            Dim daysInMonth As Integer = DateTime.DaysInMonth(postUltimoGiorno.Year, postUltimoGiorno.Month)
+            postUltimoGiorno = New Date(postUltimoGiorno.Year, postUltimoGiorno.Month, daysInMonth)
+            r.DataProssimaFattura = If(bIsAnt, r.CanoniDataFin.AddDays(1), postUltimoGiorno)
         ElseIf CBool(c.AlltipoRigaServizio.UnaTantum) Then
             iNrCanoni = 1
             r.CanoniDataIn = nextDate
             r.CanoniDataFin = nextDate
         End If
         r.NrCanoniIniziale = iNrCanoni
+        'r.NrCanoniCorrente = iNrCanoni
         Return r
     End Function
 
@@ -1560,4 +1576,58 @@ Module Ordini
         'canoniSospesi = DateAndTime.DateDiff(DateInterval.Month, dataInizio, range.CanoniDataFin)
         Return monthNr
     End Function
+End Module
+
+Module FattureDaOrdini
+    Public Function AdeguaFattureDaOrdini(filtri As FiltroAnalitica, Optional ByRef MyReturnString As String = "") As Boolean
+        'dati succhiati dal filtro
+        Dim fromDate As Date = filtri.DataDA
+        Dim todate As Date = filtri.DataA
+        Dim nrFirst As String = filtri.NumberFirst
+        Dim nrLast As String = filtri.NumberLast
+        Dim allNumbers As Boolean = filtri.AllNumbers
+        Dim sFromDate As String = fromDate.ToString("yyyyMMdd")
+        Dim sToDate As String = todate.ToString("yyyyMMdd")
+
+        Dim s As New StringBuilder()
+        Dim sMsg As String
+        Try
+            s.Append("Update MA_SaleDocDetail SET ALL_CanoniDataI = Ord.ALL_CanoniDataI , ALL_CanoniDataF = Ord.ALL_CanoniDataF, ALL_NrCanoni = Ord.ALL_NrCanoni ")
+            s.Append("From MA_SaleDoc Testa INNER JOIN MA_SaleDocDetail Doc ON Testa.SaleDocId = Doc.SaleDocId INNER Join MA_SaleOrdDetails Ord ON Ord.SaleOrdId = Doc.SaleOrdId And Ord.SubId = Doc.SaleOrdSubId ")
+            s.Append("WHERE (Doc.LineType = " & LineType.Merce & " OR Doc.LineType = " & LineType.Servizio & ") ")
+            s.Append("AND (Testa.DocumentType=" & DocumentType.Fattura & " Or Testa.DocumentType=" & DocumentType.FatturaAcc & " Or Testa.DocumentType=" & DocumentType.NotaCredito & ") ")
+            s.Append("AND (Testa.DocumentDate >=@FromDate  And Testa.DocumentDate <=@ToDate ) ")
+            s.Append("AND (@AllNumbers = 1 Or (@AllNumbers = 0 And Testa.DocNo >=@NrFirst And Testa.DocNo <=@NrLast )) ")
+            s.Append("AND Doc.ALL_CanoniDataI = '17991231' ")
+
+            Using cmd = New SqlCommand(s.ToString, Connection)
+                cmd.Transaction = Trans
+                cmd.Parameters.AddWithValue("@FromDate", sFromDate)
+                cmd.Parameters.AddWithValue("@ToDate", sToDate)
+                cmd.Parameters.AddWithValue("@AllNumbers", allNumbers)
+                cmd.Parameters.AddWithValue("@NrFirst", nrFirst)
+                cmd.Parameters.AddWithValue("@NrLast", nrLast)
+                Dim irows As Integer = cmd.ExecuteNonQuery()
+                If irows <= 0 Then
+                    sMsg = "Nessun documento di vendita da aggiornare"
+                Else
+                    sMsg = "Adeguate " & irows.ToString & " righe."
+                End If
+            End Using
+
+            If String.IsNullOrWhiteSpace(MyReturnString) Then
+                My.Application.Log.WriteEntry(sMsg)
+            Else
+                MyReturnString = sMsg
+            End If
+
+        Catch ex As Exception
+            Debug.Print(ex.Message)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
+            Return False
+        End Try
+        Return True
+    End Function
+
 End Module

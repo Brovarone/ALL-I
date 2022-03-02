@@ -7,6 +7,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 // If you have enabled NRTs for your project, then un-comment the following line:
 // #nullable disable
 
+//Ultimo adeguamento mago.net 3.14.21
+//Personalizzazioni
+//  ALL_SPA - Ordini - 9
+
 namespace EFMago.Models
 {
     public partial class OrdiniContext : DbContext
@@ -270,6 +274,11 @@ namespace EFMago.Models
                     .HasMaxLength(8)
                     .IsUnicode(false)
                     .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.ImpiantoDue)
+                 .HasMaxLength(8)
+                 .IsUnicode(false)
+                 .HasDefaultValueSql("('')");
 
                 entity.Property(e => e.ImpiantoProprietaCliente)
                     .HasMaxLength(1)

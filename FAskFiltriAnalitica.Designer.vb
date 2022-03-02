@@ -36,6 +36,7 @@ Partial Class FAskFiltriAnalitica
         Me.TxtNumberFirst = New System.Windows.Forms.TextBox()
         Me.Label4 = New System.Windows.Forms.Label()
         Me.Label3 = New System.Windows.Forms.Label()
+        Me.ChkAdeguaCampi = New System.Windows.Forms.CheckBox()
         Me.TableLayoutPanel1.SuspendLayout()
         Me.GroupBox1.SuspendLayout()
         Me.SuspendLayout()
@@ -48,7 +49,7 @@ Partial Class FAskFiltriAnalitica
         Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
         Me.TableLayoutPanel1.Controls.Add(Me.OK_Button, 0, 0)
         Me.TableLayoutPanel1.Controls.Add(Me.Cancel_Button, 1, 0)
-        Me.TableLayoutPanel1.Location = New System.Drawing.Point(88, 196)
+        Me.TableLayoutPanel1.Location = New System.Drawing.Point(88, 238)
         Me.TableLayoutPanel1.Name = "TableLayoutPanel1"
         Me.TableLayoutPanel1.RowCount = 1
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
@@ -123,7 +124,7 @@ Partial Class FAskFiltriAnalitica
         Me.ChkMovInAna.AutoSize = True
         Me.ChkMovInAna.Checked = True
         Me.ChkMovInAna.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.ChkMovInAna.Location = New System.Drawing.Point(87, 173)
+        Me.ChkMovInAna.Location = New System.Drawing.Point(87, 201)
         Me.ChkMovInAna.Name = "ChkMovInAna"
         Me.ChkMovInAna.Size = New System.Drawing.Size(143, 17)
         Me.ChkMovInAna.TabIndex = 6
@@ -178,13 +179,24 @@ Partial Class FAskFiltriAnalitica
         Me.Label3.TabIndex = 6
         Me.Label3.Text = "Dal numero"
         '
+        'ChkAdeguaCampi
+        '
+        Me.ChkAdeguaCampi.AutoSize = True
+        Me.ChkAdeguaCampi.Location = New System.Drawing.Point(15, 164)
+        Me.ChkAdeguaCampi.Name = "ChkAdeguaCampi"
+        Me.ChkAdeguaCampi.Size = New System.Drawing.Size(183, 17)
+        Me.ChkAdeguaCampi.TabIndex = 10
+        Me.ChkAdeguaCampi.Text = "Adegua Canoni e Date da Ordine"
+        Me.ChkAdeguaCampi.UseVisualStyleBackColor = True
+        '
         'FAskFiltriAnalitica
         '
         Me.AcceptButton = Me.OK_Button
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.CancelButton = Me.Cancel_Button
-        Me.ClientSize = New System.Drawing.Size(246, 237)
+        Me.ClientSize = New System.Drawing.Size(246, 279)
+        Me.Controls.Add(Me.ChkAdeguaCampi)
         Me.Controls.Add(Me.ChkMovInAna)
         Me.Controls.Add(Me.DtaPickA)
         Me.Controls.Add(Me.DtaPickDA)
@@ -218,4 +230,5 @@ Partial Class FAskFiltriAnalitica
     Friend WithEvents TxtNumberFirst As TextBox
     Friend WithEvents Label4 As Label
     Friend WithEvents Label3 As Label
+    Friend WithEvents ChkAdeguaCampi As CheckBox
 End Class

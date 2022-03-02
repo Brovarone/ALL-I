@@ -2500,6 +2500,7 @@ Module Fatture
     End Function
 
 End Module
+
 Module MovimentiAnaliticiDaFatture
 
     Public Function CreaAnaliticaDaFatture(filtri As FiltroAnalitica) As Boolean

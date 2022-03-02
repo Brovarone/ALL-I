@@ -921,6 +921,7 @@ Public Module FiltriAnalitici
         Public Property NumberFirst As String
         Public Property NumberLast As String
         Public Property AllNumbers As Boolean
+        Public Property AdeguaCanoniDate As Boolean
         Public Sub New()
             DataA = Today
             DataDA = Today
@@ -929,6 +930,7 @@ Public Module FiltriAnalitici
             NumberFirst = ""
             NumberLast = ""
             AllNumbers = True
+            AdeguaCanoniDate = False
         End Sub
     End Class
     Public NotInheritable Class DareAvereIgnora

@@ -6,6 +6,9 @@ using Microsoft.EntityFrameworkCore.Metadata;
 // If you have enabled NRTs for your project, then un-comment the following line:
 // #nullable disable
 
+// Prima generazione delle tabelle alla versione Mago.net 3.14.boh ( forse la 18)
+// Adeguare con campi nuovi se serve
+
 namespace EFMago.Models
 {
     public partial class MagoContext : DbContext
@@ -1510,6 +1513,11 @@ namespace EFMago.Models
                     .HasMaxLength(8)
                     .IsUnicode(false)
                     .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.ImpiantoDue)
+                .HasMaxLength(8)
+                .IsUnicode(false)
+                .HasDefaultValueSql("('')");
 
                 entity.Property(e => e.ImpiantoProprietaCliente)
                     .HasMaxLength(1)

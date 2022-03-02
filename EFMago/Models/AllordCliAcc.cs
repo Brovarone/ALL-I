@@ -43,7 +43,7 @@ namespace EFMago.Models
         public int TbmodifiedId { get; set; }
         public string CdC { get; set; }
         public string Vettore { get; set; }
-
+        public string ImpiantoDue { get; set; }
         public virtual MaSaleOrd SaleOrd { get; set; }
     }
 }

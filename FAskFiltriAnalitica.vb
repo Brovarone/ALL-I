@@ -2,7 +2,7 @@
 
 Public Class FAskFiltriAnalitica
     Public f As FiltroAnalitica
-    Public Sub New()
+    Public Sub New(Optional IsDBUno As Boolean = True)
 
         ' This call is required by the designer.
         InitializeComponent()
@@ -10,10 +10,12 @@ Public Class FAskFiltriAnalitica
         ' Add any initialization after the InitializeComponent() call.
         'DtaPickDA.Value = New DateTime(2021, 3, 19)
         f = New FiltroAnalitica
+        f.AdeguaCanoniDate = IsDBUno
         ChkGiaRegistrati.Enabled = isAdmin
         ChkMovInAna.Enabled = isAdmin
         TxtNumberFirst.Text = "PRIMO"
         TxtNumberLast.Text = "ULTIMO"
+        ChkAdeguaCampi.Checked = IsDBUno
     End Sub
     Private Sub OK_Button_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles OK_Button.Click
         f.DataA = DtaPickA.Value
@@ -22,6 +24,7 @@ Public Class FAskFiltriAnalitica
         f.MovInAnalitica = ChkMovInAna.Checked
         f.NumberFirst = If(String.IsNullOrWhiteSpace(TxtNumberFirst.Text), "PRIMO", TxtNumberFirst.Text)
         f.NumberLast = If(String.IsNullOrWhiteSpace(TxtNumberLast.Text), "ULTIMO", TxtNumberLast.Text)
+        f.AdeguaCanoniDate = ChkAdeguaCampi.Checked
         If f.NumberFirst <> "PRIMO" Then
             f.AllNumbers = False
             f.NumberFirst = f.NumberFirst.PadLeft(6, "0")
@@ -59,4 +62,6 @@ Public Class FAskFiltriAnalitica
             TxtNumberFirst.Text = "ULTIMO"
         End If
     End Sub
+
+
 End Class
