@@ -214,7 +214,8 @@ Module Ordini
                         Else
                             Debug.Print("# [ESCLUSA] (Fuori filtro data ) R.:(" & sEx)
                             debugging.AppendLine("# [ESCLUSA] (Fuori filtro data) R.:(" & sEx)
-                            Continue For
+                            '26/01/2022 Vanno comunque esaminate per cercare eventuali righe sospsese da rifatturare
+                            'DEPRECATO il Continue For
                         End If
 
                         If c.DataProssimaFatt > dataFattA Then
@@ -228,7 +229,7 @@ Module Ordini
 #End Region
 #Region "Variabili Correnti"
                         Dim cOrdRow As CurOrdRow = EvalCurOrdRow(c)
-                        cOrdRow.CanoneDaEscludere = c.DataProssimaFatt > dataFattA
+                        cOrdRow.CanoneDaEscludere = (c.DataProssimaFatt > dataFattA) OrElse (c.DataProssimaFatt >= dataFattDa And c.DataProssimaFatt <= dataFattA)
                         cOrdRow.Contropartita = If(String.IsNullOrWhiteSpace(c.MaItems.SaleOffset), sDefContropartita, c.MaItems.SaleOffset)
                         cOrdRow.CodIva = If(String.IsNullOrWhiteSpace(c.CodiceIva), sDefCodIva, c.CodiceIva)
                         cOrdRow.PercIva = Math.Round(codiciIva.FirstOrDefault(Function(tax) tax.TaxCode = cOrdRow.CodIva).Perc.Value, decPerc)
