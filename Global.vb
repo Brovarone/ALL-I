@@ -339,7 +339,6 @@ Module MagoNet
         Return res
     End Function
 
-    'TODO: cambire structure e mettere Enum !!
     Friend Structure CustSuppType
         Public Shared Cliente As Integer = 3211264
         Public Shared Fornitore As Integer = 3211265
@@ -349,76 +348,75 @@ Module MagoNet
         Public Shared FornitoreIgnora As Integer = 6094849
         Public Shared IgnoraIgnora As Integer = 6094850
     End Structure
-    Friend Structure DocumentType
+    Friend Enum DocumentType As Integer
         'Tipo documento , 52
-        Public Shared Fattura As Integer = 3407874
-        Public Shared FatturaAcc As Integer = 3407875
-        Public Shared NotaCredito As Integer = 3407876
-    End Structure
-    Friend Structure CrossReference
+        Fattura = 3407874
+        FatturaAcc = 3407875
+        NotaCredito = 3407876
+    End Enum
+    Friend Enum CrossReference As Integer
         'Riferimenti Incrociati , 413
-        Public Shared Tutti As Integer = 27066368  'DEFAULT
-        Public Shared FatturaImmediata As Integer = 27066387
-        Public Shared NotaDiCredito As Integer = 27066389
-        Public Shared PnotaPuro As Integer = 27066418
-        Public Shared PnotaEmesso As Integer = 27066419
-        Public Shared MovimentoAnalitico As Integer = 27066424
-    End Structure
-    Friend Structure LineType
-        Public Shared Nota As Integer = 3538944
-        Public Shared Riferimento As Integer = 3538945
-        Public Shared Servizio As Integer = 3538946
-        Public Shared Merce As Integer = 3538947
-        Public Shared Descrittiva As Integer = 3538948
-    End Structure
-    Friend Structure PaymentTerm
-        Public Shared Contante As Integer = 2686976
-        Public Shared RimessaDiretta As Integer = 2686977
-        Public Shared Contrassegno As Integer = 2686978
-        Public Shared VistaFattura As Integer = 2686979
-        Public Shared Cambiale As Integer = 2686980
-        Public Shared RicevutaBancaria As Integer = 2686981
-        Public Shared Bonifico As Integer = 2686982
-        Public Shared AssegnoBancario As Integer = 2686983
-        Public Shared AssegnoCircolare As Integer = 2686984
-        Public Shared VagliaPostale As Integer = 2686985
-        Public Shared VagliaNazionale As Integer = 2686986
-        Public Shared VagliaInternazionale As Integer = 2686987
-        Public Shared MAV As Integer = 2686988
-        Public Shared RID_SEPA_SDD_CORE As Integer = 2686989
-        Public Shared AssegnoBancarioEstero As Integer = 2686990
-        Public Shared BonificoEstero As Integer = 2686991
-        Public Shared CartaDiCredito As Integer = 2686992
-        Public Shared BollettinoBancario As Integer = 2686993
-        Public Shared BollettinoPostale As Integer = 2686994
-        Public Shared LetteraDiCredito As Integer = 2686995
-        Public Shared Factoring As Integer = 2686996
-        Public Shared RIDVeloce_SEPA_SDD_B2B As Integer = 2686997
-    End Structure
+        Tutti = 27066368  'DEFAULT
+        FatturaImmediata = 27066387
+        NotaDiCredito = 27066389
+        PnotaPuro = 27066418
+        PnotaEmesso = 27066419
+        MovimentoAnalitico = 27066424
+    End Enum
+    Friend Enum LineType As Integer
+        Nota = 3538944
+        Riferimento = 3538945
+        Servizio = 3538946
+        Merce = 3538947
+        Descrittiva = 3538948
+    End Enum
+    Friend Enum PaymentTerm As Integer
+        Contante = 2686976
+        RimessaDiretta = 2686977
+        Contrassegno = 2686978
+        VistaFattura = 2686979
+        Cambiale = 2686980
+        RicevutaBancaria = 2686981
+        Bonifico = 2686982
+        AssegnoBancario = 2686983
+        AssegnoCircolare = 2686984
+        VagliaPostale = 2686985
+        VagliaNazionale = 2686986
+        VagliaInternazionale = 2686987
+        MAV = 2686988
+        RID_SEPA_SDD_CORE = 2686989
+        AssegnoBancarioEstero = 2686990
+        BonificoEstero = 2686991
+        CartaDiCredito = 2686992
+        BollettinoBancario = 2686993
+        BollettinoPostale = 2686994
+        LetteraDiCredito = 2686995
+        Factoring = 2686996
+        RIDVeloce_SEPA_SDD_B2B = 2686997
+    End Enum
 
-    Friend NotInheritable Class IdType
+    Friend Enum IdType As Integer
         'Specie Archivio 58
-        Public Shared PNota As Integer = 3801095
-        Public Shared MovAna As Integer = 3801102
-        Public Const DocVend As Integer = 3801088
-        Public Shared OrdCli As Integer = 3801098
-        Public Shared Partite As Integer = 3801094
-        Public Shared DicIntento As Integer = 3801122
-        Public Shared MovCespite As Integer = 3801097
-    End Class
-    Friend NotInheritable Class CodeType
+        PNota = 3801095
+        MovAna = 3801102
+        DocVend = 3801088
+        OrdCli = 3801098
+        Partite = 3801094
+        DicIntento = 3801122
+        MovCespite = 3801097
+    End Enum
+    Friend Enum CodeType As Integer
         'Tipo Documento non fiscale 57
-        Public Shared PNota As Integer = 3735558
-        Public Shared MovAna As Integer = 3735561
-        Public Shared MovCes As Integer = 3735585 '  Nr. Riferimento Movimenti Cespiti
+        PNota = 3735558
+        MovAna = 3735561
+        MovCes = 3735585 '  Nr. Riferimento Movimenti Cespiti
+    End Enum
 
-    End Class
-
-    Friend NotInheritable Class DeclType
-        Public Shared Specifica As Integer = 1507328
-        Public Shared FinoA As Integer = 1507329
-        Public Shared Periodo As Integer = 1507330
-    End Class
+    Friend Enum DeclType As Integer
+        Specifica = 1507328
+        FinoA = 1507329
+        Periodo = 1507330
+    End Enum
     Public Function ReturnVarName(ByVal i As Integer, ByVal t As Type) As String
         Dim result As String = ""
         Dim dict = t.GetFields(BindingFlags.Static Or BindingFlags.Public).ToDictionary(Function(f) f.GetValue(Nothing), Function(f) f.Name)

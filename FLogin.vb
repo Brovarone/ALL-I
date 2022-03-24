@@ -1212,8 +1212,8 @@ Public Class FLogin
     End Sub
 
     Private Sub ToolStripMenuItemDebugging_Click(sender As Object, e As EventArgs) Handles ToolStripMenuItemDebugging.Click
-        bIsDebugging = ToolStripTracciatoVecchio.Checked
-        lstStatoConnessione.Items.Add("DEBUG - Log Dettagliato " & If(bOldtrack, "abilitato", "disabilitato"))
+        bIsDebugging = ToolStripMenuItemDebugging.Checked
+        lstStatoConnessione.Items.Add("DEBUG - Log Dettagliato " & If(bIsDebugging, "abilitato", "disabilitato"))
 
     End Sub
 
@@ -1640,5 +1640,11 @@ Public Class FLogin
         BtnOrdiniISTAT.PerformClick()
     End Sub
 
-
+    Private Sub RiparaMaschereMagoToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles RiparaMaschereMagoToolStripMenuItem.Click
+        Try
+            FileIO.FileSystem.RenameFile("\\SV-AP-MAGO\Magonet_Custom\Companies\AllCompanies\Applications\ERP\SaleOrders\ModuleObjects\SaleOrd\SPA_SaleOrd.dll.disabled", "SPA_SaleOrd.dll")
+        Catch ex As Exception
+            ' Debug.Print(ex.Message)
+        End Try
+    End Sub
 End Class
