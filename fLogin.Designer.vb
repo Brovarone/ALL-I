@@ -95,6 +95,20 @@ Partial Class FLogin
         Me.lstStatoConnessione = New System.Windows.Forms.ListBox()
         Me.DataGridView1 = New System.Windows.Forms.DataGridView()
         Me.MenuStrip1 = New System.Windows.Forms.MenuStrip()
+        Me.ToolsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.AdministratorToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.DisconnettiAdminToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ComandiToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem()
+        Me.TestOrdiniToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.TestISTATToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.TestRiscontiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ToolStripSeparator6 = New System.Windows.Forms.ToolStripSeparator()
+        Me.BackupDatabaseToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.CopiaUNOSuTESTToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.RiparaMaschereMagoToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ToolStripSeparator7 = New System.Windows.Forms.ToolStripSeparator()
+        Me.UserSettingToolStripMenu = New System.Windows.Forms.ToolStripMenuItem()
+        Me.AppLogToolStripMenu = New System.Windows.Forms.ToolStripMenuItem()
         Me.FileToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.NewToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.OpenToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -106,24 +120,12 @@ Partial Class FLogin
         Me.PrintPreviewToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.toolStripSeparator2 = New System.Windows.Forms.ToolStripSeparator()
         Me.ExitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ToolsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.AdministratorToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.DisconnettiAdminToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ToolStripSeparator6 = New System.Windows.Forms.ToolStripSeparator()
-        Me.BackupDatabaseToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ToolStripSeparator7 = New System.Windows.Forms.ToolStripSeparator()
-        Me.UserSettingToolStripMenu = New System.Windows.Forms.ToolStripMenuItem()
-        Me.AppLogToolStripMenu = New System.Windows.Forms.ToolStripMenuItem()
         Me.CespitiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ImportaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.CancellaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SettingsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripTracciatoVecchio = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItemDebugging = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ComandiToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem()
-        Me.TestOrdiniToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.TestISTATToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.TestRiscontiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ComandiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.IDToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.CaricaSchemaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -144,7 +146,8 @@ Partial Class FLogin
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
-        Me.RiparaMaschereMagoToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.TestRiscontiRidottoToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ChkRiscontiRidotto = New System.Windows.Forms.CheckBox()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabPageCancella.SuspendLayout()
@@ -655,6 +658,7 @@ Partial Class FLogin
         'TabPagePnota
         '
         Me.TabPagePnota.BackColor = System.Drawing.SystemColors.Control
+        Me.TabPagePnota.Controls.Add(Me.ChkRiscontiRidotto)
         Me.TabPagePnota.Controls.Add(Me.ChkRisconti)
         Me.TabPagePnota.Controls.Add(Me.ChkPNotaForDaPartitario)
         Me.TabPagePnota.Controls.Add(Me.ChkPNotaCliDaPartitario)
@@ -895,6 +899,97 @@ Partial Class FLogin
         Me.MenuStrip1.TabIndex = 45
         Me.MenuStrip1.Text = "MenuStrip1"
         '
+        'ToolsToolStripMenuItem
+        '
+        Me.ToolsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.AdministratorToolStripMenuItem, Me.DisconnettiAdminToolStripMenuItem, Me.ComandiToolStripMenuItem1, Me.ToolStripSeparator6, Me.BackupDatabaseToolStripMenuItem, Me.CopiaUNOSuTESTToolStripMenuItem, Me.RiparaMaschereMagoToolStripMenuItem, Me.ToolStripSeparator7, Me.UserSettingToolStripMenu, Me.AppLogToolStripMenu})
+        Me.ToolsToolStripMenuItem.Name = "ToolsToolStripMenuItem"
+        Me.ToolsToolStripMenuItem.Size = New System.Drawing.Size(46, 20)
+        Me.ToolsToolStripMenuItem.Text = "&Tools"
+        '
+        'AdministratorToolStripMenuItem
+        '
+        Me.AdministratorToolStripMenuItem.Image = Global.ALLSystemTools.My.Resources.Resources.lock_48
+        Me.AdministratorToolStripMenuItem.Name = "AdministratorToolStripMenuItem"
+        Me.AdministratorToolStripMenuItem.Size = New System.Drawing.Size(195, 22)
+        Me.AdministratorToolStripMenuItem.Text = "&Login Administrator"
+        '
+        'DisconnettiAdminToolStripMenuItem
+        '
+        Me.DisconnettiAdminToolStripMenuItem.Image = Global.ALLSystemTools.My.Resources.Resources.lock_open_48
+        Me.DisconnettiAdminToolStripMenuItem.Name = "DisconnettiAdminToolStripMenuItem"
+        Me.DisconnettiAdminToolStripMenuItem.Size = New System.Drawing.Size(195, 22)
+        Me.DisconnettiAdminToolStripMenuItem.Text = "Disconnetti Admin"
+        Me.DisconnettiAdminToolStripMenuItem.Visible = False
+        '
+        'ComandiToolStripMenuItem1
+        '
+        Me.ComandiToolStripMenuItem1.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.TestOrdiniToolStripMenuItem, Me.TestISTATToolStripMenuItem, Me.TestRiscontiToolStripMenuItem, Me.TestRiscontiRidottoToolStripMenuItem})
+        Me.ComandiToolStripMenuItem1.Name = "ComandiToolStripMenuItem1"
+        Me.ComandiToolStripMenuItem1.Size = New System.Drawing.Size(195, 22)
+        Me.ComandiToolStripMenuItem1.Text = "Comandi"
+        '
+        'TestOrdiniToolStripMenuItem
+        '
+        Me.TestOrdiniToolStripMenuItem.Name = "TestOrdiniToolStripMenuItem"
+        Me.TestOrdiniToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.TestOrdiniToolStripMenuItem.Text = "Test_Ordini"
+        '
+        'TestISTATToolStripMenuItem
+        '
+        Me.TestISTATToolStripMenuItem.Name = "TestISTATToolStripMenuItem"
+        Me.TestISTATToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.TestISTATToolStripMenuItem.Text = "Test_ISTAT"
+        '
+        'TestRiscontiToolStripMenuItem
+        '
+        Me.TestRiscontiToolStripMenuItem.Name = "TestRiscontiToolStripMenuItem"
+        Me.TestRiscontiToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.TestRiscontiToolStripMenuItem.Text = "Test_Risconti"
+        '
+        'ToolStripSeparator6
+        '
+        Me.ToolStripSeparator6.Name = "ToolStripSeparator6"
+        Me.ToolStripSeparator6.Size = New System.Drawing.Size(192, 6)
+        '
+        'BackupDatabaseToolStripMenuItem
+        '
+        Me.BackupDatabaseToolStripMenuItem.Image = Global.ALLSystemTools.My.Resources.Resources.designfloat_48
+        Me.BackupDatabaseToolStripMenuItem.Name = "BackupDatabaseToolStripMenuItem"
+        Me.BackupDatabaseToolStripMenuItem.Size = New System.Drawing.Size(195, 22)
+        Me.BackupDatabaseToolStripMenuItem.Text = "Backup database"
+        Me.BackupDatabaseToolStripMenuItem.Visible = False
+        '
+        'CopiaUNOSuTESTToolStripMenuItem
+        '
+        Me.CopiaUNOSuTESTToolStripMenuItem.Image = Global.ALLSystemTools.My.Resources.Resources.database_add_48
+        Me.CopiaUNOSuTESTToolStripMenuItem.Name = "CopiaUNOSuTESTToolStripMenuItem"
+        Me.CopiaUNOSuTESTToolStripMenuItem.Size = New System.Drawing.Size(195, 22)
+        Me.CopiaUNOSuTESTToolStripMenuItem.Text = "Copia UNO su TEST"
+        '
+        'RiparaMaschereMagoToolStripMenuItem
+        '
+        Me.RiparaMaschereMagoToolStripMenuItem.Image = Global.ALLSystemTools.My.Resources.Resources.mixx_48
+        Me.RiparaMaschereMagoToolStripMenuItem.Name = "RiparaMaschereMagoToolStripMenuItem"
+        Me.RiparaMaschereMagoToolStripMenuItem.Size = New System.Drawing.Size(195, 22)
+        Me.RiparaMaschereMagoToolStripMenuItem.Text = "Ripara maschere Mago"
+        '
+        'ToolStripSeparator7
+        '
+        Me.ToolStripSeparator7.Name = "ToolStripSeparator7"
+        Me.ToolStripSeparator7.Size = New System.Drawing.Size(192, 6)
+        '
+        'UserSettingToolStripMenu
+        '
+        Me.UserSettingToolStripMenu.Name = "UserSettingToolStripMenu"
+        Me.UserSettingToolStripMenu.Size = New System.Drawing.Size(195, 22)
+        Me.UserSettingToolStripMenu.Text = "User.Setting Folder"
+        '
+        'AppLogToolStripMenu
+        '
+        Me.AppLogToolStripMenu.Name = "AppLogToolStripMenu"
+        Me.AppLogToolStripMenu.Size = New System.Drawing.Size(195, 22)
+        Me.AppLogToolStripMenu.Text = "App Log Folder"
+        '
         'FileToolStripMenuItem
         '
         Me.FileToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.NewToolStripMenuItem, Me.OpenToolStripMenuItem, Me.toolStripSeparator, Me.SaveToolStripMenuItem, Me.SaveAsToolStripMenuItem, Me.toolStripSeparator1, Me.PrintToolStripMenuItem, Me.PrintPreviewToolStripMenuItem, Me.toolStripSeparator2, Me.ExitToolStripMenuItem})
@@ -974,57 +1069,6 @@ Partial Class FLogin
         Me.ExitToolStripMenuItem.Size = New System.Drawing.Size(154, 22)
         Me.ExitToolStripMenuItem.Text = "E&xit"
         '
-        'ToolsToolStripMenuItem
-        '
-        Me.ToolsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.AdministratorToolStripMenuItem, Me.DisconnettiAdminToolStripMenuItem, Me.ToolStripSeparator6, Me.BackupDatabaseToolStripMenuItem, Me.RiparaMaschereMagoToolStripMenuItem, Me.ToolStripSeparator7, Me.UserSettingToolStripMenu, Me.AppLogToolStripMenu})
-        Me.ToolsToolStripMenuItem.Name = "ToolsToolStripMenuItem"
-        Me.ToolsToolStripMenuItem.Size = New System.Drawing.Size(46, 20)
-        Me.ToolsToolStripMenuItem.Text = "&Tools"
-        '
-        'AdministratorToolStripMenuItem
-        '
-        Me.AdministratorToolStripMenuItem.Image = Global.ALLSystemTools.My.Resources.Resources.lock_48
-        Me.AdministratorToolStripMenuItem.Name = "AdministratorToolStripMenuItem"
-        Me.AdministratorToolStripMenuItem.Size = New System.Drawing.Size(195, 22)
-        Me.AdministratorToolStripMenuItem.Text = "&Login Administrator"
-        '
-        'DisconnettiAdminToolStripMenuItem
-        '
-        Me.DisconnettiAdminToolStripMenuItem.Image = Global.ALLSystemTools.My.Resources.Resources.lock_open_48
-        Me.DisconnettiAdminToolStripMenuItem.Name = "DisconnettiAdminToolStripMenuItem"
-        Me.DisconnettiAdminToolStripMenuItem.Size = New System.Drawing.Size(195, 22)
-        Me.DisconnettiAdminToolStripMenuItem.Text = "Disconnetti Admin"
-        Me.DisconnettiAdminToolStripMenuItem.Visible = False
-        '
-        'ToolStripSeparator6
-        '
-        Me.ToolStripSeparator6.Name = "ToolStripSeparator6"
-        Me.ToolStripSeparator6.Size = New System.Drawing.Size(192, 6)
-        '
-        'BackupDatabaseToolStripMenuItem
-        '
-        Me.BackupDatabaseToolStripMenuItem.Image = Global.ALLSystemTools.My.Resources.Resources.designfloat_48
-        Me.BackupDatabaseToolStripMenuItem.Name = "BackupDatabaseToolStripMenuItem"
-        Me.BackupDatabaseToolStripMenuItem.Size = New System.Drawing.Size(195, 22)
-        Me.BackupDatabaseToolStripMenuItem.Text = "Backup database"
-        '
-        'ToolStripSeparator7
-        '
-        Me.ToolStripSeparator7.Name = "ToolStripSeparator7"
-        Me.ToolStripSeparator7.Size = New System.Drawing.Size(192, 6)
-        '
-        'UserSettingToolStripMenu
-        '
-        Me.UserSettingToolStripMenu.Name = "UserSettingToolStripMenu"
-        Me.UserSettingToolStripMenu.Size = New System.Drawing.Size(195, 22)
-        Me.UserSettingToolStripMenu.Text = "User.Setting Folder"
-        '
-        'AppLogToolStripMenu
-        '
-        Me.AppLogToolStripMenu.Name = "AppLogToolStripMenu"
-        Me.AppLogToolStripMenu.Size = New System.Drawing.Size(195, 22)
-        Me.AppLogToolStripMenu.Text = "App Log Folder"
-        '
         'CespitiToolStripMenuItem
         '
         Me.CespitiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ImportaToolStripMenuItem, Me.CancellaToolStripMenuItem})
@@ -1046,7 +1090,7 @@ Partial Class FLogin
         '
         'SettingsToolStripMenuItem
         '
-        Me.SettingsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripTracciatoVecchio, Me.ToolStripMenuItemDebugging, Me.ComandiToolStripMenuItem1})
+        Me.SettingsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripTracciatoVecchio, Me.ToolStripMenuItemDebugging})
         Me.SettingsToolStripMenuItem.Name = "SettingsToolStripMenuItem"
         Me.SettingsToolStripMenuItem.Size = New System.Drawing.Size(61, 20)
         Me.SettingsToolStripMenuItem.Text = "Settings"
@@ -1066,31 +1110,6 @@ Partial Class FLogin
         Me.ToolStripMenuItemDebugging.Name = "ToolStripMenuItemDebugging"
         Me.ToolStripMenuItemDebugging.Size = New System.Drawing.Size(151, 22)
         Me.ToolStripMenuItemDebugging.Text = "Debugging"
-        '
-        'ComandiToolStripMenuItem1
-        '
-        Me.ComandiToolStripMenuItem1.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.TestOrdiniToolStripMenuItem, Me.TestISTATToolStripMenuItem, Me.TestRiscontiToolStripMenuItem})
-        Me.ComandiToolStripMenuItem1.Name = "ComandiToolStripMenuItem1"
-        Me.ComandiToolStripMenuItem1.Size = New System.Drawing.Size(151, 22)
-        Me.ComandiToolStripMenuItem1.Text = "Comandi"
-        '
-        'TestOrdiniToolStripMenuItem
-        '
-        Me.TestOrdiniToolStripMenuItem.Name = "TestOrdiniToolStripMenuItem"
-        Me.TestOrdiniToolStripMenuItem.Size = New System.Drawing.Size(141, 22)
-        Me.TestOrdiniToolStripMenuItem.Text = "Test_Ordini"
-        '
-        'TestISTATToolStripMenuItem
-        '
-        Me.TestISTATToolStripMenuItem.Name = "TestISTATToolStripMenuItem"
-        Me.TestISTATToolStripMenuItem.Size = New System.Drawing.Size(141, 22)
-        Me.TestISTATToolStripMenuItem.Text = "Test_ISTAT"
-        '
-        'TestRiscontiToolStripMenuItem
-        '
-        Me.TestRiscontiToolStripMenuItem.Name = "TestRiscontiToolStripMenuItem"
-        Me.TestRiscontiToolStripMenuItem.Size = New System.Drawing.Size(141, 22)
-        Me.TestRiscontiToolStripMenuItem.Text = "Test_Risconti"
         '
         'ComandiToolStripMenuItem
         '
@@ -1238,12 +1257,21 @@ Partial Class FLogin
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
         '
-        'RiparaMaschereMagoToolStripMenuItem
+        'TestRiscontiRidottoToolStripMenuItem
         '
-        Me.RiparaMaschereMagoToolStripMenuItem.Image = Global.ALLSystemTools.My.Resources.Resources.mixx_48
-        Me.RiparaMaschereMagoToolStripMenuItem.Name = "RiparaMaschereMagoToolStripMenuItem"
-        Me.RiparaMaschereMagoToolStripMenuItem.Size = New System.Drawing.Size(195, 22)
-        Me.RiparaMaschereMagoToolStripMenuItem.Text = "Ripara maschere Mago"
+        Me.TestRiscontiRidottoToolStripMenuItem.Name = "TestRiscontiRidottoToolStripMenuItem"
+        Me.TestRiscontiRidottoToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.TestRiscontiRidottoToolStripMenuItem.Text = "Test_RiscontiRidotto"
+        '
+        'ChkRiscontiRidotto
+        '
+        Me.ChkRiscontiRidotto.AutoSize = True
+        Me.ChkRiscontiRidotto.Location = New System.Drawing.Point(173, 29)
+        Me.ChkRiscontiRidotto.Name = "ChkRiscontiRidotto"
+        Me.ChkRiscontiRidotto.Size = New System.Drawing.Size(96, 17)
+        Me.ChkRiscontiRidotto.TabIndex = 26
+        Me.ChkRiscontiRidotto.Text = "Risconti ridotto"
+        Me.ChkRiscontiRidotto.UseVisualStyleBackColor = True
         '
         'FLogin
         '
@@ -1403,11 +1431,14 @@ Partial Class FLogin
     Friend WithEvents BtnSelSPA As Button
     Friend WithEvents BtnSelUNO As Button
     Friend WithEvents Label8 As Label
+    Friend WithEvents CHKDBTemporaneo As CheckBox
+    Friend WithEvents BtnCancellaRigheOrdini As Button
+    Friend WithEvents RiparaMaschereMagoToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents CopiaUNOSuTESTToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ComandiToolStripMenuItem1 As ToolStripMenuItem
     Friend WithEvents TestOrdiniToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents TestISTATToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents TestRiscontiToolStripMenuItem As ToolStripMenuItem
-    Friend WithEvents CHKDBTemporaneo As CheckBox
-    Friend WithEvents BtnCancellaRigheOrdini As Button
-    Friend WithEvents RiparaMaschereMagoToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents TestRiscontiRidottoToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents ChkRiscontiRidotto As CheckBox
 End Class

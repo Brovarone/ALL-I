@@ -621,14 +621,14 @@ Public Module Contabilita
     ''' </summary>
     ''' <param name="r">Righe</param>
     ''' <returns></returns>
-    Public Function CreaPNotaRisconti(ByVal r As DataTable) As Boolean
+    Public Function CreaPNotaRisconti(ByVal r As DataTable, ByVal withAnalitica As Boolean, Optional ByVal xlsRidotto As Boolean = False) As Boolean
         'Movimenti Contabili PURI - MA_JournalEntries
         'Righe - MA_JournalEntriesGLDetail
         'I vari conti che leggo vanno matchati con quelli nuovi
 
         Dim okBulk As Boolean
         Dim someTrouble As Boolean
-        Dim DataRiga As Date = MagoFormatta("20210102", GetType(DateTime)).DataTempo
+        Dim DataRiga As Date = MagoFormatta("20220101", GetType(DateTime)).DataTempo
         FLogin.prgCopy.Value = 1
 
         If r.Rows.Count > 0 Then
@@ -652,7 +652,7 @@ Public Module Contabilita
                 Dim ireg As Integer = 0
                 Dim iNrRegistrazioni As Integer = 0
                 Dim iLine As Integer ' Contatore delle righe
-
+#Region "Schema E Tabelle"
                 Using dtPN As DataTable = CaricaSchema("MA_JournalEntries", True)
                     Using dtPND As DataTable = CaricaSchema("MA_JournalEntriesGLDetail", True)
                         Using dtMovAna As DataTable = CaricaSchema("MA_CostAccEntries", True)
@@ -682,11 +682,12 @@ Public Module Contabilita
                                                 Dim dtCntrp As New DataTable("Contropartita")
                                                 adp.Fill(dtCntrp)
                                                 Dim dvCntrp As New DataView(dtCntrp, "", "ACGCode", DataViewRowState.CurrentRows)
+                                                If xlsRidotto Then dvCntrp.Sort = "Account"
                                                 Using adpCdC As New SqlDataAdapter("Select * FROM MA_CostCenters", Connection)
                                                     Dim dtCdc As New DataTable("Centri")
                                                     adpCdC.Fill(dtCdc)
                                                     Dim dvCdC As New DataView(dtCdc, "", "CostCenter", DataViewRowState.CurrentRows)
-
+#End Region
                                                     Dim isQDare As Boolean
                                                     Dim drPn As DataRow = dtPN.NewRow
                                                     Dim drPnD As DataRow = dtPND.NewRow
@@ -725,22 +726,36 @@ Public Module Contabilita
                                                             drPnD("PostingDate") = DataRiga
                                                             drPnD("AccrualDate") = DataRiga
                                                             drPnD("AccRsn") = CauRiga
-                                                            Dim nota As String = .Item("L").ToString & " " & .Item("B").ToString & " " & MagoFormatta(.Item("A"), GetType(DateTime)).sDataSlash
+                                                            Dim nota As String = If(xlsRidotto, .Item("D").ToString, .Item("L").ToString & " " & .Item("B").ToString & " " & MagoFormatta(.Item("A"), GetType(DateTime)).sDataSlash)
                                                             drPnD("Notes") = nota
                                                             'drPnD ("CodeType")= 5177344 ' Normale / Apertura / Assestamento
                                                             Dim isDare As Boolean = True
-                                                            Dim c As String = .Item("H")
                                                             Dim sConto As String = ""
-                                                            If TryTrovaContropartita(c, dvCntrp, sConto) Then
-                                                                drPnD("Account") = sConto
+                                                            If xlsRidotto Then
+                                                                sConto = .Item("A").ToString
+                                                                Dim iCP As Integer = dvCntrp.Find(sConto)
+                                                                If iCP = -1 Then
+                                                                    Debug.Print("Conto senza corrispondenza: " & sConto)
+                                                                    My.Application.Log.WriteEntry("Conto senza corrispondenza:" & sConto)
+                                                                    MessageBox.Show("Impossibile continuare, conto senza corrispondenza:" & sConto)
+                                                                    End
+                                                                Else
+                                                                    drPnD("Account") = sConto
+                                                                End If
                                                             Else
-                                                                Debug.Print("Conto senza corrispondenza: " & c)
-                                                                My.Application.Log.WriteEntry("Conto senza corrispondenza:" & c)
-                                                                MessageBox.Show("Impossibile continuare, conto senza corrispondenza:" & c)
-                                                                End
+                                                                Dim c As String = .Item("H")
+                                                                If TryTrovaContropartita(c, dvCntrp, sConto) Then
+                                                                    drPnD("Account") = sConto
+                                                                Else
+                                                                    Debug.Print("Conto senza corrispondenza: " & c)
+                                                                    My.Application.Log.WriteEntry("Conto senza corrispondenza:" & c)
+                                                                    MessageBox.Show("Impossibile continuare, conto senza corrispondenza:" & c)
+                                                                    End
+                                                                End If
                                                             End If
+
                                                             drPnD("DebitCreditSign") = If(isDare, 4980736, 4980737)
-                                                            Dim imp As Double = .Item("G")  ' Math.Round(CDbl(.Item("Imponibile")), 2)
+                                                            Dim imp As Double = If(xlsRidotto, .Item("C"), .Item("G"))  ' Math.Round(CDbl(.Item("Imponibile")), 2)
                                                             drPnD("Amount") = imp
                                                             drPnD("FiscalAmount") = imp
                                                             quadratura += If(isDare, imp, -imp)
@@ -757,116 +772,126 @@ Public Module Contabilita
                                                             AggiornaSaldoContabile(drPnD("Account"), Year(DataRiga), Month(DataRiga), isDare, drPnD("Amount"), dvPNSaldi)
                                                             dtPND.Rows.Add(drPnD)
 
-                                                            'Scrivo analitica
-                                                            Try
-                                                                Dim iRegAna As Integer = 0
-                                                                Dim drAna As DataRow = dtMovAna.NewRow
-                                                                ' Dim drAnaD As DataRow = dtMovAnaD.NewRow
-                                                                Dim drCR As DataRow = dtCR.NewRow
+                                                            If withAnalitica Then
+                                                                'Scrivo analitica
+                                                                Try
+                                                                    Dim iRegAna As Integer = 0
+                                                                    Dim drAna As DataRow = dtMovAna.NewRow
+                                                                    ' Dim drAnaD As DataRow = dtMovAnaD.NewRow
+                                                                    Dim drCR As DataRow = dtCR.NewRow
 
-                                                                Dim conF As Integer = dvCntrp.Find(.Item("H"))
-                                                                Dim isAnalitico As Boolean = dvCntrp(conF).Item("PostableInCostAcc") = "1"
-                                                                If isAnalitico Then
-                                                                    ' Uso il datarow precedente
-                                                                    With drPnD
-                                                                        'Creo la testa della registrazione
-                                                                        idMovAna += 1
-                                                                        iRefNoAna += 1
-                                                                        iRegAna += 1
-                                                                        drAna = dtMovAna.NewRow
-                                                                        drAna("Account") = .Item("Account")
-                                                                        drAna("DebitCreditSign") = If(.Item("DebitCreditSign") = 4980736, DareAvereIgnora.Dare, DareAvereIgnora.Avere)
-                                                                        drAna("CodeType") = 7995393 ' Consuntivo
-                                                                        drAna("RefNo") = Right(Year(DataRiga), 2) & "-" & iRefNoAna.ToString("00000")
-                                                                        drAna("PostingDate") = .Item("PostingDate")
-                                                                        drAna("AccrualDate") = .Item("AccrualDate")
-                                                                        drAna("DocumentDate") = .Item("PostingDate")
-                                                                        drAna("DocNo") = drPn.Item("DocNo")
-                                                                        drAna("RefDocNo") = drPn.Item("RefNo")
-                                                                        drAna("TotalAmount") = .Item("Amount")
-                                                                        drAna("Notes") = .Item("Notes")
-                                                                        drAna("EntryId") = idMovAna
-                                                                        drAna("JournalEntryId") = .Item("JournalEntryId")
-                                                                        drAna("CRRefType") = CrossReference.PnotaPuro ' Riferimento incrociato: Contabili puri
-                                                                        drAna("CRRefID") = .Item("JournalEntryId")
-                                                                        drAna("CRRefSubID") = .Item("Line")
-                                                                        drAna("TBCreatedID") = My.Settings.mLOGINID 'ID utente
-                                                                        drAna("TBModifiedID") = My.Settings.mLOGINID 'ID utente
-
-
-                                                                        'Creo il riferimento Cross Reference
-                                                                        'Origine = P.Nota Puri // Derivato =  Mov. Analitico
-                                                                        drCR = dtCR.NewRow
-                                                                        drCR("OriginDocType") = CrossReference.PnotaPuro
-                                                                        drCR("OriginDocID") = .Item("JournalEntryId")
-                                                                        drCR("OriginDocSubID") = 0
-                                                                        drCR("OriginDocLine") = 0
-                                                                        drCR("DerivedDocType") = CrossReference.MovimentoAnalitico
-                                                                        drCR("DerivedDocID") = idMovAna
-                                                                        drCR("DerivedDocSubID") = 0
-                                                                        drCR("DerivedDocLine") = 0
-                                                                        drCR("TBCreatedID") = My.Settings.mLOGINID 'ID utente
-                                                                        drCR("TBModifiedID") = My.Settings.mLOGINID 'ID utente
-                                                                        dtCR.Rows.Add(drCR)
-
-                                                                        ''''''''''''''''''''''
-                                                                        'Righe MA_CostAccEntriesDetail
-                                                                        ''''''''''''''''''''''
-                                                                        'Creo n righe
-                                                                        Dim importo As Double = .Item("Amount")
-                                                                        Dim tempAmount As Double = 0
-                                                                        Dim iLineMovAna As Integer = 0
-                                                                        Dim iCanoni = If(r.Rows(irow).Item("K") = 0, 1, Math.Abs(r.Rows(irow).Item("K")))
-                                                                        Dim importoMensile As Double = importo / iCanoni
-                                                                        Dim dataDecorrenza As Date = DataRiga
-                                                                        Dim isDareAna = drAna("DebitCreditSign") = 8192000
-                                                                        Dim CdC As String = r.Rows(irow).Item("L")
-
-                                                                        Dim iCdcFound As Integer = dvCdC.Find(CdC)
-                                                                        If iCdcFound = -1 Then
-                                                                            Debug.Print("Centro di Costo senza corrispondenza: " & CdC)
-                                                                            My.Application.Log.WriteEntry("Centro di Costo senza corrispondenza:" & CdC)
-                                                                            MessageBox.Show("Impossibile continuare, centro di costo non presente:" & CdC)
-                                                                            End
-                                                                        End If
+                                                                    Dim conF As Integer = dvCntrp.Find(.Item("H"))
+                                                                    Dim isAnalitico As Boolean = dvCntrp(conF).Item("PostableInCostAcc") = "1"
+                                                                    If isAnalitico Then
+                                                                        ' Uso il datarow precedente
+                                                                        With drPnD
+                                                                            'Creo la testa della registrazione
+                                                                            idMovAna += 1
+                                                                            iRefNoAna += 1
+                                                                            iRegAna += 1
+                                                                            drAna = dtMovAna.NewRow
+                                                                            drAna("Account") = .Item("Account")
+                                                                            drAna("DebitCreditSign") = If(.Item("DebitCreditSign") = 4980736, DareAvereIgnora.Dare, DareAvereIgnora.Avere)
+                                                                            drAna("CodeType") = 7995393 ' Consuntivo
+                                                                            drAna("RefNo") = Right(Year(DataRiga), 2) & "-" & iRefNoAna.ToString("00000")
+                                                                            drAna("PostingDate") = .Item("PostingDate")
+                                                                            drAna("AccrualDate") = .Item("AccrualDate")
+                                                                            drAna("DocumentDate") = .Item("PostingDate")
+                                                                            drAna("DocNo") = drPn.Item("DocNo")
+                                                                            drAna("RefDocNo") = drPn.Item("RefNo")
+                                                                            drAna("TotalAmount") = .Item("Amount")
+                                                                            drAna("Notes") = .Item("Notes")
+                                                                            drAna("EntryId") = idMovAna
+                                                                            drAna("JournalEntryId") = .Item("JournalEntryId")
+                                                                            drAna("CRRefType") = CrossReference.PnotaPuro ' Riferimento incrociato: Contabili puri
+                                                                            drAna("CRRefID") = .Item("JournalEntryId")
+                                                                            drAna("CRRefSubID") = .Item("Line")
+                                                                            drAna("TBCreatedID") = My.Settings.mLOGINID 'ID utente
+                                                                            drAna("TBModifiedID") = My.Settings.mLOGINID 'ID utente
 
 
-                                                                        For n = 0 To iCanoni - 1
+                                                                            'Creo il riferimento Cross Reference
+                                                                            'Origine = P.Nota Puri // Derivato =  Mov. Analitico
+                                                                            drCR = dtCR.NewRow
+                                                                            drCR("OriginDocType") = CrossReference.PnotaPuro
+                                                                            drCR("OriginDocID") = .Item("JournalEntryId")
+                                                                            drCR("OriginDocSubID") = 0
+                                                                            drCR("OriginDocLine") = 0
+                                                                            drCR("DerivedDocType") = CrossReference.MovimentoAnalitico
+                                                                            drCR("DerivedDocID") = idMovAna
+                                                                            drCR("DerivedDocSubID") = 0
+                                                                            drCR("DerivedDocLine") = 0
+                                                                            drCR("TBCreatedID") = My.Settings.mLOGINID 'ID utente
+                                                                            drCR("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+                                                                            dtCR.Rows.Add(drCR)
 
-                                                                            Dim dataMensile As DateTime = dataDecorrenza.AddMonths(n)
-                                                                            iLineMovAna += 1
-                                                                            Dim drAnaD As DataRow = dtMovAnaD.NewRow
-                                                                            drAnaD("EntryId") = idMovAna
-                                                                            drAnaD("Line") = iLineMovAna
-                                                                            drAnaD("Account") = .Item("Account")
-                                                                            drAnaD("PostingDate") = .Item("PostingDate")
-                                                                            drAnaD("AccrualDate") = MagoFormatta(dataMensile.ToString, GetType(String)).DataTempo
-                                                                            drAnaD("CodeType") = 7995393 ' Consuntivo
-                                                                            drAnaD("CostCenter") = CdC
-                                                                            drAnaD("HasCostCenter") = 1
-                                                                            drAnaD("Perc") = 100
-                                                                            drAnaD("DebitCreditSign") = .Item("DebitCreditSign")
-                                                                            'Se e' l'ultima riga saldo
-                                                                            drAnaD("Amount") = Math.Round(If(n = iCanoni - 1, importo - tempAmount, importoMensile), 2)
-                                                                            tempAmount += Math.Round(importoMensile, 2)
-                                                                            drAnaD("Notes") = ""
-                                                                            drAnaD("TBCreatedID") = My.Settings.mLOGINID 'ID utente
-                                                                            drAnaD("TBModifiedID") = My.Settings.mLOGINID 'ID utente
-                                                                            dtMovAnaD.Rows.Add(drAnaD)
-                                                                            AggiornaSaldoAnalitico(drAnaD("Account"), CdC, Year(DataRiga), Month(DataRiga), isDareAna, drAnaD("Amount"), dvMovAnaSaldi)
-                                                                        Next
-                                                                    End With
-                                                                    RicalcolaPerc(dtMovAnaD, idMovAna, drAna("TotalAmount"))
-                                                                    dtMovAna.Rows.Add(drAna)
-                                                                End If
+                                                                            ''''''''''''''''''''''
+                                                                            'Righe MA_CostAccEntriesDetail
+                                                                            ''''''''''''''''''''''
+                                                                            'Creo n righe
+                                                                            Dim importo As Double = .Item("Amount")
+                                                                            Dim tempAmount As Double = 0
+                                                                            Dim iLineMovAna As Integer = 0
+                                                                            Dim iCanoni = If(r.Rows(irow).Item("K") = 0, 1, Math.Abs(r.Rows(irow).Item("K")))
+                                                                            Dim importoMensile As Double = importo / iCanoni
+                                                                            Dim dataDecorrenza As Date = DataRiga
+                                                                            Dim isDareAna = drAna("DebitCreditSign") = 8192000
+                                                                            Dim CdC As String = r.Rows(irow).Item("L")
 
-                                                            Catch ex As Exception
-                                                                Debug.Print(ex.Message)
-                                                                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
-                                                                mb.ShowDialog()
-                                                            End Try
+                                                                            Dim iCdcFound As Integer = dvCdC.Find(CdC)
+                                                                            If iCdcFound = -1 Then
+                                                                                Debug.Print("Centro di Costo senza corrispondenza: " & CdC)
+                                                                                My.Application.Log.WriteEntry("Centro di Costo senza corrispondenza:" & CdC)
+                                                                                MessageBox.Show("Impossibile continuare, centro di costo non presente:" & CdC)
+                                                                                End
+                                                                            End If
 
-                                                            If .Item("M") IsNot DBNull.Value AndAlso Double.TryParse(.Item("M"), quadraturaDaFile) Then 'OrElse bChiudiRegistrazione Then
+
+                                                                            For n = 0 To iCanoni - 1
+
+                                                                                Dim dataMensile As DateTime = dataDecorrenza.AddMonths(n)
+                                                                                iLineMovAna += 1
+                                                                                Dim drAnaD As DataRow = dtMovAnaD.NewRow
+                                                                                drAnaD("EntryId") = idMovAna
+                                                                                drAnaD("Line") = iLineMovAna
+                                                                                drAnaD("Account") = .Item("Account")
+                                                                                drAnaD("PostingDate") = .Item("PostingDate")
+                                                                                drAnaD("AccrualDate") = MagoFormatta(dataMensile.ToString, GetType(String)).DataTempo
+                                                                                drAnaD("CodeType") = 7995393 ' Consuntivo
+                                                                                drAnaD("CostCenter") = CdC
+                                                                                drAnaD("HasCostCenter") = 1
+                                                                                drAnaD("Perc") = 100
+                                                                                drAnaD("DebitCreditSign") = .Item("DebitCreditSign")
+                                                                                'Se e' l'ultima riga saldo
+                                                                                drAnaD("Amount") = Math.Round(If(n = iCanoni - 1, importo - tempAmount, importoMensile), 2)
+                                                                                tempAmount += Math.Round(importoMensile, 2)
+                                                                                drAnaD("Notes") = ""
+                                                                                drAnaD("TBCreatedID") = My.Settings.mLOGINID 'ID utente
+                                                                                drAnaD("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+                                                                                dtMovAnaD.Rows.Add(drAnaD)
+                                                                                AggiornaSaldoAnalitico(drAnaD("Account"), CdC, Year(DataRiga), Month(DataRiga), isDareAna, drAnaD("Amount"), dvMovAnaSaldi)
+                                                                            Next
+                                                                        End With
+                                                                        RicalcolaPerc(dtMovAnaD, idMovAna, drAna("TotalAmount"))
+                                                                        dtMovAna.Rows.Add(drAna)
+                                                                    End If
+
+                                                                Catch ex As Exception
+                                                                    Debug.Print(ex.Message)
+                                                                    Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                                                                    mb.ShowDialog()
+                                                                End Try
+                                                            End If
+                                                            'Chiudo le regitrazione
+                                                            Dim bChiudi As Boolean = False
+                                                            If xlsRidotto Then
+                                                                'Faccio scritture da 100 righe
+                                                                If iLine = 99 Then bChiudi = True
+                                                            Else
+                                                                If .Item("M") IsNot DBNull.Value AndAlso Double.TryParse(.Item("M"), quadraturaDaFile) Then bChiudi = True
+                                                            End If
+
+                                                            If bChiudi Then
                                                                 If Not isNewReg Then
                                                                     'Aggiorno la testa con quello che ho calcolato
                                                                     drPn("TotalAmount") = Math.Round(If(totDare > totAvere, totDare, totAvere), 2)
@@ -906,7 +931,6 @@ Public Module Contabilita
                                                                 quadraturaDaFile = 0
                                                                 totDare = 0
                                                                 totAvere = 0
-                                                                'FIX forse va messa a zero 
                                                                 iLine = 0
 
                                                             End If

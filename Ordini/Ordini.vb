@@ -7,6 +7,7 @@ Imports System.Collections.Generic
 
 Imports EFMago.Models
 Imports Microsoft.EntityFrameworkCore
+Imports Microsoft.EntityFrameworkCore.EF
 Imports EFCore.BulkExtensions
 'TODO: valutare implementazioni Fattura elettronica 
 'Todo: Dichiarazione intento lettera W ( magari impostare un campo in anagrafica cliente/ordine) e aggiungerlo agli step di pre-invio( tipo quello dei dati canoni ) ma ne verrano fuori altri
@@ -22,7 +23,9 @@ Module Ordini
         'Variabili legate alla maschera di selezione 
         Dim bFiltroDateOrdini As Boolean
         Dim fromOrdDate As Date
+        Dim sFromOrdDate As String = fromOrdDate.ToShortDateString
         Dim toOrdDate As Date
+        Dim sToOrdDate As String = toOrdDate.ToShortDateString
         Dim bSingoloOrdine As Boolean
         Dim nrOrd As String = String.Empty
         Dim bSingoloCliente As Boolean
@@ -30,7 +33,9 @@ Module Ordini
         Dim bSingolaFiliale As Boolean
         Dim filiale As String = String.Empty
         Dim dataFattDa As Date
+        Dim sDataFattDa As String = dataFattDa.ToShortDateString
         Dim dataFattA As Date
+        Dim sDataFattA As String = dataFattA.ToShortDateString
         Dim p_Tutti As Boolean
         Dim p_Annuali As Boolean
         Dim p_Semestrali As Boolean
@@ -121,17 +126,19 @@ Module Ordini
                                 .ThenInclude(Of Allattivita)(Function(at) at.Allattivita)) ' _
             'AGGIUNGO  FILTRI
             'Vengono esclusi a priori gli ordini con data cessazione > di Data Competenza
-            q = q.Where(Function(facc) facc.ALLOrdCliAcc.DataCessazione = sDataNulla OrElse facc.ALLOrdCliAcc.DataCessazione > dataFattA)
+            'Il filtro where che prende quelli senza data cessazione o con data successiva ( preimpostata da loro)
+            ' q = q.Where(Function(facc) facc.ALLOrdCliAcc.DataCessazione = sDataNulla OrElse facc.ALLOrdCliAcc.DataCessazione.Value.Date >= dataFattA)
             If bFiltroDateOrdini Then
-                q = q.Where(Function(oDate) oDate.OrderDate >= fromOrdDate And oDate.OrderDate <= toOrdDate)
+                q = q.Where(Function(oDate) oDate.OrderDate.Value.Date >= fromOrdDate And oDate.OrderDate.Value.Date <= toOrdDate)
             Else
+                'Sostituisco la logica di "uguale" aggiungendo un giorno, in questo modo prendo anche le cose create nello stesso giorno
                 q = q.Where(Function(oDate) oDate.OrderDate <= toOrdDate)
             End If
             If bSingoloCliente Then q = q.Where(Function(oCli) oCli.Customer.Equals(cliente))
             If bSingoloOrdine Then q = q.Where(Function(oNrOrd) oNrOrd.InternalOrdNo.Equals(nrOrd))
             If bSingolaFiliale Then q = q.Where(Function(oFiliale) oFiliale.CostCenter.Equals(filiale))
 
-            'ESEGUO LA QUERY
+            'ESEGUO LA QUERY (ALDO 30/06 ritorna 1 invece che 2)
             Dim allOrders = q.ToList
 
             'Creo le entities che usero' poi con BulkInsert
@@ -271,7 +278,7 @@ Module Ordini
                                 'Mesi sospesi
                                 Dim dCanoniSospesi As Double
                                 If IsBetweenSospensione(att.DataInizio, att.DataFine, cOrdRow, dCanoniSospesi) Then
-                                    cOrdRow.Sospeso = True
+                                    cOrdRow.SospesoDaAttivita = True
                                     If dCanoniSospesi = cOrdRow.QtaIniziale Then cOrdRow.IsOk = False
                                     If dCanoniSospesi > 0 Then cOrdRow.QtaCorrente -= dCanoniSospesi
                                     msgLog = "  - [Sospensione]: Mesi " & dCanoniSospesi.ToString & " dal " & att.DataInizio.Value.ToShortDateString & " al " & att.DataFine.Value.ToShortDateString
@@ -309,12 +316,12 @@ Module Ordini
                                 If IsBetweenAnnullamento(att.DataInizio, cOrdRow, dCanoniResidui) Then
                                     'In dCanoniresidui ho il delta dei mesi
                                     If dCanoniResidui > 0 Then
-                                        cOrdRow.Annullato = True
+                                        cOrdRow.AnnullatoDaAttivita = True
                                         cOrdRow.QtaCorrente = (dCanoniResidui - cOrdRow.QtaIniziale + cOrdRow.QtaCorrente)
                                         cOrdRow.QtaAnnullata = cOrdRow.QtaIniziale - dCanoniResidui
                                         debugging.AppendLine("  - Annullamento Parziale")
                                     Else
-                                        cOrdRow.Annullato = True
+                                        cOrdRow.AnnullatoDaAttivita = True
                                         cOrdRow.QtaCorrente = 0
                                         cOrdRow.QtaAnnullata = cOrdRow.QtaIniziale
                                         cOrdRow.IsOk = False
@@ -322,7 +329,7 @@ Module Ordini
                                     End If
                                 ElseIf att.DataInizio <> sDataNulla AndAlso att.DataInizio < cOrdRow.CanoniDataIn Then
                                     'Completamente annullata
-                                    cOrdRow.Annullato = True
+                                    cOrdRow.AnnullatoDaAttivita = True
                                     cOrdRow.QtaAnnullata = cOrdRow.QtaIniziale
                                     cOrdRow.IsOk = False
                                     Debug.Print("  - Annullamento Totale")
@@ -355,9 +362,11 @@ Module Ordini
                                 End If
                             End If
                         Next
-                        'STEP 4 : Controllo Scadenza Fissa
+                        'STEP 4 : Controllo Scadenza Fissa ( se CanoniDataFin >= data Scadenza Fissa su Ordine)
                         If cOrd.DataScadenzaFissa <> sDataNulla AndAlso cOrdRow.CanoniDataFin >= cOrd.DataScadenzaFissa Then
                             cOrd.IsScadenzaFissa = True
+                            'Ne uso 2 diverse (una per la testa e una per le righe) ma riportano sempre la stessa data per il calcolo
+                            cOrdRow.DataScadenzaFissa = cOrd.DataScadenzaFissa
                             msgLog = "Ordine: " & cOrd.OrdNo & " Cliente: " & cOrd.Cliente & " con scadenza fissa. Controllare canoni!"
                             avvisi.AppendLine(msgLog)
                             debugging.AppendLine(msgLog)
@@ -374,7 +383,7 @@ Module Ordini
                                     debugging.AppendLine("  - Scadenza Fissa -> Totale")
                                 End If
                             End If
-
+                            'Scrivo Data e Motivo Cessazione
                             If o.ALLOrdCliAcc.DataCessazione = sDataNulla Then
                                 o.ALLOrdCliAcc.DataCessazione = cOrd.DataScadenzaFissa
                                 o.ALLOrdCliAcc.MotivoCessazione = "[AUTO] Scadenza Fissa"
@@ -386,13 +395,12 @@ Module Ordini
                                 errori.AppendLine("Ordine: " & cOrd.OrdNo & " Cliente: " & cOrd.Cliente & " con data cessazione già valorizzata. Controllare scadenza fissa!")
                             End If
                         End If
-                        'STEP 5 : Controllo Data Cessazione
+                        'STEP 5 : Controllo Data Cessazione ( se CanoniDataFin >= data Cessazione su Ordine)
                         If cOrd.DataCessazione <> sDataNulla AndAlso cOrdRow.CanoniDataFin >= cOrd.DataCessazione Then
-                            If cOrdRow.Annullato Then
+                            If cOrdRow.AnnullatoDaAttivita Then
                                 'Controllo che le date coincidano o che quella generale sia successiva.
                                 If cOrd.DataCessazione < cOrdRow.DataCessazione Then
                                     isCessazione = True
-                                    msgLog = "Ordine: " & cOrd.OrdNo & " Cliente: " & cOrd.Cliente & " cessato il " & cOrd.DataCessazione.ToShortDateString & ". Controllare esattezza canoni!"
                                     errori.AppendLine("DISCREPANZA Ordine: " & cOrd.OrdNo & " Cliente: " & cOrd.Cliente & " cessato il " & cOrd.DataCessazione.ToShortDateString & ". Controllare esattezza canoni!")
                                     'TODO CALCOLARE I MESI  
                                 End If
@@ -400,11 +408,7 @@ Module Ordini
                                 'Se la riga non era annullata allora valorizzo isCessazione
                                 isCessazione = True
                             End If
-                            msgLog = "Ordine: " & cOrd.OrdNo & " Cliente: " & cOrd.Cliente & " cessato il " & cOrd.DataCessazione.ToShortDateString & ". Controllare esattezza canoni!"
-                            avvisi.AppendLine(msgLog)
-                            debugging.AppendLine(msgLog)
                             'Simile a Mesi annullati
-                            'TODO ( vedere come interagisce con sospesi , annullati o altro)
                             Dim dCanoniFinoA As Double
                             If IsBetweenAnnullamento(cOrd.DataCessazione, cOrdRow, dCanoniFinoA) Then
                                 'In dCanoniFinoA ho i mesi da fatturare
@@ -416,6 +420,15 @@ Module Ordini
                                     cOrdRow.IsOk = False
                                     debugging.AppendLine("  - Cessato -> Totale")
                                 End If
+                                msgLog = "Ordine: " & cOrd.OrdNo & " Cliente: " & cOrd.Cliente & " cessato il " & cOrd.DataCessazione.ToShortDateString & ". Controllare esattezza canoni!"
+                                avvisi.AppendLine(msgLog)
+                                debugging.AppendLine(msgLog)
+
+                            Else
+                                'MI INSERISCO PER ESLCUDERE I CONTRATTI ANNUALLATI/CESSATI
+                                cOrdRow.PrecendementeCessato = True
+                                Debug.Print(" - [ESCLUSA] Precentemente Cessato")
+                                debugging.AppendLine(" - [ESCLUSA] Precentemente Cessato")
                             End If
 
                             'If o.ALLOrdCliAcc.DataCessazione = sDataNulla Then
@@ -430,7 +443,7 @@ Module Ordini
                             'End If
                         End If
                         'Se ok allora Creo nuova riga di dettaglio
-                        If ((cOrdRow.IsOk AndAlso Not cOrdRow.CanoneDaEscludere) OrElse cOrdRow.DaRifatturare) AndAlso cOrdRow.QtaCorrente > 0 Then
+                        If ((cOrdRow.IsOk AndAlso Not cOrdRow.CanoneDaEscludere) OrElse cOrdRow.DaRifatturare) AndAlso cOrdRow.QtaCorrente > 0 AndAlso Not cOrdRow.PrecendementeCessato Then
 #Region "Controllo su prima riga bianca"
                             If o.MaSaleOrdDetails.Any AndAlso o.MaSaleOrdDetails.Count = 1 Then
 
@@ -584,10 +597,11 @@ Module Ordini
                                     }
                                 Debug.Print("### R Ord:" & r.Position.ToString)
                                 debugging.AppendLine(" *R:" & r.Position.ToString)
-                                Dim perDataFine As String = If(cOrd.IsScadenzaFissa, cOrd.DataScadenzaFissa.ToShortDateString, cOrdRow.CanoniDataFin.ToShortDateString)
-                                perDataFine = If(cOrdRow.Annullato, cOrdRow.DataCessazione.ToShortDateString, perDataFine)
-                                perDataFine = If(isCessazione, cOrd.DataCessazione.ToShortDateString, perDataFine)
-                                Dim periodo As String = "Periodo dal " & cOrdRow.CanoniDataIn.ToShortDateString & " al " & perDataFine
+                                cOrdRow.PeriodoDataFin = If(cOrd.IsScadenzaFissa, cOrd.DataScadenzaFissa, cOrdRow.CanoniDataFin)
+                                cOrdRow.PeriodoDataFin = If(cOrdRow.AnnullatoDaAttivita, cOrdRow.DataCessazione, cOrdRow.PeriodoDataFin)
+                                cOrdRow.PeriodoDataFin = If(isCessazione, cOrd.DataCessazione, cOrdRow.PeriodoDataFin)
+                                Dim periodoDataFine As String = cOrdRow.PeriodoDataFin.ToShortDateString
+                                Dim periodo As String = "Periodo dal " & cOrdRow.PeriodoDataIn.ToShortDateString & " al " & periodoDataFine
                                 If cOrdRow.UnaTantum Then
                                     r.Description = cOrdRow.Description
                                     'Segno come Fatturata
@@ -608,8 +622,8 @@ Module Ordini
                                 'TODO: chiedere se data fine competenza in caso di Scadenza fissa e' fine periodo o la data scadenza fissa
                                 'TODO: Idem per quantità
                                 r.AllNrCanoni = cOrdRow.QtaCorrente 'cOrdRow.NrCanoni '-> visto che potrebbe variare uso cOrdRow.QtaCorrente
-                                r.AllCanoniDataI = cOrdRow.CanoniDataIn
-                                r.AllCanoniDataF = cOrdRow.CanoniDataFin
+                                r.AllCanoniDataI = cOrdRow.PeriodoDataIn
+                                r.AllCanoniDataF = cOrdRow.PeriodoDataFin
                                 r.Invoiced = "0"
                                 r.Notes = Trim(Left(c.Nota.ToString, 32))
                                 r.Job = cOrd.Commessa
@@ -690,7 +704,7 @@ Module Ordini
 #End Region
                         End If
 #Region "Aggiorno date prossima Fatturazione"
-                        If Not cOrdRow.CanoneDaEscludere AndAlso (cOrdRow.IsOk OrElse cOrdRow.DaRifatturare OrElse cOrdRow.Sospeso) Then
+                        If Not cOrdRow.CanoneDaEscludere AndAlso (cOrdRow.IsOk OrElse cOrdRow.DaRifatturare OrElse cOrdRow.SospesoDaAttivita) AndAlso Not cOrdRow.PrecendementeCessato Then
                             If cOrdRow.DataProssimaFattura < dataFattA Then avvisi.AppendLine("Ordine " & cOrd.OrdNo & " Servizio " & cOrdRow.Item & " con data prossima fatturazione antecedente alla data di fine estrazione !")
                             c.DataProssimaFatt = cOrdRow.DataProssimaFattura
                             c.DataFineElaborazione = Now
@@ -1090,7 +1104,7 @@ Module Ordini
                                 End If
                                 'Mesi sospesi
                                 If att.DataInizio.Value.Year = annoAdeguamento OrElse att.DataFine.Value.Year = annoAdeguamento Then
-                                    cOrdRow.Sospeso = True
+                                    cOrdRow.SospesoDaAttivita = True
                                     msgLog = "## [Sospensione] ## : dal " & att.DataInizio.Value.ToShortDateString & " al " & att.DataFine.Value.ToShortDateString
                                     Debug.Print(msgLog)
                                     debugging.AppendLine(msgLog)
@@ -1104,7 +1118,7 @@ Module Ordini
                             If CBool(att.Allattivita.Annullamento) Then
                                 '--- Controllo Esclusioni di Annullamento---
 
-                                cOrdRow.Annullato = True
+                                cOrdRow.AnnullatoDaAttivita = True
                                 'Controllo la data di Inizio
                                 Dim dCanoniResidui As Double
                                 If IsBetweenAnnullamento(att.DataInizio, cOrdRow, dCanoniResidui) Then
@@ -1377,13 +1391,25 @@ Module Ordini
         Public Property DataProssimaRifatturazione As Date
         Public Property CanoneDaEscludere As Boolean
         Public Property QtaSospesa As Double
-        Public Property Sospeso As Boolean
+        Public Property SospesoDaAttivita As Boolean
         Public Property QtaAnnullata As Double
-        Public Property Annullato As Boolean
+        ''' <summary>
+        ''' Vale per righe attività di annullamento
+        ''' </summary>
+        ''' <returns></returns>
+        Public Property AnnullatoDaAttivita As Boolean
         Public Property CanoniDataIn As Date
         Public Property CanoniDataFin As Date
+        Public Property PeriodoDataIn As Date
+        Public Property PeriodoDataFin As Date
         Public Property UnaTantum As Boolean
+        ''' <summary>
+        ''' Vale per righe attività di annullamento
+        ''' </summary>
+        ''' <returns></returns>
+        Public Property PrecendementeCessato As Boolean
         Public Property DataCessazione As Date
+        Public Property DataScadenzaFissa As Date
         Public Property CodIva As String
         Public Property PercIva As Double
         Public Property Contropartita As String
@@ -1408,13 +1434,17 @@ Module Ordini
             DataProssimaRifatturazione = d
             CanoneDaEscludere = False
             QtaSospesa = 0
-            Sospeso = False
+            SospesoDaAttivita = False
             QtaAnnullata = 0
-            Annullato = False
+            AnnullatoDaAttivita = False
             CanoniDataIn = d
             CanoniDataFin = d
+            PeriodoDataIn = d
+            PeriodoDataFin = d
             UnaTantum = False
+            PrecendementeCessato = False
             DataCessazione = New DateTime(1799, 12, 31)
+            DataScadenzaFissa = New DateTime(1799, 12, 31)
             Contropartita = String.Empty
             CodIva = String.Empty
             PercIva = 0
@@ -1457,6 +1487,9 @@ Module Ordini
             '23/03/2022: Creo una nuova data per i POSTICIPATI che e' sempre fine mese e sempre il primo per gli ANTICIPTI
             If c.AlltipoRigaServizio.Cadenza.Value = Cadenza.Anticipato Then
                 Dim nextDateAnt = New Date(nextDate.Year, nextDate.Month, 1)
+                'Sempre il primo del mese
+                r.DataPrevistaConsegna = nextDateAnt
+                r.DataConfermaConsegna = nextDateAnt
                 r.CanoniDataIn = nextDateAnt
                 'Eseguo l'aggiunta dei mesi ed essendo il primo basta togliere un giorno
                 r.CanoniDataFin = nextDateAnt.AddMonths(iNrCanoni).AddDays(-1)
@@ -1464,6 +1497,8 @@ Module Ordini
             Else
                 'Imposto l'ultimo giorno del mese
                 Dim nextDatePos = New Date(nextDate.Year, nextDate.Month, DateTime.DaysInMonth(nextDate.Year, nextDate.Month))
+                r.DataPrevistaConsegna = nextDatePos
+                r.DataConfermaConsegna = nextDatePos
                 'La data e' posticipata quindi devo sottrarre dei mesi
                 'prima aggiungo un giorno in modo da poter sottrarre correttamente
                 Dim postPrimoGiorno = nextDatePos.AddDays(1).AddMonths(-iNrCanoni)
@@ -1484,6 +1519,8 @@ Module Ordini
         End If
         r.NrCanoniIniziale = iNrCanoni
         'r.NrCanoniCorrente = iNrCanoni
+        r.PeriodoDataIn = r.CanoniDataIn
+        r.PeriodoDataFin = r.CanoniDataFin
         Return r
     End Function
     Private Function BAKCUP_EvalCurOrdRow(ByVal c As AllordCliContratto) As CurOrdRow

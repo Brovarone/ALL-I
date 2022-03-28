@@ -244,7 +244,7 @@ Partial Class FAskFiltriOrdini
         Me.DtaFattA.Location = New System.Drawing.Point(110, 45)
         Me.DtaFattA.Name = "DtaFattA"
         Me.DtaFattA.Size = New System.Drawing.Size(96, 20)
-        Me.DtaFattA.TabIndex = 11
+        Me.DtaFattA.TabIndex = 12
         '
         'GroupDataFatt
         '
@@ -283,7 +283,7 @@ Partial Class FAskFiltriOrdini
         Me.DtaFattDa.Location = New System.Drawing.Point(110, 19)
         Me.DtaFattDa.Name = "DtaFattDa"
         Me.DtaFattDa.Size = New System.Drawing.Size(96, 20)
-        Me.DtaFattDa.TabIndex = 12
+        Me.DtaFattDa.TabIndex = 11
         '
         'GroupPeriodo
         '
@@ -413,7 +413,7 @@ Partial Class FAskFiltriOrdini
         Me.TxtAnnoAdeguamento.Location = New System.Drawing.Point(182, 40)
         Me.TxtAnnoAdeguamento.Name = "TxtAnnoAdeguamento"
         Me.TxtAnnoAdeguamento.Size = New System.Drawing.Size(40, 20)
-        Me.TxtAnnoAdeguamento.TabIndex = 27
+        Me.TxtAnnoAdeguamento.TabIndex = 20
         '
         'Label4
         '
@@ -488,7 +488,7 @@ Partial Class FAskFiltriOrdini
         Me.DtaDecorrenza.Location = New System.Drawing.Point(110, 19)
         Me.DtaDecorrenza.Name = "DtaDecorrenza"
         Me.DtaDecorrenza.Size = New System.Drawing.Size(96, 20)
-        Me.DtaDecorrenza.TabIndex = 12
+        Me.DtaDecorrenza.TabIndex = 13
         '
         'FAskFiltriOrdini
         '

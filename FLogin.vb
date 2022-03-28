@@ -63,6 +63,7 @@ Public Class FLogin
         ComandiToolStripMenuItem.Visible = admin
         DisconnettiAdminToolStripMenuItem.Visible = admin
         AdministratorToolStripMenuItem.Enabled = Not admin
+        BackupDatabaseToolStripMenuItem.Visible = admin
         'DisconnettiAdminToolStripMenuItem.Visible = admin
         'ToolsToolStripMenuItem.Enabled = admin
         'SettingsToolStripMenuItem.Enabled = admin
@@ -764,6 +765,30 @@ Public Class FLogin
             ProcessaGruppo(risc, "Risconti")
         End If
 
+        If ChkRiscontiRidotto.Checked Then
+            Dim bFound As Boolean
+            Dim risc As String() = {"RISCONTIRIDOTTO"}
+            Dim riscFound As Boolean() = {False}
+            Dim FileInFolder As String() = Directory.GetFiles(FolderPath, "*.*", SearchOption.TopDirectoryOnly)
+
+            For i = 0 To UBound(risc)
+                For Each sFile As String In FileInFolder
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile)
+                    bFound = sNomeFile.Equals(risc(i))
+                    If bFound Then
+                        riscFound(i) = True
+                        risc(i) = sFile
+                        lista.Add(sFile)
+                        Exit For
+                    End If
+                Next
+                If Not riscFound(i) Then
+                    MessageBox.Show("Impossibile continuare l'elaborazione dei risconti file RISCONTIRIDOTTO.XLSX")
+                    Exit For
+                End If
+            Next
+            ProcessaGruppo(risc, "Risconti Ridotto")
+        End If
         If ChkCespiti.Checked Then
             Dim bFound As Boolean
             Dim cespiti As String() = {"CBIL", "CFIS"}
@@ -877,8 +902,12 @@ Public Class FLogin
                         'Risconti Xlsx  (con riga di Intestazione)
                         lstStatoConnessione.Items.Add("Risconti")
                         dsXLS = LoadXLS(spath, True, False)
-                        esito = CreaPNotaRisconti(dsXLS.Tables(0))
-
+                        esito = CreaPNotaRisconti(dsXLS.Tables(0), True, False)
+                    Case "RISCONTIRIDOTTO"
+                        'RiscontiRidotto Xlsx  (con riga di Intestazione, solo 4 COLONNE)
+                        lstStatoConnessione.Items.Add("Risconti (ridotto)")
+                        dsXLS = LoadXLS(spath, True, False)
+                        esito = CreaPNotaRisconti(dsXLS.Tables(0), False, True)
 
                     Case "ANFO200F"
                         'Fornitori (con riga di Intestazione)
@@ -1051,7 +1080,9 @@ Public Class FLogin
     Private Sub BackupDatabaseToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles BackupDatabaseToolStripMenuItem.Click
         MySqlServerBackup.Backup()
     End Sub
-
+    Private Sub CopiaUNOSuTESTToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles CopiaUNOSuTESTToolStripMenuItem.Click
+        MySqlServerBackup.CopiaUnoSuTest()
+    End Sub
     Private Sub TestPagheToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles TestPagheToolStripMenuItem.Click
         CaricaFlussoPaghe("")
         DataGridView1.Visible = True
@@ -1354,11 +1385,7 @@ Public Class FLogin
         If withDelete Then Directory.Delete(origine, True)
     End Sub
 
-    Private Sub TestRiscontiToolStripMenuItem1_Click(sender As Object, e As EventArgs) Handles TestRiscontiToolStripMenuItem.Click
-        ChkRisconti.Checked = True
-        SUBConnetti()
-        SUBProcessa()
-    End Sub
+
     Private Sub ImportaToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles ImportaToolStripMenuItem.Click
         'Processa Cespiti
         ChkCespiti.Checked = True
@@ -1639,7 +1666,16 @@ Public Class FLogin
         BtnOrdiniISTAT.Enabled = True
         BtnOrdiniISTAT.PerformClick()
     End Sub
-
+    Private Sub TestRiscontiToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles TestRiscontiToolStripMenuItem.Click
+        ChkRisconti.Checked = True
+        SUBConnetti()
+        SUBProcessa()
+    End Sub
+    Private Sub TestRiscontiRidottoToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles TestRiscontiRidottoToolStripMenuItem.Click
+        ChkRiscontiRidotto.Checked = True
+        SUBConnetti()
+        SUBProcessa()
+    End Sub
     Private Sub RiparaMaschereMagoToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles RiparaMaschereMagoToolStripMenuItem.Click
         Try
             FileIO.FileSystem.RenameFile("\\SV-AP-MAGO\Magonet_Custom\Companies\AllCompanies\Applications\ERP\SaleOrders\ModuleObjects\SaleOrd\SPA_SaleOrd.dll.disabled", "SPA_SaleOrd.dll")
@@ -1647,4 +1683,6 @@ Public Class FLogin
             ' Debug.Print(ex.Message)
         End Try
     End Sub
+
+
 End Class
