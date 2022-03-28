@@ -810,6 +810,7 @@ Module MagoNet
         Debug.Print("Carico schema: " & TableName)
         Dim dt As New DataTable(TableName)
         Dim SQLquery As String
+        Dim errorLevel As String = ""
         If withData Then
             SQLquery = If(String.IsNullOrWhiteSpace(query), "SELECT * FROM " & TableName, query)
         Else
@@ -857,8 +858,10 @@ Module MagoNet
 
                                     Select Case dt.Columns(colName).DataType
                                         Case GetType(Integer), GetType(Short)
+                                            errorLevel = "Integer " & colName
                                             defaultValue = constraintKeys.Substring(2, constraintKeys.Length - 4)
                                         Case GetType(Date)
+                                            errorLevel = "Date " & colName
                                             defaultValue = constraintKeys.Substring(1, constraintKeys.Length - 2)
                                             Select Case defaultValue
                                                 Case "getdate()"
@@ -867,16 +870,20 @@ Module MagoNet
                                                     defaultValue = defaultValue.Substring(1, 4) & "-" & defaultValue.Substring(5, 2) & "-" & defaultValue.Substring(7, 2)
                                             End Select
                                         Case GetType(Double)
+                                            errorLevel = "Double " & colName
                                             defaultValue = constraintKeys.Substring(2, constraintKeys.Length - 4)
                                         Case GetType(Guid)
+                                            errorLevel = "Guid " & colName
                                             defaultValue = Guid.Empty.ToString
                                         Case GetType(String)
+                                            errorLevel = "String " & colName
                                             'If dt.Columns(colName).MaxLength = 1 Then
                                             defaultValue = constraintKeys.Substring(2, constraintKeys.Length - 4)
                                             'Else
                                             'defaultValue = constraintKeys.Substring(1, constraintKeys.Length - 2)
                                             'End If
                                         Case Else
+                                            errorLevel = "Case Else " & colName
                                             defaultValue = constraintKeys.Substring(1, constraintKeys.Length - 2)
 
                                     End Select
@@ -892,7 +899,7 @@ Module MagoNet
                             End If
                         Catch ex As Exception
                             Debug.Print(ex.Message)
-                            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                            Dim mb As New MessageBoxWithDetails(errorLevel & Environment.NewLine & ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                             mb.ShowDialog()
                         End Try
                         Application.DoEvents()

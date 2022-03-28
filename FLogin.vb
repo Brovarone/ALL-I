@@ -1678,7 +1678,7 @@ Public Class FLogin
     End Sub
     Private Sub RiparaMaschereMagoToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles RiparaMaschereMagoToolStripMenuItem.Click
         Try
-            FileIO.FileSystem.RenameFile("\\SV-AP-MAGO\Magonet_Custom\Companies\AllCompanies\Applications\ERP\SaleOrders\ModuleObjects\SaleOrd\SPA_SaleOrd.dll.disabled", "SPA_SaleOrd.dll")
+            FileIO.FileSystem.RenameFile("\\SV-AP-MAGO\Magonet_Custom\Companies\AllCompanies\Applications\ERP\SaleOrders\ModuleObjects\SaleOrd\SPA_SaleOrd.disabled", "SPA_SaleOrd.dll")
         Catch ex As Exception
             ' Debug.Print(ex.Message)
         End Try
