@@ -871,7 +871,8 @@ Module MagoNet
                                             End Select
                                         Case GetType(Double)
                                             errorLevel = "Double " & colName
-                                            defaultValue = constraintKeys.Substring(2, constraintKeys.Length - 4)
+                                            'defaultValue = constraintKeys.Substring(2, constraintKeys.Length - 4)
+                                            defaultValue = constraintKeys.Replace("(", "").Replace(")", "")
                                         Case GetType(Guid)
                                             errorLevel = "Guid " & colName
                                             defaultValue = Guid.Empty.ToString
