@@ -266,9 +266,9 @@ Module Partite
                         EditTestoBarra("Salvataggio: Partite")
 
                         Using bulkTrans = Connection.BeginTransaction
-                            okBulk = ScriviBulk("MA_PyblsRcvbls", dtPartita, bulkTrans, If(isDiff, DataRowState.Added, DataRowState.Unchanged))
+                            okBulk = ScriviBulk("MA_PyblsRcvbls", dtPartita, bulkTrans, Connection, If(isDiff, DataRowState.Added, DataRowState.Unchanged))
                             EditTestoBarra("Salvataggio: Righe")
-                            okBulk = ScriviBulk("MA_PyblsRcvblsDetails", dtDettPartita, bulkTrans, If(isDiff, DataRowState.Added, DataRowState.Unchanged))
+                            okBulk = ScriviBulk("MA_PyblsRcvblsDetails", dtDettPartita, bulkTrans, Connection, If(isDiff, DataRowState.Added, DataRowState.Unchanged))
                             bulkTrans.Commit()
                             If isDiff AndAlso ListofIDs.Count > 0 Then
                                 Using cmdqry = New SqlCommand("delete from MA_PyblsRcvblsDetails where PymtSchedId=@ID", Connection)
@@ -580,9 +580,9 @@ Module Partite
                                 cmdqry.ExecuteNonQuery()
                                 Using bulkTrans = Connection.BeginTransaction
                                     EditTestoBarra("Salvataggio: Prima Nota")
-                                    okBulk = ScriviBulk("MA_JournalEntries", dtPN, bulkTrans)
+                                    okBulk = ScriviBulk("MA_JournalEntries", dtPN, bulkTrans, Connection)
                                     EditTestoBarra("Salvataggio: Righe")
-                                    okBulk = ScriviBulk("MA_JournalEntriesGLDetail", dtPND, bulkTrans)
+                                    okBulk = ScriviBulk("MA_JournalEntriesGLDetail", dtPND, bulkTrans, Connection)
                                     bulkTrans.Commit()
                                 End Using
                                 cmdqry.CommandText = "DBCC TRACEOFF(610)"

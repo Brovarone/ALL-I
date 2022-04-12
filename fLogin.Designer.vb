@@ -71,11 +71,14 @@ Partial Class FLogin
         Me.ChkPartiteFornitori = New System.Windows.Forms.CheckBox()
         Me.ChkPartiteCliente = New System.Windows.Forms.CheckBox()
         Me.TabPagePnota = New System.Windows.Forms.TabPage()
+        Me.ChkRiscontiRidotto = New System.Windows.Forms.CheckBox()
         Me.ChkRisconti = New System.Windows.Forms.CheckBox()
         Me.ChkPNotaForDaPartitario = New System.Windows.Forms.CheckBox()
         Me.ChkPNotaCliDaPartitario = New System.Windows.Forms.CheckBox()
         Me.TabCespiti = New System.Windows.Forms.TabPage()
         Me.ChkCespiti = New System.Windows.Forms.CheckBox()
+        Me.TabFusione = New System.Windows.Forms.TabPage()
+        Me.ChkFusioneFull = New System.Windows.Forms.CheckBox()
         Me.BtnProcessa = New System.Windows.Forms.Button()
         Me.lblDataInizio = New System.Windows.Forms.Label()
         Me.txtPath = New System.Windows.Forms.TextBox()
@@ -102,6 +105,7 @@ Partial Class FLogin
         Me.TestOrdiniToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.TestISTATToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.TestRiscontiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.TestRiscontiRidottoToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripSeparator6 = New System.Windows.Forms.ToolStripSeparator()
         Me.BackupDatabaseToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.CopiaUNOSuTESTToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -141,13 +145,14 @@ Partial Class FLogin
         Me.SearchToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.toolStripSeparator5 = New System.Windows.Forms.ToolStripSeparator()
         Me.AboutToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.FusioneToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.EseguiToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem()
         Me.PanelDB = New System.Windows.Forms.Panel()
         Me.CHKDBTemporaneo = New System.Windows.Forms.CheckBox()
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
-        Me.TestRiscontiRidottoToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ChkRiscontiRidotto = New System.Windows.Forms.CheckBox()
+        Me.RegioneDaProvinciaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabPageCancella.SuspendLayout()
@@ -158,6 +163,7 @@ Partial Class FLogin
         Me.TabPagePartite.SuspendLayout()
         Me.TabPagePnota.SuspendLayout()
         Me.TabCespiti.SuspendLayout()
+        Me.TabFusione.SuspendLayout()
         Me.PanelUser.SuspendLayout()
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.MenuStrip1.SuspendLayout()
@@ -347,6 +353,7 @@ Partial Class FLogin
         Me.TabControl1.Controls.Add(Me.TabPagePartite)
         Me.TabControl1.Controls.Add(Me.TabPagePnota)
         Me.TabControl1.Controls.Add(Me.TabCespiti)
+        Me.TabControl1.Controls.Add(Me.TabFusione)
         Me.TabControl1.Enabled = False
         Me.TabControl1.Location = New System.Drawing.Point(10, 113)
         Me.TabControl1.Name = "TabControl1"
@@ -669,6 +676,16 @@ Partial Class FLogin
         Me.TabPagePnota.TabIndex = 4
         Me.TabPagePnota.Text = "Prima Nota"
         '
+        'ChkRiscontiRidotto
+        '
+        Me.ChkRiscontiRidotto.AutoSize = True
+        Me.ChkRiscontiRidotto.Location = New System.Drawing.Point(173, 29)
+        Me.ChkRiscontiRidotto.Name = "ChkRiscontiRidotto"
+        Me.ChkRiscontiRidotto.Size = New System.Drawing.Size(96, 17)
+        Me.ChkRiscontiRidotto.TabIndex = 26
+        Me.ChkRiscontiRidotto.Text = "Risconti ridotto"
+        Me.ChkRiscontiRidotto.UseVisualStyleBackColor = True
+        '
         'ChkRisconti
         '
         Me.ChkRisconti.AutoSize = True
@@ -719,6 +736,27 @@ Partial Class FLogin
         Me.ChkCespiti.TabIndex = 0
         Me.ChkCespiti.Text = "Cespiti"
         Me.ChkCespiti.UseVisualStyleBackColor = True
+        '
+        'TabFusione
+        '
+        Me.TabFusione.BackColor = System.Drawing.SystemColors.Control
+        Me.TabFusione.Controls.Add(Me.ChkFusioneFull)
+        Me.TabFusione.Location = New System.Drawing.Point(4, 22)
+        Me.TabFusione.Name = "TabFusione"
+        Me.TabFusione.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabFusione.Size = New System.Drawing.Size(322, 101)
+        Me.TabFusione.TabIndex = 8
+        Me.TabFusione.Text = "Fusione"
+        '
+        'ChkFusioneFull
+        '
+        Me.ChkFusioneFull.AutoSize = True
+        Me.ChkFusioneFull.Location = New System.Drawing.Point(6, 6)
+        Me.ChkFusioneFull.Name = "ChkFusioneFull"
+        Me.ChkFusioneFull.Size = New System.Drawing.Size(82, 17)
+        Me.ChkFusioneFull.TabIndex = 1
+        Me.ChkFusioneFull.Text = "Fusione Full"
+        Me.ChkFusioneFull.UseVisualStyleBackColor = True
         '
         'BtnProcessa
         '
@@ -892,7 +930,7 @@ Partial Class FLogin
         '
         'MenuStrip1
         '
-        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolsToolStripMenuItem, Me.FileToolStripMenuItem, Me.CespitiToolStripMenuItem, Me.SettingsToolStripMenuItem, Me.ComandiToolStripMenuItem, Me.HelpToolStripMenuItem})
+        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolsToolStripMenuItem, Me.FileToolStripMenuItem, Me.CespitiToolStripMenuItem, Me.SettingsToolStripMenuItem, Me.ComandiToolStripMenuItem, Me.HelpToolStripMenuItem, Me.FusioneToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip1.Name = "MenuStrip1"
         Me.MenuStrip1.Size = New System.Drawing.Size(456, 24)
@@ -945,6 +983,12 @@ Partial Class FLogin
         Me.TestRiscontiToolStripMenuItem.Name = "TestRiscontiToolStripMenuItem"
         Me.TestRiscontiToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.TestRiscontiToolStripMenuItem.Text = "Test_Risconti"
+        '
+        'TestRiscontiRidottoToolStripMenuItem
+        '
+        Me.TestRiscontiRidottoToolStripMenuItem.Name = "TestRiscontiRidottoToolStripMenuItem"
+        Me.TestRiscontiRidottoToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.TestRiscontiRidottoToolStripMenuItem.Text = "Test_RiscontiRidotto"
         '
         'ToolStripSeparator6
         '
@@ -1079,13 +1123,13 @@ Partial Class FLogin
         'ImportaToolStripMenuItem
         '
         Me.ImportaToolStripMenuItem.Name = "ImportaToolStripMenuItem"
-        Me.ImportaToolStripMenuItem.Size = New System.Drawing.Size(119, 22)
+        Me.ImportaToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.ImportaToolStripMenuItem.Text = "Importa"
         '
         'CancellaToolStripMenuItem
         '
         Me.CancellaToolStripMenuItem.Name = "CancellaToolStripMenuItem"
-        Me.CancellaToolStripMenuItem.Size = New System.Drawing.Size(119, 22)
+        Me.CancellaToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.CancellaToolStripMenuItem.Text = "Cancella"
         '
         'SettingsToolStripMenuItem
@@ -1099,7 +1143,7 @@ Partial Class FLogin
         '
         Me.ToolStripTracciatoVecchio.CheckOnClick = True
         Me.ToolStripTracciatoVecchio.Name = "ToolStripTracciatoVecchio"
-        Me.ToolStripTracciatoVecchio.Size = New System.Drawing.Size(151, 22)
+        Me.ToolStripTracciatoVecchio.Size = New System.Drawing.Size(180, 22)
         Me.ToolStripTracciatoVecchio.Text = "Vecchio Flusso"
         Me.ToolStripTracciatoVecchio.ToolTipText = "Il flusso NON presenta le nuove colonne  ( dalla IB) dedicate alla contabilità an" &
     "alitica ( NrCanoni e Data decorrenza)"
@@ -1108,12 +1152,12 @@ Partial Class FLogin
         '
         Me.ToolStripMenuItemDebugging.CheckOnClick = True
         Me.ToolStripMenuItemDebugging.Name = "ToolStripMenuItemDebugging"
-        Me.ToolStripMenuItemDebugging.Size = New System.Drawing.Size(151, 22)
+        Me.ToolStripMenuItemDebugging.Size = New System.Drawing.Size(180, 22)
         Me.ToolStripMenuItemDebugging.Text = "Debugging"
         '
         'ComandiToolStripMenuItem
         '
-        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.IDToolStripMenuItem, Me.CaricaSchemaToolStripMenuItem, Me.EseguiToolStripMenuItem, Me.XLSToolStripMenuItem, Me.CSVToolStripMenuItem, Me.TestPagheToolStripMenuItem, Me.AnaliticaDaFattureToolStripMenuItem, Me.RiorganizzaCartelleToolStripMenuItem})
+        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.IDToolStripMenuItem, Me.CaricaSchemaToolStripMenuItem, Me.EseguiToolStripMenuItem, Me.XLSToolStripMenuItem, Me.CSVToolStripMenuItem, Me.TestPagheToolStripMenuItem, Me.AnaliticaDaFattureToolStripMenuItem, Me.RiorganizzaCartelleToolStripMenuItem, Me.RegioneDaProvinciaToolStripMenuItem})
         Me.ComandiToolStripMenuItem.Name = "ComandiToolStripMenuItem"
         Me.ComandiToolStripMenuItem.Size = New System.Drawing.Size(68, 20)
         Me.ComandiToolStripMenuItem.Text = "Comandi"
@@ -1122,51 +1166,51 @@ Partial Class FLogin
         'IDToolStripMenuItem
         '
         Me.IDToolStripMenuItem.Name = "IDToolStripMenuItem"
-        Me.IDToolStripMenuItem.Size = New System.Drawing.Size(177, 22)
+        Me.IDToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.IDToolStripMenuItem.Text = "ID"
         '
         'CaricaSchemaToolStripMenuItem
         '
         Me.CaricaSchemaToolStripMenuItem.Name = "CaricaSchemaToolStripMenuItem"
-        Me.CaricaSchemaToolStripMenuItem.Size = New System.Drawing.Size(177, 22)
+        Me.CaricaSchemaToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.CaricaSchemaToolStripMenuItem.Text = "Carica Schema"
         '
         'EseguiToolStripMenuItem
         '
         Me.EseguiToolStripMenuItem.Name = "EseguiToolStripMenuItem"
-        Me.EseguiToolStripMenuItem.Size = New System.Drawing.Size(177, 22)
+        Me.EseguiToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.EseguiToolStripMenuItem.Text = "Esegui"
         Me.EseguiToolStripMenuItem.ToolTipText = "Analizza la cartella e per ogni file esegue l'azione corrispondente. DEPRECATO"
         '
         'XLSToolStripMenuItem
         '
         Me.XLSToolStripMenuItem.Name = "XLSToolStripMenuItem"
-        Me.XLSToolStripMenuItem.Size = New System.Drawing.Size(177, 22)
+        Me.XLSToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.XLSToolStripMenuItem.Text = "XLS"
         '
         'CSVToolStripMenuItem
         '
         Me.CSVToolStripMenuItem.Name = "CSVToolStripMenuItem"
-        Me.CSVToolStripMenuItem.Size = New System.Drawing.Size(177, 22)
+        Me.CSVToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.CSVToolStripMenuItem.Text = "CSV"
         '
         'TestPagheToolStripMenuItem
         '
         Me.TestPagheToolStripMenuItem.Name = "TestPagheToolStripMenuItem"
-        Me.TestPagheToolStripMenuItem.Size = New System.Drawing.Size(177, 22)
+        Me.TestPagheToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.TestPagheToolStripMenuItem.Text = "TestPaghe"
         '
         'AnaliticaDaFattureToolStripMenuItem
         '
         Me.AnaliticaDaFattureToolStripMenuItem.Image = Global.ALLSystemTools.My.Resources.Resources.pie_chart_48
         Me.AnaliticaDaFattureToolStripMenuItem.Name = "AnaliticaDaFattureToolStripMenuItem"
-        Me.AnaliticaDaFattureToolStripMenuItem.Size = New System.Drawing.Size(177, 22)
+        Me.AnaliticaDaFattureToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.AnaliticaDaFattureToolStripMenuItem.Text = "Analitica da fatture"
         '
         'RiorganizzaCartelleToolStripMenuItem
         '
         Me.RiorganizzaCartelleToolStripMenuItem.Name = "RiorganizzaCartelleToolStripMenuItem"
-        Me.RiorganizzaCartelleToolStripMenuItem.Size = New System.Drawing.Size(177, 22)
+        Me.RiorganizzaCartelleToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.RiorganizzaCartelleToolStripMenuItem.Text = "Riorganizza Cartelle"
         '
         'HelpToolStripMenuItem
@@ -1208,6 +1252,20 @@ Partial Class FLogin
         Me.AboutToolStripMenuItem.Name = "AboutToolStripMenuItem"
         Me.AboutToolStripMenuItem.Size = New System.Drawing.Size(122, 22)
         Me.AboutToolStripMenuItem.Text = "&About..."
+        '
+        'FusioneToolStripMenuItem
+        '
+        Me.FusioneToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.EseguiToolStripMenuItem1})
+        Me.FusioneToolStripMenuItem.Name = "FusioneToolStripMenuItem"
+        Me.FusioneToolStripMenuItem.Size = New System.Drawing.Size(60, 20)
+        Me.FusioneToolStripMenuItem.Text = "Fusione"
+        Me.FusioneToolStripMenuItem.Visible = False
+        '
+        'EseguiToolStripMenuItem1
+        '
+        Me.EseguiToolStripMenuItem1.Name = "EseguiToolStripMenuItem1"
+        Me.EseguiToolStripMenuItem1.Size = New System.Drawing.Size(108, 22)
+        Me.EseguiToolStripMenuItem1.Text = "Esegui"
         '
         'PanelDB
         '
@@ -1257,21 +1315,11 @@ Partial Class FLogin
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
         '
-        'TestRiscontiRidottoToolStripMenuItem
+        'RegioneDaProvinciaToolStripMenuItem
         '
-        Me.TestRiscontiRidottoToolStripMenuItem.Name = "TestRiscontiRidottoToolStripMenuItem"
-        Me.TestRiscontiRidottoToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.TestRiscontiRidottoToolStripMenuItem.Text = "Test_RiscontiRidotto"
-        '
-        'ChkRiscontiRidotto
-        '
-        Me.ChkRiscontiRidotto.AutoSize = True
-        Me.ChkRiscontiRidotto.Location = New System.Drawing.Point(173, 29)
-        Me.ChkRiscontiRidotto.Name = "ChkRiscontiRidotto"
-        Me.ChkRiscontiRidotto.Size = New System.Drawing.Size(96, 17)
-        Me.ChkRiscontiRidotto.TabIndex = 26
-        Me.ChkRiscontiRidotto.Text = "Risconti ridotto"
-        Me.ChkRiscontiRidotto.UseVisualStyleBackColor = True
+        Me.RegioneDaProvinciaToolStripMenuItem.Name = "RegioneDaProvinciaToolStripMenuItem"
+        Me.RegioneDaProvinciaToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
+        Me.RegioneDaProvinciaToolStripMenuItem.Text = "Regione da Provincia"
         '
         'FLogin
         '
@@ -1305,6 +1353,8 @@ Partial Class FLogin
         Me.TabPagePnota.PerformLayout()
         Me.TabCespiti.ResumeLayout(False)
         Me.TabCespiti.PerformLayout()
+        Me.TabFusione.ResumeLayout(False)
+        Me.TabFusione.PerformLayout()
         Me.PanelUser.ResumeLayout(False)
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.MenuStrip1.ResumeLayout(False)
@@ -1441,4 +1491,9 @@ Partial Class FLogin
     Friend WithEvents TestRiscontiToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents TestRiscontiRidottoToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ChkRiscontiRidotto As CheckBox
+    Friend WithEvents FusioneToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents EseguiToolStripMenuItem1 As ToolStripMenuItem
+    Friend WithEvents TabFusione As TabPage
+    Friend WithEvents ChkFusioneFull As CheckBox
+    Friend WithEvents RegioneDaProvinciaToolStripMenuItem As ToolStripMenuItem
 End Class

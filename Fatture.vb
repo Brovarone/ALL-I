@@ -229,6 +229,7 @@ Module Fatture
                                                                                 drCli("Address") = dvClienOrd(iClienOrdFound).Item("I").ToString '("AC" della fattura)
                                                                                 drCli("City") = dvClienOrd(iClienOrdFound).Item("J").ToString '("AE" della fattura)
                                                                                 drCli("County") = dvClienOrd(iClienOrdFound).Item("K").ToString '("AF" della fattura)
+                                                                                drCli("Region") = Get_Regione(dvClienOrd(iClienOrdFound).Item("K").ToString)
                                                                                 Dim iCAP As Integer
                                                                                 If Integer.TryParse(dvClienOrd(iClienOrdFound).Item("L").ToString, iCAP) Then
                                                                                     drCli("ZIPCode") = iCAP.ToString("00000") '("AE" della fattura)
@@ -1036,52 +1037,52 @@ Module Fatture
                                                                 cmdqry.ExecuteNonQuery()
                                                                 Using bulkTrans = Connection.BeginTransaction
                                                                     EditTestoBarra("Salvataggio: Fatture")
-                                                                    okBulk = ScriviBulk("MA_SaleDoc", dtDoc, bulkTrans, DataRowState.Unchanged, loggingTxt)
+                                                                    okBulk = ScriviBulk("MA_SaleDoc", dtDoc, bulkTrans, Connection, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
                                                                     l_Bulk.Add("B01", loggingTxt)
                                                                     EditTestoBarra("Salvataggio: Righe")
-                                                                    okBulk = ScriviBulk("MA_SaleDocDetail", dtDocDet, bulkTrans, DataRowState.Unchanged, loggingTxt)
+                                                                    okBulk = ScriviBulk("MA_SaleDocDetail", dtDocDet, bulkTrans, Connection, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
                                                                     l_Bulk.Add("B01", loggingTxt)
                                                                     EditTestoBarra("Salvataggio: Dati Aggiuntivi fatt. ele.")
-                                                                    okBulk = ScriviBulk("MA_EI_ITDocAdditionalData", dtEI, bulkTrans, DataRowState.Unchanged, loggingTxt)
+                                                                    okBulk = ScriviBulk("MA_EI_ITDocAdditionalData", dtEI, bulkTrans, Connection, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
                                                                     l_Bulk.Add("B01", loggingTxt)
                                                                     EditTestoBarra("Salvataggio: Totali")
-                                                                    okBulk = ScriviBulk("MA_SaleDocSummary", dtDocSumm, bulkTrans, DataRowState.Unchanged, loggingTxt)
+                                                                    okBulk = ScriviBulk("MA_SaleDocSummary", dtDocSumm, bulkTrans, Connection, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
                                                                     l_Bulk.Add("B01", loggingTxt)
                                                                     EditTestoBarra("Salvataggio: SSD/RID")
-                                                                    okBulk = ScriviBulk("MA_SDDMandate", dtSSDNew, bulkTrans, DataRowState.Unchanged, loggingTxt)
+                                                                    okBulk = ScriviBulk("MA_SDDMandate", dtSSDNew, bulkTrans, Connection, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
                                                                     l_Bulk.Add("B01", loggingTxt)
                                                                     EditTestoBarra("Salvataggio: Clienti")
-                                                                    okBulk = ScriviBulk("MA_CustSupp", dtClientiNew, bulkTrans, DataRowState.Unchanged, loggingTxt)
+                                                                    okBulk = ScriviBulk("MA_CustSupp", dtClientiNew, bulkTrans, Connection, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
                                                                     l_Bulk.Add("B01", loggingTxt)
                                                                     EditTestoBarra("Salvataggio: Altri dati Clienti")
-                                                                    okBulk = ScriviBulk("MA_CustSuppCustomerOptions", dtCliOptNew, bulkTrans, DataRowState.Unchanged, loggingTxt)
+                                                                    okBulk = ScriviBulk("MA_CustSuppCustomerOptions", dtCliOptNew, bulkTrans, Connection, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
                                                                     l_Bulk.Add("B01", loggingTxt)
                                                                     EditTestoBarra("Salvataggio: Persona Fisica Clienti")
-                                                                    okBulk = ScriviBulk("MA_CustSuppNaturalPerson", dtCliNatPersNew, bulkTrans, DataRowState.Unchanged, loggingTxt)
+                                                                    okBulk = ScriviBulk("MA_CustSuppNaturalPerson", dtCliNatPersNew, bulkTrans, Connection, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
                                                                     l_Bulk.Add("B01", loggingTxt)
                                                                     EditTestoBarra("Salvataggio: Sedi Clienti")
-                                                                    okBulk = ScriviBulk("MA_CustSuppBranches", dtSediNew, bulkTrans, DataRowState.Unchanged, loggingTxt)
+                                                                    okBulk = ScriviBulk("MA_CustSuppBranches", dtSediNew, bulkTrans, Connection, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
                                                                     l_Bulk.Add("B01", loggingTxt)
                                                                     EditTestoBarra("Salvataggio: Banche Clienti")
-                                                                    okBulk = ScriviBulk("MA_Banks", dtBancheCliNew, bulkTrans, DataRowState.Unchanged, loggingTxt)
+                                                                    okBulk = ScriviBulk("MA_Banks", dtBancheCliNew, bulkTrans, Connection, DataRowState.Unchanged, loggingTxt)
                                                                     If Not okBulk Then someTrouble = True
                                                                     bulkMessage.AppendLine(loggingTxt)
                                                                     l_Bulk.Add("B01", loggingTxt)
@@ -2041,6 +2042,7 @@ Module Fatture
             destinazione("Address") = origine.Item("AC").ToString
             destinazione("City") = origine.Item("AE").ToString
             destinazione("County") = origine.Item("AF").ToString
+            destinazione("Region") = Get_Regione(origine.Item("AF").ToString)
             destinazione("ZIPCode") = origine.Item("AD").ToString
 
             Dim sEmail As String = origine.Item("HH").ToString
@@ -2116,6 +2118,11 @@ Module Fatture
                 If anagBranch.Item("County").ToString <> .Item("AF").ToString Then
                     avvisi.AppendLine("Provincia : (" & .Item("AF").ToString & ") [" & anagBranch.Item("County") & "]")
                     anagBranch.Item("County") = .Item("AF").ToString
+                End If
+                Dim regione As String = Get_Regione(.Item("AF").ToString)
+                If anagBranch.Item("Region").ToString <> regione Then
+                    avvisi.AppendLine("Regione : (" & regione & ") [" & anagBranch.Item("Region") & "]")
+                    anagBranch.Item("Region") = regione
                 End If
                 If anagBranch.Item("ZIPCode").ToString <> .Item("AD").ToString Then
                     avvisi.AppendLine("CAP : (" & .Item("AD").ToString & ") [" & anagBranch.Item("ZIPCode") & "]")
@@ -2394,6 +2401,11 @@ Module Fatture
                 If anag.Item("County").ToString <> .Item("K").ToString Then
                     avvisi.AppendLine("Provincia : (" & .Item("K").ToString & ") [" & anag.Item("County") & "]")
                     anag.Item("County") = .Item("K").ToString
+                End If
+                Dim regione = Get_Regione(.Item("K").ToString)
+                If anag.Item("Region").ToString <> regione Then
+                    avvisi.AppendLine("Regione : (" & regione & ") [" & anag.Item("Region") & "]")
+                    anag.Item("Region") = regione
                 End If
                 Dim iCAP As Integer
                 If Integer.TryParse(.Item("L").ToString, iCAP) AndAlso anag.Item("ZIPCode").ToString <> iCAP.ToString("00000") Then
@@ -3142,13 +3154,13 @@ Module MovimentiAnaliticiDaFatture
                                                         Dim irows As Integer
                                                         Using bulkTrans = Connection.BeginTransaction
                                                             EditTestoBarra("Salvataggio: Movimenti Analitici")
-                                                            okBulk = ScriviBulk("MA_CostAccEntries", dtMovAna, bulkTrans)
+                                                            okBulk = ScriviBulk("MA_CostAccEntries", dtMovAna, bulkTrans, Connection)
                                                             If Not okBulk Then someTrouble = True
                                                             EditTestoBarra("Salvataggio: Righe")
-                                                            okBulk = ScriviBulk("MA_CostAccEntriesDetail", dtMovAnaD, bulkTrans)
+                                                            okBulk = ScriviBulk("MA_CostAccEntriesDetail", dtMovAnaD, bulkTrans, Connection)
                                                             If Not okBulk Then someTrouble = True
                                                             EditTestoBarra("Salvataggio: Riferimenti incrociati")
-                                                            okBulk = ScriviBulk("MA_CrossReferences", dtCR, bulkTrans)
+                                                            okBulk = ScriviBulk("MA_CrossReferences", dtCR, bulkTrans, Connection)
                                                             If Not okBulk Then someTrouble = True
                                                             If someTrouble Then
                                                                 FLogin.lstStatoConnessione.Items.Add("Riscontrati errori: annullamento operazione...")
@@ -3476,7 +3488,7 @@ Module SEPA
                             cmdqry.ExecuteNonQuery()
                             Using bulkTrans = Connection.BeginTransaction
                                 EditTestoBarra("Salvataggio: SSD/RID")
-                                okBulk = ScriviBulk("MA_SDDMandate", dtSSDNew, bulkTrans)
+                                okBulk = ScriviBulk("MA_SDDMandate", dtSSDNew, bulkTrans, Connection)
                                 bulkMessage.AppendLine(loggingTxt)
                                 If okBulk Then
                                     bulkTrans.Commit()

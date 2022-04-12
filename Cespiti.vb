@@ -373,7 +373,7 @@ Module Cespiti
                                                 cmdqry.ExecuteNonQuery()
                                                 Using bulkTrans = Connection.BeginTransaction
                                                     EditTestoBarra("Salvataggio: Anagrafica Cespiti")
-                                                    okBulk = ScriviBulk("MA_FixedAssets", dtCespiti, bulkTrans, DataRowState.Added, loggingTxt)
+                                                    okBulk = ScriviBulk("MA_FixedAssets", dtCespiti, bulkTrans, Connection, DataRowState.Added, loggingTxt)
                                                     If Not okBulk Then someTrouble = True
                                                     bulkMessage.AppendLine(loggingTxt)
                                                     'EditTestoBarra("Salvataggio: Anagrafica Categorie Cespiti")
@@ -381,15 +381,15 @@ Module Cespiti
                                                     'If Not okBulk Then someTrouble = True
                                                     'bulkMessage.AppendLine(loggingTxt)
                                                     EditTestoBarra("Salvataggio: Movimenti Cespiti")
-                                                    okBulk = ScriviBulk("MA_FixAssetEntries", dtMovCes, bulkTrans, DataRowState.Unchanged, loggingTxt)
+                                                    okBulk = ScriviBulk("MA_FixAssetEntries", dtMovCes, bulkTrans, Connection, DataRowState.Unchanged, loggingTxt)
                                                     If Not okBulk Then someTrouble = True
                                                     bulkMessage.AppendLine(loggingTxt)
                                                     EditTestoBarra("Salvataggio: Righe")
-                                                    okBulk = ScriviBulk("MA_FixAssetEntriesDetail", dtMovCesDet, bulkTrans, DataRowState.Unchanged, loggingTxt)
+                                                    okBulk = ScriviBulk("MA_FixAssetEntriesDetail", dtMovCesDet, bulkTrans, Connection, DataRowState.Unchanged, loggingTxt)
                                                     If Not okBulk Then someTrouble = True
                                                     bulkMessage.AppendLine(loggingTxt)
                                                     EditTestoBarra("Salvataggio: Saldi ")
-                                                    okBulk = ScriviBulk(If(isFiscale, "MA_FixedAssetsFiscal", "MA_FixedAssetsBalance"), dtSaldi, bulkTrans, DataRowState.Unchanged, loggingTxt)
+                                                    okBulk = ScriviBulk(If(isFiscale, "MA_FixedAssetsFiscal", "MA_FixedAssetsBalance"), dtSaldi, bulkTrans, Connection, DataRowState.Unchanged, loggingTxt)
                                                     If Not okBulk Then someTrouble = True
                                                     bulkMessage.AppendLine(loggingTxt)
 

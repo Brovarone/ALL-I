@@ -345,10 +345,10 @@ Public Module Paghe
                                     cmdqry.ExecuteNonQuery()
                                     Using bulkTrans = Connection.BeginTransaction
                                         EditTestoBarra("Salvataggio: Prima Nota")
-                                        okBulk = ScriviBulk("MA_JournalEntries", dtPN, bulkTrans)
+                                        okBulk = ScriviBulk("MA_JournalEntries", dtPN, bulkTrans, Connection)
                                         If Not okBulk Then someTrouble = True
                                         EditTestoBarra("Salvataggio: Righe")
-                                        okBulk = ScriviBulk("MA_JournalEntriesGLDetail", dtPND, bulkTrans)
+                                        okBulk = ScriviBulk("MA_JournalEntriesGLDetail", dtPND, bulkTrans, Connection)
                                         If Not okBulk Then someTrouble = True
                                         If someTrouble Then
                                             FLogin.lstStatoConnessione.Items.Add("Riscontrati errori: annullamento operazione...")
@@ -516,13 +516,13 @@ Public Module Paghe
                                     Debug.Print("Aggiornamento Saldi analitici: " & irows.ToString & " record")
                                     Using bulkTrans = Connection.BeginTransaction
                                         EditTestoBarra("Salvataggio: Movimenti Analitici")
-                                        okBulk = ScriviBulk("MA_CostAccEntries", dtMovAna, bulkTrans)
+                                        okBulk = ScriviBulk("MA_CostAccEntries", dtMovAna, bulkTrans, Connection)
                                         If Not okBulk Then someTrouble = True
                                         EditTestoBarra("Salvataggio: Righe")
-                                        okBulk = ScriviBulk("MA_CostAccEntriesDetail", dtMovAnaD, bulkTrans)
+                                        okBulk = ScriviBulk("MA_CostAccEntriesDetail", dtMovAnaD, bulkTrans, Connection)
                                         If Not okBulk Then someTrouble = True
                                         EditTestoBarra("Salvataggio: Riferimenti incrociati")
-                                        okBulk = ScriviBulk("MA_CrossReferences", dtCR, bulkTrans)
+                                        okBulk = ScriviBulk("MA_CrossReferences", dtCR, bulkTrans, Connection)
                                         If Not okBulk Then someTrouble = True
                                         If someTrouble Then
                                             FLogin.lstStatoConnessione.Items.Add("Riscontrati errori: annullamento operazione...")
@@ -944,19 +944,19 @@ Public Module Contabilita
                                                         cmdqry.ExecuteNonQuery()
                                                         Using bulkTrans = Connection.BeginTransaction
                                                             EditTestoBarra("Salvataggio: Prima Nota")
-                                                            okBulk = ScriviBulk("MA_JournalEntries", dtPN, bulkTrans)
+                                                            okBulk = ScriviBulk("MA_JournalEntries", dtPN, bulkTrans, Connection)
                                                             If Not okBulk Then someTrouble = True
                                                             EditTestoBarra("Salvataggio: Righe  Prima Nota")
-                                                            okBulk = ScriviBulk("MA_JournalEntriesGLDetail", dtPND, bulkTrans)
+                                                            okBulk = ScriviBulk("MA_JournalEntriesGLDetail", dtPND, bulkTrans, Connection)
                                                             If Not okBulk Then someTrouble = True
                                                             EditTestoBarra("Salvataggio: Movimenti Analitici")
-                                                            okBulk = ScriviBulk("MA_CostAccEntries", dtMovAna, bulkTrans)
+                                                            okBulk = ScriviBulk("MA_CostAccEntries", dtMovAna, bulkTrans, Connection)
                                                             If Not okBulk Then someTrouble = True
                                                             EditTestoBarra("Salvataggio: Righe Movimenti Analitici")
-                                                            okBulk = ScriviBulk("MA_CostAccEntriesDetail", dtMovAnaD, bulkTrans)
+                                                            okBulk = ScriviBulk("MA_CostAccEntriesDetail", dtMovAnaD, bulkTrans, Connection)
                                                             If Not okBulk Then someTrouble = True
                                                             EditTestoBarra("Salvataggio: Riferimenti incrociati")
-                                                            okBulk = ScriviBulk("MA_CrossReferences", dtCR, bulkTrans)
+                                                            okBulk = ScriviBulk("MA_CrossReferences", dtCR, bulkTrans, Connection)
                                                             If Not okBulk Then someTrouble = True
 
                                                             If someTrouble Then

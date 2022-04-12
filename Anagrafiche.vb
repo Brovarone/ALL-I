@@ -92,6 +92,7 @@ Module Anagrafiche
                                     drCF("Address") = .Item("H").ToString
                                     drCF("City") = .Item("I").ToString
                                     drCF("County") = .Item("J").ToString
+                                    drCF("Region") = Get_Regione(.Item("J").ToString)
                                     drCF("ZIPCode") = .Item("K").ToString
                                     drCF("Telephone1") = .Item("L").ToString
                                     ' drCF ( "Telephone2")= .Item("M").toString
@@ -186,9 +187,9 @@ Module Anagrafiche
                         Debug.Print("Elaborazione Clienti: " & dtCF.Rows.Count.ToString & " in " & stopwatch1.Elapsed.ToString())
                         EditTestoBarra("Salvataggio testate")
                         Using bulkTrans = Connection.BeginTransaction
-                            okBulk = ScriviBulk("MA_CustSupp", dtCF, bulkTrans)
+                            okBulk = ScriviBulk("MA_CustSupp", dtCF, bulkTrans, Connection)
                             EditTestoBarra("Salvataggio options")
-                            okBulk = ScriviBulk("MA_CustSuppCustomerOptions", dtCFOpt, bulkTrans)
+                            okBulk = ScriviBulk("MA_CustSuppCustomerOptions", dtCFOpt, bulkTrans, Connection)
                             bulkTrans.Commit()
                         End Using
                     End Using
@@ -282,7 +283,7 @@ Module Anagrafiche
                     Debug.Print("Elaborazione Clienti Persone Fisiche: " & dtCFNat.Rows.Count.ToString & " in " & stopwatch1.Elapsed.ToString())
                     EditTestoBarra("Salvataggio ")
                     Using bulkTrans = Connection.BeginTransaction
-                        okBulk = ScriviBulk("MA_CustSuppNaturalPerson", dtCFNat, bulkTrans)
+                        okBulk = ScriviBulk("MA_CustSuppNaturalPerson", dtCFNat, bulkTrans, Connection)
                         bulkTrans.Commit()
                     End Using
                 End Using
@@ -389,7 +390,7 @@ Module Anagrafiche
                     Debug.Print("Elaborazione Mandati: " & dtRID.Rows.Count.ToString & " in " & stopwatch1.Elapsed.ToString())
                     EditTestoBarra("Salvataggio ")
                     Using bulkTrans = Connection.BeginTransaction
-                        okBulk = ScriviBulk("MA_SDDMandate", dtRID, bulkTrans)
+                        okBulk = ScriviBulk("MA_SDDMandate", dtRID, bulkTrans, Connection)
                         bulkTrans.Commit()
                     End Using
                 End Using
@@ -537,6 +538,8 @@ Module Anagrafiche
                                         If Not String.IsNullOrWhiteSpace(.Item("L").ToString) Then
                                             drInt("TelProtocol") = Mid(.Item("L").ToString, 42, 17)
                                             drInt("DocProtocol") = Right(.Item("L").ToString, 6)
+                                            '08/04/2022 : Aggiornamento Mago 3.14.21 Data Protocollo Telematico
+                                            drInt("DateProtocol") = MagoFormatta("20" & .Item("C").ToString, GetType(DateTime)).DataTempo
                                         End If
                                         drInt("TBCreatedID") = My.Settings.mLOGINID 'ID utente
                                         drInt("TBModifiedID") = My.Settings.mLOGINID 'ID utente
@@ -560,8 +563,8 @@ Module Anagrafiche
                         Debug.Print("Elaborazione Dich. Intento: " & dtInt.Rows.Count.ToString & " in " & stopwatch1.Elapsed.ToString())
                         EditTestoBarra("Salvataggio ")
                         Using bulkTrans = Connection.BeginTransaction
-                            okBulk = ScriviBulk("MA_DeclarationOfIntent", dtInt, bulkTrans)
-                            If newInsert Then okBulk = ScriviBulk("MA_DeclarationOfIntentNumbers", dtIntNr, bulkTrans)
+                            okBulk = ScriviBulk("MA_DeclarationOfIntent", dtInt, bulkTrans, Connection)
+                            If newInsert Then okBulk = ScriviBulk("MA_DeclarationOfIntentNumbers", dtIntNr, bulkTrans, Connection)
                             If okBulk Then
                                 bulkTrans.Commit()
                             Else
@@ -662,7 +665,7 @@ Module Anagrafiche
                     Debug.Print("Elaborazione Note Clienti da FoxPro: " & dtFox.Rows.Count.ToString & " in " & stopwatch1.Elapsed.ToString())
                     EditTestoBarra("Salvataggio ")
                     Using bulkTrans = Connection.BeginTransaction
-                        okBulk = ScriviBulk("ALLNoteFoxPro", dtFox, bulkTrans)
+                        okBulk = ScriviBulk("ALLNoteFoxPro", dtFox, bulkTrans, Connection)
                         bulkTrans.Commit()
                     End Using
                 End Using
@@ -687,6 +690,102 @@ Module Anagrafiche
         s(5) = Mid(IBAN, 16, 12) 'cc
         Return s
     End Function
+
+    Public Function Get_Regione(ByVal Provincia As String) As String
+        Dim r As String
+        Select Case Provincia.ToUpper
+            Case "AQ", "CH", "PE", "TE"
+                r = "Abruzzo"
+            Case "MT", "PZ"
+                r = "Basilicata"
+            Case "CS", "CZ", "KR", "RC", "VV"
+                r = "Calabria"
+            Case "AV", "BN", "CE", "NA", "SA"
+                r = "Campania"
+            Case "BO", "FC", "FE", "MO", "PC", "PR", "RA", "RE", "RN"
+                r = "Emilia-Romagna"
+            Case "GO", "PN", "TS", "UD"
+                r = "Friuli-Venezia Giulia"
+            Case "FR", "LT", "RI", "RM", "VT"
+                r = "Lazio"
+            Case "GE", "IM", "SP", "SV"
+                r = "Liguria"
+            Case "BG", "BS", "CO", "CR", "LC", "LO", "MB", "MI", "MN", "PV", "SO", "VA"
+                r = "Lombardia"
+            Case "AN", "AP", "FM", "MC", "PU"
+                r = "Marche"
+            Case "CB", "IS"
+                r = "Molise"
+            Case "NO", "AL", "AT", "BI", "CN", "TO", "VB", "VC"
+                r = "Piemonte"
+            Case "BA", "BR", "BT", "FG", "LE", "TA"
+                r = "Puglia"
+            Case "CA", "NU", "OR", "SS", "SU"
+                r = "Sardegna"
+            Case "AG", "CL", "CT", "EN", "ME", "PA", "RG", "SR", "TP"
+                r = "Sicilia"
+            Case "SI", "AR", "FI", "GR", "LI", "LU", "MS", "PI", "PO", "PT"
+                r = "Toscana"
+            Case "BZ", "TN"
+                r = "Trentino-Alto Adige"
+            Case "PG", "TR"
+                r = "Umbria"
+            Case "AO"
+                r = "Valle d'Aosta"
+            Case "BL", "PD", "RO", "TV", "VE", "VI", "VR"
+                r = "Veneto"
+            Case Else
+                r = ""
+        End Select
+        Return r
+    End Function
+    Public Function UpdRegione() As Boolean
+        'MA_CustSupp - Regione
+        'effettua solo UPDATE
+        Dim stopwatch As New System.Diagnostics.Stopwatch
+
+        stopwatch.Start()
+        EditTestoBarra("Aggiornamento anagrafica")
+        FLogin.prgCopy.Value = 1
+
+        Try
+            EditTestoBarra("Aggiornamento Clienti")
+            'popolo un Datatable con i soli codici
+            Using adpCli As New SqlDataAdapter("SELECT CustSupp ,CustSuppType,  County, Region , TBModified, TBModifiedID FROM MA_CustSupp ", Connection)
+                Dim dt As New DataTable("MA_CustSupp")
+                adpCli.Fill(dt)
+                Dim cbMar = New SqlCommandBuilder(adpCli)
+                adpCli.UpdateCommand = cbMar.GetUpdateCommand(True)
+
+                FLogin.prgCopy.Maximum = dt.Rows.Count
+                FLogin.prgCopy.Step = 1
+                Dim stopwatch1 As New System.Diagnostics.Stopwatch
+                stopwatch1.Start()
+                ' Ciclo le righe del datatable
+
+                For Each r As DataRow In dt.Rows
+                    r.Item("Region") = Get_Regione(r.Item("County"))
+                    r.Item("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+
+                    FLogin.prgCopy.PerformStep()
+                    FLogin.prgCopy.Update()
+                    Application.DoEvents()
+                Next
+                EditTestoBarra("Salvataggio ")
+                adpCli.Update(dt)
+            End Using
+
+        Catch ex As Exception
+            Debug.Print(ex.Message)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
+            Return False
+        End Try
+        Debug.Print("Aggiornamento Clienti" & " " & stopwatch.Elapsed.ToString)
+        stopwatch.Stop()
+        Return True
+    End Function
+
 
     Public Function FornitoriXLS(ByVal dts As DataSet, Optional ByVal bConIntestazione As Boolean = True) As Boolean
         'Fornitori - MA_CustSupp
@@ -765,6 +864,7 @@ Module Anagrafiche
                                     drCF("Address") = .Item("H").ToString
                                     drCF("City") = .Item("I").ToString
                                     drCF("County") = .Item("J").ToString
+                                    drCF("Region") = Get_Regione(.Item("J").ToString)
                                     drCF("ZIPCode") = .Item("K").ToString
                                     drCF("Telephone1") = .Item("L").ToString
                                     ' drCF ( "Telephone2")= .Item("M").toString
@@ -854,9 +954,9 @@ Module Anagrafiche
                         Debug.Print("Elaborazione Fornitori: " & dtCF.Rows.Count.ToString & " in " & stopwatch1.Elapsed.ToString())
                         EditTestoBarra("Salvataggio testate")
                         Using bulkTrans = Connection.BeginTransaction
-                            okBulk = ScriviBulk("MA_CustSupp", dtCF, bulkTrans)
+                            okBulk = ScriviBulk("MA_CustSupp", dtCF, bulkTrans, Connection)
                             EditTestoBarra("Salvataggio options")
-                            okBulk = ScriviBulk("MA_CustSuppSupplierOptions", dtCFOpt, bulkTrans)
+                            okBulk = ScriviBulk("MA_CustSuppSupplierOptions", dtCFOpt, bulkTrans, Connection)
                             bulkTrans.Commit()
                         End Using
                     End Using
@@ -950,7 +1050,7 @@ Module Anagrafiche
                     Debug.Print("Elaborazione Fornitori Persone Fisiche: " & dtCF.Rows.Count.ToString & " in " & stopwatch1.Elapsed.ToString())
                     EditTestoBarra("Salvataggio ")
                     Using bulkTrans = Connection.BeginTransaction
-                        okBulk = ScriviBulk("MA_CustSuppNaturalPerson", dtCF, bulkTrans)
+                        okBulk = ScriviBulk("MA_CustSuppNaturalPerson", dtCF, bulkTrans, Connection)
                         bulkTrans.Commit()
                     End Using
                 End Using
@@ -1126,7 +1226,7 @@ Module Anagrafiche
                     My.Application.Log.WriteEntry(result.ToString)
                     EditTestoBarra("Salvataggio ")
                     Using bulkTrans = Connection.BeginTransaction
-                        okBulk = ScriviBulk("MA_ChartOfAccounts", dtPdc, bulkTrans)
+                        okBulk = ScriviBulk("MA_ChartOfAccounts", dtPdc, bulkTrans, Connection)
                         bulkTrans.Commit()
                     End Using
                 End Using
@@ -1161,7 +1261,7 @@ Module Anagrafiche
             Try
                 EditTestoBarra("Aggiornamento Clienti")
                 'popolo un Datatable con i soli codici
-                Using adpCli As New SqlDataAdapter("SELECT CustSupp ,CustSuppType, CompanyName, Address, City, County , ZIPCode, ElectronicInvoicing, IPACode, AdministrationReference, SendByCertifiedEmail, EICertifiedEMail, TBModifiedID FROM MA_CustSupp WHERE CustSuppType=" & CustSuppType.Cliente, Connection)
+                Using adpCli As New SqlDataAdapter("SELECT CustSupp ,CustSuppType, CompanyName, Address, City, County, Region , ZIPCode, ElectronicInvoicing, IPACode, AdministrationReference, SendByCertifiedEmail, EICertifiedEMail, TBModifiedID FROM MA_CustSupp WHERE CustSuppType=" & CustSuppType.Cliente, Connection)
                     Dim ds As New DataSet
                     adpCli.Fill(ds, "MA_CustSupp")
                     Dim cbMar = New SqlCommandBuilder(adpCli)
@@ -1230,6 +1330,7 @@ Module Anagrafiche
                                         drCustSede("Address") = If(String.IsNullOrWhiteSpace(drXLS(irxls).Item("U").ToString), dvCli(ir)("Address"), drXLS(irxls).Item("U").ToString)
                                         drCustSede("City") = If(String.IsNullOrWhiteSpace(drXLS(irxls).Item("V").ToString), dvCli(ir)("City"), drXLS(irxls).Item("V").ToString)
                                         drCustSede("County") = If(String.IsNullOrWhiteSpace(drXLS(irxls).Item("X").ToString), dvCli(ir)("County"), drXLS(irxls).Item("X").ToString) ' provincia
+                                        drCustSede("Region") = Get_Regione(drCustSede("County").ToString) ' regione
                                         drCustSede("ZIPCode") = If(String.IsNullOrWhiteSpace(drXLS(irxls).Item("Y").ToString), dvCli(ir)("ZIPCode"), drXLS(irxls).Item("Y").ToString)
                                         Dim sEmail As String = drXLS(irxls).Item("T").ToString
                                         If Len(sEmail) > 128 Then result.AppendLine("Email troppo lunga su Cliente: " & drXLS(irxls).Item("F").ToString)
@@ -1266,7 +1367,7 @@ Module Anagrafiche
                                 cmdqry.ExecuteNonQuery()
                                 Using bulkTrans = Connection.BeginTransaction
                                     EditTestoBarra("Salvataggio: Sedi")
-                                    okBulk = ScriviBulk("MA_CustSuppBranches", dtCustSede, bulkTrans)
+                                    okBulk = ScriviBulk("MA_CustSuppBranches", dtCustSede, bulkTrans, Connection)
                                     bulkTrans.Commit()
                                 End Using
                                 cmdqry.CommandText = "DBCC TRACEOFF(610)"
@@ -1368,7 +1469,7 @@ Module Anagrafiche
                             cmdqry.ExecuteNonQuery()
                             Using bulkTrans = Connection.BeginTransaction
                                 EditTestoBarra("Salvataggio: banche")
-                                okBulk = ScriviBulk("MA_Banks", dtBanche, bulkTrans)
+                                okBulk = ScriviBulk("MA_Banks", dtBanche, bulkTrans, Connection)
                                 bulkTrans.Commit()
                             End Using
                             cmdqry.CommandText = "DBCC TRACEOFF(610)"

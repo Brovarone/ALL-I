@@ -38,6 +38,7 @@ Module Variabili
     Public DBInUse As String = ""
     Public DBisTMP As Boolean
     Public Connection As SqlConnection
+    Public ConnectionSpa As SqlConnection
     Public Trans As SqlTransaction
     Public DataInizio As String
     Public isAdmin As Boolean = False
@@ -740,11 +741,11 @@ Module MagoNet
         FLogin.prgCopy.Update()
         Application.DoEvents()
     End Sub
-    Public Function ScriviBulk(ByVal TableName As String, ByRef dt As DataTable, ByVal tr As SqlTransaction, Optional ByVal rowState As DataRowState = DataRowState.Unchanged, Optional ByRef MyReturnString As String = "") As Boolean
+    Public Function ScriviBulk(ByVal TableName As String, ByRef dt As DataTable, ByVal tr As SqlTransaction, ByVal Conn As SqlConnection, Optional ByVal rowState As DataRowState = DataRowState.Unchanged, Optional ByRef MyReturnString As String = "", Optional ColumnMapping As Boolean = False) As Boolean
         Dim esito As Boolean
         Dim logTxt As String
         If dt.Rows.Count > 0 Then
-            Using bulkCopy As New SqlBulkCopy(Connection, SqlBulkCopyOptions.KeepIdentity, tr)
+            Using bulkCopy As New SqlBulkCopy(Conn, SqlBulkCopyOptions.KeepIdentity, tr)
                 bulkCopy.BatchSize = If(dt.Rows.Count < 5000, 0, dt.Rows.Count / 10)
                 bulkCopy.BulkCopyTimeout = 0
                 bulkCopy.NotifyAfter = dt.Rows.Count / 10
@@ -759,10 +760,17 @@ Module MagoNet
                 Debug.Print("Scrivo in Bulk Copy : " & TableName & " , " & dt.Rows.Count.ToString & " record totali.")
                 bulkCopy.DestinationTableName = TableName
                 Try
-                    'Dim cmd As New SqlCommand("", Connection)
+                    'Dim cmd As New SqlCommand("", Conn)
                     'cmd.Transaction = Trans
                     'cmd.CommandText = "ALTER INDEX ALL ON " & TableName & " DISABLE"
                     ' cmd.ExecuteNonQuery()
+
+                    'Column Mapping
+                    If ColumnMapping Then
+                        For Each c As DataColumn In dt.Columns
+                            bulkCopy.ColumnMappings.Add(c.ColumnName, c.ColumnName)
+                        Next
+                    End If
                     ' Write unchanged rows from the source to the destination.
                     If rowState = DataRowState.Unchanged Then
                         bulkCopy.WriteToServer(dt)
@@ -816,6 +824,10 @@ Module MagoNet
         Else
             SQLquery = "SELECT * FROM " & TableName & " where 1=2"
         End If
+        If Connection.State <> ConnectionState.Open Then
+            MessageBox.Show("Connessione non aperta.")
+            End
+        End If
         Using da As New SqlDataAdapter(SQLquery, Connection)
             da.FillSchema(dt, SchemaType.Source)
             'Debug.Print("Creazione fillschema : " & stopwatch2.Elapsed.ToString)
@@ -859,7 +871,8 @@ Module MagoNet
                                     Select Case dt.Columns(colName).DataType
                                         Case GetType(Integer), GetType(Short)
                                             errorLevel = "Integer " & colName
-                                            defaultValue = constraintKeys.Substring(2, constraintKeys.Length - 4)
+                                            'defaultValue = constraintKeys.Substring(2, constraintKeys.Length - 4)
+                                            defaultValue = constraintKeys.Replace("(", "").Replace(")", "")
                                         Case GetType(Date)
                                             errorLevel = "Date " & colName
                                             defaultValue = constraintKeys.Substring(1, constraintKeys.Length - 2)
@@ -879,14 +892,15 @@ Module MagoNet
                                         Case GetType(String)
                                             errorLevel = "String " & colName
                                             'If dt.Columns(colName).MaxLength = 1 Then
-                                            defaultValue = constraintKeys.Substring(2, constraintKeys.Length - 4)
+                                            'defaultValue = constraintKeys.Substring(2, constraintKeys.Length - 4)
+                                            defaultValue = constraintKeys.Replace("(", "").Replace(")", "")
                                             'Else
                                             'defaultValue = constraintKeys.Substring(1, constraintKeys.Length - 2)
                                             'End If
                                         Case Else
                                             errorLevel = "Case Else " & colName
-                                            defaultValue = constraintKeys.Substring(1, constraintKeys.Length - 2)
-
+                                            'defaultValue = constraintKeys.Substring(1, constraintKeys.Length - 2)
+                                            defaultValue = constraintKeys.Replace("(", "").Replace(")", "")
                                     End Select
 
                                     ' Only strips single quotes for numeric default types

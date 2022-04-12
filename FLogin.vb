@@ -123,6 +123,29 @@ Public Class FLogin
 
         Me.Cursor = Cursors.Default
     End Sub
+    Private Sub SUBConnettiSPA(ByVal DB As String)
+        Cursor = Cursors.WaitCursor
+
+        ConnectionSpa = New SqlConnection With {
+            .ConnectionString = "Data Source=" & txtSERVER.Text & "; Database=" & DB & ";User Id=" & txtID.Text & ";Password=" & txtPSW.Text & ";"
+            }
+        ConnectionSpa.Open()
+
+        If Connection.State = ConnectionState.Open Then
+            Using comm As New SqlCommand("SELECT  @@OPTIONS", Connection)
+                'Imposto questo flag per velocizzare se StoredProcedure
+                comm.CommandText = "SET ARITHABORT ON"
+                'comm.CommandText = "SET QUOTED_IDENTIFIER ON" già presente
+                'comm.CommandText = "SET ANSI_NULLS ON" già presente
+                comm.ExecuteNonQuery()
+                'comm.CommandText = "SELECT  @@OPTIONS"
+            End Using
+            lstStatoConnessione.Items.Add("Connessione a seconda azienda: " & DB & " avvenuta con successo")
+
+        End If
+
+        Me.Cursor = Cursors.Default
+    End Sub
     Private Function LINQConnetti(Optional DB As String = "") As Boolean
         Dim bStatus As Boolean = False
         If String.IsNullOrWhiteSpace(DB) Then DB = DBInUse
@@ -813,6 +836,32 @@ Public Class FLogin
             Next
             ProcessaGruppo(cespiti, "Cespiti")
         End If
+        If ChkFusioneFull.Checked Then
+            Dim bFound As Boolean
+            Dim fusione As String() = {"IDS_Migrazione"}
+            Dim fusioneFound As Boolean() = {False}
+            Dim FileInFolder As String() = Directory.GetFiles(FolderPath, "*.*", SearchOption.TopDirectoryOnly)
+
+            For i = 0 To UBound(fusione)
+                For Each sFile As String In FileInFolder
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile)
+                    bFound = sNomeFile.Equals(fusione(i))
+                    If bFound Then
+                        fusioneFound(i) = True
+                        fusione(i) = sFile
+                        lista.Add(sFile)
+                        Exit For
+                    End If
+                Next
+                If Not fusioneFound(i) Then
+                    MessageBox.Show("Impossibile continuare l'elaborazione della fusione file IDS_Migrazione.XLSX assente")
+                    Exit For
+                End If
+            Next
+            ProcessaGruppo(fusione, "Fusione")
+            'Imposto admin cosi' da non spostare il file excel
+            isAdmin = True
+        End If
 
         'Scrivo informazioni di Chiusura
         lstStatoConnessione.Items.Add("   ---   Elaborazione completata   ---")
@@ -990,8 +1039,21 @@ Public Class FLogin
                         'Cespiti Movimenti Fiscali
                         lstStatoConnessione.Items.Add("Cespiti - Movimenti Fiscali")
                         dsXLS = LoadXLS(spath, True, False)
-
                         esito = CespitiXLS(dsXLS, True)
+
+                    Case "IDS_MIGRAZIONE"
+                        'IDS migrazione Xlsx  (con riga di Intestazione)
+                        lstStatoConnessione.Items.Add("Apertura file con IDS per Migrazione")
+                        dsXLS = LoadXLS(spath, True, True)
+                        Dim bok As Boolean
+                        bok = EseguiFusione(dsXLS)
+                        If bok Then
+                            bok = 'FusioneModificadati()
+                                esito = True
+                        Else
+                            esito = False
+                        End If
+
                     Case Else
 
                         'Paghe
@@ -1611,6 +1673,8 @@ Public Class FLogin
             TxtDB_UNO.BackColor = Color.FromArgb(255, 152, 251, 152)
         End If
         isDbUNO = True
+        FusioneToolStripMenuItem.Visible = True ' Accendo il tasto per la fusione
+
     End Sub
 
     Private Sub BtnSelSPA_Click(sender As Object, e As EventArgs) Handles BtnSelSPA.Click
@@ -1643,6 +1707,7 @@ Public Class FLogin
 
         PanelUser.Visible = True
         PanelDB.Visible = False
+        'TODO levare dopo averlo fatto
         lstStatoConnessione.Items.Add(If(DBisTMP, "Azienda test: ", "Azienda: ") & azienda & " - Database : " & DBInUse)
     End Sub
     Private Sub DisabilitaTxt(ByVal ny As Boolean)
@@ -1684,5 +1749,42 @@ Public Class FLogin
         End Try
     End Sub
 
+    Private Sub EseguiToolStripMenuItem1_Click(sender As Object, e As EventArgs) Handles EseguiToolStripMenuItem1.Click
+        SUBConnetti(If(DBisTMP, TxtTmpDB_UNO.Text, TxtDB_UNO.Text))
+        SUBConnettiSPA(If(DBisTMP, TxtTmpDB_SPA.Text, TxtDB_SPA.Text))
+        ChkFusioneFull.Checked = True
+        SUBProcessa()
 
+    End Sub
+
+    Private Sub RegioneDaProvinciaToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles RegioneDaProvinciaToolStripMenuItem.Click
+        'Adeguo il campo Regione leggendolo dalla Provincia
+        SUBConnetti()
+        If Connection.State = ConnectionState.Open Then
+            Me.Cursor = Cursors.WaitCursor
+            En_Dis_Controls(False, False, True)
+            lstStatoConnessione.Items.Add("Attendere... il processo potrebbe durare qualche minuto")
+            'INIZIALIZZO NUOVO LOG
+            My.Application.Log.DefaultFileLogWriter.BaseFileName += "-" & DateTime.Now.ToString("dd-MM-yyyy--HH-mm-ss")
+            My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Azienda: " & DBInUse & "  ---  ")
+            My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Adeguamento anagrafiche - Regione da Provincia  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
+
+            Dim esito As Boolean
+            lstStatoConnessione.Items.Add("Adeguamento anagrafiche...")
+            Dim msg As String = ""
+            esito = UpdRegione()
+            lstStatoConnessione.Items.Add(If(esito, "OK: " & msg, "Adeguamento: Errore " & msg))
+            lstStatoConnessione.Items.Add("   ---   Elaborazione completata   ---")
+            prgCopy.Value = 0
+            prgCopy.Text = "Elaborazione completata"
+            prgCopy.Refresh()
+            Application.DoEvents()
+            Me.Cursor = Cursors.Default
+            Me.Refresh()
+
+            'Salvo il log
+            ScriviLogESposta()
+
+        End If
+    End Sub
 End Class
