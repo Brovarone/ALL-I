@@ -18,7 +18,7 @@ Module Fusione
 
     Private Class TabelleDaEstrarre
         Public Property Filtro As String
-        Public Nome As String
+        Public Property Nome As String
         Public Sub New()
             Filtro = ""
             Nome = ""
@@ -152,16 +152,15 @@ Module Fusione
     Private Function ModificaDati() As Boolean
         Dim ok As Boolean
         Dim someTrouble As Boolean
+        dsDestination = New DataSet
 
-        Dim dvIDS = New DataView(dtIDS, "", "NewKey", DataViewRowState.CurrentRows)
-        'Dim iCIDFound As Integer = dvIDS.Find("SaleDocId")
-        'If iCdcFound = -1 Then
-        '    Debug.Print("Centro di Costo senza corrispondenza: " & CdC)
-        '    My.Application.Log.WriteEntry("Centro di Costo senza corrispondenza:" & CdC)
-        '    MessageBox.Show("Impossibile continuare, centro di costo non presente:" & CdC)
-        '    End
-        'End If
-        ok = EditFatture()
+        Dim dvIDS = New DataView(dtIDS, "", "Key", DataViewRowState.CurrentRows)
+        FLogin.prgCopy.Value = 1
+        FLogin.prgCopy.Step = 1
+        FLogin.prgCopy.Maximum = 6
+
+        ok = EditFatture(dvIDS)
+        FLogin.prgCopy.PerformStep()
         If Not ok Then someTrouble = True
         'EditAcquisti
         'EditClienti
@@ -171,41 +170,214 @@ Module Fusione
         Return someTrouble
     End Function
 
-    Private Function EditFatture() As Boolean
-        dsDestination = New DataSet
-        Dim id As Integer = 111
+    Private Function EditFatture(ByVal dv As DataView) As Boolean
+
+        Dim lIDS As New List(Of IDS)
+        Dim SaleDocId As Integer
+        Dim found As Integer = dv.Find("SaleDocId")
+        If found = -1 Then
+            Debug.Print("Fatture SaleDocId: non trovato")
+            My.Application.Log.WriteEntry("Fatture SaleDocId: non trovato")
+            MessageBox.Show("Impossibile continuare,Fatture SaleDocId: non trovato nel file IDS")
+            End
+        Else
+            SaleDocId = CInt(dv(found)("NewKey"))
+            lIDS.Add(New IDS With {
+                .Chiave = True,
+                .Id = SaleDocId,
+                .Nome = "SaleDocId",
+                .Operatore = "+"
+            })
+            lIDS.Add(New IDS With {
+              .Id = 0,
+              .Nome = "PymtSchedId",
+              .Operatore = "="
+            })
+            lIDS.Add(New IDS With {
+             .Id = 0,
+             .Nome = "JournalEntryId",
+             .Operatore = "="
+           })
+            lIDS.Add(New IDS With {
+             .Id = 0,
+             .Nome = "IntrastatId",
+             .Operatore = "="
+           })
+            lIDS.Add(New IDS With {
+             .Id = 0,
+             .Nome = "InvEntryId",
+             .Operatore = "="
+           })
+            lIDS.Add(New IDS With {
+            .Id = 0,
+            .Nome = "AdvancePymtSchedId",
+            .Operatore = "="
+          })
+            lIDS.Add(New IDS With {
+             .Id = 0,
+             .Nome = "CorrectionDocumentId",
+             .Operatore = "="
+           })
+            lIDS.Add(New IDS With {
+             .Id = 0,
+             .Nome = "CorrectedDocumentId",
+             .Operatore = "="
+           })
+            lIDS.Add(New IDS With {
+           .Id = 0,
+           .Nome = "InventoryIDReturn",
+           .Operatore = "="
+         })
+            lIDS.Add(New IDS With {
+             .Id = 0,
+             .Nome = "ParagonID",
+             .Operatore = "="
+           })
+            lIDS.Add(New IDS With {
+            .Id = 0,
+            .Nome = "ProFormaInvoiceID",
+            .Operatore = "="
+          })
+            lIDS.Add(New IDS With {
+           .Id = 0,
+           .Nome = "PureJECollectionPaymentId",
+           .Operatore = "="
+         })
+            lIDS.Add(New IDS With {
+             .Id = 0,
+             .Nome = "CorrectionDocumentIdInCN",
+             .Operatore = "="
+           })
+            lIDS.Add(New IDS With {
+           .Id = 0,
+           .Nome = "WorkerIDIssue",
+           .Operatore = "="
+         })
+            lIDS.Add(New IDS With {
+            .Id = 0,
+            .Nome = "ExtAccAEID",
+            .Operatore = "="
+          })
+
+        End If
+
         Try
             'Fatture
-            dsDestination.Tables.Add(SumId(dsOrigin.Tables("MA_SaleDoc"), "SaleDocId", id))
-            dsDestination.Tables.Add(SumId(dsOrigin.Tables("MA_SaleDocComponents"), "SaleDocId", id))
-            dsDestination.Tables.Add(SumId(dsOrigin.Tables("MA_SaleDocDetail"), "SaleDocId", id))
-            dsDestination.Tables.Add(SumId(dsOrigin.Tables("MA_SaleDocManufReasons"), "SaleDocId", id))
-            dsDestination.Tables.Add(SumId(dsOrigin.Tables("MA_SaleDocNotes"), "SaleDocId", id))
-            dsDestination.Tables.Add(SumId(dsOrigin.Tables("MA_SaleDocPymtSched"), "SaleDocId", id))
-            dsDestination.Tables.Add(SumId(dsOrigin.Tables("MA_SaleDocReferences"), "SaleDocId", id))
-            dsDestination.Tables.Add(SumId(dsOrigin.Tables("MA_SaleDocShipping"), "SaleDocId", id))
-            dsDestination.Tables.Add(SumId(dsOrigin.Tables("MA_SaleDocSummary"), "SaleDocId", id))
-            dsDestination.Tables.Add(SumId(dsOrigin.Tables("MA_SaleDocTaxSummary"), "SaleDocId", id))
-            '  dsDestination.Tables.Add( SumId(dsOrigin.Tables( "MA_EIEventViewer"), "SaleDocId", id))
-            '  dsDestination.Tables.Add( SumId(dsOrigin.Tables( "MA_EI_ITDocAdditionalData"), "SaleDocId", id))
-            '  dsDestination.Tables.Add( SumId(dsOrigin.Tables( "MA_EI_ITAsyncComm"), "SaleDocId", id))
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_SaleDoc"), lIDS))
+
+            lIDS.Clear()
+            lIDS.Add(New IDS With {
+                .Chiave = True,
+                .Id = SaleDocId,
+                .Nome = "SaleDocId",
+                .Operatore = "+"
+            })
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_SaleDocComponents"), lIDS))
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_SaleDocManufReasons"), lIDS))
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_SaleDocNotes"), lIDS))
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_SaleDocPymtSched"), lIDS))
+            'dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_SaleDocReferences"), lIDS))
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_SaleDocShipping"), lIDS))
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_SaleDocSummary"), lIDS))
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_SaleDocTaxSummary"), lIDS))
+            '  dsDestination.Tables.Add( EditId(dsOrigin.Tables( "MA_EIEventViewer"), lIDS))
+            '  dsDestination.Tables.Add( EditId(dsOrigin.Tables( "MA_EI_ITDocAdditionalData"), lIDS))
+            '  dsDestination.Tables.Add( EditId(dsOrigin.Tables( "MA_EI_ITAsyncComm"), lIDS))
+            Dim fOrdine As Integer = dv.Find("SaleOrdId")
+            If fOrdine = -1 Then
+                Debug.Print("Fatture: SaleOrdId: non trovato")
+                My.Application.Log.WriteEntry("Fatture: SaleOrdId: non trovato")
+                MessageBox.Show("Impossibile continuare, Fatture: SaleOrdId: non trovato nel file IDS")
+                End
+            Else
+                lIDS.Add(New IDS With {
+                         .Id = CInt(dv(fOrdine)("NewKey")),
+                        .Nome = "SaleOrdId",
+                        .Operatore = "+"
+                        })
+            End If
+            lIDS.Add(New IDS With {
+            .Id = 0,
+            .Nome = "MOId",
+            .Operatore = "="
+            })
+            lIDS.Add(New IDS With {
+            .Id = 0,
+            .Nome = "ReturnFromCustomerId",
+            .Operatore = "="
+            })
+            lIDS.Add(New IDS With {
+            .Id = 0,
+            .Nome = "ReferenceDocumentId",
+            .Operatore = "="
+             })
+            lIDS.Add(New IDS With {
+            .Id = 0,
+            .Nome = "DocIdToBeUnloaded",
+            .Operatore = "="
+            })
+            lIDS.Add(New IDS With {
+            .Id = 0,
+            .Nome = "InvoiceId",
+            .Operatore = "="
+             })
+            lIDS.Add(New IDS With {
+            .Id = 0,
+            .Nome = "InvoiceForAdvanceID",
+            .Operatore = "="
+             })
+            lIDS.Add(New IDS With {
+            .Id = 0,
+            .Nome = "ProFormaInvoiceID",
+            .Operatore = "="
+            })
+            lIDS.Add(New IDS With {
+            .Id = 0,
+            .Nome = "CRRefID",
+            .Operatore = "="
+            })
+            lIDS.Add(New IDS With {
+            .Id = 0,
+            .Nome = "TRId",
+            .Operatore = "="
+            })
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_SaleDocDetail"), lIDS))
             Return True
         Catch ex As Exception
             Return False
         End Try
     End Function
 
-    Private Function SumId(ByVal dt As DataTable, field As String, id As Integer) As DataTable
+    Private Function EditId(ByVal dt As DataTable, id As List(Of IDS)) As DataTable
         Dim stopwatch As New System.Diagnostics.Stopwatch
         stopwatch.Start()
         Dim dv As DataView = dt.DefaultView
-        dv.Sort = field & " desc"
-        For Each r As DataRowView In dv
-            r.Item(field) = r.Item(field) + id
-        Next
+        Dim keyIDS As IDS = id.Find(Function(p) p.Chiave = True)
+        dv.Sort = keyIDS.Nome & " desc"
+        Try
+            For Each r As DataRowView In dv
+                For Each f As IDS In id
+                    r.Item(f.Nome) = If(f.Operatore = "+", CInt(r.Item(f.Nome)) + f.Id, f.Id)
+                Next
+            Next
+        Catch ex As Exception
+            Debug.Print(ex.Message)
+            FLogin.lstStatoConnessione.Items.Add("Annullamento operazione: Riscontrati errori durante l'EditId " & dt.TableName)
+
+            Dim mb As New MessageBoxWithDetails(ex.Message & " " & dt.TableName, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
+        End Try
         Debug.Print("Edit " & dt.TableName & " " & stopwatch.Elapsed.ToString)
         Return dv.ToTable
     End Function
+
+    Private Class IDS
+        Public Property Chiave As Boolean
+        Public Property Nome As String
+        Public Property Id As Integer
+        Public Property Operatore As String
+
+    End Class
     ''' <summary>
     ''' Eseguo la BULK INSERT dell'intero dataset nel database di destinazione
     ''' </summary>

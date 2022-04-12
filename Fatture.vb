@@ -7,6 +7,8 @@ Module Fatture
     'TODO: creare dei parametri
     Private Const UpdatePIvaCodFisc As Boolean = False '12/04/2021 Usato per determinare se aggiornare o meno codice fiscale e P.iva
     Private Const UpdateEmailCliente As Boolean = False '08/07/2021 Usato per determinare se aggiornare o meno partita iva
+    Private Const UpdateProvincia As Boolean = False '12/04/2022 Usato per determinare se aggiornare o meno la Provincia
+
     Public Function FattEleCSV(dts As DataSet, Optional bConIntestazione As Boolean = False) As Boolean
         'QUESTO CSV HA I VALORI MONETARI CON IL PUNTO
         'QUANDO PASSO UN DOUBLE DEVO FARE ATTENZIONE
@@ -2115,7 +2117,7 @@ Module Fatture
                         anagBranch.Item("CompanyName") = sRagSoc
                     End If
                 End If
-                If anagBranch.Item("County").ToString <> .Item("AF").ToString Then
+                If UpdateProvincia AndAlso anagBranch.Item("County").ToString <> .Item("AF").ToString Then
                     avvisi.AppendLine("Provincia : (" & .Item("AF").ToString & ") [" & anagBranch.Item("County") & "]")
                     anagBranch.Item("County") = .Item("AF").ToString
                 End If
@@ -2398,7 +2400,7 @@ Module Fatture
                     avvisi.AppendLine("Città : (" & .Item("J").ToString & ") [" & anag.Item("City") & "]")
                     anag.Item("City") = .Item("J").ToString
                 End If
-                If anag.Item("County").ToString <> .Item("K").ToString Then
+                If UpdateProvincia AndAlso anag.Item("County").ToString <> .Item("K").ToString Then
                     avvisi.AppendLine("Provincia : (" & .Item("K").ToString & ") [" & anag.Item("County") & "]")
                     anag.Item("County") = .Item("K").ToString
                 End If
