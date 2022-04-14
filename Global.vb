@@ -893,7 +893,7 @@ Module MagoNet
                                             errorLevel = "String " & colName
                                             'If dt.Columns(colName).MaxLength = 1 Then
                                             'defaultValue = constraintKeys.Substring(2, constraintKeys.Length - 4)
-                                            defaultValue = constraintKeys.Replace("(", "").Replace(")", "")
+                                            defaultValue = constraintKeys.Replace("(", "").Replace(")", "").Replace("'", "")
                                             'Else
                                             'defaultValue = constraintKeys.Substring(1, constraintKeys.Length - 2)
                                             'End If
