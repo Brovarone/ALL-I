@@ -199,9 +199,7 @@ Namespace MySqlServerBackup
             FLogin.Cursor = Cursors.Arrow
         End Sub
         Private Sub OnInfoMessage(ByVal sender As Object, ByVal e As System.Data.SqlClient.SqlInfoMessageEventArgs)
-            FLogin.prgCopy.PerformStep()
-            FLogin.prgCopy.Refresh()
-            Debug.Print(e.Message)
+            AvanzaBarra()
         End Sub
     End Module
 End Namespace

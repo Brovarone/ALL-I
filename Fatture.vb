@@ -608,9 +608,7 @@ Module Fatture
                                                                                         End If
 
                                                                                         'esco da questo ciclo
-                                                                                        FLogin.prgCopy.PerformStep()
-                                                                                        FLogin.prgCopy.Update()
-                                                                                        Application.DoEvents()
+                                                                                        AvanzaBarra()
                                                                                         Continue For
                                                                                     Else
                                                                                         'processo riga Merce/Servizio
@@ -1029,9 +1027,7 @@ Module Fatture
                                                                             End If
                                                                     End Select
                                                                 End With
-                                                                FLogin.prgCopy.PerformStep()
-                                                                FLogin.prgCopy.Update()
-                                                                Application.DoEvents()
+                                                                AvanzaBarra()
                                                             Next
                                                             Debug.Print("Inizio Bulk")
                                                             Using cmdqry = New SqlCommand("DBCC TRACEON(610)", Connection)
@@ -2966,9 +2962,7 @@ Module MovimentiAnaliticiDaFatture
                                                             Next
 
                                                         End With
-                                                        FLogin.prgCopy.PerformStep()
-                                                        FLogin.prgCopy.Update()
-                                                        Application.DoEvents()
+                                                        AvanzaBarra()
                                                     Next
                                                     'FINE CICLO 
 
@@ -3364,9 +3358,7 @@ Module SEPA
                             End Select
                         End With
                         'Debug.Print("Fatt: " & iNrRighe.ToString() & " " & stopwatch2.Elapsed.ToString())
-                        FLogin.prgCopy.PerformStep()
-                        FLogin.prgCopy.Update()
-                        Application.DoEvents()
+                        AvanzaBarra()
                     Next
 
                     Using cmdqry = New SqlCommand("DBCC TRACEON(610)", Connection)
@@ -3480,9 +3472,7 @@ Module SEPA
                                 End Select
                             End With
                             'Debug.Print("Fatt: " & iNrRighe.ToString() & " " & stopwatch2.Elapsed.ToString())
-                            FLogin.prgCopy.PerformStep()
-                            FLogin.prgCopy.Update()
-                            Application.DoEvents()
+                            AvanzaBarra()
                         Next
 
                         Using cmdqry = New SqlCommand("DBCC TRACEON(610)", Connection)

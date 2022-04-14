@@ -354,9 +354,7 @@ Module Cespiti
 
                                                 End With
                                                 'Fine Ciclo
-                                                FLogin.prgCopy.PerformStep()
-                                                FLogin.prgCopy.Update()
-                                                Application.DoEvents()
+                                                AvanzaBarra()
                                             Next
                                             'Ultimo adeguamento al 2021
                                             wSaldo.Anno = 2021

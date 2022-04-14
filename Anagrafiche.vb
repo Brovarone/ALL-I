@@ -177,9 +177,7 @@ Module Anagrafiche
                                 'MessageBox.Show("Cliente già presente:" & drXLS(irxls).Item("D").ToString & " " & drXLS(irxls).Item("E").ToString)
                                 Continue For
                             End If
-                            FLogin.prgCopy.PerformStep()
-                            FLogin.prgCopy.Update()
-                            Application.DoEvents()
+                            AvanzaBarra
                         Next
                         Debug.Print(result.ToString)
                         If bDuplicate Then MessageBox.Show(result.ToString)
@@ -273,9 +271,7 @@ Module Anagrafiche
 
                         End With
                         dtCFNat.Rows.Add(drCF)
-                        FLogin.prgCopy.PerformStep()
-                        FLogin.prgCopy.Update()
-                        Application.DoEvents()
+                        AvanzaBarra
                     Next
                     Debug.Print(result.ToString)
                     If bDuplicate Then MessageBox.Show(result.ToString)
@@ -380,9 +376,7 @@ Module Anagrafiche
                         End With
                         dtRID.Rows.Add(drRID)
 
-                        FLogin.prgCopy.PerformStep()
-                        FLogin.prgCopy.Update()
-                        Application.DoEvents()
+                        AvanzaBarra
                     Next
                     Debug.Print(result.ToString)
                     If bExixts Then MessageBox.Show(result.ToString)
@@ -547,9 +541,7 @@ Module Anagrafiche
                                     End With
                                     dtInt.Rows.Add(drInt)
 
-                                    FLogin.prgCopy.PerformStep()
-                                    FLogin.prgCopy.Update()
-                                    Application.DoEvents()
+                                    AvanzaBarra
                                 End If
                                 'Aggiorno il flag sull'anagrafica cliente
                                 Dim iCliopt As Integer = dvCliOpt.Find(drXLS(irxls).Item("A").ToString)
@@ -655,9 +647,7 @@ Module Anagrafiche
                                 'If ex.HResult = -2146232022 Then Continue For
                             End Try
                         End If
-                        FLogin.prgCopy.PerformStep()
-                        FLogin.prgCopy.Update()
-                        Application.DoEvents()
+                        AvanzaBarra()
                     Next
                     Debug.Print(result.ToString)
                     'If bAbsent Then MessageBox.Show(result.ToString)
@@ -766,10 +756,7 @@ Module Anagrafiche
                 For Each r As DataRow In dt.Rows
                     r.Item("Region") = Get_Regione(r.Item("County"))
                     r.Item("TBModifiedID") = My.Settings.mLOGINID 'ID utente
-
-                    FLogin.prgCopy.PerformStep()
-                    FLogin.prgCopy.Update()
-                    Application.DoEvents()
+                    AvanzaBarra()
                 Next
                 EditTestoBarra("Salvataggio ")
                 adpCli.Update(dt)
@@ -936,9 +923,7 @@ Module Anagrafiche
                                 End With
                                 dtCF.Rows.Add(drCF)
                                 dtCFOpt.Rows.Add(drCFOpt)
-                                FLogin.prgCopy.PerformStep()
-                                FLogin.prgCopy.Update()
-                                Application.DoEvents()
+                                AvanzaBarra()
 
                             Else
                                 bDuplicate = True
@@ -1040,9 +1025,7 @@ Module Anagrafiche
 
                         End With
                         dtCF.Rows.Add(drCF)
-                        FLogin.prgCopy.PerformStep()
-                        FLogin.prgCopy.Update()
-                        Application.DoEvents()
+                        AvanzaBarra()
                     Next
                     Debug.Print(result.ToString)
                     If bDuplicate Then MessageBox.Show(result.ToString)
@@ -1120,9 +1103,7 @@ Module Anagrafiche
                             dvCondPag(ir)("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                             dvCondPag(ir).EndEdit()
                         End If
-                        FLogin.prgCopy.PerformStep()
-                        FLogin.prgCopy.Update()
-                        Application.DoEvents()
+                        AvanzaBarra()
                     Next
                     Debug.Print(result.ToString)
                     If bAssente Then MessageBox.Show(result.ToString)
@@ -1217,9 +1198,7 @@ Module Anagrafiche
                             End With
                             dtPdc.Rows.Add(drPdc)
                         End If
-                        FLogin.prgCopy.PerformStep()
-                        FLogin.prgCopy.Update()
-                        Application.DoEvents()
+                        AvanzaBarra()
                     Next
                     Debug.Print(result.ToString)
                     If bExist Then MessageBox.Show(result.ToString)
@@ -1350,9 +1329,7 @@ Module Anagrafiche
                                         iSede = 0
                                     End If
                                 End If
-                                FLogin.prgCopy.PerformStep()
-                                FLogin.prgCopy.Update()
-                                Application.DoEvents()
+                                AvanzaBarra()
                             Next
                             Debug.Print(result.ToString)
                             If bAssente Then MessageBox.Show(result.ToString)
@@ -1456,9 +1433,7 @@ Module Anagrafiche
                                     'dvbanche(ib).EndEdit()
                                 End If
                             End With
-                            FLogin.prgCopy.PerformStep()
-                            FLogin.prgCopy.Update()
-                            Application.DoEvents()
+                            AvanzaBarra()
                         Next
                         Debug.Print("Inserimento Banche Clienti: " & drXLS.Length.ToString & " in " & stopwatch1.Elapsed.ToString())
                         EditTestoBarra("Salvataggio ")

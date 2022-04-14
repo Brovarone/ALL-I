@@ -935,9 +935,7 @@ Public Module Contabilita
 
                                                             End If
                                                         End With
-                                                        FLogin.prgCopy.PerformStep()
-                                                        FLogin.prgCopy.Update()
-                                                        Application.DoEvents()
+                                                        AvanzaBarra()
                                                     Next
 
                                                     Using cmdqry = New SqlCommand("DBCC TRACEON(610)", Connection)

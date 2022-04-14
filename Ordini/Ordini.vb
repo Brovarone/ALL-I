@@ -173,9 +173,7 @@ Module Ordini
 #End Region
                 'Ciclo su tutti gli ordini
                 For Each o In allOrders
-                    FLogin.prgCopy.PerformStep()
-                    FLogin.prgCopy.Update()
-                    Application.DoEvents()
+                    AvanzaBarra()
                     Debug.Print("Ordine: " & o.InternalOrdNo)
                     debugging.AppendLine("Ordine: " & o.InternalOrdNo)
 #Region "Inizializzazione"
@@ -1027,9 +1025,7 @@ Module Ordini
 
                 'Ciclo su tutti gli ordini
                 For Each o In allOrders
-                    FLogin.prgCopy.PerformStep()
-                    FLogin.prgCopy.Update()
-                    Application.DoEvents()
+                    AvanzaBarra()
                     Debug.Print("Ordine: " & o.InternalOrdNo)
                     debugging.AppendLine("Ordine: " & o.InternalOrdNo)
 #Region "Inizializzazione"

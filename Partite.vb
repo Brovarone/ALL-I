@@ -221,9 +221,7 @@ Module Partite
 
                                 End Select
                             End With
-                            FLogin.prgCopy.PerformStep()
-                            FLogin.prgCopy.Update()
-                            Application.DoEvents()
+                            AvanzaBarra()
                         Next
                         'Devo gestire quelle da cancellare
                         Dim ListofIDs As List(Of Integer) = New List(Of Integer)
@@ -286,9 +284,7 @@ Module Partite
                                             cmdqry2.Parameters("@ID2").Value = ID
                                             cmdqry.ExecuteNonQuery()
                                             cmdqry2.ExecuteNonQuery()
-                                            FLogin.prgCopy.PerformStep()
-                                            FLogin.prgCopy.Update()
-                                            Application.DoEvents()
+                                            AvanzaBarra()
                                         Next
                                     End Using
                                 End Using

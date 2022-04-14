@@ -335,9 +335,7 @@ Module Unused
                                 End Select
                             End With
                             'Debug.Print("Fatt: " & iNrRighe.ToString() & " " & stopwatch2.Elapsed.ToString())
-                            FLogin.prgCopy.PerformStep()
-                            FLogin.prgCopy.Update()
-                            Application.DoEvents()
+                            AvanzaBarra()
                         Next
                         EditTestoBarra("Salvataggio: Fatture")
                         Using bulkTrans = Connection.BeginTransaction

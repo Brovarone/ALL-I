@@ -967,6 +967,11 @@ Public Module Common
         GC.WaitForPendingFinalizers()
 
     End Sub
+    Public Sub AvanzaBarra()
+        FLogin.prgCopy.PerformStep()
+        FLogin.prgCopy.Update()
+        Application.DoEvents()
+    End Sub
     Public Sub ScriviLogESposta()
         Dim s As New List(Of String)
         ScriviLogESposta(s)

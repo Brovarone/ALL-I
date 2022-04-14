@@ -403,29 +403,29 @@ Public Class FLogin
             ElseIf s = "AAAAMMGG" Then
                 'Ho premuto ok ma senza inserire data
                 result.Append(" MA_SaleDocDetail: " & comm.ExecuteNonQuery().ToString)
-                prgCopy.PerformStep()
+                AvanzaBarra()
                 comm.CommandText = "DELETE MA_SaleDocReferences" & wCrID
                 result.Append(" MA_SaleDocReferences: " & comm.ExecuteNonQuery().ToString)
-                prgCopy.PerformStep()
+                AvanzaBarra()
                 comm.CommandText = "DELETE MA_SaleDocShipping" & wCrID
                 result.Append(" MA_SaleDocShipping: " & comm.ExecuteNonQuery().ToString)
-                prgCopy.PerformStep()
+                AvanzaBarra()
                 prgCopy.Update()
                 comm.CommandText = "DELETE MA_SaleDocPymtSched" & wCrID
                 result.Append(" MA_SaleDocPymtSched: " & comm.ExecuteNonQuery().ToString)
-                prgCopy.PerformStep()
+                AvanzaBarra()
                 comm.CommandText = "DELETE MA_SaleDocSummary" & wCrID
                 result.Append(" MA_SaleDocSummary: " & comm.ExecuteNonQuery().ToString)
-                prgCopy.PerformStep()
+                AvanzaBarra()
                 comm.CommandText = "DELETE MA_EI_ITDocAdditionalData" & wCrID
                 result.Append(" MA_EI_ITDocAdditionalData: " & comm.ExecuteNonQuery().ToString)
-                prgCopy.PerformStep()
+                AvanzaBarra()
                 comm.CommandText = "DELETE MA_SaleDocTaxSummary" & wCrID
                 result.Append(" MA_SaleDocTaxSummary: " & comm.ExecuteNonQuery().ToString)
-                prgCopy.PerformStep()
+                AvanzaBarra()
                 comm.CommandText = "DELETE MA_SaleDoc WHERE CustSuppType=" & CustSuppType.Cliente & " AND TBCreatedID=" & My.Settings.mLOGINID
                 result.Append(" MA_SaleDoc: " & comm.ExecuteNonQuery().ToString)
-                prgCopy.PerformStep()
+                AvanzaBarra()
             ElseIf Integer.TryParse(s, res) Then
                 'se ho una data valida cancello solo quella data
                 'Dim data As String = MagoFormatta(s, GetType(DateTime)).DataTempo
@@ -1326,14 +1326,14 @@ Public Class FLogin
                 'Ho premuto ok ma senza inserire data
                 'LOW reimposta flag su documento
                 'result.Append(" MA_CostAccEntriesDetail: " & comm.ExecuteNonQuery().ToString)
-                'prgCopy.PerformStep()
+                'AvanzaBarra
                 'Dim wCross As String = " WHERE DerivedDocType=" & CrossReference.MovimentoAnalitico & " AND TBCreatedID=" & My.Settings.mLOGINID
                 'comm.CommandText = "DELETE MA_CrossReferences" & wCross
                 'result.Append(" MA_CrossReferences: " & comm.ExecuteNonQuery().ToString)
-                'prgCopy.PerformStep()
+                'AvanzaBarra
                 'comm.CommandText = "DELETE MA_CostAccEntries" & wCr_Mod
                 'result.Append(" MA_CostAccEntries: " & comm.ExecuteNonQuery().ToString)
-                'prgCopy.PerformStep()
+                'AvanzaBarra
                 'prgCopy.Update()
             ElseIf Integer.TryParse(s, res) Then
                 'se ho una data valida cancello solo quella data
@@ -1372,14 +1372,14 @@ Public Class FLogin
                 'Ho premuto ok ma senza inserire data
                 'LOW reimposta flag su documento
                 'result.Append(" MA_CostAccEntriesDetail: " & comm.ExecuteNonQuery().ToString)
-                'prgCopy.PerformStep()
+                'AvanzaBarra
                 'Dim wCross As String = " WHERE DerivedDocType=" & CrossReference.MovimentoAnalitico & " AND TBCreatedID=" & My.Settings.mLOGINID
                 'comm.CommandText = "DELETE MA_CrossReferences" & wCross
                 'result.Append(" MA_CrossReferences: " & comm.ExecuteNonQuery().ToString)
-                'prgCopy.PerformStep()
+                'AvanzaBarra
                 'comm.CommandText = "DELETE MA_CostAccEntries" & wCr_Mod
                 'result.Append(" MA_CostAccEntries: " & comm.ExecuteNonQuery().ToString)
-                'prgCopy.PerformStep()
+                'AvanzaBarra
                 'prgCopy.Update()
             ElseIf Integer.TryParse(s, res) Then
                 'se ho una data valida cancello solo quella data
@@ -1480,20 +1480,20 @@ Public Class FLogin
             ElseIf s = "AAAAMMGG" Then
                 'Ho premuto ok ma senza inserire data
                 result.Append(" MA_FixedAssetsBalance: " & comm.ExecuteNonQuery().ToString)
-                prgCopy.PerformStep()
+                AvanzaBarra()
                 comm.CommandText = "DELETE MA_FixedAssetsFiscal" & wCrID
                 result.Append(" MA_FixedAssetsFiscal: " & comm.ExecuteNonQuery().ToString)
-                prgCopy.PerformStep()
+                AvanzaBarra()
                 comm.CommandText = "DELETE MA_FixAssetEntriesDetail" & wCrID
                 result.Append(" MA_FixAssetEntriesDetail: " & comm.ExecuteNonQuery().ToString)
-                prgCopy.PerformStep()
+                AvanzaBarra()
                 prgCopy.Update()
                 comm.CommandText = "DELETE MA_FixAssetEntries" & wCrID
                 result.Append(" MA_FixAssetEntries: " & comm.ExecuteNonQuery().ToString)
-                prgCopy.PerformStep()
+                AvanzaBarra()
                 comm.CommandText = "DELETE MA_FixedAssets" & wCrID
                 result.Append(" MA_FixedAssets: " & comm.ExecuteNonQuery().ToString)
-                prgCopy.PerformStep()
+                AvanzaBarra()
 
             ElseIf Integer.TryParse(s, res) Then
                 'se ho una data valida cancello solo quella data
