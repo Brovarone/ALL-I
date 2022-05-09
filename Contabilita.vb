@@ -1010,15 +1010,15 @@ Public Module Contabilita
     End Function
     Private Sub RicalcolaPerc(dt As DataTable, id As Integer, tot As Double)
         Dim dvDoc As New DataView(dt, "EntryId=" & id, "Line", DataViewRowState.CurrentRows)
-        Dim pSum As Double
         Try
             For i = 0 To dvDoc.Count - 1
                 Dim am As Double = dvDoc(i).Item("Amount")
                 Dim p As Double = If(tot = 0, 0, Math.Round((am / tot) * 100, 2))
-                'In quanto posso NON scrivere delle righe questo tipo di ragionamento non funziona.
-                'dvDoc(i).Item("Perc") = Math.Round(If(i = dvDoc.Count - 1, 100 - pSum, p), 2)
                 dvDoc(i).Item("Perc") = Math.Round(p, 2)
-                pSum += Math.Round(p, 2)
+                'In quanto posso NON scrivere delle righe questo tipo di ragionamento non funziona.
+                'Dim pSum As Double
+                'pSum += Math.Round(p, 2)
+                'dvDoc(i).Item("Perc") = Math.Round(If(i = dvDoc.Count - 1, 100 - pSum, p), 2)
             Next
         Catch ex As Exception
             Debug.Print(ex.Message)

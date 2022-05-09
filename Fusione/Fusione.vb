@@ -3,19 +3,17 @@ Imports System.Data.SqlClient
 Imports System.Text
 Imports System.Reflection.MethodBase
 
-Imports EFMago.Models
-Imports Microsoft.EntityFrameworkCore
-Imports Microsoft.EntityFrameworkCore.EF
-Imports EFCore.BulkExtensions
-'TODO: valutare implementazioni Fattura elettronica 
-'Todo: Dichiarazione intento lettera W ( magari impostare un campo in anagrafica cliente/ordine) e aggiungerlo agli step di pre-invio( tipo quello dei dati canoni ) ma ne verrano fuori altri
-
 Module Fusione
 
-    Dim dsOrigin As DataSet
-    Dim dsDestination As DataSet
-    Dim dtIDS As DataTable
-    Const Prefisso As String = "UNO"
+    Private dsOrigin As DataSet
+    Private dsDestination As DataSet
+    Private dtIDS As DataTable
+    Private dtNewIds As DataTable
+    Private dvNewIds As DataView
+    Const PrefissoCespiti As String = "A"
+    Const Prefisso As String = "1"
+    Const Suffisso As String = "1"
+    Const ContropartitaAcquisto As String = "3ACQ"
 
     Private Class TabelleDaEstrarre
         Public Property Filtro As String
@@ -53,7 +51,7 @@ Module Fusione
         Dim qry As String = "SELECT * FROM "
         Dim tabelle = New List(Of TabelleDaEstrarre)
         Dim tabelleNoEdit = New List(Of TabelleDaEstrarre)
-        'Fatture
+#Region "Fatture"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDoc", .Filtro = ""})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocComponents"})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocDetail"})
@@ -67,8 +65,8 @@ Module Fusione
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_EIEventViewer"})
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_EI_ITDocAdditionalData"})
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_EI_ITAsyncComm"})
-
-        'Acquisti ( solo bolle di carico)
+#End Region
+#Region "Acquisti ( solo bolle di carico)"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDoc", .Filtro = qry & "MA_PurchaseDoc WHERE DocumentType =  9830400"})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocDetail"})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocNotes"})
@@ -77,58 +75,170 @@ Module Fusione
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocShipping"})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocSummary"})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocTaxSummary"})
+#End Region
+#Region "Ordini Clienti"
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrd", .Filtro = ""})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdComponents"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdDetails"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdNotes"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdPymtSched"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdReferences"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdShipping"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdSummary"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdTaxSummary"})
+        'Tabelle Personalizzate ALLSYSTEM UNO
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "ALLOrdCliAcc"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "ALLOrdCliAttivita"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "ALLOrdCliContratto"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "ALLOrdCliDescrizioni"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "ALLOrdCliTipologiaServizi"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "ALLOrdFiglio"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "ALLOrdPadre"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "ALLCespiti"})
 
-        'Cespiti
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssets"})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsBalance"})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsCoeff"})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsFinancial"})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsFiscal"})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsPeriod"})
+#End Region
+#Region "Cespiti"
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssets", .Filtro = qry & "MA_FixedAssets WHERE DisposalType <> 7143424"})
+        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsBalance"})
+        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsCoeff"})
+        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsFinancial"})
+        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsFiscal"})
+        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsPeriod"})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixAssetLocations"})
-
-
-        'Analitica ( Centri di Costo)
+#End Region
+#Region "Analitica ( Centri di Costo + Commesse)"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CostCenters"})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CostCenterGroups"}) ' nessuna modifica
+
+#End Region
+#Region "Agenti"
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Areas"})
+#End Region
+#Region "Clienti : Dichiarazioni di Intento"
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_DeclarationOfIntent"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppCustomerOptions", .Filtro = qry & "MA_CustSuppCustomerOptions WHERE CustSuppType=" & CustSuppType.Cliente})
+
+#End Region
+#Region "Magazzino : Articoli"
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Items"})
+#End Region
+
+#Region "Note"
+        '--Tabelle della UNO a 0 Records
+        'MA_ItemCodes
+        'MA_ItemCustomersBudget
+        'MA_ItemCustomersPriceLists
+        'MA_ItemsAnalysisParameters
+        'MA_ItemsBRFiscalCtg
+        'MA_ItemsBRTaxes
+        'MA_ItemsComparableUoM
+        'MA_ItemsConai
+        'MA_ItemsLanguageDescri
+        'MA_ItemsLocations
+        'MA_ItemsLocationsMonthly
+        'MA_ItemsManufacturingData
+        'MA_ItemsMaterials
+        'MA_ItemsPriceLists
+        'MA_ItemsPurchaseBarCode
+        'MA_ItemsStorageRetailPrices
+        'MA_ItemsTechDataDefinition
+        'MA_ItemsTechnicalData
+        'MA_ItemSuppliersOperations
+        'MA_ItemsWMS
+        'MA_ItemsWMSZones
+        'MA_ItemToCtgAssociations
+        'MA_ItemTypeBudget
+        'MA_ItemTypeCustomers
+        'MA_ItemTypeCustomersBudget
+        'MA_ItemTypeSuppliers
+
+        '-- Da gestire
+        '21335 MA_Items   
+        '13 MA_ItemCustomers
+        '80 MA_ItemNotes
+        'xxx MA_ItemsGoodsData
+        'xxx MA_ItemsIntrastat
+        'xxx MA_ItemsKit
+        '3 MA_ItemsSubstitute
+        '30 MA_ItemTypes
+        '?? NON HO I CODICI FORNITORE
+        'xxx MA_ItemSuppliers
+        'xxx MA_ItemSuppliersPriceLists
+
+        '-- Da riebolare
+        'xxx MA_ItemsFiscalData
+        'xxx MA_ItemsFiscalDataDomCurr
+
+        '-- Da gestire a mano
+        '1 MA_ItemParameters
+
+        '--Da non Importare
+        'xxx MA_ItemsFIFO
+        'xxx MA_ItemsFIFODomCurr
+        'xxx MA_ItemsLIFO
+        'xxx MA_ItemsLIFODomCurr
+        'xxx MA_ItemsMonthlyBalances                       
+        'xxx MA_ItemsStorageQty
+        'xxx MA_ItemsStorageQtyMonthly
+#End Region
+
+#End Region
 
         '''''''''''''''''''''''
         ''''NESSUNA MODIFICA'''
         '''''''''''''''''''''''
-        'Clienti
+#Region "Clienti"
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .Filtro = qry & "MA_CustSupp WHERE CustSuppType=" & CustSuppType.Cliente})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppBranches", .Filtro = qry & "MA_CustSuppBranches WHERE CustSuppType=" & CustSuppType.Cliente})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppCustomerOptions"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNaturalPerson", .Filtro = qry & "MA_CustSuppNaturalPerson WHERE CustSuppType=" & CustSuppType.Cliente})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNotes", .Filtro = qry & "MA_CustSuppNotes WHERE CustSuppType=" & CustSuppType.Cliente})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppOutstandings", .Filtro = qry & "MA_CustSuppOutstandings WHERE CustSuppType=" & CustSuppType.Cliente}) ' Insoluti
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppPeople", .Filtro = qry & "MA_CustSuppPeople WHERE CustSuppType=" & CustSuppType.Cliente})
         '
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_DeclarationOfIntent", .Filtro = qry & "MA_DeclarationOfIntent WHERE CustSuppType=" & CustSuppType.Cliente})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SDDMandate"})
-
-        'Banche
+#End Region
+#Region "Banche"
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Banks", .Filtro = qry & "MA_Banks WHERE IsACompanyBank = 0"})
-
-        'Ordini Clienti
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrd", .Filtro = ""})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdComponents"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdDetails"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdNotes"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdPymtSched"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdReferences"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdShipping"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdSummary"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdTaxSummary"})
-
-        'Analitica ( Commesse)
+#End Region
+#Region "Analitica (CdC + Commesse)"
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Jobs"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_JobGroups"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_JobsLang"})
-        'Cespiti
+        'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_JobsBalances"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CostCenterGroups"}) ' nessuna modifica
+
+#End Region
+#Region "Cespiti Classi e Categorie"
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_FixAssetsClasses"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_FixAssetsCtg"})
 #End Region
+#Region "Ordini - Dati Allsystem"
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "ALLAttivita"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "ALLDescrizioni"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "ALLTipoRigaServizio"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "ALLNoteFoxPro"})
+#End Region
+#Region " Articoli"
+
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemCustomers"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemNotes"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsGoodsData"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsIntrastat"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsKit"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsSubstitute"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemTypes"})
+        'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemSuppliers"})
+        'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemSuppliersPriceLists"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsFiscalData", .Filtro = qry & "MA_ItemsFiscalData WHERE FiscalYear = 2022"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsFiscalDataDomCurr", .Filtro = qry & "MA_ItemsFiscalDataDomCurr WHERE FiscalYear = 2022"})
+
+#End Region
+#Region "Magazzino : Depositi"
+        'Da Export di mago tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Storages"})
+#End Region
+#Region "Agenti"
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SalesPeople"})
+#End Region
+
 
         dsOrigin = New DataSet
         dsDestination = New DataSet
@@ -155,6 +265,13 @@ Module Fusione
                 End Using
                 AvanzaBarra()
             Next
+            'Carico IDS da database di destinazione
+            Using adpIDS As New SqlDataAdapter("Select * FROM MA_IDNumbers", ConnDestination)
+                dtNewIds = New DataTable
+                adpIDS.Fill(dtNewIds)
+                dvNewIds = New DataView(dtNewIds, "", "CodeType", DataViewRowState.CurrentRows)
+            End Using
+
             stopwatch.Stop()
             Debug.Print(stopwatch.Elapsed.ToString)
             FLogin.lstStatoConnessione.Items.Add("Estrazione dati eseguita in : " & stopwatch.Elapsed.ToString)
@@ -178,31 +295,54 @@ Module Fusione
         Dim dvIDS = New DataView(dtIDS, "", "Key", DataViewRowState.CurrentRows)
         FLogin.prgCopy.Value = 0
         FLogin.prgCopy.Step = 1
-        FLogin.prgCopy.Maximum = 5
+        FLogin.prgCopy.Maximum = 8
+        FLogin.lstStatoConnessione.Items.Add("Modifiche ai dati in corso...")
+        AvanzaBarra()
 
+        EditTestoBarra("Modifiche: Documenti Vendita")
         ok = EditFatture(dvIDS)
         AvanzaBarra()
         If Not ok Then someTrouble = True
+        EditTestoBarra("Modifiche: Documenti Acquisto")
         ok = EditAcquisti(dvIDS)
         AvanzaBarra()
         If Not ok Then someTrouble = True
+        EditTestoBarra("Modifiche: Analitica")
         ok = EditCentriDiCosto()
         AvanzaBarra()
         If Not ok Then someTrouble = True
+        EditTestoBarra("Modifiche: Ordini Clienti")
         ok = EditOrdiniClienti(dvIDS)
         AvanzaBarra()
         If Not ok Then someTrouble = True
+        EditTestoBarra("Modifiche: Cespiti")
         ok = EditCespiti()
+        AvanzaBarra()
+        If Not ok Then someTrouble = True
+        EditTestoBarra("Modifiche: Agenti")
+        ok = EditAgenti()
+        AvanzaBarra()
+        If Not ok Then someTrouble = True
+        EditTestoBarra("Modifiche: Clienti")
+        ok = EditClienti(dvIDS)
+        AvanzaBarra()
+        If Not ok Then someTrouble = True
+        EditTestoBarra("Modifiche: Articoli")
+        ok = EditArticoli()
         AvanzaBarra()
         If Not ok Then someTrouble = True
 
         Return someTrouble
     End Function
-
+    ''' <summary>
+    ''' Incremento SaleDocId sulle tabelle delle Vendite
+    ''' </summary>
+    ''' <param name="dv"></param>
+    ''' <returns></returns>
     Private Function EditFatture(ByVal dv As DataView) As Boolean
 
         Dim lIDS As New List(Of IDS)
-        Dim SaleDocId As Integer
+        Dim saleDocId As Integer
         Dim found As Integer = dv.Find("SaleDocId")
         If found = -1 Then
             Debug.Print("Fatture SaleDocId: non trovato")
@@ -210,10 +350,12 @@ Module Fusione
             MessageBox.Show("Impossibile continuare,Fatture SaleDocId: non trovato nel file IDS")
             End
         Else
-            SaleDocId = CInt(dv(found)("NewKey"))
+            saleDocId = CInt(dv(found)("NewKey"))
+            Dim lastId As Integer = dtNewIds(dvNewIds.Find(IdType.DocVend)).Item("LastId")
+            dtNewIds(dvNewIds.Find(IdType.DocVend)).Item("LastId") = lastId + saleDocId
             lIDS.Add(New IDS With {
                 .Chiave = True,
-                .Id = SaleDocId,
+                .Id = saleDocId,
                 .Nome = "SaleDocId",
                 .Operatore = "+"
             })
@@ -293,6 +435,11 @@ Module Fusione
                 .Nome = "CostCenter",
                 .Operatore = "ADD"
             })
+            lIDS.Add(New IDS With {
+                .IdString = Suffisso,
+                .Nome = "Area",
+                .Operatore = "END"
+            })
         End If
 
         Try
@@ -302,7 +449,7 @@ Module Fusione
             lIDS.Clear()
             lIDS.Add(New IDS With {
                 .Chiave = True,
-                .Id = SaleDocId,
+                .Id = saleDocId,
                 .Nome = "SaleDocId",
                 .Operatore = "+"
             })
@@ -387,7 +534,11 @@ Module Fusione
             Return False
         End Try
     End Function
-
+    ''' <summary>
+    ''' Incremento PurchaseDocId sulle sole Bolle di Carico
+    ''' </summary>
+    ''' <param name="dv"></param>
+    ''' <returns></returns>
     Private Function EditAcquisti(ByVal dv As DataView) As Boolean
 
         Dim lIDS As New List(Of IDS)
@@ -400,6 +551,8 @@ Module Fusione
             End
         Else
             PurchaseDocId = CInt(dv(found)("NewKey"))
+            Dim lastId As Integer = dtNewIds(dvNewIds.Find(IdType.DocVend)).Item("LastId")
+            dtNewIds(dvNewIds.Find(IdType.DocAcq)).Item("LastId") = lastId + PurchaseDocId
             lIDS.Add(New IDS With {
                 .Chiave = True,
                 .Id = PurchaseDocId,
@@ -500,7 +653,6 @@ Module Fusione
         End If
 
         Try
-
             'Acquisti
             dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_PurchaseDoc"), lIDS))
 
@@ -600,6 +752,10 @@ Module Fusione
             Return False
         End Try
     End Function
+    ''' <summary>
+    ''' Viene aggiunto il prefisso UNO ai Cepiti e Ubicazioni
+    ''' </summary>
+    ''' <returns></returns>
     Private Function EditCespiti() As Boolean
         'dati presenti in 4 tabelle
         'MA_FixAssetEntriesDetail   'Esclusa
@@ -610,20 +766,25 @@ Module Fusione
             Dim lIDS As New List(Of IDS)
             lIDS.Add(New IDS With {
                 .Chiave = True,
-                .IdString = Prefisso,
+                .IdString = PrefissoCespiti,
                 .Nome = "FixedAsset",
                 .Operatore = "ADD"
             })
+            lIDS.Add(New IDS With {
+                .IdString = Suffisso,
+                .Nome = "Location",
+                .Operatore = "END"
+            })
             dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_FixedAssets"), lIDS))
+
             lIDS.Clear()
             lIDS.Add(New IDS With {
                 .Chiave = True,
-                .IdString = Prefisso,
+                .IdString = Suffisso,
                 .Nome = "Location",
-                .Operatore = "ADD"
+                .Operatore = "END"
             })
             dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_FixAssetLocations"), lIDS))
-
 
             Return True
         Catch ex As Exception
@@ -631,6 +792,94 @@ Module Fusione
         End Try
 
     End Function
+    ''' <summary>
+    ''' Viene controllata contropartita
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function EditArticoli() As Boolean
+        Try
+            Dim lIDS As New List(Of IDS)
+            lIDS.Add(New IDS With {
+                .IdString = ContropartitaAcquisto,
+                .Nome = "PurchaseOffset",
+                .Operatore = "SAVE"
+            })
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_Items"), lIDS))
+
+            Return True
+        Catch ex As Exception
+            Return False
+        End Try
+
+    End Function
+    ''' <summary>
+    ''' Viene controllata contropartita
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function EditAgenti() As Boolean
+        Try
+            Dim lIDS As New List(Of IDS)
+            lIDS.Add(New IDS With {
+                .Chiave = True,
+                .IdString = Suffisso,
+                .Nome = "Area",
+                .Operatore = "END"
+            })
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_Areas"), lIDS))
+
+            Return True
+        Catch ex As Exception
+            Return False
+        End Try
+
+    End Function
+    ''' <summary>
+    ''' Dichiarazioni di Intento
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function EditClienti(ByVal dv As DataView) As Boolean
+        Dim lIDS As New List(Of IDS)
+        Dim DeclId As Integer
+        Dim found As Integer = dv.Find("DeclId")
+        If found = -1 Then
+            Debug.Print("Clienti DeclId: non trovato")
+            My.Application.Log.WriteEntry("Clienti DeclId: non trovato")
+            MessageBox.Show("Impossibile continuare, Clienti DeclId: non trovato nel file IDS")
+            End
+        Else
+            DeclId = CInt(dv(found)("NewKey"))
+            Dim lastId As Integer = dtNewIds(dvNewIds.Find(IdType.DocVend)).Item("LastId")
+            dtNewIds(dvNewIds.Find(IdType.DicIntento)).Item("LastId") = lastId + DeclId
+            lIDS.Add(New IDS With {
+                .Chiave = True,
+                .IdString = 11,
+                .Nome = "DeclId",
+                .Operatore = "+"
+                })
+        End If
+
+        Try
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_DeclarationOfIntent"), lIDS))
+            lIDS.Clear()
+            lIDS.Add(New IDS With {
+                .IdString = Suffisso,
+                .Nome = "Area",
+                .Operatore = "END"
+            })
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_CustSuppCustomerOptions"), lIDS))
+
+            Return True
+
+        Catch ex As Exception
+            Return False
+        End Try
+
+
+    End Function
+    ''' <summary>
+    ''' Viene aggiunto il prefisso UNO ai Centri di Costo
+    ''' </summary>
+    ''' <returns></returns>
     Private Function EditCentriDiCosto() As Boolean
         'Presente su 21 tabelle !!!!!
         'MA_ChartOfAccountsCostAccTpl   'Esclusa
@@ -663,13 +912,17 @@ Module Fusione
                 .Operatore = "ADD"
             })
             dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_CostCenters"), lIDS))
-            dsDestination.Tables.Add(dsOrigin.Tables("MA_CostCenterGroups"))
 
             Return True
         Catch ex As Exception
             Return False
         End Try
     End Function
+    ''' <summary>
+    ''' Incremento SaleOrdId sugli Ordini
+    ''' </summary>
+    ''' <param name="dv"></param>
+    ''' <returns></returns>
     Private Function EditOrdiniClienti(ByVal dv As DataView) As Boolean
 
         Dim lIDS As New List(Of IDS)
@@ -682,6 +935,8 @@ Module Fusione
             End
         Else
             SaleOrdId = CInt(dv(found)("NewKey"))
+            Dim lastId As Integer = dtNewIds(dvNewIds.Find(IdType.DocVend)).Item("LastId")
+            dtNewIds(dvNewIds.Find(IdType.OrdCli)).Item("LastId") = lastId + SaleOrdId
             lIDS.Add(New IDS With {
                 .Chiave = True,
                 .Id = SaleOrdId,
@@ -700,14 +955,20 @@ Module Fusione
             dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_SaleOrdSummary"), lIDS))
             dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_SaleOrdTaxSummary"), lIDS))
 
-            'Aggiungo campo aggiuntivo cost center
+            'Aggiungo campo aggiuntivo Cost Center
             lIDS.Add(New IDS With {
                 .IdString = Prefisso,
                 .Nome = "CostCenter",
                 .Operatore = "ADD"
             })
+            lIDS.Add(New IDS With {
+                .IdString = Suffisso,
+                .Nome = "Area",
+                .Operatore = "END"
+            })
             dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_SaleOrd"), lIDS))
 
+            lIDS.RemoveAt(2)
             lIDS.Add(New IDS With {
             .Id = 0,
             .Nome = "ProductionPlanId",
@@ -734,6 +995,62 @@ Module Fusione
             .Operatore = "="
              })
             dsDestination.Tables.Add(EditId(dsOrigin.Tables("MA_SaleOrdDetails"), lIDS))
+
+            'Tabelle ALLSYSTEM UNO - Campo chiave diverso
+            lIDS.Clear()
+            lIDS.Add(New IDS With {
+                .Chiave = True,
+                .Id = SaleOrdId,
+                .Nome = "IdOrdCli",
+                .Operatore = "+"
+                })
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("ALLOrdCliDescrizioni"), lIDS))
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("ALLOrdCliContratto"), lIDS))
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("ALLOrdCliTipologiaServizi"), lIDS))
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("ALLOrdCliAttivita"), lIDS))
+            lIDS.Add(New IDS With {
+                .Id = SaleOrdId,
+                .Nome = "IdOrdPadre",
+                .Operatore = "+"
+                })
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("ALLOrdPadre"), lIDS))
+
+            lIDS.RemoveAt(1)
+
+            lIDS.Add(New IDS With {
+                .Id = SaleOrdId,
+                .Nome = "IdOrdFiglio",
+                .Operatore = "+"
+                })
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("ALLOrdFiglio"), lIDS))
+
+            lIDS.Clear()
+            lIDS.Add(New IDS With {
+                .Chiave = True,
+                .Id = SaleOrdId,
+                .Nome = "IdOrdCli",
+                .Operatore = "+"
+                })
+            lIDS.Add(New IDS With {
+                .IdString = Prefisso,
+                .Nome = "Cdc",
+                .Operatore = "ADD"
+                })
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("ALLOrdCliAcc"), lIDS))
+
+            lIDS.Clear()
+            lIDS.Add(New IDS With {
+                .Chiave = True,
+                .Id = SaleOrdId,
+                .Nome = "IdOrdCli",
+                .Operatore = "+"
+                })
+            lIDS.Add(New IDS With {
+                .IdString = PrefissoCespiti,
+                .Nome = "Cespite",
+                .Operatore = "ADD"
+                })
+            dsDestination.Tables.Add(EditId(dsOrigin.Tables("ALLCespiti"), lIDS))
             Return True
         Catch ex As Exception
             Return False
@@ -764,16 +1081,18 @@ Module Fusione
         stopwatch.Start()
         Dim dv As DataView = dt.DefaultView
         Dim keyIDS As IDS = id.Find(Function(p) p.Chiave = True)
-        dv.Sort = keyIDS.Nome & " desc"
+        If keyIDS IsNot Nothing Then dv.Sort = keyIDS.Nome & " desc"
+        Dim iRow As Integer
         Try
             For Each r As DataRowView In dv
+                iRow += 1
                 For Each f As IDS In id
                     Select Case f.Operatore
                         Case "+"
                             r.Item(f.Nome) = CInt(r.Item(f.Nome)) + f.Id
                         Case ""
                             r.Item(f.Nome) = f.Id
-                        Case "ADD"
+                        Case "ADD", "END"
                             Dim lprefix As Short = f.IdString.Length
                             If r.Item(f.Nome).ToString.Length + lprefix > r.Row.Table.Columns(f.Nome).MaxLength Then
                                 Dim msg As String = "Annullamento operazione: Riscontrati errori durante l'EditAddPrefix " & dt.TableName
@@ -782,21 +1101,33 @@ Module Fusione
                                 mb.ShowDialog()
                                 End
                             Else
-                                If Not String.IsNullOrEmpty(r.Item(f.Nome)) Then
-                                    r.Item(f.Nome) = String.Concat(f.IdString, r.Item(f.Nome))
+                                If Not String.IsNullOrWhiteSpace(r.Item(f.Nome).ToString) Then
+                                    If f.Operatore = "ADD" Then
+                                        r.Item(f.Nome) = String.Concat(f.IdString, r.Item(f.Nome))
+                                    Else
+                                        'END" = Suffisso
+                                        r.Item(f.Nome) = String.Concat(r.Item(f.Nome), f.IdString)
+                                    End If
                                 End If
                             End If
+                        Case "SAVE"
+                            If Not String.IsNullOrWhiteSpace(r.Item(f.Nome).ToString) AndAlso r.Item(f.Nome) <> f.IdString Then
+                                r.Item(f.Nome) = String.Empty
+                            End If
+                        Case "="
+                            r.Item(f.Nome) = f.Id
                     End Select
 
                 Next
             Next
         Catch ex As Exception
             Debug.Print(ex.Message)
-            FLogin.lstStatoConnessione.Items.Add("Annullamento operazione: Riscontrati errori durante l'EditId " & dt.TableName)
+            FLogin.lstStatoConnessione.Items.Add("Annullamento operazione: Riscontrata exception durante l'EditId " & dt.TableName)
             Dim mb As New MessageBoxWithDetails(ex.Message & " " & dt.TableName, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
         End Try
-        Debug.Print("Edit " & dt.TableName & " " & stopwatch.Elapsed.ToString)
+        Debug.Print("Edit: " & dt.TableName & " " & stopwatch.Elapsed.ToString)
+        My.Application.Log.DefaultFileLogWriter.WriteLine("Edit: " & dt.TableName & " " & stopwatch.Elapsed.ToString)
         Return dv.ToTable
     End Function
 
@@ -833,10 +1164,11 @@ Module Fusione
         Dim iStep As Integer
         Try
 
-            Using cmdqry = New SqlCommand("DBCC TRACEON(610)", ConnectionSpa)
+            Using cmdqry = New SqlCommand("DBCC TRACEON(610)", ConnDestination)
                 cmdqry.ExecuteNonQuery()
-                Using bulkTrans = ConnectionSpa.BeginTransaction
+                Using bulkTrans = ConnDestination.BeginTransaction
                     'Ciclo su ogni tabella
+                    FLogin.lstStatoConnessione.Items.Add("Scrittura dati in corso...")
                     FLogin.prgCopy.Maximum = dsDestination.Tables.Count
                     FLogin.prgCopy.Step = 1
                     FLogin.prgCopy.Value = 0
@@ -846,7 +1178,7 @@ Module Fusione
                         iStep += 1
                         Dim s As String = t.TableName
                         EditTestoBarra("Salvataggio: " & s)
-                        okBulk = ScriviBulk(s, t, bulkTrans, ConnectionSpa, DataRowState.Unchanged, loggingTxt, True)
+                        okBulk = ScriviBulk(s, t, bulkTrans, ConnDestination, DataRowState.Unchanged, loggingTxt, True)
                         If Not okBulk Then someTrouble = True
                         bulkMessage.AppendLine(loggingTxt)
                         AvanzaBarra()
@@ -857,9 +1189,31 @@ Module Fusione
                         bulkTrans.Rollback()
                     Else
                         bulkTrans.Commit()
+                        Debug.Print("Commit !")
                     End If
                     Debug.Print("Fine bulk")
                 End Using
+
+                'Aggiorno la tabella degli IDS
+                If Not someTrouble Then
+                    Dim irows As Integer
+                    Using updTrans = ConnDestination.BeginTransaction
+                        EditTestoBarra("Aggiornamento IDS")
+                        Using adpIDS As New SqlDataAdapter("Select * FROM MA_IDNumbers", ConnDestination)
+                            Dim cbMar = New SqlCommandBuilder(adpIDS)
+                            adpIDS.UpdateCommand = cbMar.GetUpdateCommand(True)
+                            adpIDS.UpdateCommand.Transaction = updTrans
+
+                            adpIDS.Fill(dtNewIds)
+                            irows = adpIDS.Update(dtNewIds)
+                            If irows > 0 Then
+                                'Debug.Print("Aggiornamento IDS: " & irows.ToString & " record")
+                            End If
+                            Debug.Print("Aggiornamento IDS: " & irows.ToString & " record")
+                            updTrans.Commit()
+                        End Using
+                    End Using
+                End If
                 cmdqry.CommandText = "DBCC TRACEOFF(610)"
                 cmdqry.ExecuteNonQuery()
                 Debug.Print("Fine update")
@@ -875,6 +1229,7 @@ Module Fusione
             Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
         End Try
+
 
         'Scrivo i Log
         If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Inserimento Dati ---" & vbCrLf & bulkMessage.ToString)

@@ -126,10 +126,10 @@ Public Class FLogin
     Private Sub SUBConnettiSPA(ByVal DB As String)
         Cursor = Cursors.WaitCursor
 
-        ConnectionSpa = New SqlConnection With {
+        ConnDestination = New SqlConnection With {
             .ConnectionString = "Data Source=" & txtSERVER.Text & "; Database=" & DB & ";User Id=" & txtID.Text & ";Password=" & txtPSW.Text & ";"
             }
-        ConnectionSpa.Open()
+        ConnDestination.Open()
 
         If Connection.State = ConnectionState.Open Then
             Using comm As New SqlCommand("SELECT  @@OPTIONS", Connection)
@@ -1305,8 +1305,8 @@ Public Class FLogin
     End Sub
 
     Private Sub ToolStripMenuItemDebugging_Click(sender As Object, e As EventArgs) Handles ToolStripMenuItemDebugging.Click
-        bIsDebugging = ToolStripMenuItemDebugging.Checked
-        lstStatoConnessione.Items.Add("DEBUG - Log Dettagliato " & If(bIsDebugging, "abilitato", "disabilitato"))
+        IsDebugging = ToolStripMenuItemDebugging.Checked
+        lstStatoConnessione.Items.Add("DEBUG - Log Dettagliato " & If(IsDebugging, "abilitato", "disabilitato"))
 
     End Sub
 
@@ -1669,11 +1669,11 @@ Public Class FLogin
         If CheckDB(TxtDB_UNO.Text, TxtTmpDB_UNO.Text) Then MostraPannelloUtente("UNO")
         If DBisTMP Then
             TxtTmpDB_UNO.BackColor = Color.FromArgb(255, 152, 251, 152)
+            FusioneToolStripMenuItem.Visible = True ' Accendo il tasto per la fusione (temporaneamento solo su TEST / TEST
         Else
             TxtDB_UNO.BackColor = Color.FromArgb(255, 152, 251, 152)
         End If
         isDbUNO = True
-        FusioneToolStripMenuItem.Visible = True ' Accendo il tasto per la fusione
 
     End Sub
 

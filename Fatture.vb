@@ -3207,7 +3207,7 @@ Module MovimentiAnaliticiDaFatture
         If errori.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & vbCrLf & errori.ToString)
         If errorAnniDiversi.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Riparti di competenze analitiche su anni precedenti NON creati! ---" & vbCrLf & errorAnniDiversi.ToString)
         If warningAnniDiversi.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Riparti di competenze analitiche su anni successivi creati! ---" & vbCrLf & warningAnniDiversi.ToString)
-        If bIsDebugging AndAlso debugging.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Debugging ---" & vbCrLf & debugging.ToString)
+        If IsDebugging AndAlso debugging.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Debugging ---" & vbCrLf & debugging.ToString)
 
         Return Not someTrouble
 

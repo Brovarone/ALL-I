@@ -38,13 +38,13 @@ Module Variabili
     Public DBInUse As String = ""
     Public DBisTMP As Boolean
     Public Connection As SqlConnection
-    Public ConnectionSpa As SqlConnection
+    Public ConnDestination As SqlConnection
     Public Trans As SqlTransaction
     Public DataInizio As String
     Public isAdmin As Boolean = False
     'Nuovo tracciato introduce altri campi quindi se reimporto cose vecchie mi si schianta
     Public bOldtrack As Boolean = False
-    Public bIsDebugging As Boolean = False
+    Public IsDebugging As Boolean = False
     Public Const IsDeprecated As Boolean = False ' Da utilizzare per funzioni DEPRECATE da All-System
     Public FolderPath As String ' percorso globale
 
@@ -398,13 +398,14 @@ Module MagoNet
 
     Friend Enum IdType As Integer
         'Specie Archivio 58
-        PNota = 3801095
-        MovAna = 3801102
         DocVend = 3801088
-        OrdCli = 3801098
         Partite = 3801094
-        DicIntento = 3801122
+        PNota = 3801095
         MovCespite = 3801097
+        OrdCli = 3801098
+        MovAna = 3801102
+        DocAcq = 3801108
+        DicIntento = 3801122
     End Enum
     Friend Enum CodeType As Integer
         'Tipo Documento non fiscale 57

@@ -459,7 +459,7 @@ Module Cespiti
             If avvisi.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Avvisi ---" & vbCrLf & avvisi.ToString)
             Debug.Print(avvisi.ToString)
             '( solo se in debugging)
-            If bIsDebugging AndAlso listOfNewCespiti.Count > 0 Then
+            If IsDebugging AndAlso listOfNewCespiti.Count > 0 Then
                 My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Nuovi cespiti ---")
                 For l = 0 To listOfNewCespiti.Count - 1
                     My.Application.Log.DefaultFileLogWriter.WriteLine(listOfNewCespiti(l).ToString)
