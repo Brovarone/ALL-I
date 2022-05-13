@@ -1749,13 +1749,6 @@ Public Class FLogin
         End Try
     End Sub
 
-    Private Sub EseguiToolStripMenuItem1_Click(sender As Object, e As EventArgs) Handles EseguiToolStripMenuItem1.Click
-        SUBConnetti(If(DBisTMP, TxtTmpDB_UNO.Text, TxtDB_UNO.Text))
-        SUBConnettiSPA(If(DBisTMP, TxtTmpDB_SPA.Text, TxtDB_SPA.Text))
-        ChkFusioneFull.Checked = True
-        SUBProcessa()
-
-    End Sub
 
     Private Sub RegioneDaProvinciaToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles RegioneDaProvinciaToolStripMenuItem.Click
         'Adeguo il campo Regione leggendolo dalla Provincia
@@ -1786,5 +1779,16 @@ Public Class FLogin
             ScriviLogESposta()
 
         End If
+    End Sub
+
+    Private Sub FusioneToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles FusioneToolStripMenuItem.Click
+
+        ToolStripMenuItemDebugging.PerformClick()
+
+        SUBConnetti(If(DBisTMP, TxtTmpDB_UNO.Text, TxtDB_UNO.Text))
+        SUBConnettiSPA(If(DBisTMP, TxtTmpDB_SPA.Text, TxtDB_SPA.Text))
+        ChkFusioneFull.Checked = True
+        SUBProcessa()
+
     End Sub
 End Class

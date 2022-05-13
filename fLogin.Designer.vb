@@ -139,6 +139,7 @@ Partial Class FLogin
         Me.TestPagheToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.AnaliticaDaFattureToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.RiorganizzaCartelleToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.RegioneDaProvinciaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.HelpToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ContentsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.IndexToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -152,7 +153,6 @@ Partial Class FLogin
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
-        Me.RegioneDaProvinciaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabPageCancella.SuspendLayout()
@@ -1123,13 +1123,13 @@ Partial Class FLogin
         'ImportaToolStripMenuItem
         '
         Me.ImportaToolStripMenuItem.Name = "ImportaToolStripMenuItem"
-        Me.ImportaToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.ImportaToolStripMenuItem.Size = New System.Drawing.Size(119, 22)
         Me.ImportaToolStripMenuItem.Text = "Importa"
         '
         'CancellaToolStripMenuItem
         '
         Me.CancellaToolStripMenuItem.Name = "CancellaToolStripMenuItem"
-        Me.CancellaToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.CancellaToolStripMenuItem.Size = New System.Drawing.Size(119, 22)
         Me.CancellaToolStripMenuItem.Text = "Cancella"
         '
         'SettingsToolStripMenuItem
@@ -1143,7 +1143,7 @@ Partial Class FLogin
         '
         Me.ToolStripTracciatoVecchio.CheckOnClick = True
         Me.ToolStripTracciatoVecchio.Name = "ToolStripTracciatoVecchio"
-        Me.ToolStripTracciatoVecchio.Size = New System.Drawing.Size(180, 22)
+        Me.ToolStripTracciatoVecchio.Size = New System.Drawing.Size(151, 22)
         Me.ToolStripTracciatoVecchio.Text = "Vecchio Flusso"
         Me.ToolStripTracciatoVecchio.ToolTipText = "Il flusso NON presenta le nuove colonne  ( dalla IB) dedicate alla contabilità an" &
     "alitica ( NrCanoni e Data decorrenza)"
@@ -1152,7 +1152,7 @@ Partial Class FLogin
         '
         Me.ToolStripMenuItemDebugging.CheckOnClick = True
         Me.ToolStripMenuItemDebugging.Name = "ToolStripMenuItemDebugging"
-        Me.ToolStripMenuItemDebugging.Size = New System.Drawing.Size(180, 22)
+        Me.ToolStripMenuItemDebugging.Size = New System.Drawing.Size(151, 22)
         Me.ToolStripMenuItemDebugging.Text = "Debugging"
         '
         'ComandiToolStripMenuItem
@@ -1166,52 +1166,58 @@ Partial Class FLogin
         'IDToolStripMenuItem
         '
         Me.IDToolStripMenuItem.Name = "IDToolStripMenuItem"
-        Me.IDToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.IDToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
         Me.IDToolStripMenuItem.Text = "ID"
         '
         'CaricaSchemaToolStripMenuItem
         '
         Me.CaricaSchemaToolStripMenuItem.Name = "CaricaSchemaToolStripMenuItem"
-        Me.CaricaSchemaToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.CaricaSchemaToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
         Me.CaricaSchemaToolStripMenuItem.Text = "Carica Schema"
         '
         'EseguiToolStripMenuItem
         '
         Me.EseguiToolStripMenuItem.Name = "EseguiToolStripMenuItem"
-        Me.EseguiToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.EseguiToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
         Me.EseguiToolStripMenuItem.Text = "Esegui"
         Me.EseguiToolStripMenuItem.ToolTipText = "Analizza la cartella e per ogni file esegue l'azione corrispondente. DEPRECATO"
         '
         'XLSToolStripMenuItem
         '
         Me.XLSToolStripMenuItem.Name = "XLSToolStripMenuItem"
-        Me.XLSToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.XLSToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
         Me.XLSToolStripMenuItem.Text = "XLS"
         '
         'CSVToolStripMenuItem
         '
         Me.CSVToolStripMenuItem.Name = "CSVToolStripMenuItem"
-        Me.CSVToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.CSVToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
         Me.CSVToolStripMenuItem.Text = "CSV"
         '
         'TestPagheToolStripMenuItem
         '
         Me.TestPagheToolStripMenuItem.Name = "TestPagheToolStripMenuItem"
-        Me.TestPagheToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.TestPagheToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
         Me.TestPagheToolStripMenuItem.Text = "TestPaghe"
         '
         'AnaliticaDaFattureToolStripMenuItem
         '
         Me.AnaliticaDaFattureToolStripMenuItem.Image = Global.ALLSystemTools.My.Resources.Resources.pie_chart_48
         Me.AnaliticaDaFattureToolStripMenuItem.Name = "AnaliticaDaFattureToolStripMenuItem"
-        Me.AnaliticaDaFattureToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.AnaliticaDaFattureToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
         Me.AnaliticaDaFattureToolStripMenuItem.Text = "Analitica da fatture"
         '
         'RiorganizzaCartelleToolStripMenuItem
         '
         Me.RiorganizzaCartelleToolStripMenuItem.Name = "RiorganizzaCartelleToolStripMenuItem"
-        Me.RiorganizzaCartelleToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.RiorganizzaCartelleToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
         Me.RiorganizzaCartelleToolStripMenuItem.Text = "Riorganizza Cartelle"
+        '
+        'RegioneDaProvinciaToolStripMenuItem
+        '
+        Me.RegioneDaProvinciaToolStripMenuItem.Name = "RegioneDaProvinciaToolStripMenuItem"
+        Me.RegioneDaProvinciaToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
+        Me.RegioneDaProvinciaToolStripMenuItem.Text = "Regione da Provincia"
         '
         'HelpToolStripMenuItem
         '
@@ -1264,7 +1270,7 @@ Partial Class FLogin
         'EseguiToolStripMenuItem1
         '
         Me.EseguiToolStripMenuItem1.Name = "EseguiToolStripMenuItem1"
-        Me.EseguiToolStripMenuItem1.Size = New System.Drawing.Size(108, 22)
+        Me.EseguiToolStripMenuItem1.Size = New System.Drawing.Size(180, 22)
         Me.EseguiToolStripMenuItem1.Text = "Esegui"
         '
         'PanelDB
@@ -1314,12 +1320,6 @@ Partial Class FLogin
         Me.Label8.Size = New System.Drawing.Size(271, 13)
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
-        '
-        'RegioneDaProvinciaToolStripMenuItem
-        '
-        Me.RegioneDaProvinciaToolStripMenuItem.Name = "RegioneDaProvinciaToolStripMenuItem"
-        Me.RegioneDaProvinciaToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
-        Me.RegioneDaProvinciaToolStripMenuItem.Text = "Regione da Provincia"
         '
         'FLogin
         '

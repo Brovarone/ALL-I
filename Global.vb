@@ -403,6 +403,7 @@ Module MagoNet
         PNota = 3801095
         MovCespite = 3801097
         OrdCli = 3801098
+        OrdFor = 3801100
         MovAna = 3801102
         DocAcq = 3801108
         DicIntento = 3801122

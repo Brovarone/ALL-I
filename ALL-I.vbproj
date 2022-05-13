@@ -38,7 +38,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>21</ApplicationRevision>
+    <ApplicationRevision>22</ApplicationRevision>
     <ApplicationVersion>3.1.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -366,6 +366,7 @@
     </Compile>
     <Compile Include="ApplicationEvents.vb" />
     <Compile Include="Cespiti.vb" />
+    <Compile Include="Fusione\FusioneOLD.vb" />
     <Compile Include="Fusione\Fusione.vb" />
     <Compile Include="Ordini\FAskFiltriOrdini.designer.vb">
       <DependentUpon>FAskFiltriOrdini.vb</DependentUpon>
