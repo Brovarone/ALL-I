@@ -949,8 +949,8 @@ Module Fusione
         Dim SQLquery As String
         Dim qryCount As String
         Dim errorLevel As String = ""
-        'todo Prov a mettere 100.000 , magari alzare
-        Dim pageSize As Integer = 100000
+        'todo Prov a mettere 100k , lento, abbassare a 10k
+        Dim pageSize As Integer = 10000
 
         If withData Then
             If String.IsNullOrWhiteSpace(t.QuerySelect) Then
