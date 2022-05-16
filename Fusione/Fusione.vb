@@ -85,6 +85,8 @@ Module Fusione
             FLogin.prgCopy.Step = 1
             FLogin.prgCopy.Maximum = tabelle.Count + tabelleNoEdit.Count
 
+            Dim stopwatch2 As New System.Diagnostics.Stopwatch
+            stopwatch2.Start()
             For Each t In tabelle
                 'Creo Datatable con valori di DEFAULT nelle colonne
                 EditTestoBarra("Carico dati: " & t.Nome)
@@ -110,6 +112,9 @@ Module Fusione
                 End Using
                 AvanzaBarra()
             Next
+            My.Application.Log.WriteEntry("Processo tabelle in : " & stopwatch2.Elapsed.ToString)
+            stopwatch2.Restart()
+
             'ciclo le tabelle senza Edit
             For Each t In tabelleNoEdit
                 EditTestoBarra("Carico dati: " & t.Nome)
@@ -119,22 +124,28 @@ Module Fusione
                 End Using
                 AvanzaBarra()
             Next
+            My.Application.Log.WriteEntry("Processo tabelle No edit in : " & stopwatch2.Elapsed.ToString)
+            stopwatch2.Restart()
             'Edit IDS
             If Not IsDebugging Then
                 ok = ScriviIds(dvIDS)
                 If Not ok Then someTrouble = True
             End If
-
+            stopwatch2.Stop()
             stopwatch.Stop()
             Debug.Print(stopwatch.Elapsed.ToString)
-            FLogin.lstStatoConnessione.Items.Add("Fusione eseguita in : " & stopwatch.Elapsed.ToString)
+            FLogin.lstStatoConnessione.Items.Add("Processo eseguito in : " & stopwatch.Elapsed.ToString)
+            My.Application.Log.WriteEntry("Processo eseguito in : " & stopwatch.Elapsed.ToString)
         Catch ex As Exception
             Debug.Print(ex.Message)
-            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
-            mb.ShowDialog()
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# EseguiFusione " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            If Not IsDebugging Then
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                mb.ShowDialog()
+            End If
             Return False
         End Try
-
+        My.Application.Log.WriteEntry("Fine processo")
         Return someTrouble
     End Function
 
@@ -409,29 +420,34 @@ Module Fusione
 
             Return True
         Catch ex As Exception
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ScriviIds: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
             Return False
         End Try
     End Function
     Private Sub AggiornaIDs(ByVal IdType As Integer, ByVal value As Integer, Optional ByRef MyReturnString As String = "")
-        Using cmd = New SqlCommand("UPDATE MA_IDNumbers SET LastId =" & value.ToString & " WHERE CodeType=@CodeType",
-                              ConnDestination)
-            cmd.Transaction = Trans
-            cmd.Parameters.AddWithValue("@CodeType", IdType)
-            Dim irows As Integer = cmd.ExecuteNonQuery()
-            If irows <= 0 Then
-                cmd.CommandText = "INSERT INTO MA_IDNumbers (CodeType, LastId, TBCreatedID, TBModifiedID) VALUES (@CodeType, @Value, @TBCreatedID ,@TBModifiedID )"
-                cmd.Parameters.AddWithValue("@Value", value)
-                cmd.Parameters.AddWithValue("@TBCreatedID", My.Settings.mLOGINID)
-                cmd.Parameters.AddWithValue("@TBModifiedID", My.Settings.mLOGINID)
-                irows = cmd.ExecuteNonQuery()
+        Try
+            Using cmd = New SqlCommand("UPDATE MA_IDNumbers SET LastId =" & value.ToString & " WHERE CodeType=@CodeType",
+                             ConnDestination)
+                cmd.Transaction = Trans
+                cmd.Parameters.AddWithValue("@CodeType", IdType)
+                Dim irows As Integer = cmd.ExecuteNonQuery()
+                If irows <= 0 Then
+                    cmd.CommandText = "INSERT INTO MA_IDNumbers (CodeType, LastId, TBCreatedID, TBModifiedID) VALUES (@CodeType, @Value, @TBCreatedID ,@TBModifiedID )"
+                    cmd.Parameters.AddWithValue("@Value", value)
+                    cmd.Parameters.AddWithValue("@TBCreatedID", My.Settings.mLOGINID)
+                    cmd.Parameters.AddWithValue("@TBModifiedID", My.Settings.mLOGINID)
+                    irows = cmd.ExecuteNonQuery()
+                End If
+            End Using
+            Dim r As String = ReturnVarName(IdType, GetType(MagoNet.IdType))
+            If String.IsNullOrWhiteSpace(MyReturnString) Then
+                My.Application.Log.WriteEntry("Ultimo ID scritto: " & value.ToString & " su tipo: " & r)
+            Else
+                MyReturnString = "Ultimo ID scritto: " & value.ToString & " su tipo: " & r
             End If
-        End Using
-        Dim r As String = ReturnVarName(IdType, GetType(MagoNet.IdType))
-        If String.IsNullOrWhiteSpace(MyReturnString) Then
-            My.Application.Log.WriteEntry("Ultimo ID scritto: " & value.ToString & " su tipo: " & r)
-        Else
-            MyReturnString = "Ultimo ID scritto: " & value.ToString & " su tipo: " & r
-        End If
+        Catch ex As Exception
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in AggiornaIDs: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+        End Try
     End Sub
     ''' <summary>
     ''' Incremento SaleDocId sulle tabelle delle Vendite
@@ -447,8 +463,10 @@ Module Fusione
         If found = -1 Then
             Debug.Print("Vendite SaleDocId: non trovato")
             My.Application.Log.WriteEntry("Fatture SaleDocId: non trovato")
-            MessageBox.Show("Impossibile continuare,Vendite SaleDocId: non trovato nel file IDS")
-            End
+            If Not IsDebugging Then
+                MessageBox.Show("Impossibile continuare,Vendite SaleDocId: non trovato nel file IDS")
+                End
+            End If
         Else
             saleDocId = CInt(dv(found)("NewKey"))
             Select Case dt.TableName
@@ -484,8 +502,10 @@ Module Fusione
                     If fOrdine = -1 Then
                         Debug.Print("Fatture: SaleOrdId: non trovato")
                         My.Application.Log.WriteEntry("Fatture: SaleOrdId: non trovato")
-                        MessageBox.Show("Impossibile continuare, Fatture: SaleOrdId: non trovato nel file IDS")
-                        End
+                        If Not IsDebugging Then
+                            MessageBox.Show("Impossibile continuare, Fatture: SaleOrdId: non trovato nel file IDS")
+                            End
+                        End If
                     Else
                         lIDS.Add(New IDS With {.Id = CInt(dv(fOrdine)("NewKey")), .Nome = "SaleOrdId", .Operatore = "+"})
                     End If
@@ -503,6 +523,7 @@ Module Fusione
                 newDt = Edit(dt, lIDS)
                 result = True
             Catch ex As Exception
+                My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditVendite: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
                 result = False
             End Try
         End If
@@ -523,8 +544,10 @@ Module Fusione
         If found = -1 Then
             Debug.Print("Acquisti PurchaseDocId: non trovato")
             My.Application.Log.WriteEntry("Acquisti PurchaseDocId: non trovato")
-            MessageBox.Show("Impossibile continuare, Acquisti PurchaseDocId: non trovato nel file IDS")
-            End
+            If Not IsDebugging Then
+                MessageBox.Show("Impossibile continuare, Acquisti PurchaseDocId: non trovato nel file IDS")
+                End
+            End If
         Else
             PurchaseDocId = CInt(dv(found)("NewKey"))
             Select Case dt.TableName
@@ -566,8 +589,10 @@ Module Fusione
                     If fOrdine = -1 Then
                         Debug.Print("Acquisti: PurchaseOrdId: non trovato")
                         My.Application.Log.WriteEntry("Acquisti: PurchaseOrdId: non trovato")
-                        MessageBox.Show("Impossibile continuare, Acquisti: PurchaseOrdId: non trovato nel file IDS")
-                        End
+                        If Not IsDebugging Then
+                            MessageBox.Show("Impossibile continuare, Acquisti: PurchaseOrdId: non trovato nel file IDS")
+                            End
+                        End If
                     Else
                         lIDS.Add(New IDS With {.Id = CInt(dv(fOrdine)("NewKey")), .Nome = "PurchaseOrdId", .Operatore = "+"})
                     End If
@@ -588,6 +613,7 @@ Module Fusione
                 newDt = Edit(If(withFilter, FilterRows(dt, listeIDs.Find(Function(x) x.Nome.Contains("MA_PurchaseDoc")), "PurchaseDocId"), dt), lIDS)
                 result = True
             Catch ex As Exception
+                My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditAcquisti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
                 result = False
             End Try
         End If
@@ -616,6 +642,7 @@ Module Fusione
             newDt = Edit(dt, lIDS)
             result = True
         Catch ex As Exception
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditCespiti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
             result = False
         End Try
         Return newDt
@@ -636,6 +663,7 @@ Module Fusione
             newDt = Edit(dt, lIDS)
             result = True
         Catch ex As Exception
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditArticoli: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
             result = False
         End Try
         Return newDt
@@ -655,6 +683,7 @@ Module Fusione
             newDt = Edit(dt, lIDS)
             result = True
         Catch ex As Exception
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditAgenti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
             result = False
         End Try
         Return newDt
@@ -673,8 +702,10 @@ Module Fusione
                 If found = -1 Then
                     Debug.Print("Clienti DeclId: non trovato")
                     My.Application.Log.WriteEntry("Clienti DeclId: non trovato")
-                    MessageBox.Show("Impossibile continuare, Clienti DeclId: non trovato nel file IDS")
-                    End
+                    If Not IsDebugging Then
+                        MessageBox.Show("Impossibile continuare, Clienti DeclId: non trovato nel file IDS")
+                        End
+                    End If
                 Else
                     DeclId = CInt(dv(found)("NewKey"))
                     lIDS.Add(New IDS With {.Chiave = True, .Id = DeclId, .Nome = "DeclId", .Operatore = "+"})
@@ -687,6 +718,7 @@ Module Fusione
             newDt = Edit(dt, lIDS)
             result = True
         Catch ex As Exception
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditClienti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
             result = False
         End Try
         Return newDt
@@ -728,6 +760,7 @@ Module Fusione
             newDt = Edit(dt, lIDS)
             result = True
         Catch ex As Exception
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditCentriDiCosto: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
             result = False
         End Try
         Return newDt
@@ -745,8 +778,10 @@ Module Fusione
         If found = -1 Then
             Debug.Print("Ordini SaleOrdId: non trovato")
             My.Application.Log.WriteEntry("Ordini SaleOrdId: non trovato")
-            MessageBox.Show("Impossibile continuare,Ordini SaleOrdId: non trovato nel file IDS")
-            End
+            If Not IsDebugging Then
+                MessageBox.Show("Impossibile continuare,Ordini SaleOrdId: non trovato nel file IDS")
+                End
+            End If
         Else
             SaleOrdId = CInt(dv(found)("NewKey"))
             Select Case dt.TableName
@@ -785,6 +820,7 @@ Module Fusione
             newDt = Edit(dt, lIDS)
             result = True
         Catch ex As Exception
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditOrdiniClienti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
             result = False
         End Try
         Return newDt
@@ -804,9 +840,12 @@ Module Fusione
             Next
         Catch ex As Exception
             Debug.Print(ex.Message)
-            FLogin.lstStatoConnessione.Items.Add("Annullamento operazione: Riscontrati errori durante il FiltroRows " & dt.TableName)
-            Dim mb As New MessageBoxWithDetails(ex.Message & " " & dt.TableName, GetCurrentMethod.Name, ex.StackTrace)
-            mb.ShowDialog()
+            FLogin.lstStatoConnessione.Items.Add("Riscontrati errori durante il FiltroRows " & dt.TableName)
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# FiltroRows " & dt.TableName & " " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            If Not IsDebugging Then
+                Dim mb As New MessageBoxWithDetails(ex.Message & " " & dt.TableName, GetCurrentMethod.Name, ex.StackTrace)
+                mb.ShowDialog()
+            End If
         End Try
         Return newDt
     End Function
@@ -829,12 +868,14 @@ Module Fusione
                         Case "ADD", "END"
                             Dim lprefix As Short = f.IdString.Length
                             If r.Item(f.Nome).ToString.Length + lprefix > r.Row.Table.Columns(f.Nome).MaxLength Then
-                                Dim msg As String = "Annullamento operazione: Riscontrati errori durante l'EditAddPrefix " & dt.TableName
+                                Dim msg As String = "Riscontrati errori durante l'EditAddPrefix " & dt.TableName
                                 FLogin.lstStatoConnessione.Items.Add(msg)
-                                Dim mb As New MessageBoxWithDetails(msg & " " & dt.TableName, GetCurrentMethod.Name, "Valore troppo grosso " & r.Item(f.Nome) & " " & f.IdString)
-                                mb.ShowDialog()
-                                'TODO da togliere
-                                If Not IsDebugging Then End
+                                My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditAddPrefix: " & dt.TableName & "." & f.Nome & " - Valore troppo grosso " & r.Item(f.Nome) & " " & f.IdString)
+                                If Not IsDebugging Then
+                                    Dim mb As New MessageBoxWithDetails(msg & "." & f.Nome, GetCurrentMethod.Name, "Valore troppo grosso " & r.Item(f.Nome) & " " & f.IdString)
+                                    mb.ShowDialog()
+                                    End
+                                End If
                             Else
                                 If Not String.IsNullOrWhiteSpace(r.Item(f.Nome).ToString) Then
                                     If f.Operatore = "ADD" Then
@@ -856,12 +897,15 @@ Module Fusione
             Next
         Catch ex As Exception
             Debug.Print(ex.Message)
-            FLogin.lstStatoConnessione.Items.Add("Annullamento operazione: Riscontrata exception durante l'EditId " & dt.TableName)
-            Dim mb As New MessageBoxWithDetails(ex.Message & " " & dt.TableName, GetCurrentMethod.Name, ex.StackTrace)
-            mb.ShowDialog()
+            FLogin.lstStatoConnessione.Items.Add("Riscontrata exception durante l'EditId " & dt.TableName)
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in Edit: " & dt.TableName & " - " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            If Not IsDebugging Then
+                Dim mb As New MessageBoxWithDetails(ex.Message & " " & dt.TableName, GetCurrentMethod.Name, ex.StackTrace)
+                mb.ShowDialog()
+            End If
         End Try
-        Debug.Print("Edit: " & dt.TableName & " " & stopwatch.Elapsed.ToString)
-        My.Application.Log.DefaultFileLogWriter.WriteLine("Edit: " & dt.TableName & " " & stopwatch.Elapsed.ToString)
+        Debug.Print("Edit(ok): " & dt.TableName & " " & stopwatch.Elapsed.ToString)
+        My.Application.Log.DefaultFileLogWriter.WriteLine("Edit(ok): " & dt.TableName & " " & stopwatch.Elapsed.ToString)
         Return dv.ToTable
     End Function
 
@@ -922,8 +966,10 @@ Module Fusione
             errori.AppendLine("[Salvataggio] Messaggio:" & ex.Message)
             errori.AppendLine("[Salvataggio] Stack:" & ex.StackTrace)
 
-            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
-            mb.ShowDialog()
+            If Not IsDebugging Then
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                mb.ShowDialog()
+            End If
         End Try
 
 
@@ -1089,8 +1135,11 @@ Module Fusione
                             End If
                         Catch ex As Exception
                             Debug.Print(ex.Message)
-                            Dim mb As New MessageBoxWithDetails(errorLevel & Environment.NewLine & ex.Message, GetCurrentMethod.Name, ex.StackTrace)
-                            mb.ShowDialog()
+                            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in CaricaDati: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                            If Not IsDebugging Then
+                                Dim mb As New MessageBoxWithDetails(errorLevel & Environment.NewLine & ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                                mb.ShowDialog()
+                            End If
                         End Try
                         Application.DoEvents()
                     End While
