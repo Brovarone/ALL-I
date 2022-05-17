@@ -91,25 +91,28 @@ Module Fusione
                 'Creo Datatable con valori di DEFAULT nelle colonne
                 EditTestoBarra("Carico dati: " & t.Nome)
                 Dim pageindex As Integer = 1
-                Using dt As DataTable = CaricaDati(t, False, pageindex)
-                    Dim newDt As New DataTable
-                    If t.Paging Then
-                        While t.Paging = True
-                            newDt = ModificaDati(t, dt, ok)
-                            If Not ok Then someTrouble = True
-                            ok = ScriviDati(newDt, Not IsDebugging)
-                            pageindex += 1
-                            'Carica nuovi dati
-                            CaricaDati(t, False, pageindex)
-                        End While
-                    End If
-                    'Ultimo cilco while + Se non ho paging
-                    newDt = New DataTable
-                    newDt = ModificaDati(t, dt, ok)
-                    If Not ok Then someTrouble = True
-                    ok = ScriviDati(newDt, Not IsDebugging)
+                Dim dt As New DataTable
+                Dim newDt As New DataTable
+                'Primo caricamento
+                dt = CaricaDati(t, False, pageindex)
+                If t.Paging Then
+                    While t.Paging = True
+                        newDt = New DataTable
+                        newDt = ModificaDati(t, dt, ok)
+                        If Not ok Then someTrouble = True
+                        ok = ScriviDati(newDt, Not IsDebugging)
+                        pageindex += 1
+                        'Carica nuovi dati
+                        dt = New DataTable
+                        dt = CaricaDati(t, False, pageindex)
+                    End While
+                End If
+                'Ultimo cilco while + Se non ho paging
+                newDt = New DataTable
+                newDt = ModificaDati(t, dt, ok)
+                If Not ok Then someTrouble = True
+                ok = ScriviDati(newDt, Not IsDebugging)
 
-                End Using
                 AvanzaBarra()
             Next
             My.Application.Log.WriteEntry("Processo tabelle in : " & stopwatch2.Elapsed.ToString)
@@ -355,7 +358,7 @@ Module Fusione
     ''' Eseguo le modifiche ai dati
     ''' </summary>
     ''' <returns></returns>
-    Private Function ModificaDati(ByVal t As TabelleDaEstrarre, ByRef dt As DataTable, ByRef result As Boolean) As DataTable
+    Private Function ModificaDati(ByVal t As TabelleDaEstrarre, ByVal dt As DataTable, ByRef result As Boolean) As DataTable
         Dim ok As Boolean
         Dim newDt As New DataTable
         Select Case t.Gruppo
@@ -441,10 +444,10 @@ Module Fusione
             End Using
             Dim r As String = ReturnVarName(IdType, GetType(MagoNet.IdType))
             If String.IsNullOrWhiteSpace(MyReturnString) Then
-                My.Application.Log.WriteEntry("Ultimo ID scritto: " & value.ToString & " su tipo: " & r)
-            Else
-                MyReturnString = "Ultimo ID scritto: " & value.ToString & " su tipo: " & r
-            End If
+                    My.Application.Log.WriteEntry("Ultimo ID scritto: " & value.ToString & " su tipo: " & r)
+                Else
+                    MyReturnString = "Ultimo ID scritto: " & value.ToString & " su tipo: " & r
+                End If
         Catch ex As Exception
             My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in AggiornaIDs: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
         End Try
@@ -454,7 +457,7 @@ Module Fusione
     ''' </summary>
     ''' <param name="dv"></param>
     ''' <returns></returns>
-    Private Function EditVendite(ByVal dv As DataView, ByRef dt As DataTable, ByRef result As Boolean) As DataTable
+    Private Function EditVendite(ByVal dv As DataView, ByVal dt As DataTable, ByRef result As Boolean) As DataTable
 
         Dim lIDS As New List(Of IDS)
         Dim saleDocId As Integer
@@ -534,7 +537,7 @@ Module Fusione
     ''' </summary>
     ''' <param name="dv"></param>
     ''' <returns></returns>
-    Private Function EditAcquisti(ByVal dv As DataView, ByRef dt As DataTable, ByRef result As Boolean) As DataTable
+    Private Function EditAcquisti(ByVal dv As DataView, ByVal dt As DataTable, ByRef result As Boolean) As DataTable
 
         Dim lIDS As New List(Of IDS)
         Dim PurchaseDocId As Integer
@@ -623,7 +626,7 @@ Module Fusione
     ''' Viene aggiunto il prefisso UNO ai Cepiti e Ubicazioni
     ''' </summary>
     ''' <returns></returns>
-    Private Function EditCespiti(ByRef dt As DataTable, ByRef result As Boolean) As DataTable
+    Private Function EditCespiti(ByVal dt As DataTable, ByRef result As Boolean) As DataTable
         'dati presenti in 4 tabelle
         'MA_FixAssetEntriesDetail   'Esclusa
         'MA_FixedAssets
@@ -651,7 +654,7 @@ Module Fusione
     ''' Viene controllata contropartita
     ''' </summary>
     ''' <returns></returns>
-    Private Function EditArticoli(ByRef dt As DataTable, ByRef result As Boolean) As DataTable
+    Private Function EditArticoli(ByVal dt As DataTable, ByRef result As Boolean) As DataTable
 
         Dim lIDS As New List(Of IDS)
         Dim newDt As New DataTable
@@ -672,7 +675,7 @@ Module Fusione
     ''' Viene controllata contropartita
     ''' </summary>
     ''' <returns></returns>
-    Private Function EditAgenti(ByRef dt As DataTable, ByRef result As Boolean) As DataTable
+    Private Function EditAgenti(ByVal dt As DataTable, ByRef result As Boolean) As DataTable
         Dim lIDS As New List(Of IDS)
         Dim newDt As New DataTable
         Select Case dtIDS.TableName
@@ -692,7 +695,7 @@ Module Fusione
     ''' Dichiarazioni di Intento
     ''' </summary>
     ''' <returns></returns>
-    Private Function EditClienti(ByVal dv As DataView, ByRef dt As DataTable, ByRef result As Boolean) As DataTable
+    Private Function EditClienti(ByVal dv As DataView, ByVal dt As DataTable, ByRef result As Boolean) As DataTable
         Dim lIDS As New List(Of IDS)
         Dim newDt As New DataTable
         Select Case dt.TableName
@@ -727,7 +730,7 @@ Module Fusione
     ''' Viene aggiunto il prefisso UNO ai Centri di Costo
     ''' </summary>
     ''' <returns></returns>
-    Private Function EditCentriDiCosto(ByRef dt As DataTable, ByRef result As Boolean) As DataTable
+    Private Function EditCentriDiCosto(ByVal dt As DataTable, ByRef result As Boolean) As DataTable
         'Presente su 21 tabelle !!!!!
         'MA_ChartOfAccountsCostAccTpl   'Esclusa
         'MA_CostAccEntriesDetail        'Esclusa
@@ -849,7 +852,7 @@ Module Fusione
         End Try
         Return newDt
     End Function
-    Private Function Edit(ByRef dt As DataTable, id As List(Of IDS)) As DataTable
+    Private Function Edit(ByVal dt As DataTable, id As List(Of IDS)) As DataTable
         Dim stopwatch As New System.Diagnostics.Stopwatch
         stopwatch.Start()
         Dim dv As DataView = dt.DefaultView
@@ -870,7 +873,7 @@ Module Fusione
                             If r.Item(f.Nome).ToString.Length + lprefix > r.Row.Table.Columns(f.Nome).MaxLength Then
                                 Dim msg As String = "Riscontrati errori durante l'EditAddPrefix " & dt.TableName
                                 FLogin.lstStatoConnessione.Items.Add(msg)
-                                My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditAddPrefix: " & dt.TableName & "." & f.Nome & " - Valore troppo grosso " & r.Item(f.Nome) & " " & f.IdString)
+                                My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditAddPrefix: " & r.Item(dt.PrimaryKey.First.ColumnName) & " - " & dt.TableName & "." & f.Nome & " - Valore troppo grosso " & r.Item(f.Nome) & f.IdString)
                                 If Not IsDebugging Then
                                     Dim mb As New MessageBoxWithDetails(msg & "." & f.Nome, GetCurrentMethod.Name, "Valore troppo grosso " & r.Item(f.Nome) & " " & f.IdString)
                                     mb.ShowDialog()
@@ -996,7 +999,7 @@ Module Fusione
         Dim qryCount As String
         Dim errorLevel As String = ""
         'todo Prov a mettere 100k , lento, abbassare a 10k
-        Dim pageSize As Integer = 10000
+        Dim pageSize As Integer = 500 '10000
 
         If withData Then
             If String.IsNullOrWhiteSpace(t.QuerySelect) Then
