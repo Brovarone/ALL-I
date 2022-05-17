@@ -999,7 +999,7 @@ Module Fusione
         Dim qryCount As String
         Dim errorLevel As String = ""
         'todo Prov a mettere 100k , lento, abbassare a 10k
-        Dim pageSize As Integer = 500 '10000
+        Dim pageSize As Integer = 10000
 
         If withData Then
             If String.IsNullOrWhiteSpace(t.QuerySelect) Then
