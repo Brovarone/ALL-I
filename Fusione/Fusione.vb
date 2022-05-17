@@ -11,10 +11,6 @@ Module Fusione
     'Tabelle database di destinazione
     Private dtNewIds As DataTable
     Private dvNewIds As DataView
-    Const PrefissoCespiti As String = "A"
-    Const Prefisso As String = "1"
-    Const Suffisso As String = "1"
-    Const ContropartitaAcquisto As String = "3ACQ"
     'Contenitori delle tabelle da processare
     Private tabelle As List(Of TabelleDaEstrarre)
     Private tabelleNoEdit As List(Of TabelleDaEstrarre)
@@ -88,7 +84,9 @@ Module Fusione
             Dim stopwatch2 As New System.Diagnostics.Stopwatch
             stopwatch2.Start()
             For Each t In tabelle
-                'Creo Datatable con valori di DEFAULT nelle colonne
+                'Estraggo la ListaIDS
+                Dim lIDS As New List(Of IDS)
+                lIDS = EstraiListaIds(t.Gruppo, t.Nome, dvIDS)
                 EditTestoBarra("Carico dati: " & t.Nome)
                 Dim pageindex As Integer = 1
                 Dim dt As New DataTable
@@ -98,7 +96,7 @@ Module Fusione
                 If t.Paging Then
                     While t.Paging = True
                         newDt = New DataTable
-                        newDt = ModificaDati(t, dt, ok)
+                        newDt = ModificaDati(t.Gruppo, dt, lIDS, ok)
                         If Not ok Then someTrouble = True
                         ok = ScriviDati(newDt, Not IsDebugging)
                         pageindex += 1
@@ -107,9 +105,9 @@ Module Fusione
                         dt = CaricaDati(t, False, pageindex)
                     End While
                 End If
-                'Ultimo cilco while + Se non ho paging
+                'Ultimo ciclo while + Se non ho paging
                 newDt = New DataTable
-                newDt = ModificaDati(t, dt, ok)
+                newDt = ModificaDati(t.Gruppo, dt, lIDS, ok)
                 If Not ok Then someTrouble = True
                 ok = ScriviDati(newDt, Not IsDebugging)
 
@@ -122,9 +120,20 @@ Module Fusione
             For Each t In tabelleNoEdit
                 EditTestoBarra("Carico dati: " & t.Nome)
                 Dim pageindex As Integer = 1
-                Using dt As DataTable = CaricaDati(t, False, pageindex)
-                    ok = ScriviDati(dt, Not IsDebugging)
-                End Using
+                Dim dt As New DataTable
+                'Primo caricamento
+                dt = CaricaDati(t, False, pageindex)
+                If t.Paging Then
+                    While t.Paging = True
+                        ok = ScriviDati(dt, Not IsDebugging)
+                        pageindex += 1
+                        'Carica nuovi dati
+                        dt = New DataTable
+                        dt = CaricaDati(t, False, pageindex)
+                    End While
+                End If
+                'Ultimo ciclo while + Se non ho paging
+                ok = ScriviDati(dt, Not IsDebugging)
                 AvanzaBarra()
             Next
             My.Application.Log.WriteEntry("Processo tabelle No edit in : " & stopwatch2.Elapsed.ToString)
@@ -358,41 +367,84 @@ Module Fusione
     ''' Eseguo le modifiche ai dati
     ''' </summary>
     ''' <returns></returns>
-    Private Function ModificaDati(ByVal t As TabelleDaEstrarre, ByVal dt As DataTable, ByRef result As Boolean) As DataTable
+    Private Function ModificaDati(ByVal g As MacroGruppo, ByVal dt As DataTable, ByVal lids As List(Of IDS), ByRef result As Boolean) As DataTable
         Dim ok As Boolean
         Dim newDt As New DataTable
-        Select Case t.Gruppo
+        Select Case g
             Case MacroGruppo.Vendita
-                EditTestoBarra("Modifiche: Documenti Vendita")
-                newDt = EditVendite(dvIDS, dt, ok)
+                Try
+                    newDt = Edit(dt, lids)
+                    result = True
+                Catch ex As Exception
+                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati Vendite: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                    result = False
+                End Try
             Case MacroGruppo.Acquisto
-                EditTestoBarra("Modifiche: Documenti Acquisto")
                 'Logica diversa perche' ho un filtro
-                newDt = EditAcquisti(dvIDS, dt, ok)
+                Dim withFiltro As Boolean = dt.TableName <> "MA_PurchaseDoc"
+                Try
+                    'Filtro e edito in un colpo solo
+                    newDt = Edit(If(withFiltro, FilterRows(dt, listeIDs.Find(Function(x) x.Nome.Contains("MA_PurchaseDoc")), "PurchaseDocId"), dt), lids)
+                    result = True
+                Catch ex As Exception
+                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditAcquisti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                    result = False
+                End Try
             Case MacroGruppo.Analitica
-                EditTestoBarra("Modifiche: Analitica")
-                newDt = EditCentriDiCosto(dt, ok)
+                Try
+                    newDt = Edit(dt, lids)
+                    result = True
+                Catch ex As Exception
+                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati CentriDiCosto: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                    result = False
+                End Try
             Case MacroGruppo.OrdiniClienti
-                EditTestoBarra("Modifiche: Ordini Clienti")
-                newDt = EditOrdiniClienti(dvIDS, dt, ok)
+                Try
+                    newDt = Edit(dt, lids)
+                    result = True
+                Catch ex As Exception
+                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati OrdiniClienti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                    result = False
+                End Try
             Case MacroGruppo.Cespiti
-                EditTestoBarra("Modifiche: Cespiti")
-                newDt = EditCespiti(dt, ok)
+                Try
+                    newDt = Edit(dt, lids)
+                    result = True
+                Catch ex As Exception
+                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati Cespiti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                    result = False
+                End Try
             Case MacroGruppo.Agenti
-                EditTestoBarra("Modifiche: Agenti")
-                newDt = EditAgenti(dt, ok)
+                Try
+                    newDt = Edit(dt, lids)
+                    result = True
+                Catch ex As Exception
+                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati Agenti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                    result = False
+                End Try
             Case MacroGruppo.Clienti
-                EditTestoBarra("Modifiche: Clienti")
-                newDt = EditClienti(dvIDS, dt, ok)
+                Try
+                    newDt = Edit(dt, lids)
+                    result = True
+                Catch ex As Exception
+                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati Clienti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                    result = False
+                End Try
             Case MacroGruppo.Articoli
-                EditTestoBarra("Modifiche: Articoli")
-                newDt = EditArticoli(dt, ok)
+                Try
+                    newDt = Edit(dt, lids)
+                    result = True
+                Catch ex As Exception
+                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati Articoli: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                    result = False
+                End Try
         End Select
 
         If Not ok Then result = True
 
         Return newDt
     End Function
+
     Private Function ScriviIds(ByVal dv As DataView) As Boolean
         Try
             'Vendite
@@ -444,390 +496,14 @@ Module Fusione
             End Using
             Dim r As String = ReturnVarName(IdType, GetType(MagoNet.IdType))
             If String.IsNullOrWhiteSpace(MyReturnString) Then
-                    My.Application.Log.WriteEntry("Ultimo ID scritto: " & value.ToString & " su tipo: " & r)
-                Else
-                    MyReturnString = "Ultimo ID scritto: " & value.ToString & " su tipo: " & r
-                End If
+                My.Application.Log.WriteEntry("Ultimo ID scritto: " & value.ToString & " su tipo: " & r)
+            Else
+                MyReturnString = "Ultimo ID scritto: " & value.ToString & " su tipo: " & r
+            End If
         Catch ex As Exception
             My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in AggiornaIDs: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
         End Try
     End Sub
-    ''' <summary>
-    ''' Incremento SaleDocId sulle tabelle delle Vendite
-    ''' </summary>
-    ''' <param name="dv"></param>
-    ''' <returns></returns>
-    Private Function EditVendite(ByVal dv As DataView, ByVal dt As DataTable, ByRef result As Boolean) As DataTable
-
-        Dim lIDS As New List(Of IDS)
-        Dim saleDocId As Integer
-        Dim found As Integer = dv.Find("SaleDocId")
-        Dim newDt As New DataTable
-        If found = -1 Then
-            Debug.Print("Vendite SaleDocId: non trovato")
-            My.Application.Log.WriteEntry("Fatture SaleDocId: non trovato")
-            If Not IsDebugging Then
-                MessageBox.Show("Impossibile continuare,Vendite SaleDocId: non trovato nel file IDS")
-                End
-            End If
-        Else
-            saleDocId = CInt(dv(found)("NewKey"))
-            Select Case dt.TableName
-                Case "MA_SaleDoc"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = saleDocId, .Nome = "SaleDocId", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PymtSchedId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "JournalEntryId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "IntrastatId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvEntryId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "AdvancePymtSchedId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectionDocumentId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectedDocumentId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InventoryIDReturn", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ParagonID", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ProFormaInvoiceID", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PureJECollectionPaymentId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectionDocumentIdInCN", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "WorkerIDIssue", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ExtAccAEID", .Operatore = "="})
-                    'Aggiungo campo aggiuntivo cost center
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
-                    lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = "END"})
-                Case "MA_SaleDocComponents", "MA_SaleDocManufReasons", "MA_SaleDocNotes", "MA_SaleDocShipping", "MA_SaleDocSummary", "MA_SaleDocTaxSummary"
-                    '"MA_SaleDocReferences", "MA_EIEventViewer", "MA_EI_ITDocAdditionalData", "MA_EI_ITAsyncComm"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = saleDocId, .Nome = "SaleDocId", .Operatore = "+"})
-                Case "MA_SaleDocPymtSched"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = saleDocId, .Nome = "SaleDocId", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
-                Case "MA_SaleDocDetail"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = saleDocId, .Nome = "SaleDocId", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
-                    Dim fOrdine As Integer = dv.Find("SaleOrdId")
-                    If fOrdine = -1 Then
-                        Debug.Print("Fatture: SaleOrdId: non trovato")
-                        My.Application.Log.WriteEntry("Fatture: SaleOrdId: non trovato")
-                        If Not IsDebugging Then
-                            MessageBox.Show("Impossibile continuare, Fatture: SaleOrdId: non trovato nel file IDS")
-                            End
-                        End If
-                    Else
-                        lIDS.Add(New IDS With {.Id = CInt(dv(fOrdine)("NewKey")), .Nome = "SaleOrdId", .Operatore = "+"})
-                    End If
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "MOId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReturnFromCustomerId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocumentId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "DocIdToBeUnloaded", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvoiceId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvoiceForAdvanceID", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ProFormaInvoiceID", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "TRId", .Operatore = "="})
-            End Select
-            Try
-                newDt = Edit(dt, lIDS)
-                result = True
-            Catch ex As Exception
-                My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditVendite: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-                result = False
-            End Try
-        End If
-        Return newDt
-    End Function
-    ''' <summary>
-    ''' Incremento PurchaseDocId sulle sole Bolle di Carico
-    ''' </summary>
-    ''' <param name="dv"></param>
-    ''' <returns></returns>
-    Private Function EditAcquisti(ByVal dv As DataView, ByVal dt As DataTable, ByRef result As Boolean) As DataTable
-
-        Dim lIDS As New List(Of IDS)
-        Dim PurchaseDocId As Integer
-        Dim found As Integer = dv.Find("PurchaseDocId")
-        Dim withFilter As Boolean
-        Dim newDt As New DataTable
-        If found = -1 Then
-            Debug.Print("Acquisti PurchaseDocId: non trovato")
-            My.Application.Log.WriteEntry("Acquisti PurchaseDocId: non trovato")
-            If Not IsDebugging Then
-                MessageBox.Show("Impossibile continuare, Acquisti PurchaseDocId: non trovato nel file IDS")
-                End
-            End If
-        Else
-            PurchaseDocId = CInt(dv(found)("NewKey"))
-            Select Case dt.TableName
-                Case "MA_PurchaseDoc"
-                    withFilter = False
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseDocId, .Nome = "PurchaseDocId", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PymtSchedId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "JournalEntryId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "IntrastatId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvEntryId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "RMAId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InspectionOrdId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ScrapInvEntryId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReturnInvEntryId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "AdvancePymtSchedId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "AdjValueOnlyInvEntryId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectionDocumentId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectedDocumentId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PureJECollectionPaymentId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectionDocumentIdInCN", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "WorkerIDIssue", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PureJETaxTransferId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ExtAccAEID", .Operatore = "="})
-                    'Campi accessori
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
-                Case "MA_PurchaseDocNotes", "MA_PurchaseDocShipping", "MA_PurchaseDocSummary", "MA_PurchaseDocTaxSummary"
-                    '"MA_PurchaseDocReferences"
-                    withFilter = True
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseDocId, .Nome = "PurchaseDocId", .Operatore = "+"})
-                Case "MA_PurchaseDocPymtSched"
-                    withFilter = True
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseDocId, .Nome = "PurchaseDocId", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
-                Case "MA_PurchaseDocDetail"
-                    withFilter = True
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseDocId, .Nome = "PurchaseDocId", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
-                    Dim fOrdine As Integer = dv.Find("PurchaseOrdId")
-                    If fOrdine = -1 Then
-                        Debug.Print("Acquisti: PurchaseOrdId: non trovato")
-                        My.Application.Log.WriteEntry("Acquisti: PurchaseOrdId: non trovato")
-                        If Not IsDebugging Then
-                            MessageBox.Show("Impossibile continuare, Acquisti: PurchaseOrdId: non trovato nel file IDS")
-                            End
-                        End If
-                    Else
-                        lIDS.Add(New IDS With {.Id = CInt(dv(fOrdine)("NewKey")), .Nome = "PurchaseOrdId", .Operatore = "+"})
-                    End If
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InspectionOrdId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InspectionBillId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "RMAId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "BillOfLadingId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "MOId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "SaleDocId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocumentId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvoiceForAdvanceID", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "SuppQuotaId", .Operatore = "="})
-            End Select
-            Try
-                'Filtro e edito in un colpo solo
-                newDt = Edit(If(withFilter, FilterRows(dt, listeIDs.Find(Function(x) x.Nome.Contains("MA_PurchaseDoc")), "PurchaseDocId"), dt), lIDS)
-                result = True
-            Catch ex As Exception
-                My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditAcquisti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-                result = False
-            End Try
-        End If
-        Return newDt
-    End Function
-    ''' <summary>
-    ''' Viene aggiunto il prefisso UNO ai Cepiti e Ubicazioni
-    ''' </summary>
-    ''' <returns></returns>
-    Private Function EditCespiti(ByVal dt As DataTable, ByRef result As Boolean) As DataTable
-        'dati presenti in 4 tabelle
-        'MA_FixAssetEntriesDetail   'Esclusa
-        'MA_FixedAssets
-        'MA_FixedAssetsBalance      'Esclusa
-        'MA_FixedAssetsFiscal       'Esclusa
-        Dim lIDS As New List(Of IDS)
-        Dim newDt As New DataTable
-        Select Case dt.TableName
-            Case "MA_FixedAssets"
-                lIDS.Add(New IDS With {.Chiave = True, .IdString = PrefissoCespiti, .Nome = "FixedAsset", .Operatore = "ADD"})
-                lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Location", .Operatore = "END"})
-            Case "MA_FixAssetLocations"
-                lIDS.Add(New IDS With {.Chiave = True, .IdString = Suffisso, .Nome = "Location", .Operatore = "END"})
-        End Select
-        Try
-            newDt = Edit(dt, lIDS)
-            result = True
-        Catch ex As Exception
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditCespiti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-            result = False
-        End Try
-        Return newDt
-    End Function
-    ''' <summary>
-    ''' Viene controllata contropartita
-    ''' </summary>
-    ''' <returns></returns>
-    Private Function EditArticoli(ByVal dt As DataTable, ByRef result As Boolean) As DataTable
-
-        Dim lIDS As New List(Of IDS)
-        Dim newDt As New DataTable
-        Select Case dtIDS.TableName
-            Case "MA_Items"
-                lIDS.Add(New IDS With {.IdString = ContropartitaAcquisto, .Nome = "PurchaseOffset", .Operatore = "SAVE"})
-        End Select
-        Try
-            newDt = Edit(dt, lIDS)
-            result = True
-        Catch ex As Exception
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditArticoli: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-            result = False
-        End Try
-        Return newDt
-    End Function
-    ''' <summary>
-    ''' Viene controllata contropartita
-    ''' </summary>
-    ''' <returns></returns>
-    Private Function EditAgenti(ByVal dt As DataTable, ByRef result As Boolean) As DataTable
-        Dim lIDS As New List(Of IDS)
-        Dim newDt As New DataTable
-        Select Case dtIDS.TableName
-            Case "MA_Areas"
-                lIDS.Add(New IDS With {.Chiave = True, .IdString = Suffisso, .Nome = "Area", .Operatore = "End"})
-        End Select
-        Try
-            newDt = Edit(dt, lIDS)
-            result = True
-        Catch ex As Exception
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditAgenti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-            result = False
-        End Try
-        Return newDt
-    End Function
-    ''' <summary>
-    ''' Dichiarazioni di Intento
-    ''' </summary>
-    ''' <returns></returns>
-    Private Function EditClienti(ByVal dv As DataView, ByVal dt As DataTable, ByRef result As Boolean) As DataTable
-        Dim lIDS As New List(Of IDS)
-        Dim newDt As New DataTable
-        Select Case dt.TableName
-            Case "MA_DeclarationOfIntent"
-                Dim DeclId As Integer
-                Dim found As Integer = dv.Find("DeclId")
-                If found = -1 Then
-                    Debug.Print("Clienti DeclId: non trovato")
-                    My.Application.Log.WriteEntry("Clienti DeclId: non trovato")
-                    If Not IsDebugging Then
-                        MessageBox.Show("Impossibile continuare, Clienti DeclId: non trovato nel file IDS")
-                        End
-                    End If
-                Else
-                    DeclId = CInt(dv(found)("NewKey"))
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = DeclId, .Nome = "DeclId", .Operatore = "+"})
-                End If
-
-            Case "MA_CustSuppCustomerOptions"
-                lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = "END"})
-        End Select
-        Try
-            newDt = Edit(dt, lIDS)
-            result = True
-        Catch ex As Exception
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditClienti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-            result = False
-        End Try
-        Return newDt
-    End Function
-    ''' <summary>
-    ''' Viene aggiunto il prefisso UNO ai Centri di Costo
-    ''' </summary>
-    ''' <returns></returns>
-    Private Function EditCentriDiCosto(ByVal dt As DataTable, ByRef result As Boolean) As DataTable
-        'Presente su 21 tabelle !!!!!
-        'MA_ChartOfAccountsCostAccTpl   'Esclusa
-        'MA_CostAccEntriesDetail        'Esclusa
-        'MA_CostCenters
-        'MA_CostCentersBalances         'Esclusa
-        'MA_CustSupp                    '2 Voci
-        'MA_FixedAssets
-        'MA_InventoryEntries            'Esclusa
-        'MA_InventoryEntriesDetail      'Esclusa
-        'MA_Items                       '2 Voci
-        'MA_PurchaseDoc                 'Aggiunta
-        'MA_PurchaseDocDetail           'Aggiunta
-        'MA_PurchaseDocPymtSched        'Aggiunta
-        'MA_PurchaseOrd                 'Aggiunta
-        'MA_PurchaseOrdDetails          'Aggiunta
-        'MA_PyblsRcvblsDetails          'Stand by
-        'MA_SaleDoc                     'Aggiunta
-        'MA_SaleDocDetail               'Aggiunta
-        'MA_SaleDocPymtSched            'Aggiunta
-        'MA_SaleOrd                     'Aggiunta
-        'MA_SaleOrdDetails              'Aggiunta
-        'MA_Workers                     'Esclusa
-        Dim lIDS As New List(Of IDS)
-        Dim newDt As New DataTable
-        Select Case dtIDS.TableName
-            Case "MA_CostCenters"
-                lIDS.Add(New IDS With {.Chiave = True, .IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
-        End Select
-        Try
-            newDt = Edit(dt, lIDS)
-            result = True
-        Catch ex As Exception
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditCentriDiCosto: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-            result = False
-        End Try
-        Return newDt
-    End Function
-    ''' <summary>
-    ''' Incremento SaleOrdId sugli Ordini
-    ''' </summary>
-    ''' <param name="dv"></param>
-    ''' <returns></returns>
-    Private Function EditOrdiniClienti(ByVal dv As DataView, dt As DataTable, ByRef result As Boolean) As DataTable
-        Dim lIDS As New List(Of IDS)
-        Dim SaleOrdId As Integer
-        Dim found As Integer = dv.Find("SaleOrdId")
-        Dim newDt As New DataTable
-        If found = -1 Then
-            Debug.Print("Ordini SaleOrdId: non trovato")
-            My.Application.Log.WriteEntry("Ordini SaleOrdId: non trovato")
-            If Not IsDebugging Then
-                MessageBox.Show("Impossibile continuare,Ordini SaleOrdId: non trovato nel file IDS")
-                End
-            End If
-        Else
-            SaleOrdId = CInt(dv(found)("NewKey"))
-            Select Case dt.TableName
-                Case "MA_SaleOrdComponents", "MA_SaleOrdNotes", "MA_SaleOrdPymtSched", "MA_SaleOrdShipping", "MA_SaleOrdSummary", "MA_SaleOrdTaxSummary"
-                    '"MA_SaleOrdReferences"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = "+"})
-                Case "MA_SaleOrd"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
-                    lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = "END"})
-                Case "MA_SaleOrdDetails"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ProductionPlanId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ProductionJobId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceQuotationId", .Operatore = "="})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = "="})
-                Case "ALLOrdCliDescrizioni", "ALLOrdCliContratto", "ALLOrdCliTipologiaServizi", "ALLOrdCliAttivita"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = "+"})
-                Case "ALLOrdFiglio"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.Id = SaleOrdId, .Nome = "IdOrdFiglio", .Operatore = "+"})
-                Case "ALLOrdPadre"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.Id = SaleOrdId, .Nome = "IdOrdPadre", .Operatore = "+"})
-                Case "ALLOrdCliAcc"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "Cdc", .Operatore = "ADD"})
-                Case "ALLCespiti"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.IdString = PrefissoCespiti, .Nome = "Cespite", .Operatore = "ADD"})
-            End Select
-        End If
-        Try
-            newDt = Edit(dt, lIDS)
-            result = True
-        Catch ex As Exception
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditOrdiniClienti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-            result = False
-        End Try
-        Return newDt
-    End Function
     ''' <summary>
     ''' Restituisce una datatable filtrata in base a una datatable filter secondo la primaryKey
     ''' </summary>
@@ -912,7 +588,7 @@ Module Fusione
         Return dv.ToTable
     End Function
 
-    Private Class IDS
+    Friend Class IDS
         Public Property Chiave As Boolean
         Public Property Nome As String
         Public Property Id As Integer
@@ -1000,6 +676,7 @@ Module Fusione
         Dim errorLevel As String = ""
         'todo Prov a mettere 100k , lento, abbassare a 10k
         Dim pageSize As Integer = 10000
+        Dim pageTot As Integer
 
         If withData Then
             If String.IsNullOrWhiteSpace(t.QuerySelect) Then
@@ -1021,6 +698,7 @@ Module Fusione
             End
         End If
         Using da As New SqlDataAdapter(SQLquery, Connection)
+            da.SelectCommand.CommandTimeout = 120
             da.FillSchema(dt, SchemaType.Source)
             'Debug.Print("Creazione fillschema : " & stopwatch2.Elapsed.ToString)
             stopwatch2.Restart()
@@ -1032,7 +710,8 @@ Module Fusione
                     Dim rowsCount As Integer = CInt(cmd.ExecuteScalar())
                     If rowsCount > pageSize Then
                         t.Paging = True
-                        msg = "Estrazione dati : " & t.Nome & "(" & rowsCount.ToString & ") Paging (" & Math.Ceiling(rowsCount / pageSize).ToString & ")"
+                        pageTot = Math.Ceiling(rowsCount / pageSize)
+                        msg = "Estrazione dati : " & t.Nome & "(" & rowsCount.ToString & ") Paging (" & pageTot.ToString & ")"
                     Else
                         msg = "Estrazione dati : " & t.Nome & "(" & rowsCount.ToString & ") No Paging"
                     End If
@@ -1043,7 +722,7 @@ Module Fusione
                 My.Application.Log.WriteEntry(msg)
             End If
             If t.Paging Then
-                msg = "--- Page: " & pageindex.ToString
+                msg = "--- Page: " & pageindex.ToString & "/" & pageTot.ToString
                 FLogin.lstStatoConnessione.Items.Add(msg)
                 My.Application.Log.WriteEntry(msg)
                 Dim qry As String = "SELECT * FROM " & t.Nome & " ORDER BY " & dt.PrimaryKey(0).ColumnName.ToString & " OFFSET (" & (pageindex - 1) * pageSize & ") ROWS FETCH NEXT " & pageSize & " ROWS ONLY"
@@ -1165,4 +844,350 @@ Module Fusione
             l.Ids.Add(dr.Item(primarykey))
         Next
     End Sub
+End Module
+Module ListeID
+    Const PrefissoCespiti As String = "A"
+    Const Prefisso As String = "1"
+    Const Suffisso As String = "1"
+    Const ContropartitaAcquisto As String = "3ACQ"
+    Friend Function EstraiListaIds(ByVal g As MacroGruppo, ByVal tablename As String, ByVal dvids As DataView) As List(Of IDS)
+        Dim lIDS As New List(Of IDS)
+        Select Case g
+            Case MacroGruppo.Vendita
+                EditTestoBarra("Modifiche: Documenti Vendita")
+                lIDS = IdsVendite(dvids, tablename)
+            Case MacroGruppo.Acquisto
+                EditTestoBarra("Modifiche: Documenti Acquisto")
+                'Logica diversa perche' ho un filtro
+                lIDS = IdsAcquisti(dvids, tablename)
+            Case MacroGruppo.Analitica
+                EditTestoBarra("Modifiche: Analitica")
+                lIDS = IdsCentriDiCosto(tablename)
+            Case MacroGruppo.OrdiniClienti
+                EditTestoBarra("Modifiche: Ordini Clienti")
+                lIDS = IdsOrdiniClienti(dvids, tablename)
+            Case MacroGruppo.Cespiti
+                EditTestoBarra("Modifiche: Cespiti")
+                lIDS = IdsCespiti(tablename)
+            Case MacroGruppo.Agenti
+                EditTestoBarra("Modifiche: Agenti")
+                lIDS = IdsAgenti(tablename)
+            Case MacroGruppo.Clienti
+                EditTestoBarra("Modifiche: Clienti")
+                lIDS = IdsClienti(dvids, tablename)
+            Case MacroGruppo.Articoli
+                EditTestoBarra("Modifiche: Articoli")
+                lIDS = IdsArticoli(tablename)
+        End Select
+
+        Return lIDS
+    End Function
+    ''' <summary>
+    ''' Incremento SaleDocId sulle tabelle delle Vendite
+    ''' </summary>
+    ''' <param name="dv"></param>
+    ''' <returns></returns>
+    Private Function IdsVendite(ByVal dv As DataView, ByVal tablename As String) As List(Of IDS)
+
+        Dim lIDS As New List(Of IDS)
+        Dim saleDocId As Integer
+        Dim found As Integer = dv.Find("SaleDocId")
+        If found = -1 Then
+            Debug.Print("Vendite SaleDocId: non trovato")
+            My.Application.Log.WriteEntry("Fatture SaleDocId: non trovato")
+            If Not IsDebugging Then
+                MessageBox.Show("Impossibile continuare,Vendite SaleDocId: non trovato nel file IDS")
+                End
+            End If
+        Else
+            saleDocId = CInt(dv(found)("NewKey"))
+            Select Case tablename
+                Case "MA_SaleDoc"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = saleDocId, .Nome = "SaleDocId", .Operatore = "+"})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PymtSchedId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "JournalEntryId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "IntrastatId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvEntryId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "AdvancePymtSchedId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectionDocumentId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectedDocumentId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InventoryIDReturn", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ParagonID", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ProFormaInvoiceID", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PureJECollectionPaymentId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectionDocumentIdInCN", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "WorkerIDIssue", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ExtAccAEID", .Operatore = "="})
+                    'Aggiungo campo aggiuntivo cost center
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
+                    lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = "END"})
+                Case "MA_SaleDocComponents", "MA_SaleDocManufReasons", "MA_SaleDocNotes", "MA_SaleDocShipping", "MA_SaleDocSummary", "MA_SaleDocTaxSummary"
+                    '"MA_SaleDocReferences", "MA_EIEventViewer", "MA_EI_ITDocAdditionalData", "MA_EI_ITAsyncComm"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = saleDocId, .Nome = "SaleDocId", .Operatore = "+"})
+                Case "MA_SaleDocPymtSched"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = saleDocId, .Nome = "SaleDocId", .Operatore = "+"})
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
+                Case "MA_SaleDocDetail"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = saleDocId, .Nome = "SaleDocId", .Operatore = "+"})
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
+                    Dim fOrdine As Integer = dv.Find("SaleOrdId")
+                    If fOrdine = -1 Then
+                        Debug.Print("Fatture: SaleOrdId: non trovato")
+                        My.Application.Log.WriteEntry("Fatture: SaleOrdId: non trovato")
+                        If Not IsDebugging Then
+                            MessageBox.Show("Impossibile continuare, Fatture: SaleOrdId: non trovato nel file IDS")
+                            End
+                        End If
+                    Else
+                        lIDS.Add(New IDS With {.Id = CInt(dv(fOrdine)("NewKey")), .Nome = "SaleOrdId", .Operatore = "+"})
+                    End If
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "MOId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReturnFromCustomerId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocumentId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "DocIdToBeUnloaded", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvoiceId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvoiceForAdvanceID", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ProFormaInvoiceID", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "TRId", .Operatore = "="})
+            End Select
+        End If
+        Return lIDS
+    End Function
+    ''' <summary>
+    ''' Incremento PurchaseDocId sulle sole Bolle di Carico
+    ''' </summary>
+    ''' <param name="dv"></param>
+    ''' <returns></returns>
+    Private Function IdsAcquisti(ByVal dv As DataView, ByVal tablename As String) As List(Of IDS)
+
+        Dim lIDS As New List(Of IDS)
+        Dim PurchaseDocId As Integer
+        Dim found As Integer = dv.Find("PurchaseDocId")
+        If found = -1 Then
+            Debug.Print("Acquisti PurchaseDocId: non trovato")
+            My.Application.Log.WriteEntry("Acquisti PurchaseDocId: non trovato")
+            If Not IsDebugging Then
+                MessageBox.Show("Impossibile continuare, Acquisti PurchaseDocId: non trovato nel file IDS")
+                End
+            End If
+        Else
+            PurchaseDocId = CInt(dv(found)("NewKey"))
+            Select Case tablename
+                Case "MA_PurchaseDoc"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseDocId, .Nome = "PurchaseDocId", .Operatore = "+"})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PymtSchedId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "JournalEntryId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "IntrastatId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvEntryId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "RMAId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InspectionOrdId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ScrapInvEntryId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReturnInvEntryId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "AdvancePymtSchedId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "AdjValueOnlyInvEntryId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectionDocumentId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectedDocumentId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PureJECollectionPaymentId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectionDocumentIdInCN", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "WorkerIDIssue", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PureJETaxTransferId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ExtAccAEID", .Operatore = "="})
+                    'Campi accessori
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
+                Case "MA_PurchaseDocNotes", "MA_PurchaseDocShipping", "MA_PurchaseDocSummary", "MA_PurchaseDocTaxSummary"
+                    '"MA_PurchaseDocReferences"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseDocId, .Nome = "PurchaseDocId", .Operatore = "+"})
+                Case "MA_PurchaseDocPymtSched"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseDocId, .Nome = "PurchaseDocId", .Operatore = "+"})
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
+                Case "MA_PurchaseDocDetail"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseDocId, .Nome = "PurchaseDocId", .Operatore = "+"})
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
+                    Dim fOrdine As Integer = dv.Find("PurchaseOrdId")
+                    If fOrdine = -1 Then
+                        Debug.Print("Acquisti: PurchaseOrdId: non trovato")
+                        My.Application.Log.WriteEntry("Acquisti: PurchaseOrdId: non trovato")
+                        If Not IsDebugging Then
+                            MessageBox.Show("Impossibile continuare, Acquisti: PurchaseOrdId: non trovato nel file IDS")
+                            End
+                        End If
+                    Else
+                        lIDS.Add(New IDS With {.Id = CInt(dv(fOrdine)("NewKey")), .Nome = "PurchaseOrdId", .Operatore = "+"})
+                    End If
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InspectionOrdId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InspectionBillId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "RMAId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "BillOfLadingId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "MOId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "SaleDocId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocumentId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvoiceForAdvanceID", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "SuppQuotaId", .Operatore = "="})
+            End Select
+        End If
+        Return lIDS
+    End Function
+    ''' <summary>
+    ''' Viene aggiunto il prefisso UNO ai Cepiti e Ubicazioni
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function IdsCespiti(ByVal tablename As String) As List(Of IDS)
+        'dati presenti in 4 tabelle
+        'MA_FixAssetEntriesDetail   'Esclusa
+        'MA_FixedAssets
+        'MA_FixedAssetsBalance      'Esclusa
+        'MA_FixedAssetsFiscal       'Esclusa
+        Dim lIDS As New List(Of IDS)
+        Select Case tablename
+            Case "MA_FixedAssets"
+                lIDS.Add(New IDS With {.Chiave = True, .IdString = PrefissoCespiti, .Nome = "FixedAsset", .Operatore = "ADD"})
+                lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Location", .Operatore = "END"})
+            Case "MA_FixAssetLocations"
+                lIDS.Add(New IDS With {.Chiave = True, .IdString = Suffisso, .Nome = "Location", .Operatore = "END"})
+        End Select
+        Return lIDS
+    End Function
+    ''' <summary>
+    ''' Viene controllata contropartita
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function IdsArticoli(ByVal tablename As String) As List(Of IDS)
+
+        Dim lIDS As New List(Of IDS)
+        Select Case tablename
+            Case "MA_Items"
+                lIDS.Add(New IDS With {.IdString = ContropartitaAcquisto, .Nome = "PurchaseOffset", .Operatore = "SAVE"})
+        End Select
+        Return lIDS
+    End Function
+    ''' <summary>
+    ''' Viene controllata contropartita
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function IdsAgenti(ByVal tablename As String) As List(Of IDS)
+        Dim lIDS As New List(Of IDS)
+        Select Case tablename
+            Case "MA_Areas"
+                lIDS.Add(New IDS With {.Chiave = True, .IdString = Suffisso, .Nome = "Area", .Operatore = "End"})
+        End Select
+        Return lIDS
+    End Function
+    ''' <summary>
+    ''' Dichiarazioni di Intento
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function IdsClienti(ByVal dv As DataView, ByVal tablename As String) As List(Of IDS)
+        Dim lIDS As New List(Of IDS)
+        Select Case tablename
+            Case "MA_DeclarationOfIntent"
+                Dim DeclId As Integer
+                Dim found As Integer = dv.Find("DeclId")
+                If found = -1 Then
+                    Debug.Print("Clienti DeclId: non trovato")
+                    My.Application.Log.WriteEntry("Clienti DeclId: non trovato")
+                    If Not IsDebugging Then
+                        MessageBox.Show("Impossibile continuare, Clienti DeclId: non trovato nel file IDS")
+                        End
+                    End If
+                Else
+                    DeclId = CInt(dv(found)("NewKey"))
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = DeclId, .Nome = "DeclId", .Operatore = "+"})
+                End If
+
+            Case "MA_CustSuppCustomerOptions"
+                lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = "END"})
+        End Select
+        Return lIDS
+    End Function
+    ''' <summary>
+    ''' Viene aggiunto il prefisso UNO ai Centri di Costo
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function IdsCentriDiCosto(ByVal tablename As String) As List(Of IDS)
+        'Presente su 21 tabelle !!!!!
+        'MA_ChartOfAccountsCostAccTpl   'Esclusa
+        'MA_CostAccEntriesDetail        'Esclusa
+        'MA_CostCenters
+        'MA_CostCentersBalances         'Esclusa
+        'MA_CustSupp                    '2 Voci
+        'MA_FixedAssets
+        'MA_InventoryEntries            'Esclusa
+        'MA_InventoryEntriesDetail      'Esclusa
+        'MA_Items                       '2 Voci
+        'MA_PurchaseDoc                 'Aggiunta
+        'MA_PurchaseDocDetail           'Aggiunta
+        'MA_PurchaseDocPymtSched        'Aggiunta
+        'MA_PurchaseOrd                 'Aggiunta
+        'MA_PurchaseOrdDetails          'Aggiunta
+        'MA_PyblsRcvblsDetails          'Stand by
+        'MA_SaleDoc                     'Aggiunta
+        'MA_SaleDocDetail               'Aggiunta
+        'MA_SaleDocPymtSched            'Aggiunta
+        'MA_SaleOrd                     'Aggiunta
+        'MA_SaleOrdDetails              'Aggiunta
+        'MA_Workers                     'Esclusa
+        Dim lIDS As New List(Of IDS)
+        Select Case tablename
+            Case "MA_CostCenters"
+                lIDS.Add(New IDS With {.Chiave = True, .IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
+        End Select
+
+        Return lIDS
+    End Function
+    ''' <summary>
+    ''' Incremento SaleOrdId sugli Ordini
+    ''' </summary>
+    ''' <param name="dv"></param>
+    ''' <returns></returns>
+    Private Function IdsOrdiniClienti(ByVal dv As DataView, ByVal tablename As String) As List(Of IDS)
+        Dim lIDS As New List(Of IDS)
+        Dim SaleOrdId As Integer
+        Dim found As Integer = dv.Find("SaleOrdId")
+        If found = -1 Then
+            Debug.Print("Ordini SaleOrdId: non trovato")
+            My.Application.Log.WriteEntry("Ordini SaleOrdId: non trovato")
+            If Not IsDebugging Then
+                MessageBox.Show("Impossibile continuare,Ordini SaleOrdId: non trovato nel file IDS")
+                End
+            End If
+        Else
+            SaleOrdId = CInt(dv(found)("NewKey"))
+            Select Case tablename
+                Case "MA_SaleOrdComponents", "MA_SaleOrdNotes", "MA_SaleOrdPymtSched", "MA_SaleOrdShipping", "MA_SaleOrdSummary", "MA_SaleOrdTaxSummary"
+                    '"MA_SaleOrdReferences"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = "+"})
+                Case "MA_SaleOrd"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = "+"})
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
+                    lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = "END"})
+                Case "MA_SaleOrdDetails"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = "+"})
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ProductionPlanId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ProductionJobId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceQuotationId", .Operatore = "="})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = "="})
+                Case "ALLOrdCliDescrizioni", "ALLOrdCliContratto", "ALLOrdCliTipologiaServizi", "ALLOrdCliAttivita"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = "+"})
+                Case "ALLOrdFiglio"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = "+"})
+                    lIDS.Add(New IDS With {.Id = SaleOrdId, .Nome = "IdOrdFiglio", .Operatore = "+"})
+                Case "ALLOrdPadre"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = "+"})
+                    lIDS.Add(New IDS With {.Id = SaleOrdId, .Nome = "IdOrdPadre", .Operatore = "+"})
+                Case "ALLOrdCliAcc"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = "+"})
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "Cdc", .Operatore = "ADD"})
+                Case "ALLCespiti"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = "+"})
+                    lIDS.Add(New IDS With {.IdString = PrefissoCespiti, .Nome = "Cespite", .Operatore = "ADD"})
+            End Select
+        End If
+
+        Return lIDS
+    End Function
 End Module
