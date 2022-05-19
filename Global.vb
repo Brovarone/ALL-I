@@ -811,6 +811,61 @@ Module MagoNet
         Return esito
     End Function
 
+    Public Function ScriviBulkSQL(ByVal TableName As String, rowCount As Double, ByVal dr As SqlDataReader, ByVal tr As SqlTransaction, ByVal Conn As SqlConnection, Optional ByRef MyReturnString As String = "", Optional ColumnMapping As Boolean = False) As Boolean
+        Dim esito As Boolean
+        Dim logTxt As String
+        If rowCount > 0 Then
+            Using bulkCopy As New SqlBulkCopy(Conn, SqlBulkCopyOptions.KeepIdentity, tr)
+                bulkCopy.BatchSize = If(rowCount < 5000, 0, rowCount / 10)
+                bulkCopy.BulkCopyTimeout = 0
+                bulkCopy.NotifyAfter = rowCount / 10
+                FLogin.prgCopy.Minimum = 0
+                FLogin.prgCopy.Maximum = rowCount
+                Application.DoEvents()
+                'bulkCopy.SqlRowsCopied += Function(sender, EventArgs) Console.WriteLine("Wrote " & eventArgs.RowsCopied & " records.")
+                AddHandler bulkCopy.SqlRowsCopied, AddressOf BulkBar
+
+                Dim stopwatch As New System.Diagnostics.Stopwatch
+                stopwatch.Start()
+                Debug.Print("Scrivo in Bulk Copy : " & TableName & " , " & rowCount.ToString & " record totali.")
+                bulkCopy.DestinationTableName = TableName
+                Try
+                    'Column Mapping
+                    'If ColumnMapping Then
+                    '    For Each c As DataColumn In dt.Columns
+                    '        bulkCopy.ColumnMappings.Add(c.ColumnName, c.ColumnName)
+                    '    Next
+                    'End If
+                    bulkCopy.WriteToServer(dr)
+
+                    Debug.Print("OK - " & stopwatch.Elapsed.ToString)
+                    logTxt = "OK - INSERIMENTO: " & TableName & " , " & rowCount.ToString & " record totali, in: " & stopwatch.Elapsed.ToString
+                    esito = True
+                Catch ex As Exception
+                    Debug.Print(ex.Message)
+                    Debug.Print("NON OK la scrittura in Bulk Copy di : " & TableName & " , " & rowCount.ToString & " record.")
+                    logTxt = "ERRORE SU INSERIMENTO : " & TableName & " , " & rowCount.ToString & " record." & vbCrLf & ex.Message.ToString
+                    esito = False
+                    Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                    mb.ShowDialog()
+                End Try
+                RemoveHandler bulkCopy.SqlRowsCopied, AddressOf BulkBar
+                Application.DoEvents()
+                stopwatch.Stop()
+            End Using
+        Else
+            'MessageBox.Show("Nessuna riga da inserire su:" & TableName)
+            logTxt = "Nessuna riga da inserire su: " & TableName
+            esito = True
+        End If
+        If String.IsNullOrWhiteSpace(MyReturnString) Then
+            My.Application.Log.WriteEntry(logTxt)
+        Else
+            MyReturnString = logTxt
+        End If
+        Return esito
+    End Function
+
     Public Function CaricaSchema(TableName As String, Optional withConstraint As Boolean = True, Optional ByVal withData As Boolean = False, Optional query As String = "") As DataTable
         Dim result As New StringBuilder()
         Dim stopwatch As New Stopwatch

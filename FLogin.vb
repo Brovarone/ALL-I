@@ -39,6 +39,7 @@ Public Class FLogin
     Public Ds As DataSet
     Public iIdCounter As Integer = 0 ' contatore degli id/fatture estratte
     Public prgCopy As New CustomProgress
+    Public prgFusion As New CustomProgress
 
     Const adminPsw = "123456"
 
@@ -1046,7 +1047,8 @@ Public Class FLogin
                         lstStatoConnessione.Items.Add("Apertura file con IDS per Migrazione")
                         dsXLS = LoadXLS(spath, True, True)
                         Dim bok As Boolean
-                        bok = EseguiFusione(dsXLS)
+                        'bok = EseguiFusione(dsXLS)
+                        bok = EseguiFusioneSQL(dsXLS)
                         If bok Then
                             bok = 'FusioneModificadati()
                                 esito = True
@@ -1785,9 +1787,24 @@ Public Class FLogin
 
         ToolStripMenuItemDebugging.PerformClick()
 
+
         SUBConnetti(If(DBisTMP, TxtTmpDB_UNO.Text, TxtDB_UNO.Text))
         SUBConnettiSPA(If(DBisTMP, TxtTmpDB_SPA.Text, TxtDB_SPA.Text))
         ChkFusioneFull.Checked = True
+
+        'aggiungo controllo progressbar
+        Me.Controls.Add(prgFusion)
+        prgFusion.Visible = False
+        prgFusion.Style = ProgressBarStyle.Blocks
+        prgFusion.Value = 0.0
+        prgFusion.Minimum = 0.0
+        prgFusion.Maximum = 100.0
+        prgFusion.Style = ProgressBarStyle.Continuous
+        prgFusion.ForeColor = Color.FromArgb(255, 102, 0, 204)
+        prgFusion.Height = 15
+        prgFusion.Top = prgCopy.Top - prgFusion.Height
+        prgFusion.Width = prgCopy.Width
+        Me.Refresh()
         SUBProcessa()
 
     End Sub
