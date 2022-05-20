@@ -152,6 +152,7 @@ Public Module Paghe
         'Ciclo le righe in quanto sulla testa non so cosa ce' che mi serve
 
         Dim okBulk As Boolean
+        Dim okAnalitica As Boolean
         Dim someTrouble As Boolean
 
         If r.Rows.Count > 0 Then
@@ -283,7 +284,7 @@ Public Module Paghe
                                             drPnD("Account") = sConto
                                         Else
                                             Debug.Print("Conto senza corrispondenza: " & c)
-                                            My.Application.Log.WriteEntry("Conto senza corrispondenza: " & c & "f iliale: " & filToReg)
+                                            My.Application.Log.WriteEntry("Conto senza corrispondenza: " & c & "filiale: " & filToReg)
                                             MessageBox.Show("Conto senza corrispondenza: " & c & Environment.NewLine & "Su Filiale: " & filToReg & Environment.NewLine & "Impossibile continuare!", "Importazione Paghe - Errore", MessageBoxButtons.OK, MessageBoxIcon.Error)
                                             End
                                         End If
@@ -369,7 +370,14 @@ Public Module Paghe
 
                             End Using
                         End Using
-                        If Not someTrouble Then CreaAnalitica(dtPN, dtPND)
+                        If Not someTrouble Then
+                            okAnalitica = CreaAnalitica(dtPN, dtPND)
+                            If Not okAnalitica Then
+                                Dim mb As New MessageBoxWithDetails("Errore su Salvataggio Analitica", GetCurrentMethod.Name, "")
+                                mb.ShowDialog()
+                                someTrouble = True
+                            End If
+                        End If
                     End Using
                 End Using
             Catch ex As Exception

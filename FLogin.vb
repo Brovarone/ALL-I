@@ -511,7 +511,7 @@ Public Class FLogin
 
             For i = 0 To UBound(Cli)
                 For Each sFile As String In FileInFolder
-                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile)
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
                     bFound = sNomeFile.Equals(Cli(i))
                     If bFound Then
                         CliFound(i) = True
@@ -536,7 +536,7 @@ Public Class FLogin
 
             For i = 0 To UBound(Forn)
                 For Each sFile As String In FileInFolder
-                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile)
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
                     bFound = sNomeFile.Equals(Forn(i))
                     If bFound Then
                         ForFound(i) = True
@@ -561,7 +561,7 @@ Public Class FLogin
 
             For i = 0 To UBound(fat)
                 For Each sFile As String In FileInFolder
-                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile)
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
                     bFound = sNomeFile.Equals(fat(i))
                     If bFound Then
                         fatFound(i) = True
@@ -593,7 +593,7 @@ Public Class FLogin
 
             For i = 0 To UBound(fatSe)
                 For Each sFile As String In FileInFolder
-                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile)
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
                     bFound = sNomeFile.Equals(fatSe(i))
                     If bFound Then
                         fatFound(i) = True
@@ -623,7 +623,7 @@ Public Class FLogin
 
             For i = 0 To UBound(fatSe)
                 For Each sFile As String In FileInFolder
-                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile)
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
                     bFound = sNomeFile.Equals(fatSe(i))
                     If bFound Then
                         fatFound(i) = True
@@ -648,13 +648,15 @@ Public Class FLogin
 
         If ChkPaghe.Checked OrElse pag Then
             Dim bFound As Boolean
-            Dim paghe As String() = {"ALL????"}
-            Dim pagheFound As Boolean() = {False}
+            Dim paghe As String() = {"ALL????", "FILE_CONTABILE_PN_######_##-##-####"}
+            Dim pagheFound As Boolean() = {False, False}
             Dim FileInFolder As String() = Directory.GetFiles(FolderPath, "*.*", SearchOption.TopDirectoryOnly)
 
+            'Controllo che almeno un file di tipo paghe sia presente
             For i = 0 To UBound(paghe)
+                'Vecchio file
                 For Each sFile As String In FileInFolder
-                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile)
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
                     bFound = sNomeFile Like paghe(i)
                     If bFound Then
                         pagheFound(i) = True
@@ -663,12 +665,13 @@ Public Class FLogin
                         Exit For
                     End If
                 Next
-                If Not pagheFound(i) Then
-                    MessageBox.Show("Impossibile continuare l'elaborazione delle Paghe a causa di file mancanti")
-                    Exit For
-                End If
             Next
-            ProcessaGruppo(paghe, "Paghe")
+
+            If pagheFound(0) OrElse pagheFound(1) Then
+                ProcessaGruppo(paghe, "Paghe")
+            Else
+                MessageBox.Show("Impossibile continuare l'elaborazione delle Paghe a causa di file mancanti")
+            End If
         End If
 
         If ChkPartiteCliente.Checked OrElse ChkDifferenzialeCliente.Checked Then
@@ -679,7 +682,7 @@ Public Class FLogin
 
             For i = 0 To UBound(ParC)
                 For Each sFile As String In FileInFolder
-                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile)
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
                     bFound = sNomeFile.Equals(ParC(i))
                     If bFound Then
                         ParCFound(i) = True
@@ -707,7 +710,7 @@ Public Class FLogin
 
             For i = 0 To UBound(ParF)
                 For Each sFile As String In FileInFolder
-                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile)
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
                     bFound = sNomeFile.Equals(ParF(i))
                     If bFound Then
                         ParFFound(i) = True
@@ -734,7 +737,7 @@ Public Class FLogin
 
             For i = 0 To UBound(NoteC)
                 For Each sFile As String In FileInFolder
-                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile)
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
                     bFound = sNomeFile.Equals(NoteC(i))
                     If bFound Then
                         NoteCFound(i) = True
@@ -772,7 +775,7 @@ Public Class FLogin
 
             For i = 0 To UBound(risc)
                 For Each sFile As String In FileInFolder
-                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile)
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
                     bFound = sNomeFile.Equals(risc(i))
                     If bFound Then
                         riscFound(i) = True
@@ -797,7 +800,7 @@ Public Class FLogin
 
             For i = 0 To UBound(risc)
                 For Each sFile As String In FileInFolder
-                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile)
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
                     bFound = sNomeFile.Equals(risc(i))
                     If bFound Then
                         riscFound(i) = True
@@ -821,7 +824,7 @@ Public Class FLogin
 
             For i = 0 To UBound(cespiti)
                 For Each sFile As String In FileInFolder
-                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile)
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
                     bFound = sNomeFile.ToUpper.Equals(cespiti(i).ToUpper)
                     If bFound Then
                         cespitiFound(i) = True
@@ -839,13 +842,13 @@ Public Class FLogin
         End If
         If ChkFusioneFull.Checked Then
             Dim bFound As Boolean
-            Dim fusione As String() = {"IDS_Migrazione"}
+            Dim fusione As String() = {"IDS_MIGRAZIONE"}
             Dim fusioneFound As Boolean() = {False}
             Dim FileInFolder As String() = Directory.GetFiles(FolderPath, "*.*", SearchOption.TopDirectoryOnly)
 
             For i = 0 To UBound(fusione)
                 For Each sFile As String In FileInFolder
-                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile)
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
                     bFound = sNomeFile.Equals(fusione(i))
                     If bFound Then
                         fusioneFound(i) = True
@@ -1057,15 +1060,16 @@ Public Class FLogin
                         End If
 
                     Case Else
-
-                        'Paghe
-                        'ALL???
-                        If Len(filename) = 7 AndAlso filename Like "ALL????" Then
-                            lstStatoConnessione.Items.Add("Importazione Paghe")
-                            esito = CaricaFlussoPaghe(spath)
-                            ' dsXLS.Tables.Add(LoadCsvData(spath, False, "", ","))
-                            ' esito = DichIntentoCSV(dsXLS, False)
-                        End If
+                        Select Case True 'Controllo in Like il nome file
+                            'Paghe vecchio
+                            Case Len(filename) = 7 AndAlso filename.ToUpper Like "ALL????"
+                                lstStatoConnessione.Items.Add("Importazione Paghe")
+                                esito = CaricaFlussoPaghe(spath)
+                            'Paghe Flusso Zucchetti
+                            Case filename.ToUpper Like "FILE_CONTABILE_PN_######_##-##-####"
+                                lstStatoConnessione.Items.Add("Importazione Paghe Zucchetti")
+                                esito = CaricaFlussoPaghe(spath)
+                        End Select
 
                 End Select
             Else
@@ -1168,7 +1172,7 @@ Public Class FLogin
         Dim FileInFolder As String() = Directory.GetFiles(FolderPath, "*.*", SearchOption.TopDirectoryOnly)
         For i = 0 To UBound(fat)
             For Each sFile As String In FileInFolder
-                Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile)
+                Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
                 bFound = sNomeFile.Equals(fat(i))
                 If bFound Then
                     fatFound(i) = True
@@ -1183,7 +1187,8 @@ Public Class FLogin
             End If
         Next
 
-        ' Paghe ALLmmaa.dat
+        ' Paghe 
+        ' Deprecato: ALLmmaa.dat
         Dim paghe As String() = {"ALL????"}
         Dim pagheFound As Boolean() = {False}
         For i = 0 To UBound(paghe)
@@ -1195,6 +1200,7 @@ Public Class FLogin
                     Dim r As Integer
                     If Integer.TryParse(Mid(sNomeFile, 4), r) Then
                         pagheFound(i) = True
+                        BtnPaghe.Enabled = True
                         paghe(i) = sFile
                         Dim sB As New StringBuilder(BtnPaghe.Text)
                         sB.Append(": " & DateAndTime.MonthName(Mid(sNomeFile, 4, 2)) & " 20" & Mid(sNomeFile, 6, 2))
@@ -1205,6 +1211,39 @@ Public Class FLogin
             Next
             If Not pagheFound(i) Then
                 Debug.Print("Impossibile continuare l'elaborazione delle Paghe a causa di file mancanti")
+                BtnPaghe.Enabled = False
+                Exit For
+            End If
+        Next
+
+        ' Paghe 
+        ' Nuovo formato: Zucchetti -> File_contabile_PN_000001_28-02-2022
+        Dim zPaghe As String() = {"FILE_CONTABILE_PN_######_##-##-####"}
+        Dim zPagheFound As Boolean() = {False}
+        For i = 0 To UBound(zPaghe)
+            For Each sFile As String In FileInFolder
+                Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
+
+                bFound = sNomeFile Like zPaghe(i)
+                If bFound Then
+                    Dim a As String() = sNomeFile.Split("_")
+                    'Cerco un intero per un contatore e una data per la registrazione
+                    Dim r As Integer
+                    Dim d As DateTime
+                    If Integer.TryParse(a(3), r) AndAlso DateTime.TryParse(a(4), d) Then
+                        zPagheFound(i) = True
+                        BtnPaghe.Enabled = True
+                        zPaghe(i) = sFile
+                        Dim sB As New StringBuilder(BtnPaghe.Text)
+                        sB.Append(Environment.NewLine & d.ToString("d MMMM yyyy"))
+                        'sB.Append(": " & DateAndTime.MonthName(d.Month) & " " & d.Year)
+                        BtnPaghe.Text = sB.ToString
+                        Exit For
+                    End If
+                End If
+            Next
+            If Not zPagheFound(i) Then
+                Debug.Print("Impossibile continuare l'elaborazione delle Paghe Zucchetti a causa di file mancanti")
                 BtnPaghe.Enabled = False
                 Exit For
             End If
@@ -1808,4 +1847,5 @@ Public Class FLogin
         SUBProcessa()
 
     End Sub
+
 End Class

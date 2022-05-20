@@ -316,24 +316,39 @@ Module MagoNet
     Public sOggi As String = DateTime.Today.ToString("yyyy-MM-dd")
     Public sDataNulla As String = New DateTime(1799, 12, 31).ToString
     Public Const ACGIVASplit As String = "32" 'Codice iva che identifica l'iva SPLIT
-
-    Public Function TryTrovaContropartita(ByVal Descri As String, ByRef dv As DataView, ByRef Conto As String) As Boolean
+    ''' <summary>
+    ''' Ritorna la contropartita conforme a Mago
+    ''' </summary>
+    ''' <param name="contropartita"></param>
+    ''' <param name="dv"></param>
+    ''' <param name="Conto"></param>
+    ''' <returns></returns>
+    Public Function TryTrovaContropartita(ByVal contropartita As String, ByRef dv As DataView, ByRef Conto As String) As Boolean
         Dim esito As String = ""
         Dim res As Boolean = False
         Dim ACGOffset As String
-        If Not String.IsNullOrWhiteSpace(Descri) Then
-            If Len(Descri) = 8 Then
-                esito = Descri
+        If Not String.IsNullOrWhiteSpace(contropartita) Then
+            If Len(contropartita) = 8 Then
+                esito = contropartita
             Else
-                ACGOffset = Left(Right(Descri, 7), 6)
+                ACGOffset = Left(Right(contropartita, 7), 6)
                 'ottengo una contropartita lunga 8
                 esito = Left(ACGOffset, 2) & "0" & Mid(ACGOffset, 3, 1) & "0" & Right(ACGOffset, 3)
             End If
             'la cerco nel dataview e restituisco la contropartita mago
+            dv.Sort = "ACGCode"
             Dim iCP As Integer = dv.Find(esito)
             If iCP <> -1 Then
                 esito = dv.Item(iCP).Item("Account").ToString
                 res = True
+            Else
+                'Forse ho passato un conto già coerente con Mago quindi cerco sul piano dei conti
+                dv.Sort = "Account"
+                Dim iAcc As Integer = dv.Find(contropartita)
+                If iAcc <> -1 Then
+                    esito = contropartita
+                    res = True
+                End If
             End If
         End If
         Conto = esito
@@ -831,11 +846,12 @@ Module MagoNet
                 bulkCopy.DestinationTableName = TableName
                 Try
                     'Column Mapping
-                    'If ColumnMapping Then
-                    '    For Each c As DataColumn In dt.Columns
-                    '        bulkCopy.ColumnMappings.Add(c.ColumnName, c.ColumnName)
-                    '    Next
-                    'End If
+                    If ColumnMapping Then
+                        Dim schema As DataTable = dr.GetSchemaTable()
+                        For Each r As DataRow In schema.Rows
+                            bulkCopy.ColumnMappings.Add(r.Item("BaseColumnName"), r.Item("BaseColumnName"))
+                        Next
+                    End If
                     bulkCopy.WriteToServer(dr)
 
                     Debug.Print("OK - " & stopwatch.Elapsed.ToString)

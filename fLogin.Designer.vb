@@ -827,7 +827,7 @@ Partial Class FLogin
         Me.PanelUser.Controls.Add(Me.BtnLastLog)
         Me.PanelUser.Controls.Add(Me.BtnPaghe)
         Me.PanelUser.Controls.Add(Me.BtnFatture)
-        Me.PanelUser.Location = New System.Drawing.Point(303, 345)
+        Me.PanelUser.Location = New System.Drawing.Point(97, 281)
         Me.PanelUser.Name = "PanelUser"
         Me.PanelUser.Size = New System.Drawing.Size(395, 295)
         Me.PanelUser.TabIndex = 46
@@ -1270,7 +1270,7 @@ Partial Class FLogin
         'EseguiToolStripMenuItem1
         '
         Me.EseguiToolStripMenuItem1.Name = "EseguiToolStripMenuItem1"
-        Me.EseguiToolStripMenuItem1.Size = New System.Drawing.Size(180, 22)
+        Me.EseguiToolStripMenuItem1.Size = New System.Drawing.Size(108, 22)
         Me.EseguiToolStripMenuItem1.Text = "Esegui"
         '
         'PanelDB
