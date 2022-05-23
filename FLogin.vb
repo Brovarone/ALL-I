@@ -1051,7 +1051,7 @@ Public Class FLogin
                         dsXLS = LoadXLS(spath, True, True)
                         Dim bok As Boolean
                         'bok = EseguiFusione(dsXLS)
-                        My.Application.Log.WriteEntry("Esegui Commit : " & Not IsDebugging.ToString)
+                        My.Application.Log.WriteEntry("Esegui Commit : " & (Not IsDebugging).ToString)
                         bok = EseguiFusioneSQL(dsXLS)
                         esito = bok
 
