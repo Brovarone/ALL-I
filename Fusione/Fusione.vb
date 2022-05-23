@@ -252,6 +252,7 @@ Module Fusione
                 'Metodo Sql Update
                 Dim rows As Integer
                 ok = ModificaSqlUpdate(t, lIDS, rows)
+                My.Application.Log.DefaultFileLogWriter.WriteLine("ModificaSql: " & t.Nome & " " & ok.ToString)
                 Application.DoEvents()
                 If Not ok Then someTrouble = True
                 EditTestoBarra("Scrittura dati (destinazione): " & t.Nome)
@@ -804,20 +805,21 @@ Module Fusione
             End If
 
             'Righe origine
-            Using cmdqry = New SqlCommand(qryCount, Connection)
-                originCount = System.Convert.ToInt32(cmdqry.ExecuteScalar())
+            Using originRowCount = New SqlCommand(qryCount, Connection)
+                originCount = System.Convert.ToInt32(originRowCount.ExecuteScalar())
                 bulkMessage.Append(t.Nome & " Orig:(" & originCount.ToString & ") ")
             End Using
 
-
-            Dim destCommRowCount As New SqlCommand(qryCount, ConnDestination)
-            Dim countStart As Long = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())
-            'Debug.Print("Starting row count = {0}", countStart)
-            bulkMessage.Append("Dest In:(" & countStart.ToString & ") ")
+            Dim countStart As Long
+            Using destCommRowCount = New SqlCommand(qryCount, ConnDestination)
+                countStart = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())
+                'Debug.Print("Starting row count = {0}", countStart)
+                bulkMessage.Append("Dest In:(" & countStart.ToString & ") ")
+            End Using
 
             ' Recupero i dati dall'origine in un SqlDataReader.
             Dim commandSourceData As New SqlCommand(SQLquery, Connection)
-            Dim reader As SqlDataReader = commandSourceData.ExecuteReader
+            Dim reader As SqlDataReader = commandSourceData.ExecuteReader()
 
             Using bulkTrans = ConnDestination.BeginTransaction
                 ' Set up the bulk copy object. 
@@ -849,11 +851,13 @@ Module Fusione
             End Using
             ' Perform a final count on the destination table
             ' to see how many rows were added.
-            Dim countEnd As Long = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())
-            Debug.Print("Ending row count = {0}", countEnd)
-            Debug.Print("{0} rows were added.", countEnd - countStart)
-            bulkMessage.Append("Agg:(" & (countEnd - countStart).ToString & ") ")
-            If (countEnd - countStart) <> originCount Then errori.AppendLine("Aggiunta righe diverse su " & t.Nome)
+            Using destCommRowCount = New SqlCommand(qryCount, ConnDestination)
+                Dim countEnd As Long = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())
+                Debug.Print("Ending row count = {0}", countEnd)
+                Debug.Print("{0} rows were added.", countEnd - countStart)
+                bulkMessage.Append("Agg:(" & (countEnd - countStart).ToString & ") ")
+                If (countEnd - countStart) <> originCount Then errori.AppendLine("Aggiunta righe diverse su " & t.Nome)
+            End Using
 
         Catch ex As Exception
             someTrouble = True

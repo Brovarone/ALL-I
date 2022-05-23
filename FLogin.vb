@@ -132,8 +132,8 @@ Public Class FLogin
             }
         ConnDestination.Open()
 
-        If Connection.State = ConnectionState.Open Then
-            Using comm As New SqlCommand("SELECT  @@OPTIONS", Connection)
+        If ConnDestination.State = ConnectionState.Open Then
+            Using comm As New SqlCommand("SELECT  @@OPTIONS", ConnDestination)
                 'Imposto questo flag per velocizzare se StoredProcedure
                 comm.CommandText = "SET ARITHABORT ON"
                 'comm.CommandText = "SET QUOTED_IDENTIFIER ON" già presente
@@ -142,7 +142,7 @@ Public Class FLogin
                 'comm.CommandText = "SELECT  @@OPTIONS"
             End Using
             lstStatoConnessione.Items.Add("Connessione a seconda azienda: " & DB & " avvenuta con successo")
-
+            My.Application.Log.DefaultFileLogWriter.WriteLine("Connessione a seconda azienda: " & DB & " avvenuta con successo")
         End If
 
         Me.Cursor = Cursors.Default

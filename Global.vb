@@ -852,6 +852,7 @@ Module MagoNet
                             bulkCopy.ColumnMappings.Add(r.Item("BaseColumnName"), r.Item("BaseColumnName"))
                         Next
                     End If
+                    'Scrivo sul database
                     bulkCopy.WriteToServer(dr)
 
                     Debug.Print("OK - " & stopwatch.Elapsed.ToString)
