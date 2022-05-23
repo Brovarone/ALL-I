@@ -1051,13 +1051,9 @@ Public Class FLogin
                         dsXLS = LoadXLS(spath, True, True)
                         Dim bok As Boolean
                         'bok = EseguiFusione(dsXLS)
+                        My.Application.Log.WriteEntry("Esegui Commit : " & Not IsDebugging.ToString)
                         bok = EseguiFusioneSQL(dsXLS)
-                        If bok Then
-                            bok = 'FusioneModificadati()
-                                esito = True
-                        Else
-                            esito = False
-                        End If
+                        esito = bok
 
                     Case Else
                         Select Case True 'Controllo in Like il nome file

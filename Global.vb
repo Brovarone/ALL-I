@@ -862,8 +862,10 @@ Module MagoNet
                     Debug.Print("NON OK la scrittura in Bulk Copy di : " & TableName & " , " & rowCount.ToString & " record.")
                     logTxt = "ERRORE SU INSERIMENTO : " & TableName & " , " & rowCount.ToString & " record." & vbCrLf & ex.Message.ToString
                     esito = False
-                    Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
-                    mb.ShowDialog()
+                    If Not IsDebugging Then
+                        Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                        mb.ShowDialog()
+                    End If
                 End Try
                 RemoveHandler bulkCopy.SqlRowsCopied, AddressOf BulkBar
                 Application.DoEvents()

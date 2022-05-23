@@ -16,10 +16,12 @@ Module Fusione
     Private tabelleNoEdit As List(Of TabelleDaEstrarre)
     Private listeIDs As List(Of ListaId)
     'todo Prov a mettere 100k , lento, abbassare a 20k
-    Private pageSize As Integer = 20000
+    Private Const pageSize As Integer = 20000
 
-    Private Class TabelleDaEstrarre
+    Class TabelleDaEstrarre
         Public Property QuerySelect As String
+        Public Property WhereClause As String
+        Public Property JoinClause As String
         Public Property Nome As String
         Public Property Paging As Boolean
         Public Property Gruppo As MacroGruppo
@@ -27,6 +29,8 @@ Module Fusione
         Public Property PrimaryKey As String
         Public Sub New()
             QuerySelect = ""
+            WhereClause = ""
+            JoinClause = ""
             Nome = ""
             Paging = False
             Gruppo = MacroGruppo.Nessuno
@@ -34,6 +38,7 @@ Module Fusione
             PrimaryKey = ""
         End Sub
     End Class
+
     Private Class ListaId
         Public Property Ids As List(Of Integer)
         Public Property Nome As String
@@ -192,65 +197,142 @@ Module Fusione
             dvNewIds = New DataView(dtNewIds, "", "CodeType", DataViewRowState.CurrentRows)
         End Using
 
-        'Processo una tabella alla volta
-        listeIDs = New List(Of ListaId)
+        Dim stopwatch As New System.Diagnostics.Stopwatch
+        stopwatch.Start()
+        Dim stopwatch2 As New System.Diagnostics.Stopwatch
+        stopwatch2.Start()
+
+        Dim cmdqry As New SqlCommand("DBCC TRACEON(610)", Connection)
+        Dim cmdDest As New SqlCommand("DBCC TRACEON(610)", ConnDestination)
+
         Try
-            Dim stopwatch As New System.Diagnostics.Stopwatch
-            stopwatch.Start()
+            'Disattivo le relazioni
+            FLogin.lstStatoConnessione.Items.Add("TRACEON Origine...")
+            cmdqry.CommandTimeout = 180
+            cmdqry.ExecuteNonQuery()
+            FLogin.lstStatoConnessione.Items.Add("TRACEON Destinazione...")
+            cmdDest.CommandTimeout = 180
+            cmdDest.ExecuteNonQuery()
+            Application.DoEvents()
+
+            'Solo per SQL 2017 in su
+            'cmdqry.CommandText = "DBCC TRACEON(460,1)" ' per cambiare errore ID 8152 with 2628
+            'cmdqry.ExecuteNonQuery()
+            FLogin.lstStatoConnessione.Items.Add("Disattivo vincoli per Origine...")
+            cmdqry.CommandText = "EXEC sp_MSforeachtable @command1='ALTER TABLE ? NOCHECK CONSTRAINT ALL'"
+            cmdqry.ExecuteNonQuery()
+            Application.DoEvents()
             FLogin.lstStatoConnessione.Items.Add("Processo tabelle in corso...")
             FLogin.prgCopy.Value = 0
             FLogin.prgCopy.Step = 1
             FLogin.prgCopy.Maximum = tabelle.Count + tabelleNoEdit.Count
-
-            Dim stopwatch2 As New System.Diagnostics.Stopwatch
-            stopwatch2.Start()
-            For Each t In tabelle
-                'Estraggo la ListaIDS
-                Dim lIDS As New List(Of IDS)
-                lIDS = EstraiListaIds(t.Gruppo, t.Nome, dvIDS)
-                EditTestoBarra("Carico dati: " & t.Nome)
-                Dim dt As New DataTable
-                Dim newDt As New DataTable
-
-                'Metodo Sql Update
-                Dim rows As Integer
-                ok = ModificaSqlUpdate(t, lIDS, rows)
-                If Not ok Then someTrouble = True
-                ok = ScriviDatiSql(t, Not IsDebugging)
-
-                AvanzaBarra()
-            Next
-            My.Application.Log.WriteEntry("Processo tabelle in : " & stopwatch2.Elapsed.ToString)
-            stopwatch2.Restart()
-
-            'ciclo le tabelle senza Edit
-            For Each t In tabelleNoEdit
-                EditTestoBarra("Carico dati: " & t.Nome)
-                Dim dt As New DataTable
-                ok = ScriviDati(dt, Not IsDebugging)
-                AvanzaBarra()
-            Next
-            My.Application.Log.WriteEntry("Processo tabelle No edit in : " & stopwatch2.Elapsed.ToString)
-            stopwatch2.Restart()
-            'Edit IDS
-            If Not IsDebugging Then
-                ok = ScriviIds(dvIDS)
-                If Not ok Then someTrouble = True
-            End If
-            stopwatch2.Stop()
-            stopwatch.Stop()
-            Debug.Print(stopwatch.Elapsed.ToString)
-            FLogin.lstStatoConnessione.Items.Add("Processo eseguito in : " & stopwatch.Elapsed.ToString)
-            My.Application.Log.WriteEntry("Processo eseguito in : " & stopwatch.Elapsed.ToString)
         Catch ex As Exception
             Debug.Print(ex.Message)
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# EseguiFusione " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# EsguiFusioneSql : DISATTIVO VINCOLI ORIGINE " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
             If Not IsDebugging Then
                 Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End If
             Return False
         End Try
+
+        Try
+            stopwatch2.Restart()
+            'Processo una tabella alla volta
+            listeIDs = New List(Of ListaId)
+
+            For Each t In tabelle
+                FLogin.lstStatoConnessione.Items.Add(t.Nome)
+                'Estraggo la ListaIDS
+                Dim lIDS As New List(Of IDS)
+                EditTestoBarra("Estrai IDS: " & t.Nome)
+                lIDS = EstraiListaIds(t.Gruppo, t.Nome, dvIDS)
+
+                EditTestoBarra("Modifica dati (origine): " & t.Nome)
+                'Metodo Sql Update
+                Dim rows As Integer
+                ok = ModificaSqlUpdate(t, lIDS, rows)
+                Application.DoEvents()
+                If Not ok Then someTrouble = True
+                EditTestoBarra("Scrittura dati (destinazione): " & t.Nome)
+                ok = ScriviDatiSql(t, Not IsDebugging)
+                AvanzaBarra()
+            Next
+            My.Application.Log.WriteEntry("Processo tabelle in : " & stopwatch2.Elapsed.ToString)
+        Catch ex As Exception
+            Debug.Print(ex.Message)
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# EsguiFusioneSql : MODIFICO E SCRIVO TABELLE " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            If Not IsDebugging Then
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                mb.ShowDialog()
+            End If
+            Return False
+        End Try
+
+        Try
+            stopwatch2.Restart()
+            'ciclo le tabelle senza Edit
+            FLogin.lstStatoConnessione.Items.Add("Processo tabelle senza modifiche in corso...")
+            For Each t In tabelleNoEdit
+                EditTestoBarra("Scrittura dati (destinazione): " & t.Nome)
+                ok = ScriviDatiSql(t, Not IsDebugging)
+                AvanzaBarra()
+            Next
+            My.Application.Log.WriteEntry("Processo tabelle No edit in : " & stopwatch2.Elapsed.ToString)
+        Catch ex As Exception
+            Debug.Print(ex.Message)
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# EsguiFusioneSql : SCRIVO TABELLE NO EDIT " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            If Not IsDebugging Then
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                mb.ShowDialog()
+            End If
+            Return False
+        End Try
+
+        Try
+            stopwatch2.Restart()
+            'Edit IDS
+            If Not IsDebugging Then
+                ok = ScriviIds(dvIDS)
+                If Not ok Then someTrouble = True
+            End If
+            My.Application.Log.WriteEntry("Scrivo Ids : " & stopwatch2.Elapsed.ToString)
+        Catch ex As Exception
+            Debug.Print(ex.Message)
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# EsguiFusioneSql : SCRIVI IDS " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            If Not IsDebugging Then
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                mb.ShowDialog()
+            End If
+            Return False
+        End Try
+
+
+        'Rimetto a posto le relazioni
+        FLogin.lstStatoConnessione.Items.Add("Riattivo vincoli per Origine...")
+        Try
+            cmdqry.CommandText = "EXEC sp_msforeachtable 'ALTER TABLE ? WITH CHECK CHECK CONSTRAINT ALL'"
+            cmdqry.ExecuteNonQuery()
+            'cmdqry.CommandText = "DBCC TRACEOFF(460, 1)"
+            'cmdqry.ExecuteNonQuery()
+            FLogin.lstStatoConnessione.Items.Add("TRACEOFF Origine...")
+            cmdqry.CommandText = "DBCC TRACEOFF(610)"
+            cmdqry.ExecuteNonQuery()
+            FLogin.lstStatoConnessione.Items.Add("TRACEOFF Destinazione...")
+            cmdDest.CommandText = "DBCC TRACEOFF(610)"
+            cmdDest.ExecuteNonQuery()
+        Catch ex As Exception
+            Debug.Print(ex.Message)
+            FLogin.lstStatoConnessione.Items.Add("ERRORE SU 'Riattivo vincoli per Origine'")
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# RIATTIVO VINCOLI ORIGINE " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+        End Try
+
+        stopwatch2.Stop()
+        stopwatch.Stop()
+        Debug.Print(stopwatch.Elapsed.ToString)
+        FLogin.lstStatoConnessione.Items.Add("Processo eseguito in : " & stopwatch.Elapsed.ToString)
+        My.Application.Log.WriteEntry("Processo eseguito in : " & stopwatch.Elapsed.ToString)
+
         My.Application.Log.WriteEntry("Fine processo")
         Return someTrouble
     End Function
@@ -263,11 +345,10 @@ Module Fusione
         EditTestoBarra("Creazione elenco lavori")
         FLogin.lstStatoConnessione.Items.Add("Creazione elenco lavori")
 #Region "Elenco Tabelle con modifiche"
-        Dim qry As String = "SELECT * FROM "
         tabelle = New List(Of TabelleDaEstrarre)
         tabelleNoEdit = New List(Of TabelleDaEstrarre)
 #Region "Fatture"
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDoc", .QuerySelect = "", .Gruppo = MacroGruppo.Vendita})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDoc", .Gruppo = MacroGruppo.Vendita})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocComponents", .Gruppo = MacroGruppo.Vendita})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocDetail", .Gruppo = MacroGruppo.Vendita})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocManufReasons", .Gruppo = MacroGruppo.Vendita})
@@ -282,17 +363,18 @@ Module Fusione
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_EI_ITAsyncComm", .Gruppo = MacroGruppo.Vendita})
 #End Region
 #Region "Acquisti ( solo bolle di carico)"
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDoc", .QuerySelect = qry & "MA_PurchaseDoc WHERE DocumentType =  9830400", .Gruppo = MacroGruppo.Acquisto, .GeneraListaId = True, .PrimaryKey = "PurchaseDocId"})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocDetail", .Gruppo = MacroGruppo.Acquisto})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocNotes", .Gruppo = MacroGruppo.Acquisto})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocPymtSched", .Gruppo = MacroGruppo.Acquisto})
-        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocReferences", .Gruppo = MacroGruppo.acquisto})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocShipping", .Gruppo = MacroGruppo.Acquisto})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocSummary", .Gruppo = MacroGruppo.Acquisto})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocTaxSummary", .Gruppo = MacroGruppo.Acquisto})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocDetail", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocDetail INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocDetail.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocNotes", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocNotes INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocNotes.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocPymtSched", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocPymtSched INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocPymtSched.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
+        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocReferences", .Gruppo = MacroGruppo.acquisto, .JoinClause = " FROM MA_PurchaseDocReferences INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocReferences.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocShipping", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocShipping INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocShipping.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocSummary", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocSummary INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocSummary.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocTaxSummary", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocTaxSummary INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocTaxSummary.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
+        'Devo metterla per ultima perche' viene usata come filtro/join per quelle sopra
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDoc", .WhereClause = " WHERE DocumentType =  9830400", .Gruppo = MacroGruppo.Acquisto, .GeneraListaId = True, .PrimaryKey = "PurchaseDocId"})
 #End Region
 #Region "Ordini Clienti"
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrd", .QuerySelect = "", .Gruppo = MacroGruppo.OrdiniClienti})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrd", .Gruppo = MacroGruppo.OrdiniClienti})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdComponents", .Gruppo = MacroGruppo.OrdiniClienti})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdDetails", .Gruppo = MacroGruppo.OrdiniClienti})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdNotes", .Gruppo = MacroGruppo.OrdiniClienti})
@@ -313,7 +395,7 @@ Module Fusione
 
 #End Region
 #Region "Cespiti"
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssets", .QuerySelect = qry & "MA_FixedAssets WHERE DisposalType <> 7143424", .Gruppo = MacroGruppo.Cespiti})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssets", .WhereClause = " WHERE DisposalType <> 7143424", .Gruppo = MacroGruppo.Cespiti})
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsBalance", .Gruppo = MacroGruppo.cespiti})
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsCoeff", .Gruppo = MacroGruppo.cespiti})
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsFinancial", .Gruppo = MacroGruppo.cespiti})
@@ -330,7 +412,7 @@ Module Fusione
 #End Region
 #Region "Clienti : Dichiarazioni di Intento"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_DeclarationOfIntent", .Gruppo = MacroGruppo.Clienti})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppCustomerOptions", .QuerySelect = qry & "MA_CustSuppCustomerOptions WHERE CustSuppType=" & CustSuppType.Cliente, .Gruppo = MacroGruppo.Clienti})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppCustomerOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .Gruppo = MacroGruppo.Clienti})
 
 #End Region
 #Region "Magazzino : Articoli"
@@ -402,17 +484,17 @@ Module Fusione
         ''''NESSUNA MODIFICA'''
         '''''''''''''''''''''''
 #Region "Clienti"
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .QuerySelect = qry & "MA_CustSupp WHERE CustSuppType=" & CustSuppType.Cliente})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppBranches", .QuerySelect = qry & "MA_CustSuppBranches WHERE CustSuppType=" & CustSuppType.Cliente})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNaturalPerson", .QuerySelect = qry & "MA_CustSuppNaturalPerson WHERE CustSuppType=" & CustSuppType.Cliente})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNotes", .QuerySelect = qry & "MA_CustSuppNotes WHERE CustSuppType=" & CustSuppType.Cliente})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppOutstandings", .QuerySelect = qry & "MA_CustSuppOutstandings WHERE CustSuppType=" & CustSuppType.Cliente}) ' Insoluti
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppPeople", .QuerySelect = qry & "MA_CustSuppPeople WHERE CustSuppType=" & CustSuppType.Cliente})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppBranches", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNaturalPerson", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNotes", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppOutstandings", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente}) ' Insoluti
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppPeople", .WhereClause = "WhereClause WHERE CustSuppType=" & CustSuppType.Cliente})
         '
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SDDMandate"})
 #End Region
 #Region "Banche"
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Banks", .QuerySelect = qry & "MA_Banks WHERE IsACompanyBank = 0"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Banks", .WhereClause = " WHERE IsACompanyBank = 0"})
 #End Region
 #Region "Analitica (CdC + Commesse)"
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Jobs"})
@@ -443,8 +525,8 @@ Module Fusione
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemTypes"})
         'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemSuppliers"})
         'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemSuppliersPriceLists"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsFiscalData", .QuerySelect = qry & "MA_ItemsFiscalData WHERE FiscalYear = 2022"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsFiscalDataDomCurr", .QuerySelect = qry & "MA_ItemsFiscalDataDomCurr WHERE FiscalYear = 2022"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsFiscalData", .WhereClause = " WHERE FiscalYear = 2022"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsFiscalDataDomCurr", .WhereClause = " WHERE FiscalYear = 2022"})
 
 #End Region
 #Region "Magazzino : Depositi"
@@ -537,85 +619,6 @@ Module Fusione
         If Not ok Then result = True
 
         Return newDt
-    End Function
-
-    Private Function ModificaDataRow(ByVal g As MacroGruppo, ByVal row As DataRow, ByVal lids As List(Of IDS), ByRef result As Boolean) As DataRow
-        Dim ok As Boolean
-        Dim newDr As DataRow
-        Select Case g
-            Case MacroGruppo.Vendita
-                Try
-                    newDr = EditDataRow(row, lids)
-                    result = True
-                Catch ex As Exception
-                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati Vendite: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-                    result = False
-                End Try
-            Case MacroGruppo.Acquisto
-                'Logica diversa perche' ho un filtro
-                Dim withFiltro As Boolean = row.Table.TableName <> "MA_PurchaseDoc"
-                Try
-                    'Filtro e EditDataRowo in un colpo solo
-                    'TODO
-                    'newDr = EditDataRow(If(withFiltro, FilterRows(row, listeIDs.Find(Function(x) x.Nome.Contains("MA_PurchaseDoc")), "PurchaseDocId"), row), lids)
-                    result = True
-                Catch ex As Exception
-                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditDataRowAcquisti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-                    result = False
-                End Try
-            Case MacroGruppo.Analitica
-                Try
-                    newDr = EditDataRow(row, lids)
-                    result = True
-                Catch ex As Exception
-                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati CentriDiCosto: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-                    result = False
-                End Try
-            Case MacroGruppo.OrdiniClienti
-                Try
-                    newDr = EditDataRow(row, lids)
-                    result = True
-                Catch ex As Exception
-                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati OrdiniClienti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-                    result = False
-                End Try
-            Case MacroGruppo.Cespiti
-                Try
-                    newDr = EditDataRow(row, lids)
-                    result = True
-                Catch ex As Exception
-                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati Cespiti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-                    result = False
-                End Try
-            Case MacroGruppo.Agenti
-                Try
-                    newDr = EditDataRow(row, lids)
-                    result = True
-                Catch ex As Exception
-                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati Agenti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-                    result = False
-                End Try
-            Case MacroGruppo.Clienti
-                Try
-                    newDr = EditDataRow(row, lids)
-                    result = True
-                Catch ex As Exception
-                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati Clienti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-                    result = False
-                End Try
-            Case MacroGruppo.Articoli
-                Try
-                    newDr = EditDataRow(row, lids)
-                    result = True
-                Catch ex As Exception
-                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati Articoli: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-                    result = False
-                End Try
-        End Select
-
-        If Not ok Then result = True
-
-        Return newDr
     End Function
 
     Private Function ScriviIds(ByVal dv As DataView) As Boolean
@@ -760,59 +763,6 @@ Module Fusione
         My.Application.Log.DefaultFileLogWriter.WriteLine("Edit(ok): " & dt.TableName & " " & stopwatch.Elapsed.ToString)
         Return dv.ToTable
     End Function
-    Private Function EditDataRow(ByVal r As DataRow, id As List(Of IDS)) As DataRow
-        Dim stopwatch As New System.Diagnostics.Stopwatch
-        stopwatch.Start()
-        Dim keyIDS As IDS = id.Find(Function(p) p.Chiave = True)
-        Try
-            For Each f As IDS In id
-                Select Case f.Operatore
-                    Case "+"
-                        r.Item(f.Nome) = CInt(r.Item(f.Nome)) + f.Id
-                    Case ""
-                        r.Item(f.Nome) = f.Id
-                    Case "ADD", "END"
-                        Dim lprefix As Short = f.IdString.Length
-                        If r.Item(f.Nome).ToString.Length + lprefix > r.Table.Columns(f.Nome).MaxLength Then
-                            Dim msg As String = "Riscontrati errori durante l'EditAddPrefix " & r.Table.TableName
-                            FLogin.lstStatoConnessione.Items.Add(msg)
-                            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditAddPrefix: " & r.Item(r.Table.PrimaryKey.First.ColumnName) & " - " & r.Table.TableName & "." & f.Nome & " - Valore troppo grosso " & r.Item(f.Nome) & f.IdString)
-                            If Not IsDebugging Then
-                                Dim mb As New MessageBoxWithDetails(msg & "." & f.Nome, GetCurrentMethod.Name, "Valore troppo grosso " & r.Item(f.Nome) & " " & f.IdString)
-                                mb.ShowDialog()
-                                End
-                            End If
-                        Else
-                            If Not String.IsNullOrWhiteSpace(r.Item(f.Nome).ToString) Then
-                                If f.Operatore = "ADD" Then
-                                    r.Item(f.Nome) = String.Concat(f.IdString, r.Item(f.Nome))
-                                Else
-                                    'END" = Suffisso
-                                    r.Item(f.Nome) = String.Concat(r.Item(f.Nome), f.IdString)
-                                End If
-                            End If
-                        End If
-                    Case "SAVE"
-                        If Not String.IsNullOrWhiteSpace(r.Item(f.Nome).ToString) AndAlso r.Item(f.Nome) <> f.IdString Then
-                            r.Item(f.Nome) = String.Empty
-                        End If
-                    Case "="
-                        r.Item(f.Nome) = f.Id
-                End Select
-            Next
-        Catch ex As Exception
-            Debug.Print(ex.Message)
-            FLogin.lstStatoConnessione.Items.Add("Riscontrata exception durante l'EditId " & r.Table.TableName)
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in Edit: " & r.Table.TableName & " - " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-            If Not IsDebugging Then
-                Dim mb As New MessageBoxWithDetails(ex.Message & " " & r.Table.TableName, GetCurrentMethod.Name, ex.StackTrace)
-                mb.ShowDialog()
-            End If
-        End Try
-        Debug.Print("Edit(ok): " & r.Table.TableName & " " & stopwatch.Elapsed.ToString)
-        My.Application.Log.DefaultFileLogWriter.WriteLine("Edit(ok): " & r.Table.TableName & " " & stopwatch.Elapsed.ToString)
-        Return r
-    End Function
 
     Friend Class IDS
         Public Property Chiave As Boolean
@@ -820,6 +770,7 @@ Module Fusione
         Public Property Id As Integer
         Public Property IdString As String
         Public Property Operatore As String
+        Public Property MaxSize As Integer
 
     End Class
     ''' <summary>
@@ -842,81 +793,73 @@ Module Fusione
         'Parametri
         'https://github.com/borisdj/EFCore.BulkExtensions
 
-        Dim iStep As Integer
         Try
             ' Definisco le query per le righe attuali nella tabella
-            If String.IsNullOrWhiteSpace(t.QuerySelect) Then
-                SQLquery = "SELECT * FROM " & t.Nome
-                qryCount = "SELECT COUNT(1) FROM " & t.Nome
+            If String.IsNullOrWhiteSpace(t.JoinClause) Then
+                SQLquery = "SELECT * FROM " & t.Nome & t.WhereClause
+                qryCount = "SELECT COUNT(1) FROM " & t.Nome & t.WhereClause
             Else
-                SQLquery = t.QuerySelect
-                'cerco posizione del Where
-                Dim p As Integer = InStr(t.QuerySelect, " WHERE")
-                Dim filter As String = Mid(t.QuerySelect, p)
-                qryCount = "SELECT COUNT(1) FROM " & t.Nome & filter
+                SQLquery = "SELECT " & t.Nome & ".* " & t.JoinClause & t.WhereClause
+                qryCount = "SELECT COUNT(1) " & t.Nome & t.JoinClause & t.WhereClause
             End If
+
             'Righe origine
             Using cmdqry = New SqlCommand(qryCount, Connection)
                 originCount = System.Convert.ToInt32(cmdqry.ExecuteScalar())
                 bulkMessage.Append(t.Nome & " Orig:(" & originCount.ToString & ") ")
             End Using
 
-            Using cmdqry = New SqlCommand("DBCC TRACEON(610)", ConnDestination)
-                cmdqry.ExecuteNonQuery()
 
-                Dim destCommRowCount As New SqlCommand(qryCount, ConnDestination)
-                Dim countStart As Long = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())
-                'Debug.Print("Starting row count = {0}", countStart)
-                bulkMessage.Append("Dest In:(" & countStart.ToString & ") ")
+            Dim destCommRowCount As New SqlCommand(qryCount, ConnDestination)
+            Dim countStart As Long = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())
+            'Debug.Print("Starting row count = {0}", countStart)
+            bulkMessage.Append("Dest In:(" & countStart.ToString & ") ")
 
-                ' Recupero i dati dall'origine in un SqlDataReader.
-                Dim commandSourceData As New SqlCommand(SQLquery, Connection)
-                Dim reader As SqlDataReader = commandSourceData.ExecuteReader
+            ' Recupero i dati dall'origine in un SqlDataReader.
+            Dim commandSourceData As New SqlCommand(SQLquery, Connection)
+            Dim reader As SqlDataReader = commandSourceData.ExecuteReader
 
-                Using bulkTrans = ConnDestination.BeginTransaction
-                    ' Set up the bulk copy object. 
-                    ' The column positions in the source data reader 
-                    ' match the column positions in the destination table, 
-                    ' so there is no need to map columns.
-                    Try
-                        'provo con column mappig = false
-                        okBulk = ScriviBulkSQL(t.Nome, originCount, reader, bulkTrans, ConnDestination, loggingTxt, False)
-                    Catch ex As Exception
-                        Debug.Print(ex.Message)
-                    Finally
-                        reader.Close()
-                    End Try
-                    'Controllo lo stato
-                    If Not okBulk Then someTrouble = True
-                    bulkMessage.AppendLine(loggingTxt)
-                    If someTrouble Then
-                        FLogin.lstStatoConnessione.Items.Add("Riscontrati errori: annullamento operazione...")
-                        My.Application.Log.DefaultFileLogWriter.WriteLine("Riscontrati errori: annullamento operazione...")
-                        bulkTrans.Rollback()
-                    Else
-                        If commit Then bulkTrans.Commit()
-                        Debug.Print("Commit !")
-                        'FLogin.lstStatoConnessione.Items.Add("Scrittura")
-                        FLogin.lstStatoConnessione.TopIndex = FLogin.lstStatoConnessione.Items.Count - 1
-                    End If
+            Using bulkTrans = ConnDestination.BeginTransaction
+                ' Set up the bulk copy object. 
+                ' The column positions in the source data reader 
+                ' match the column positions in the destination table, 
+                ' so there is no need to map columns.
+                Try
+                    'provo con column mappig = false
+                    okBulk = ScriviBulkSQL(t.Nome, originCount, reader, bulkTrans, ConnDestination, loggingTxt, True)
+                Catch ex As Exception
+                    Debug.Print(ex.Message)
+                Finally
+                    reader.Close()
+                End Try
+                'Controllo lo stato
+                If Not okBulk Then someTrouble = True
+                bulkMessage.AppendLine(loggingTxt)
+                If someTrouble Then
+                    FLogin.lstStatoConnessione.Items.Add("Riscontrati errori: annullamento operazione...")
+                    My.Application.Log.DefaultFileLogWriter.WriteLine("Riscontrati errori: annullamento operazione...")
+                    bulkTrans.Rollback()
+                Else
+                    If commit Then bulkTrans.Commit()
+                    Debug.Print("Commit !")
+                    'FLogin.lstStatoConnessione.Items.Add("Scrittura")
+                    FLogin.lstStatoConnessione.TopIndex = FLogin.lstStatoConnessione.Items.Count - 1
+                End If
 
-                    ' Perform a final count on the destination table
-                    ' to see how many rows were added.
-                    Dim countEnd As Long = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())
-                    Debug.Print("Ending row count = {0}", countEnd)
-                    Debug.Print("{0} rows were added.", countEnd - countStart)
-                    bulkMessage.Append("Agg:(" & (countEnd - countStart).ToString & ") ")
-                    If (countEnd - countStart) <> originCount Then errori.AppendLine("Aggiunta righe diverse su " & t.Nome)
-                End Using
-
-                cmdqry.CommandText = "DBCC TRACEOFF(610)"
-                cmdqry.ExecuteNonQuery()
             End Using
+            ' Perform a final count on the destination table
+            ' to see how many rows were added.
+            Dim countEnd As Long = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())
+            Debug.Print("Ending row count = {0}", countEnd)
+            Debug.Print("{0} rows were added.", countEnd - countStart)
+            bulkMessage.Append("Agg:(" & (countEnd - countStart).ToString & ") ")
+            If (countEnd - countStart) <> originCount Then errori.AppendLine("Aggiunta righe diverse su " & t.Nome)
+
         Catch ex As Exception
             someTrouble = True
             Debug.Print(ex.Message)
-            FLogin.lstStatoConnessione.Items.Add("Annullamento operazione: Riscontrati errori allo step " & iStep)
-            bulkMessage.AppendLine("[Salvataggio] - STEP: " & iStep & " - Sono stati riscontrati degli errori. (Vedere sezione Errori)")
+            bulkMessage.AppendLine("[Salvataggio] - Sono stati riscontrati degli errori. (Vedere sezione Errori): " & t.Nome)
+            errori.AppendLine(t.Nome)
             errori.AppendLine("[Salvataggio] Messaggio:" & ex.Message)
             errori.AppendLine("[Salvataggio] Stack:" & ex.StackTrace)
 
@@ -1002,26 +945,26 @@ Module Fusione
         Return Not someTrouble
     End Function
     Private Function ModificaSqlUpdate(t As TabelleDaEstrarre, ByVal lids As List(Of IDS), ByRef rows As Integer) As Boolean
-        Dim qryToExecute As String = ""
+        Dim qryToExecute As String = "UPDATE " & t.Nome & " SET "
         Dim result As Boolean = False
         Try
-            Using cmdqry = New SqlCommand("DBCC TRACEON(610)", Connection)
-                cmdqry.CommandTimeout = 180
-                cmdqry.ExecuteNonQuery()
+            Using cmdqry = New SqlCommand(qryToExecute, Connection)
+                '    cmdqry.CommandTimeout = 180
+                '    cmdqry.ExecuteNonQuery()
 
-                'Solo per SQL 2017 in su
-                'cmdqry.CommandText = "DBCC TRACEON(460,1)" ' per cambiare errore ID 8152 with 2628
-                'cmdqry.ExecuteNonQuery()
+                '    'Solo per SQL 2017 in su
+                '    'cmdqry.CommandText = "DBCC TRACEON(460,1)" ' per cambiare errore ID 8152 with 2628
+                '    'cmdqry.ExecuteNonQuery()
 
-                cmdqry.CommandText = "ALTER TABLE " & t.Nome & " NOCHECK CONSTRAINT ALL"
-                cmdqry.ExecuteNonQuery()
+                '    cmdqry.CommandText = "ALTER TABLE " & t.Nome & " NOCHECK CONSTRAINT ALL"
+                '    cmdqry.ExecuteNonQuery()
 
-                cmdqry.CommandText = "UPDATE " & t.Nome & " SET "
+                'cmdqry.CommandText = "UPDATE " & t.Nome & " SET "
                 Dim sb As New StringBuilder
                 Dim paramIndex As Integer = 0
                 For Each f As IDS In lids
                     paramIndex += 1
-                    Dim field As String = f.Nome
+                    Dim field As String = t.Nome & "." & f.Nome
                     Dim parameter As String = "@P" & paramIndex.ToString
                     Dim value As String = ""
                     Select Case f.Operatore
@@ -1041,12 +984,12 @@ Module Fusione
                                 'END" = Suffisso
                                 value = value & "CONCAT(" & field & " ,'" & f.IdString & "') END)"
                             End If
-                            'End If
-                            cmdqry.Parameters.AddWithValue(parameter, value)
+                            'cmdqry.Parameters.Add(parameter, SqlDbType.VarChar, 100).Value = value
+                            'cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.VarChar, .Size = 100, .Direction = ParameterDirection.Input, .Value = value})
 
                         Case "SAVE"
-                            value = "(CASE WHEN " & field & " <>'' AND " & field & " <> '" & f.IdString & "'  THEN '' ELSE " & field
-                            cmdqry.Parameters.AddWithValue(parameter, value)
+                            value = "(CASE WHEN " & field & " <>'' AND " & field & " <> '" & f.IdString & "'  THEN '' ELSE " & field & " END)"
+                            cmdqry.Parameters.Add(parameter, SqlDbType.VarChar, f.MaxSize).Value = value
                         Case "="
                             ' value = f.Id.ToString
                             cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
@@ -1056,23 +999,24 @@ Module Fusione
                     Select Case f.Operatore
                         Case "+"
                             sb.AppendLine(field & " = " & field & " + " & parameter & ", ")
+                        Case "ADD", "END"
+                            sb.AppendLine(field & " = " & value & ", ")
                         Case Else
                             sb.AppendLine(field & " = " & parameter & ", ")
                     End Select
 
                 Next
+                qryToExecute &= Strings.Left(sb.ToString, sb.Length - 4)
+                'Aggiungo JOIN E WHERE
+                qryToExecute &= t.JoinClause & t.WhereClause
 
-                Dim keyIDS As IDS = lids.Find(Function(p) p.Chiave = True)
-                Dim sort As String = ""
-                If keyIDS IsNot Nothing Then sort = " ORDER BY " & keyIDS.Nome & " DESC"
-                cmdqry.CommandText = cmdqry.CommandText & Strings.Left(sb.ToString, sb.Length - 4) ' & sort
-                qryToExecute = cmdqry.CommandText.ToString
-                Debug.Print(cmdqry.CommandText.ToString)
+                cmdqry.CommandText = qryToExecute
+                Debug.Print(qryToExecute)
                 Try
                     rows = cmdqry.ExecuteNonQuery()
                     result = True
                 Catch exSql As SqlException
-                    Debug.Print("Errore SQL")
+                    Debug.Print("Errore SQL:" & exSql.Number.ToString)
                     Select Case exSql.Number
                         Case 8152
                             'Dato troppo lungo
@@ -1083,13 +1027,13 @@ Module Fusione
                 Application.DoEvents()
                 cmdqry.Parameters.Clear()
 
-                cmdqry.CommandText = "ALTER TABLE " & t.Nome & " WITH CHECK CHECK CONSTRAINT ALL"
-                cmdqry.ExecuteNonQuery()
-
-                'cmdqry.CommandText = "DBCC TRACEOFF(460, 1)"
+                'cmdqry.CommandText = "ALTER TABLE " & t.Nome & " WITH CHECK CHECK CONSTRAINT ALL"
                 'cmdqry.ExecuteNonQuery()
-                cmdqry.CommandText = "DBCC TRACEOFF(610)"
-                cmdqry.ExecuteNonQuery()
+
+                ''cmdqry.CommandText = "DBCC TRACEOFF(460, 1)"
+                ''cmdqry.ExecuteNonQuery()
+                'cmdqry.CommandText = "DBCC TRACEOFF(610)"
+                'cmdqry.ExecuteNonQuery()
             End Using
 
         Catch ex As Exception
@@ -1117,16 +1061,9 @@ Module Fusione
         Dim pageTot As Integer
 
         If withData Then
-            If String.IsNullOrWhiteSpace(t.QuerySelect) Then
-                SQLquery = "SELECT * FROM " & t.Nome
-                qryCount = "SELECT COUNT(1) FROM " & t.Nome
-            Else
-                SQLquery = t.QuerySelect
-                'cerco posizione del Where
-                Dim p As Integer = InStr(t.QuerySelect, " WHERE")
-                Dim filter As String = Mid(t.QuerySelect, p)
-                qryCount = "SELECT COUNT(1) FROM " & t.Nome & filter
-            End If
+            SQLquery = "SELECT * FROM " & t.Nome & t.JoinClause & t.WhereClause
+            qryCount = "SELECT COUNT(1) FROM " & t.Nome & t.JoinClause & t.WhereClause
+
         Else
             SQLquery = "SELECT * FROM " & t.Nome & " WHERE 1=2"
             qryCount = "SELECT COUNT(1) FROM " & t.Nome
@@ -1286,127 +1223,6 @@ Module Fusione
         Return dt
     End Function
 
-    Private Function GetSchemaAndPaging(t As TabelleDaEstrarre, Optional pageindex As Integer = 1) As DataTable
-        Dim sqlQuery As String
-        Dim qryCount As String
-        Dim errorLevel As String = ""
-        Dim pageTot As Integer
-        Dim dtNew As New DataTable(t.Nome)
-
-        sqlQuery = "SELECT TOP (1) * FROM " & t.Nome
-        If String.IsNullOrWhiteSpace(t.QuerySelect) Then
-            qryCount = "SELECT COUNT(1) FROM " & t.Nome
-        Else
-            'cerco posizione del Where
-            Dim p As Integer = InStr(t.QuerySelect, " WHERE")
-            Dim filter As String = Mid(t.QuerySelect, p)
-            qryCount = "SELECT COUNT(1) FROM " & t.Nome & filter
-        End If
-
-        If Connection.State <> ConnectionState.Open Then
-            MessageBox.Show("Connessione non aperta.")
-            End
-        End If
-
-        Using da As New SqlDataAdapter(sqlQuery, Connection)
-            da.SelectCommand.CommandTimeout = 120
-            da.FillSchema(dtNew, SchemaType.Source)
-            Dim msg As String
-            If pageindex = 1 Then
-                Using cmd As New SqlCommand(qryCount, Connection)
-                    cmd.CommandTimeout = 0
-                    cmd.CommandType = CommandType.Text
-                    Dim rowsCount As Integer = CInt(cmd.ExecuteScalar())
-                    If rowsCount > pageSize Then
-                        t.Paging = True
-                        pageTot = Math.Ceiling(rowsCount / pageSize)
-                        msg = "Estrazione schema : " & t.Nome & "(" & rowsCount.ToString & ") Paging (" & pageTot.ToString & ")"
-                        'Faccio vedere la nuova barra
-                        FLogin.prgFusion.Value = 0
-                        FLogin.prgFusion.Step = 1
-                        FLogin.prgFusion.Maximum = pageTot
-                        FLogin.prgFusion.Text = t.Nome & " - Tot page: " & pageTot.ToString
-                        FLogin.prgFusion.Visible = True
-                        FLogin.prgFusion.PerformStep()
-                        FLogin.prgFusion.Update()
-                        Application.DoEvents()
-                    Else
-                        msg = "Estrazione schema : " & t.Nome & "(" & rowsCount.ToString & ") No Paging"
-                    End If
-                End Using
-                FLogin.lstStatoConnessione.Items.Add(msg)
-                My.Application.Log.WriteEntry(msg)
-            End If
-        End Using
-
-        Return dtNew
-    End Function
-    Private Function CaricaConDatarow(dt As DataTable, t As TabelleDaEstrarre, ByVal lids As List(Of IDS), Optional pageindex As Integer = 1) As DataTable
-        'Dim stopwatch As New Stopwatch
-        Dim stopwatch2 As New Stopwatch
-        'stopwatch.Start()
-        stopwatch2.Start()
-        Dim msg As String
-        Dim SQLquery As String
-        Dim dtNew As New DataTable
-        'Creo la struttura
-        dtNew = dt.Clone
-
-        If String.IsNullOrWhiteSpace(t.QuerySelect) Then
-            SQLquery = "SELECT * FROM " & t.Nome
-        Else
-            SQLquery = t.QuerySelect
-        End If
-
-        If t.Paging Then
-            msg = "--- Page: " & pageindex.ToString
-            FLogin.lstStatoConnessione.Items.Add(msg)
-            My.Application.Log.WriteEntry(msg)
-            SQLquery = "SELECT * FROM " & t.Nome & " ORDER BY " & t.PrimaryKey & " OFFSET (" & (pageindex - 1) * pageSize & ") ROWS FETCH NEXT " & pageSize & " ROWS ONLY"
-
-        Else
-            'SQLquery =
-        End If
-        Using cmd As New SqlCommand(SQLquery, Connection)
-
-            Dim rowsReturned As Integer = 0
-            'Se ho estratto tutto posso uscire dal paging
-            If rowsReturned <> pageSize Then t.Paging = False
-            'Cerco lista di appoggio con nome tabella 
-            Dim indexLista As Integer
-            If t.GeneraListaId Then
-                indexLista = listeIDs.FindIndex(Function(x) x.Nome.Contains(t.Nome))
-            End If
-            Dim dr As SqlDataReader = cmd.ExecuteReader
-            If dr.HasRows Then
-                While dr.Read
-                    Dim ColArray As Object() = New Object(dr.FieldCount - 1) {}
-
-                    For i As Integer = 0 To dr.FieldCount - 1
-                        If dr(i) IsNot Nothing Then ColArray(i) = dr(i)
-                    Next
-                    Dim r As DataRow = dtNew.NewRow()
-                    r.ItemArray = ColArray
-                    'Faccio le mie modifiche
-                    'TODO
-                    Dim nr As DataRow = EditDataRow(r, lids)
-                    'Scrivo il nuovo dato su dtNew
-                    'dtNew.LoadDataRow(ColArray, True)
-                    dtNew.Rows.Add(nr)
-                    'Aggiungo gli id
-                    If t.GeneraListaId Then listeIDs(indexLista).Ids.Add(dr.Item(t.PrimaryKey))
-
-                End While
-
-                rowsReturned += 1
-            End If
-            Debug.Print("Riempimento tabella : " & stopwatch2.Elapsed.ToString)
-            My.Application.Log.WriteEntry("Riempimento tabella : " & stopwatch2.Elapsed.ToString)
-
-            dr.Close()
-        End Using
-        Return dtNew
-    End Function
     Private Sub AggiungiIds(dt As DataTable, nome As String, listeIDs As List(Of ListaId), primarykey As String)
         Dim l As ListaId = listeIDs.Find(Function(x) x.Nome.Contains(nome))
         For Each dr As DataRow In dt.Rows
@@ -1488,17 +1304,17 @@ Module ListeID
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "WorkerIDIssue", .Operatore = "="})
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "ExtAccAEID", .Operatore = "="})
                     'Aggiungo campo aggiuntivo cost center
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
-                    lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = "END"})
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD", .MaxSize = 8})
+                    lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = "END", .MaxSize = 8})
                 Case "MA_SaleDocComponents", "MA_SaleDocManufReasons", "MA_SaleDocNotes", "MA_SaleDocShipping", "MA_SaleDocSummary", "MA_SaleDocTaxSummary"
                     '"MA_SaleDocReferences", "MA_EIEventViewer", "MA_EI_ITDocAdditionalData", "MA_EI_ITAsyncComm"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = saleDocId, .Nome = "SaleDocId", .Operatore = "+"})
                 Case "MA_SaleDocPymtSched"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = saleDocId, .Nome = "SaleDocId", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD", .MaxSize = 8})
                 Case "MA_SaleDocDetail"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = saleDocId, .Nome = "SaleDocId", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD", .MaxSize = 8})
                     Dim fOrdine As Integer = dv.Find("SaleOrdId")
                     If fOrdine = -1 Then
                         Debug.Print("Fatture: SaleOrdId: non trovato")
@@ -1563,16 +1379,16 @@ Module ListeID
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "PureJETaxTransferId", .Operatore = "="})
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "ExtAccAEID", .Operatore = "="})
                     'Campi accessori
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD", .MaxSize = 8})
                 Case "MA_PurchaseDocNotes", "MA_PurchaseDocShipping", "MA_PurchaseDocSummary", "MA_PurchaseDocTaxSummary"
                     '"MA_PurchaseDocReferences"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseDocId, .Nome = "PurchaseDocId", .Operatore = "+"})
                 Case "MA_PurchaseDocPymtSched"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseDocId, .Nome = "PurchaseDocId", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD", .MaxSize = 8})
                 Case "MA_PurchaseDocDetail"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseDocId, .Nome = "PurchaseDocId", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD", .MaxSize = 8})
                     Dim fOrdine As Integer = dv.Find("PurchaseOrdId")
                     If fOrdine = -1 Then
                         Debug.Print("Acquisti: PurchaseOrdId: non trovato")
@@ -1612,10 +1428,10 @@ Module ListeID
         Dim lIDS As New List(Of IDS)
         Select Case tablename
             Case "MA_FixedAssets"
-                lIDS.Add(New IDS With {.Chiave = True, .IdString = PrefissoCespiti, .Nome = "FixedAsset", .Operatore = "ADD"})
-                lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Location", .Operatore = "END"})
+                lIDS.Add(New IDS With {.Chiave = True, .IdString = PrefissoCespiti, .Nome = "FixedAsset", .Operatore = "ADD", .MaxSize = 10})
+                lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Location", .Operatore = "END", .MaxSize = 8})
             Case "MA_FixAssetLocations"
-                lIDS.Add(New IDS With {.Chiave = True, .IdString = Suffisso, .Nome = "Location", .Operatore = "END"})
+                lIDS.Add(New IDS With {.Chiave = True, .IdString = Suffisso, .Nome = "Location", .Operatore = "END", .MaxSize = 8})
         End Select
         Return lIDS
     End Function
@@ -1628,7 +1444,7 @@ Module ListeID
         Dim lIDS As New List(Of IDS)
         Select Case tablename
             Case "MA_Items"
-                lIDS.Add(New IDS With {.IdString = ContropartitaAcquisto, .Nome = "PurchaseOffset", .Operatore = "SAVE"})
+                lIDS.Add(New IDS With {.IdString = ContropartitaAcquisto, .Nome = "PurchaseOffset", .Operatore = "SAVE", .MaxSize = 16})
         End Select
         Return lIDS
     End Function
@@ -1640,7 +1456,7 @@ Module ListeID
         Dim lIDS As New List(Of IDS)
         Select Case tablename
             Case "MA_Areas"
-                lIDS.Add(New IDS With {.Chiave = True, .IdString = Suffisso, .Nome = "Area", .Operatore = "End"})
+                lIDS.Add(New IDS With {.Chiave = True, .IdString = Suffisso, .Nome = "Area", .Operatore = "End", .MaxSize = 8})
         End Select
         Return lIDS
     End Function
@@ -1667,7 +1483,7 @@ Module ListeID
                 End If
 
             Case "MA_CustSuppCustomerOptions"
-                lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = "END"})
+                lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = "END", .MaxSize = 8})
         End Select
         Return lIDS
     End Function
@@ -1701,7 +1517,7 @@ Module ListeID
         Dim lIDS As New List(Of IDS)
         Select Case tablename
             Case "MA_CostCenters"
-                lIDS.Add(New IDS With {.Chiave = True, .IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
+                lIDS.Add(New IDS With {.Chiave = True, .IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD", .MaxSize = 8})
         End Select
 
         Return lIDS
@@ -1730,11 +1546,11 @@ Module ListeID
                     lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = "+"})
                 Case "MA_SaleOrd"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
-                    lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = "END"})
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD", .MaxSize = 8})
+                    lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = "END", .MaxSize = 8})
                 Case "MA_SaleOrdDetails"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD"})
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = "ADD", .MaxSize = 8})
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "ProductionPlanId", .Operatore = "="})
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "ProductionJobId", .Operatore = "="})
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocId", .Operatore = "="})
@@ -1750,13 +1566,292 @@ Module ListeID
                     lIDS.Add(New IDS With {.Id = SaleOrdId, .Nome = "IdOrdPadre", .Operatore = "+"})
                 Case "ALLOrdCliAcc"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "Cdc", .Operatore = "ADD"})
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "Cdc", .Operatore = "ADD", .MaxSize = 8})
                 Case "ALLCespiti"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = "+"})
-                    lIDS.Add(New IDS With {.IdString = PrefissoCespiti, .Nome = "Cespite", .Operatore = "ADD"})
+                    lIDS.Add(New IDS With {.IdString = PrefissoCespiti, .Nome = "Cespite", .Operatore = "ADD", .MaxSize = 10})
             End Select
         End If
 
         Return lIDS
     End Function
+End Module
+Module WithDataRow
+    'Dublicate per eviatre errori in compilazione
+    Private Const pageSize As Integer = 20000
+    Private listeIDs As List(Of ListaId)
+
+    Class TabelleDaEstrarre
+        Public Property QuerySelect As String
+        Public Property WhereClause As String
+        Public Property JoinClause As String
+        Public Property Nome As String
+        Public Property Paging As Boolean
+        Public Property Gruppo As MacroGruppo
+        Public Property GeneraListaId As Boolean
+        Public Property PrimaryKey As String
+        Public Sub New()
+            QuerySelect = ""
+            WhereClause = ""
+            JoinClause = ""
+            Nome = ""
+            Paging = False
+            Gruppo = MacroGruppo.Nessuno
+            GeneraListaId = False
+            PrimaryKey = ""
+        End Sub
+    End Class
+    Private Class ListaId
+        Public Property Ids As List(Of Integer)
+        Public Property Nome As String
+        Public Sub New()
+            Ids = New List(Of Integer)
+            Nome = ""
+        End Sub
+    End Class
+
+    Private Function GetSchemaAndPaging(t As TabelleDaEstrarre, Optional pageindex As Integer = 1) As DataTable
+        Dim sqlQuery As String
+        Dim qryCount As String
+        Dim errorLevel As String = ""
+        Dim pageTot As Integer
+        Dim dtNew As New DataTable(t.Nome)
+
+        sqlQuery = "SELECT TOP (1) * FROM " & t.Nome
+        qryCount = "SELECT COUNT(1) FROM " & t.Nome & t.JoinClause & t.WhereClause
+
+        If Connection.State <> ConnectionState.Open Then
+            MessageBox.Show("Connessione non aperta.")
+            End
+        End If
+
+        Using da As New SqlDataAdapter(sqlQuery, Connection)
+            da.SelectCommand.CommandTimeout = 120
+            da.FillSchema(dtNew, SchemaType.Source)
+            Dim msg As String
+            If pageindex = 1 Then
+                Using cmd As New SqlCommand(qryCount, Connection)
+                    cmd.CommandTimeout = 0
+                    cmd.CommandType = CommandType.Text
+                    Dim rowsCount As Integer = CInt(cmd.ExecuteScalar())
+                    If rowsCount > pageSize Then
+                        t.Paging = True
+                        pageTot = Math.Ceiling(rowsCount / pageSize)
+                        msg = "Estrazione schema : " & t.Nome & "(" & rowsCount.ToString & ") Paging (" & pageTot.ToString & ")"
+                        'Faccio vedere la nuova barra
+                        FLogin.prgFusion.Value = 0
+                        FLogin.prgFusion.Step = 1
+                        FLogin.prgFusion.Maximum = pageTot
+                        FLogin.prgFusion.Text = t.Nome & " - Tot page: " & pageTot.ToString
+                        FLogin.prgFusion.Visible = True
+                        FLogin.prgFusion.PerformStep()
+                        FLogin.prgFusion.Update()
+                        Application.DoEvents()
+                    Else
+                        msg = "Estrazione schema : " & t.Nome & "(" & rowsCount.ToString & ") No Paging"
+                    End If
+                End Using
+                FLogin.lstStatoConnessione.Items.Add(msg)
+                My.Application.Log.WriteEntry(msg)
+            End If
+        End Using
+
+        Return dtNew
+    End Function
+
+    Private Function CaricaConDatarow(dt As DataTable, t As TabelleDaEstrarre, ByVal lids As List(Of IDS), Optional pageindex As Integer = 1) As DataTable
+        'Dim stopwatch As New Stopwatch
+        Dim stopwatch2 As New Stopwatch
+        'stopwatch.Start()
+        stopwatch2.Start()
+        Dim msg As String
+        Dim SQLquery As String
+        Dim dtNew As New DataTable
+        'Creo la struttura
+        dtNew = dt.Clone
+
+        SQLquery = "SELECT * FROM " & t.Nome & t.JoinClause & t.WhereClause
+
+
+        If t.Paging Then
+            msg = "--- Page: " & pageindex.ToString
+            FLogin.lstStatoConnessione.Items.Add(msg)
+            My.Application.Log.WriteEntry(msg)
+            SQLquery = "SELECT * FROM " & t.Nome & " ORDER BY " & t.PrimaryKey & " OFFSET (" & (pageindex - 1) * pageSize & ") ROWS FETCH NEXT " & pageSize & " ROWS ONLY"
+
+        Else
+            'SQLquery =
+        End If
+        Using cmd As New SqlCommand(SQLquery, Connection)
+
+            Dim rowsReturned As Integer = 0
+            'Se ho estratto tutto posso uscire dal paging
+            If rowsReturned <> pageSize Then t.Paging = False
+            'Cerco lista di appoggio con nome tabella 
+            Dim indexLista As Integer
+            If t.GeneraListaId Then
+                indexLista = listeIDs.FindIndex(Function(x) x.Nome.Contains(t.Nome))
+            End If
+            Dim dr As SqlDataReader = cmd.ExecuteReader
+            If dr.HasRows Then
+                While dr.Read
+                    Dim ColArray As Object() = New Object(dr.FieldCount - 1) {}
+
+                    For i As Integer = 0 To dr.FieldCount - 1
+                        If dr(i) IsNot Nothing Then ColArray(i) = dr(i)
+                    Next
+                    Dim r As DataRow = dtNew.NewRow()
+                    r.ItemArray = ColArray
+                    'Faccio le mie modifiche
+                    Dim nr As DataRow = EditDataRow(r, lids)
+                    'Scrivo il nuovo dato su dtNew
+                    'dtNew.LoadDataRow(ColArray, True)
+                    dtNew.Rows.Add(nr)
+                    'Aggiungo gli id
+                    If t.GeneraListaId Then listeIDs(indexLista).Ids.Add(dr.Item(t.PrimaryKey))
+
+                End While
+
+                rowsReturned += 1
+            End If
+            Debug.Print("Riempimento tabella : " & stopwatch2.Elapsed.ToString)
+            My.Application.Log.WriteEntry("Riempimento tabella : " & stopwatch2.Elapsed.ToString)
+
+            dr.Close()
+        End Using
+        Return dtNew
+    End Function
+
+    Private Function ModificaDataRow(ByVal g As MacroGruppo, ByVal row As DataRow, ByVal lids As List(Of IDS), ByRef result As Boolean) As DataRow
+        Dim ok As Boolean
+        Dim newDr As DataRow = row
+        Select Case g
+            Case MacroGruppo.Vendita
+                Try
+                    newDr = EditDataRow(row, lids)
+                    result = True
+                Catch ex As Exception
+                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati Vendite: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                    result = False
+                End Try
+            Case MacroGruppo.Acquisto
+                'Logica diversa perche' ho un filtro
+                Dim withFiltro As Boolean = row.Table.TableName <> "MA_PurchaseDoc"
+                Try
+                    'Filtro e EditDataRow in un colpo solo
+                    'TODO : accantonato
+                    'newDr = EditDataRow(If(withFiltro, FilterRows(row, listeIDs.Find(Function(x) x.Nome.Contains("MA_PurchaseDoc")), "PurchaseDocId"), row), lids)
+                    result = True
+                Catch ex As Exception
+                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditDataRowAcquisti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                    result = False
+                End Try
+            Case MacroGruppo.Analitica
+                Try
+                    newDr = EditDataRow(row, lids)
+                    result = True
+                Catch ex As Exception
+                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati CentriDiCosto: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                    result = False
+                End Try
+            Case MacroGruppo.OrdiniClienti
+                Try
+                    newDr = EditDataRow(row, lids)
+                    result = True
+                Catch ex As Exception
+                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati OrdiniClienti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                    result = False
+                End Try
+            Case MacroGruppo.Cespiti
+                Try
+                    newDr = EditDataRow(row, lids)
+                    result = True
+                Catch ex As Exception
+                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati Cespiti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                    result = False
+                End Try
+            Case MacroGruppo.Agenti
+                Try
+                    newDr = EditDataRow(row, lids)
+                    result = True
+                Catch ex As Exception
+                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati Agenti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                    result = False
+                End Try
+            Case MacroGruppo.Clienti
+                Try
+                    newDr = EditDataRow(row, lids)
+                    result = True
+                Catch ex As Exception
+                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati Clienti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                    result = False
+                End Try
+            Case MacroGruppo.Articoli
+                Try
+                    newDr = EditDataRow(row, lids)
+                    result = True
+                Catch ex As Exception
+                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati Articoli: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                    result = False
+                End Try
+        End Select
+
+        If Not ok Then result = True
+
+        Return newDr
+    End Function
+    Private Function EditDataRow(ByVal r As DataRow, id As List(Of IDS)) As DataRow
+        Dim stopwatch As New System.Diagnostics.Stopwatch
+        stopwatch.Start()
+        Dim keyIDS As IDS = id.Find(Function(p) p.Chiave = True)
+        Try
+            For Each f As IDS In id
+                Select Case f.Operatore
+                    Case "+"
+                        r.Item(f.Nome) = CInt(r.Item(f.Nome)) + f.Id
+                    Case ""
+                        r.Item(f.Nome) = f.Id
+                    Case "ADD", "END"
+                        Dim lprefix As Short = f.IdString.Length
+                        If r.Item(f.Nome).ToString.Length + lprefix > r.Table.Columns(f.Nome).MaxLength Then
+                            Dim msg As String = "Riscontrati errori durante l'EditAddPrefix " & r.Table.TableName
+                            FLogin.lstStatoConnessione.Items.Add(msg)
+                            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditAddPrefix: " & r.Item(r.Table.PrimaryKey.First.ColumnName) & " - " & r.Table.TableName & "." & f.Nome & " - Valore troppo grosso " & r.Item(f.Nome) & f.IdString)
+                            If Not IsDebugging Then
+                                Dim mb As New MessageBoxWithDetails(msg & "." & f.Nome, GetCurrentMethod.Name, "Valore troppo grosso " & r.Item(f.Nome) & " " & f.IdString)
+                                mb.ShowDialog()
+                                End
+                            End If
+                        Else
+                            If Not String.IsNullOrWhiteSpace(r.Item(f.Nome).ToString) Then
+                                If f.Operatore = "ADD" Then
+                                    r.Item(f.Nome) = String.Concat(f.IdString, r.Item(f.Nome))
+                                Else
+                                    'END" = Suffisso
+                                    r.Item(f.Nome) = String.Concat(r.Item(f.Nome), f.IdString)
+                                End If
+                            End If
+                        End If
+                    Case "SAVE"
+                        If Not String.IsNullOrWhiteSpace(r.Item(f.Nome).ToString) AndAlso r.Item(f.Nome) <> f.IdString Then
+                            r.Item(f.Nome) = String.Empty
+                        End If
+                    Case "="
+                        r.Item(f.Nome) = f.Id
+                End Select
+            Next
+        Catch ex As Exception
+            Debug.Print(ex.Message)
+            FLogin.lstStatoConnessione.Items.Add("Riscontrata exception durante l'EditId " & r.Table.TableName)
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in Edit: " & r.Table.TableName & " - " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            If Not IsDebugging Then
+                Dim mb As New MessageBoxWithDetails(ex.Message & " " & r.Table.TableName, GetCurrentMethod.Name, ex.StackTrace)
+                mb.ShowDialog()
+            End If
+        End Try
+        Debug.Print("Edit(ok): " & r.Table.TableName & " " & stopwatch.Elapsed.ToString)
+        My.Application.Log.DefaultFileLogWriter.WriteLine("Edit(ok): " & r.Table.TableName & " " & stopwatch.Elapsed.ToString)
+        Return r
+    End Function
+
 End Module
