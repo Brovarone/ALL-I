@@ -487,7 +487,7 @@ Module Fusione
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNaturalPerson", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNotes", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppOutstandings", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente}) ' Insoluti
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppPeople", .WhereClause = "WhereClause WHERE CustSuppType=" & CustSuppType.Cliente})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppPeople", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente})
         '
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SDDMandate"})
 #End Region
@@ -835,7 +835,7 @@ Module Fusione
                 If origConn.State = ConnectionState.Open Then
                     ' Recupero i dati dall'origine in un SqlDataReader.
                     Dim commandSourceData As New SqlCommand(SQLquery, origConn)
-                    Dim reader As SqlDataReader = commandSourceData.ExecuteReader()
+                    Dim reader As SqlDataReader = commandSourceData.ExecuteReader(CommandBehavior.SequentialAccess)
                     Using destConn As New SqlConnection With {.ConnectionString = GetConnectionStringSPA()}
                         destConn.Open()
                         If destConn.State = ConnectionState.Open Then
@@ -853,9 +853,9 @@ Module Fusione
                                     'spostato fuori reader.Close()
                                 End Try
                                 reader.Close()
+                                bulkMessage.AppendLine(loggingTxt)
                                 'Controllo lo stato
                                 If Not okBulk Then someTrouble = True
-                                bulkMessage.AppendLine(loggingTxt)
                                 If someTrouble Then
                                     FLogin.lstStatoConnessione.Items.Add("Riscontrati errori: annullamento operazione...")
                                     My.Application.Log.DefaultFileLogWriter.WriteLine("Riscontrati errori: annullamento operazione...")
@@ -881,8 +881,8 @@ Module Fusione
                         Dim countEnd As Long = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())
                         Debug.Print("Ending row count = {0}", countEnd)
                         Debug.Print("{0} rows were added.", countEnd - countStart)
-                        bulkMessage.Append("Agg:(" & (countEnd - countStart).ToString & ") ")
-                        If (countEnd - countStart) <> originCount Then errori.AppendLine("Aggiunta righe diverse su " & t.Nome)
+                        bulkMessage.Append("Agg:(" & (countEnd - countStart).ToString & ")")
+                        If (countEnd - countStart) <> originCount Then bulkMessage.Append(" - Aggiunta righe diverse.")
                     End Using
                 End If
             End Using
@@ -892,10 +892,9 @@ Module Fusione
         Catch ex As Exception
             someTrouble = True
             Debug.Print(ex.Message)
-            bulkMessage.AppendLine("[Salvataggio] - Sono stati riscontrati degli errori. (Vedere sezione Errori): " & t.Nome)
-            errori.AppendLine(t.Nome)
-            errori.AppendLine("[Salvataggio] Messaggio:" & ex.Message)
-            errori.AppendLine("[Salvataggio] Stack:" & ex.StackTrace)
+            bulkMessage.AppendLine("[Salvataggio] - ERRORE")
+            errori.AppendLine("[Errore Salvataggio] Messaggio:" & ex.Message)
+            errori.AppendLine("[Errore Salvataggio] Stack:" & ex.StackTrace)
 
             If Not IsDebugging Then
                 Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
@@ -906,10 +905,11 @@ Module Fusione
         'Scrivo i Log
         If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine("+ Scrittura: " & bulkMessage.ToString)
         If errori.Length > 0 Then
-            My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & vbCrLf & errori.ToString)
+            My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ScriviDatiSQL---" & vbCrLf & errori.ToString)
             FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati errori : Controllare file di Log")
             Debug.Print(errori.ToString)
         End If
+        My.Application.Log.DefaultFileLogWriter.WriteLine(String.Empty)
 
         Return Not someTrouble
     End Function
@@ -986,7 +986,7 @@ Module Fusione
                 origUpdConn.Open()
                 If origUpdConn.State = ConnectionState.Open Then
                     Using cmdqry = New SqlCommand(qryToExecute, origUpdConn)
-                        '    cmdqry.CommandTimeout = 180
+                        cmdqry.CommandTimeout = 0
                         '    cmdqry.ExecuteNonQuery()
 
                         '    'Solo per SQL 2017 in su
@@ -1058,6 +1058,8 @@ Module Fusione
                                 Case 8152
                                     'Dato troppo lungo
                                     My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaSqlUpdate.ExecuteNonQuery (Dato troppo lungo): " & exSql.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & exSql.StackTrace.ToString)
+                                Case Else
+                                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaSqlUpdate.ExecuteNonQuery (SqlException): " & exSql.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & exSql.StackTrace.ToString)
                             End Select
                         Catch ex As Exception
                             My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaSqlUpdate.ExecuteNonQuery (Exception Generica): " & ex.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & ex.StackTrace.ToString)
