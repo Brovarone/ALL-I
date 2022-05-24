@@ -6,6 +6,7 @@ Imports System.Reflection.MethodBase
 Imports System.Xml
 Imports System.Threading
 Imports EFMago.Models
+Imports ALLSystemTools.SqlTools
 
 Imports Microsoft.EntityFrameworkCore
 
@@ -124,30 +125,25 @@ Public Class FLogin
 
         Me.Cursor = Cursors.Default
     End Sub
-    Private Sub SUBConnettiSPA(ByVal DB As String)
+    Private Sub SUBConnettiSPA(ByVal db As String)
         Cursor = Cursors.WaitCursor
-
-        ConnDestination = New SqlConnection With {
-            .ConnectionString = "Data Source=" & txtSERVER.Text & "; Database=" & DB & ";User Id=" & txtID.Text & ";Password=" & txtPSW.Text & ";"
-            }
-        ConnDestination.Open()
-
-        If ConnDestination.State = ConnectionState.Open Then
-            Using comm As New SqlCommand("SELECT  @@OPTIONS", ConnDestination)
-                'Imposto questo flag per velocizzare se StoredProcedure
-                comm.CommandText = "SET ARITHABORT ON"
-                'comm.CommandText = "SET QUOTED_IDENTIFIER ON" già presente
-                'comm.CommandText = "SET ANSI_NULLS ON" già presente
-                comm.ExecuteNonQuery()
-                'comm.CommandText = "SELECT  @@OPTIONS"
-            End Using
-            lstStatoConnessione.Items.Add("Connessione a seconda azienda: " & DB & " avvenuta con successo")
-            My.Application.Log.DefaultFileLogWriter.WriteLine("Connessione a seconda azienda: " & DB & " avvenuta con successo")
-        End If
-
+        RunNonQuery("SET ARITHABORT ON", GetConnectionStringSPA)
+        lstStatoConnessione.Items.Add("Connessione a seconda azienda: " & db & " avvenuta con successo")
+        My.Application.Log.DefaultFileLogWriter.WriteLine("Connessione a seconda azienda: " & db & " avvenuta con successo")
         Me.Cursor = Cursors.Default
     End Sub
 
+    Private Sub SUBConnettiUNO(ByVal db As String)
+        Cursor = Cursors.WaitCursor
+        RunNonQuery("SET ARITHABORT ON", GetConnectionStringUNO)
+        lstStatoConnessione.Items.Add("Connessione a prima azienda: " & db & " avvenuta con successo")
+        My.Application.Log.DefaultFileLogWriter.WriteLine("Connessione a prima azienda: " & db & " avvenuta con successo")
+        DisabilitaTxt(True)
+        BtnProcessa.BackColor = BtnConnetti.BackColor
+        BtnConnetti.BackColor = BtnPath.BackColor
+        BackupDatabaseToolStripMenuItem.Enabled = True
+        Me.Cursor = Cursors.Default
+    End Sub
     Private Function LINQConnetti(Optional DB As String = "") As Boolean
         Dim bStatus As Boolean = False
         If String.IsNullOrWhiteSpace(DB) Then DB = DBInUse
@@ -1823,8 +1819,7 @@ Public Class FLogin
 
         ToolStripMenuItemDebugging.PerformClick()
 
-
-        SUBConnetti(If(DBisTMP, TxtTmpDB_UNO.Text, TxtDB_UNO.Text))
+        SUBConnettiUNO(If(DBisTMP, TxtTmpDB_UNO.Text, TxtDB_UNO.Text))
         SUBConnettiSPA(If(DBisTMP, TxtTmpDB_SPA.Text, TxtDB_SPA.Text))
         ChkFusioneFull.Checked = True
 

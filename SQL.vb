@@ -3,9 +3,9 @@ Imports System.Data.SqlClient
 Imports System.IO
 Imports System.Reflection.MethodBase
 
-Namespace AsyncTool
+Namespace SqlTools
     Module Connessione
-        Public Function GetConnectionStringSPA() As String
+        Public Function GetConnectionStringSPAAsync() As String
             Dim DB As String = If(DBisTMP, FLogin.TxtTmpDB_SPA.Text, FLogin.TxtDB_SPA.Text)
             ' To avoid storing the connection string in your code,            
             ' you can retrieve it from a configuration file. 
@@ -14,6 +14,14 @@ Namespace AsyncTool
             ' connection string, the command is not able
             ' to execute asynchronously.
             Return "Data Source=" & FLogin.txtSERVER.Text & "; Database=" & DB & ";User Id=" & FLogin.txtID.Text & ";Password=" & FLogin.txtPSW.Text & ";" & " Asynchronous Processing=True;"
+        End Function
+        Public Function GetConnectionStringSPA() As String
+            Dim DB As String = If(DBisTMP, FLogin.TxtTmpDB_SPA.Text, FLogin.TxtDB_SPA.Text)
+            Return "Data Source=" & FLogin.txtSERVER.Text & "; Database=" & DB & ";User Id=" & FLogin.txtID.Text & ";Password=" & FLogin.txtPSW.Text & ";" & " Pooling=True;"
+        End Function
+        Public Function GetConnectionStringUNO() As String
+            Dim DB As String = If(DBisTMP, FLogin.TxtTmpDB_UNO.Text, FLogin.TxtDB_UNO.Text)
+            Return "Data Source=" & FLogin.txtSERVER.Text & "; Database=" & DB & ";User Id=" & FLogin.txtID.Text & ";Password=" & FLogin.txtPSW.Text & ";" & " Pooling=True;"
         End Function
         Public Sub RunNonQueryAsynchronously(ByVal commandText As String, ByVal connectionString As String)
 
@@ -83,6 +91,29 @@ Namespace AsyncTool
                 End Try
             End Using
             ' Return nrRighe
+        End Function
+        Public Function RunNonQuery(ByVal commandText As String, ByVal connectionString As String) As Integer
+            Dim rowsAffected As Integer
+            Using connection As New SqlConnection(connectionString)
+                Try
+                    Dim command As New SqlCommand(commandText, connection)
+                    connection.Open()
+                    If connection.State = ConnectionState.Open Then
+                        rowsAffected = command.ExecuteNonQuery()
+                        Console.WriteLine("Command complete. Affected {0} rows.", rowsAffected)
+                    End If
+                Catch ex As SqlException
+                    Console.WriteLine("Error ({0}): {1}", ex.Number, ex.Message)
+                Catch ex As InvalidOperationException
+                    Console.WriteLine("Error: {0}", ex.Message)
+                Catch ex As Exception
+                    ' You might want to pass these errors
+                    ' back out to the caller.
+                    Console.WriteLine("Error: {0}", ex.Message)
+                End Try
+            End Using
+            Application.DoEvents()
+            Return rowsAffected
         End Function
     End Module
 End Namespace

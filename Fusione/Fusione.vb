@@ -2,6 +2,7 @@
 Imports System.Data.SqlClient
 Imports System.Text
 Imports System.Reflection.MethodBase
+Imports ALLSystemTools.SqlTools
 
 Module Fusione
 
@@ -190,11 +191,16 @@ Module Fusione
         dtIDS = dts.Tables("IDS")
         dvIDS = New DataView(dtIDS, "", "Key", DataViewRowState.CurrentRows)
         'Carico IDS da database di destinazione
-        Using adpIDS As New SqlDataAdapter("Select * FROM MA_IDNumbers", ConnDestination)
-            dtNewIds = New DataTable
-            adpIDS.FillSchema(dtNewIds, SchemaType.Source)
-            adpIDS.Fill(dtNewIds)
-            dvNewIds = New DataView(dtNewIds, "", "CodeType", DataViewRowState.CurrentRows)
+        Using destConn As New SqlConnection(GetConnectionStringSPA)
+            destConn.Open()
+            If destConn.State = ConnectionState.Open Then
+                Using adpIDS As New SqlDataAdapter("Select * FROM MA_IDNumbers", destConn)
+                    dtNewIds = New DataTable
+                    adpIDS.FillSchema(dtNewIds, SchemaType.Source)
+                    adpIDS.Fill(dtNewIds)
+                    dvNewIds = New DataView(dtNewIds, "", "CodeType", DataViewRowState.CurrentRows)
+                End Using
+            End If
         End Using
 
         Dim stopwatch As New System.Diagnostics.Stopwatch
@@ -202,26 +208,20 @@ Module Fusione
         Dim stopwatch2 As New System.Diagnostics.Stopwatch
         stopwatch2.Start()
 
-        Dim cmdqry As New SqlCommand("DBCC TRACEON(610)", Connection)
-        Dim cmdDest As New SqlCommand("DBCC TRACEON(610)", ConnDestination)
-
         Try
             'Disattivo le relazioni
             FLogin.lstStatoConnessione.Items.Add("TRACEON Origine...")
-            cmdqry.CommandTimeout = 180
-            cmdqry.ExecuteNonQuery()
+            RunNonQuery("DBCC TRACEON(610)", GetConnectionStringUNO)
             FLogin.lstStatoConnessione.Items.Add("TRACEON Destinazione...")
-            cmdDest.CommandTimeout = 180
-            cmdDest.ExecuteNonQuery()
-            Application.DoEvents()
+            RunNonQuery("DBCC TRACEON(610)", GetConnectionStringSPA)
 
-            'Solo per SQL 2017 in su
-            'cmdqry.CommandText = "DBCC TRACEON(460,1)" ' per cambiare errore ID 8152 with 2628
-            'cmdqry.ExecuteNonQuery()
+
+            ' Solo per SQL 2017 in su
+            ' RunNonQuery("DBCC TRACEON(460,1)", GetConnectionStringUNO)  ' per cambiare errore ID 8152 with 2628
+
             FLogin.lstStatoConnessione.Items.Add("Disattivo vincoli per Origine...")
-            cmdqry.CommandText = "EXEC sp_MSforeachtable @command1='ALTER TABLE ? NOCHECK CONSTRAINT ALL'"
-            cmdqry.ExecuteNonQuery()
-            Application.DoEvents()
+            RunNonQuery("EXEC sp_MSforeachtable @command1='ALTER TABLE ? NOCHECK CONSTRAINT ALL'", GetConnectionStringUNO)
+
             FLogin.lstStatoConnessione.Items.Add("Processo tabelle in corso...")
             FLogin.prgCopy.Value = 0
             FLogin.prgCopy.Step = 1
@@ -252,7 +252,7 @@ Module Fusione
                 'Metodo Sql Update
                 Dim rows As Integer
                 ok = ModificaSqlUpdate(t, lIDS, rows)
-                My.Application.Log.DefaultFileLogWriter.WriteLine("ModificaSql: " & t.Nome & " " & ok.ToString)
+                My.Application.Log.DefaultFileLogWriter.WriteLine("ModificaSql: " & t.Nome & " Esito:" & ok.ToString)
                 Application.DoEvents()
                 If Not ok Then someTrouble = True
                 EditTestoBarra("Scrittura dati (destinazione): " & t.Nome)
@@ -312,16 +312,13 @@ Module Fusione
         'Rimetto a posto le relazioni
         FLogin.lstStatoConnessione.Items.Add("Riattivo vincoli per Origine...")
         Try
-            cmdqry.CommandText = "EXEC sp_msforeachtable 'ALTER TABLE ? WITH CHECK CHECK CONSTRAINT ALL'"
-            cmdqry.ExecuteNonQuery()
-            'cmdqry.CommandText = "DBCC TRACEOFF(460, 1)"
-            'cmdqry.ExecuteNonQuery()
+            RunNonQuery("EXEC sp_msforeachtable 'ALTER TABLE ? WITH CHECK CHECK CONSTRAINT ALL'", GetConnectionStringUNO)
+            'RunNonQuery("DBCC TRACEOFF(460, 1)", GetConnectionStringUNO)
             FLogin.lstStatoConnessione.Items.Add("TRACEOFF Origine...")
-            cmdqry.CommandText = "DBCC TRACEOFF(610)"
-            cmdqry.ExecuteNonQuery()
+            RunNonQuery("DBCC TRACEOFF(610)", GetConnectionStringUNO)
             FLogin.lstStatoConnessione.Items.Add("TRACEOFF Destinazione...")
-            cmdDest.CommandText = "DBCC TRACEOFF(610)"
-            cmdDest.ExecuteNonQuery()
+            RunNonQuery("DBCC TRACEOFF(610)", GetConnectionStringSPA)
+
         Catch ex As Exception
             Debug.Print(ex.Message)
             FLogin.lstStatoConnessione.Items.Add("ERRORE SU 'Riattivo vincoli per Origine'")
@@ -804,75 +801,93 @@ Module Fusione
                 qryCount = "SELECT COUNT(1) " & t.Nome & t.JoinClause & t.WhereClause
             End If
 
-            My.Application.Log.DefaultFileLogWriter.WriteLine("Prima di ClearAllPools Con1:" & Connection.State.ToString & " Con2:" & ConnDestination.State.ToString)
             SqlConnection.ClearAllPools()
-            My.Application.Log.DefaultFileLogWriter.WriteLine("Dopo ClearAllPools Con1:" & Connection.State.ToString & " Con2:" & ConnDestination.State.ToString)
-
 
             'IMPLEMENTAZIONE ASINCRONA
             'Leggo numero record da SPA
-            ' Dim taskDestRowCount As Integer = AsyncTool.RunNonScalarAsynchronously(qryCount, AsyncTool.GetConnectionStringSPA()).Result
+            ' Dim taskDestRowCount As Integer = RunNonScalarAsynchronously(qryCount, GetConnectionStringSPA()).Result
 
-
-            'Righe origine
-            Using originRowCount = New SqlCommand(qryCount, Connection)
-                originCount = System.Convert.ToInt32(originRowCount.ExecuteScalar())
-                bulkMessage.Append(t.Nome & " Orig:(" & originCount.ToString & ") ")
+            Using origConn As New SqlConnection With {.ConnectionString = GetConnectionStringUNO()}
+                origConn.Open()
+                If origConn.State = ConnectionState.Open Then
+                    'Righe origine
+                    Using originRowCount = New SqlCommand(qryCount, origConn)
+                        originCount = System.Convert.ToInt32(originRowCount.ExecuteScalar())
+                        bulkMessage.Append(t.Nome & " Orig:(" & originCount.ToString & ") ")
+                    End Using
+                End If
             End Using
-            My.Application.Log.DefaultFileLogWriter.WriteLine("Dopo OrigineCount Con1:" & Connection.State.ToString & " Con2:" & ConnDestination.State.ToString)
-
 
             Dim countStart As Long
-            Using destCommRowCount = New SqlCommand(qryCount, ConnDestination)
-                countStart = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())
-                'Debug.Print("Starting row count = {0}", countStart)
-                bulkMessage.Append("Dest In:(" & countStart.ToString & ") ")
-            End Using
-            My.Application.Log.DefaultFileLogWriter.WriteLine("Dopo DestCount Con1:" & Connection.State.ToString & " Con2:" & ConnDestination.State.ToString)
-
-            ' Recupero i dati dall'origine in un SqlDataReader.
-            Dim commandSourceData As New SqlCommand(SQLquery, Connection)
-            Dim reader As SqlDataReader = commandSourceData.ExecuteReader()
-            My.Application.Log.DefaultFileLogWriter.WriteLine("Dopo executereader Con1:" & Connection.State.ToString & " Con2:" & ConnDestination.State.ToString)
-
-            Using bulkTrans = ConnDestination.BeginTransaction
-                ' Set up the bulk copy object. 
-                ' The column positions in the source data reader 
-                ' match the column positions in the destination table, 
-                ' so there is no need to map columns.
-                Try
-                    'provo con column mappig = false
-                    okBulk = ScriviBulkSQL(t.Nome, originCount, reader, bulkTrans, ConnDestination, loggingTxt, True)
-                Catch ex As Exception
-                    Debug.Print(ex.Message)
-                Finally
-                    'spostato fuori reader.Close()
-                End Try
-                reader.Close()
-                'Controllo lo stato
-                If Not okBulk Then someTrouble = True
-                bulkMessage.AppendLine(loggingTxt)
-                If someTrouble Then
-                    FLogin.lstStatoConnessione.Items.Add("Riscontrati errori: annullamento operazione...")
-                    My.Application.Log.DefaultFileLogWriter.WriteLine("Riscontrati errori: annullamento operazione...")
-                    bulkTrans.Rollback()
-                Else
-                    If commit Then bulkTrans.Commit()
-                    Debug.Print("Commit !")
-                    'FLogin.lstStatoConnessione.Items.Add("Scrittura")
-                    FLogin.lstStatoConnessione.TopIndex = FLogin.lstStatoConnessione.Items.Count - 1
+            Using destConn As New SqlConnection With {.ConnectionString = GetConnectionStringSPA()}
+                destConn.Open()
+                If destConn.State = ConnectionState.Open Then
+                    Using destCommRowCount = New SqlCommand(qryCount, destConn)
+                        countStart = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())
+                        'Debug.Print("Starting row count = {0}", countStart)
+                        bulkMessage.Append("Dest In:(" & countStart.ToString & ") ")
+                    End Using
                 End If
-
             End Using
+
+            Using origConn As New SqlConnection With {.ConnectionString = GetConnectionStringUNO()}
+                origConn.Open()
+                If origConn.State = ConnectionState.Open Then
+                    ' Recupero i dati dall'origine in un SqlDataReader.
+                    Dim commandSourceData As New SqlCommand(SQLquery, origConn)
+                    Dim reader As SqlDataReader = commandSourceData.ExecuteReader()
+                    Using destConn As New SqlConnection With {.ConnectionString = GetConnectionStringSPA()}
+                        destConn.Open()
+                        If destConn.State = ConnectionState.Open Then
+                            Using bulkTrans = destConn.BeginTransaction
+                                ' Set up the bulk copy object. 
+                                ' The column positions in the source data reader 
+                                ' match the column positions in the destination table, 
+                                ' so there is no need to map columns.
+                                Try
+                                    'provo con column mappig = false
+                                    okBulk = ScriviBulkSQL(t.Nome, originCount, reader, bulkTrans, destConn, loggingTxt, True)
+                                Catch ex As Exception
+                                    Debug.Print(ex.Message)
+                                Finally
+                                    'spostato fuori reader.Close()
+                                End Try
+                                reader.Close()
+                                'Controllo lo stato
+                                If Not okBulk Then someTrouble = True
+                                bulkMessage.AppendLine(loggingTxt)
+                                If someTrouble Then
+                                    FLogin.lstStatoConnessione.Items.Add("Riscontrati errori: annullamento operazione...")
+                                    My.Application.Log.DefaultFileLogWriter.WriteLine("Riscontrati errori: annullamento operazione...")
+                                    bulkTrans.Rollback()
+                                Else
+                                    If commit Then bulkTrans.Commit()
+                                    Debug.Print("Commit !")
+                                    'FLogin.lstStatoConnessione.Items.Add("Scrittura")
+                                    FLogin.lstStatoConnessione.TopIndex = FLogin.lstStatoConnessione.Items.Count - 1
+                                End If
+                            End Using
+                        End If
+                    End Using
+                End If
+            End Using
+
             ' Perform a final count on the destination table
             ' to see how many rows were added.
-            Using destCommRowCount = New SqlCommand(qryCount, ConnDestination)
-                Dim countEnd As Long = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())
-                Debug.Print("Ending row count = {0}", countEnd)
-                Debug.Print("{0} rows were added.", countEnd - countStart)
-                bulkMessage.Append("Agg:(" & (countEnd - countStart).ToString & ") ")
-                If (countEnd - countStart) <> originCount Then errori.AppendLine("Aggiunta righe diverse su " & t.Nome)
+            Using destConn As New SqlConnection With {.ConnectionString = GetConnectionStringSPA()}
+                destConn.Open()
+                If destConn.State = ConnectionState.Open Then
+                    Using destCommRowCount = New SqlCommand(qryCount, destConn)
+                        Dim countEnd As Long = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())
+                        Debug.Print("Ending row count = {0}", countEnd)
+                        Debug.Print("{0} rows were added.", countEnd - countStart)
+                        bulkMessage.Append("Agg:(" & (countEnd - countStart).ToString & ") ")
+                        If (countEnd - countStart) <> originCount Then errori.AppendLine("Aggiunta righe diverse su " & t.Nome)
+                    End Using
+                End If
             End Using
+            SqlConnection.ClearAllPools()
+            Application.DoEvents()
 
         Catch ex As Exception
             someTrouble = True
@@ -966,103 +981,110 @@ Module Fusione
     Private Function ModificaSqlUpdate(t As TabelleDaEstrarre, ByVal lids As List(Of IDS), ByRef rows As Integer) As Boolean
         Dim qryToExecute As String = "UPDATE " & t.Nome & " SET "
         Dim result As Boolean = False
-        Try
-            Using cmdqry = New SqlCommand(qryToExecute, Connection)
-                '    cmdqry.CommandTimeout = 180
-                '    cmdqry.ExecuteNonQuery()
+        Using origUpdConn As New SqlConnection With {.ConnectionString = GetConnectionStringUNO()}
+            Try
+                origUpdConn.Open()
+                If origUpdConn.State = ConnectionState.Open Then
+                    Using cmdqry = New SqlCommand(qryToExecute, origUpdConn)
+                        '    cmdqry.CommandTimeout = 180
+                        '    cmdqry.ExecuteNonQuery()
 
-                '    'Solo per SQL 2017 in su
-                '    'cmdqry.CommandText = "DBCC TRACEON(460,1)" ' per cambiare errore ID 8152 with 2628
-                '    'cmdqry.ExecuteNonQuery()
+                        '    'Solo per SQL 2017 in su
+                        '    'cmdqry.CommandText = "DBCC TRACEON(460,1)" ' per cambiare errore ID 8152 with 2628
+                        '    'cmdqry.ExecuteNonQuery()
 
-                '    cmdqry.CommandText = "ALTER TABLE " & t.Nome & " NOCHECK CONSTRAINT ALL"
-                '    cmdqry.ExecuteNonQuery()
+                        '    cmdqry.CommandText = "ALTER TABLE " & t.Nome & " NOCHECK CONSTRAINT ALL"
+                        '    cmdqry.ExecuteNonQuery()
 
-                'cmdqry.CommandText = "UPDATE " & t.Nome & " SET "
-                Dim sb As New StringBuilder
-                Dim paramIndex As Integer = 0
-                For Each f As IDS In lids
-                    paramIndex += 1
-                    Dim field As String = t.Nome & "." & f.Nome
-                    Dim parameter As String = "@P" & paramIndex.ToString
-                    Dim value As String = ""
-                    Select Case f.Operatore
-                        Case "+"
-                            value = field & " + " & f.Id.ToString
-                            cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
+                        'cmdqry.CommandText = "UPDATE " & t.Nome & " SET "
+                        Dim sb As New StringBuilder
+                        Dim paramIndex As Integer = 0
+                        For Each f As IDS In lids
+                            paramIndex += 1
+                            Dim field As String = t.Nome & "." & f.Nome
+                            Dim parameter As String = "@P" & paramIndex.ToString
+                            Dim value As String = ""
+                            Select Case f.Operatore
+                                Case "+"
+                                    value = field & " + " & f.Id.ToString
+                                    cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
                             'cmdqry.Parameters.AddWithValue(parameter, value)
-                        Case ""
-                            'value = f.Id.ToString
-                            cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
+                                Case ""
+                                    'value = f.Id.ToString
+                                    cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
 
-                        Case "ADD", "END"
-                            value = "(CASE WHEN " & field & " ='' THEN '' ELSE "
-                            If f.Operatore = "ADD" Then
-                                value = value & "CONCAT('" & f.IdString & "', " & field & ") END)"
-                            Else
-                                'END" = Suffisso
-                                value = value & "CONCAT(" & field & " ,'" & f.IdString & "') END)"
-                            End If
+                                Case "ADD", "END"
+                                    value = "(CASE WHEN " & field & " ='' THEN '' ELSE "
+                                    If f.Operatore = "ADD" Then
+                                        value = value & "CONCAT('" & f.IdString & "', " & field & ") END)"
+                                    Else
+                                        'END" = Suffisso
+                                        value = value & "CONCAT(" & field & " ,'" & f.IdString & "') END)"
+                                    End If
                             'cmdqry.Parameters.Add(parameter, SqlDbType.VarChar, 100).Value = value
                             'cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.VarChar, .Size = 100, .Direction = ParameterDirection.Input, .Value = value})
 
-                        Case "SAVE"
-                            value = "(CASE WHEN " & field & " <>'' AND " & field & " <> '" & f.IdString & "'  THEN '' ELSE " & field & " END)"
-                            cmdqry.Parameters.Add(parameter, SqlDbType.VarChar, f.MaxSize).Value = value
-                        Case "="
-                            ' value = f.Id.ToString
-                            cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
+                                Case "SAVE"
+                                    value = "(CASE WHEN " & field & " <>'' AND " & field & " <> '" & f.IdString & "'  THEN '' ELSE " & field & " END)"
+                                    cmdqry.Parameters.Add(parameter, SqlDbType.VarChar, f.MaxSize).Value = value
+                                Case "="
+                                    ' value = f.Id.ToString
+                                    cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
 
-                    End Select
+                            End Select
 
-                    Select Case f.Operatore
-                        Case "+"
-                            sb.AppendLine(field & " = " & field & " + " & parameter & ", ")
-                        Case "ADD", "END"
-                            sb.AppendLine(field & " = " & value & ", ")
-                        Case Else
-                            sb.AppendLine(field & " = " & parameter & ", ")
-                    End Select
+                            Select Case f.Operatore
+                                Case "+"
+                                    sb.AppendLine(field & " = " & field & " + " & parameter & ", ")
+                                Case "ADD", "END"
+                                    sb.AppendLine(field & " = " & value & ", ")
+                                Case Else
+                                    sb.AppendLine(field & " = " & parameter & ", ")
+                            End Select
 
-                Next
-                qryToExecute &= Strings.Left(sb.ToString, sb.Length - 4)
-                'Aggiungo JOIN E WHERE
-                qryToExecute &= t.JoinClause & t.WhereClause
+                        Next
+                        qryToExecute &= Strings.Left(sb.ToString, sb.Length - 4)
+                        'Aggiungo JOIN E WHERE
+                        qryToExecute &= t.JoinClause & t.WhereClause
 
-                cmdqry.CommandText = qryToExecute
-                Debug.Print(qryToExecute)
-                Try
-                    rows = cmdqry.ExecuteNonQuery()
-                    result = True
-                Catch exSql As SqlException
-                    Debug.Print("Errore SQL:" & exSql.Number.ToString)
-                    Select Case exSql.Number
-                        Case 8152
-                            'Dato troppo lungo
-                            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaSqlUpdate.ExecuteNonQuery (Dato troppo lungo): " & exSql.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & exSql.StackTrace.ToString)
-                    End Select
+                        cmdqry.CommandText = qryToExecute
+                        Debug.Print(qryToExecute)
+                        Try
+                            rows = cmdqry.ExecuteNonQuery()
+                            result = True
+                        Catch exSql As SqlException
+                            Debug.Print("Errore SQL:" & exSql.Number.ToString)
+                            Select Case exSql.Number
+                                Case 8152
+                                    'Dato troppo lungo
+                                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaSqlUpdate.ExecuteNonQuery (Dato troppo lungo): " & exSql.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & exSql.StackTrace.ToString)
+                            End Select
+                        Catch ex As Exception
+                            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaSqlUpdate.ExecuteNonQuery (Exception Generica): " & ex.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & ex.StackTrace.ToString)
 
-                End Try
-                Application.DoEvents()
-                cmdqry.Parameters.Clear()
+                        End Try
+                        Application.DoEvents()
+                        cmdqry.Parameters.Clear()
 
-                'cmdqry.CommandText = "ALTER TABLE " & t.Nome & " WITH CHECK CHECK CONSTRAINT ALL"
-                'cmdqry.ExecuteNonQuery()
+                        'cmdqry.CommandText = "ALTER TABLE " & t.Nome & " WITH CHECK CHECK CONSTRAINT ALL"
+                        'cmdqry.ExecuteNonQuery()
 
-                ''cmdqry.CommandText = "DBCC TRACEOFF(460, 1)"
-                ''cmdqry.ExecuteNonQuery()
-                'cmdqry.CommandText = "DBCC TRACEOFF(610)"
-                'cmdqry.ExecuteNonQuery()
-            End Using
+                        ''cmdqry.CommandText = "DBCC TRACEOFF(460, 1)"
+                        ''cmdqry.ExecuteNonQuery()
+                        'cmdqry.CommandText = "DBCC TRACEOFF(610)"
+                        'cmdqry.ExecuteNonQuery()
+                    End Using
+                End If
 
-        Catch ex As Exception
-            Debug.Print(ex.Message)
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaSqlUpdate: " & ex.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & ex.StackTrace.ToString)
-            If Not IsDebugging Then
-                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
-                mb.ShowDialog()
-            End If
-        End Try
+            Catch ex As Exception
+                Debug.Print(ex.Message)
+                My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaSqlUpdate: " & ex.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & ex.StackTrace.ToString)
+                If Not IsDebugging Then
+                    Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                    mb.ShowDialog()
+                End If
+            End Try
+        End Using
         Return result
     End Function
 
