@@ -147,6 +147,7 @@ Public Class FLogin
 
         Me.Cursor = Cursors.Default
     End Sub
+
     Private Function LINQConnetti(Optional DB As String = "") As Boolean
         Dim bStatus As Boolean = False
         If String.IsNullOrWhiteSpace(DB) Then DB = DBInUse

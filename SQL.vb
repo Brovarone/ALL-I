@@ -3,9 +3,92 @@ Imports System.Data.SqlClient
 Imports System.IO
 Imports System.Reflection.MethodBase
 
+Namespace AsyncTool
+    Module Connessione
+        Public Function GetConnectionStringSPA() As String
+            Dim DB As String = If(DBisTMP, FLogin.TxtTmpDB_SPA.Text, FLogin.TxtDB_SPA.Text)
+            ' To avoid storing the connection string in your code,            
+            ' you can retrieve it from a configuration file. 
+
+            ' If you have not included "Asynchronous Processing=true" in the
+            ' connection string, the command is not able
+            ' to execute asynchronously.
+            Return "Data Source=" & FLogin.txtSERVER.Text & "; Database=" & DB & ";User Id=" & FLogin.txtID.Text & ";Password=" & FLogin.txtPSW.Text & ";" & " Asynchronous Processing=True;"
+        End Function
+        Public Sub RunNonQueryAsynchronously(ByVal commandText As String, ByVal connectionString As String)
+
+            ' Given command text and connection string, asynchronously execute
+            ' the specified command against the connection. For this example,
+            ' the code displays an indicator as it is working, verifying the 
+            ' asynchronous behavior. 
+            Using connection As New SqlConnection(connectionString)
+                Try
+                    Dim count As Integer = 0
+                    Dim command As New SqlCommand(commandText, connection)
+                    connection.Open()
+                    Dim result As IAsyncResult = command.BeginExecuteNonQuery()
+                    While Not result.IsCompleted
+                        Console.WriteLine("Waiting ({0})", count)
+                        ' Wait for 1/10 second, so the counter
+                        ' does not consume all available resources 
+                        ' on the main thread.
+                        Threading.Thread.Sleep(100)
+                        count += 1
+                    End While
+                    Console.WriteLine("Command complete. Affected {0} rows.", command.EndExecuteNonQuery(result))
+                Catch ex As SqlException
+                    Console.WriteLine("Error ({0}): {1}", ex.Number, ex.Message)
+                Catch ex As InvalidOperationException
+                    Console.WriteLine("Error: {0}", ex.Message)
+                Catch ex As Exception
+                    ' You might want to pass these errors
+                    ' back out to the caller.
+                    Console.WriteLine("Error: {0}", ex.Message)
+                End Try
+            End Using
+        End Sub
+        Public Async Function RunNonScalarAsynchronously(ByVal commandText As String, ByVal connectionString As String) As Task(Of Integer)
+
+            Dim nrRighe As Integer
+            ' Given command text and connection string, asynchronously execute
+            ' the specified command against the connection. For this example,
+            ' the code displays an indicator as it is working, verifying the 
+            ' asynchronous behavior. 
+            Using sqlConn As New SqlConnection(connectionString)
+                Try
+                    Await sqlConn.OpenAsync()
+                    Dim count As Integer = 0
+                    Dim command As New SqlCommand(commandText, sqlConn)
+
+                    nrRighe = Convert.ToInt32(Await command.ExecuteScalarAsync())
+
+                    Dim result As IAsyncResult = command.ExecuteScalarAsync()
+                    While Not result.IsCompleted
+                        Console.WriteLine("Waiting ({0})", count)
+                        ' Wait for 1/10 second, so the counter
+                        ' does not consume all available resources 
+                        ' on the main thread.
+                        'Threading.Thread.Sleep(100)
+                        count += 1
+                    End While
+                    Console.WriteLine("Command complete. Affected {0} rows.", nrRighe)
+                Catch ex As SqlException
+                    Console.WriteLine("Error ({0}): {1}", ex.Number, ex.Message)
+                Catch ex As InvalidOperationException
+                    Console.WriteLine("Error: {0}", ex.Message)
+                Catch ex As Exception
+                    ' You might want to pass these errors
+                    ' back out to the caller.
+                    Console.WriteLine("Error: {0}", ex.Message)
+                End Try
+            End Using
+            ' Return nrRighe
+        End Function
+    End Module
+End Namespace
+
 Namespace MySqlServerBackup
     Module Utilities
-
         Public Sub Backup()
             FLogin.Cursor = Cursors.WaitCursor
             FLogin.PanelUser.Enabled = False

@@ -262,7 +262,7 @@ Module Fusione
             My.Application.Log.WriteEntry("Processo tabelle in : " & stopwatch2.Elapsed.ToString)
         Catch ex As Exception
             Debug.Print(ex.Message)
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# EsguiFusioneSql : MODIFICO E SCRIVO TABELLE " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# EseguiFusioneSql : MODIFICO E SCRIVO TABELLE " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
             If Not IsDebugging Then
                 Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
@@ -282,7 +282,7 @@ Module Fusione
             My.Application.Log.WriteEntry("Processo tabelle No edit in : " & stopwatch2.Elapsed.ToString)
         Catch ex As Exception
             Debug.Print(ex.Message)
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# EsguiFusioneSql : SCRIVO TABELLE NO EDIT " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# EseguiFusioneSql : SCRIVO TABELLE NO EDIT " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
             If Not IsDebugging Then
                 Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
@@ -300,7 +300,7 @@ Module Fusione
             My.Application.Log.WriteEntry("Scrivo Ids : " & stopwatch2.Elapsed.ToString)
         Catch ex As Exception
             Debug.Print(ex.Message)
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# EsguiFusioneSql : SCRIVI IDS " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# EseguiFusioneSql : SCRIVI IDS " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
             If Not IsDebugging Then
                 Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
@@ -804,11 +804,23 @@ Module Fusione
                 qryCount = "SELECT COUNT(1) " & t.Nome & t.JoinClause & t.WhereClause
             End If
 
+            My.Application.Log.DefaultFileLogWriter.WriteLine("Prima di ClearAllPools Con1:" & Connection.State.ToString & " Con2:" & ConnDestination.State.ToString)
+            SqlConnection.ClearAllPools()
+            My.Application.Log.DefaultFileLogWriter.WriteLine("Dopo ClearAllPools Con1:" & Connection.State.ToString & " Con2:" & ConnDestination.State.ToString)
+
+
+            'IMPLEMENTAZIONE ASINCRONA
+            'Leggo numero record da SPA
+            ' Dim taskDestRowCount As Integer = AsyncTool.RunNonScalarAsynchronously(qryCount, AsyncTool.GetConnectionStringSPA()).Result
+
+
             'Righe origine
             Using originRowCount = New SqlCommand(qryCount, Connection)
                 originCount = System.Convert.ToInt32(originRowCount.ExecuteScalar())
                 bulkMessage.Append(t.Nome & " Orig:(" & originCount.ToString & ") ")
             End Using
+            My.Application.Log.DefaultFileLogWriter.WriteLine("Dopo OrigineCount Con1:" & Connection.State.ToString & " Con2:" & ConnDestination.State.ToString)
+
 
             Dim countStart As Long
             Using destCommRowCount = New SqlCommand(qryCount, ConnDestination)
@@ -816,10 +828,12 @@ Module Fusione
                 'Debug.Print("Starting row count = {0}", countStart)
                 bulkMessage.Append("Dest In:(" & countStart.ToString & ") ")
             End Using
+            My.Application.Log.DefaultFileLogWriter.WriteLine("Dopo DestCount Con1:" & Connection.State.ToString & " Con2:" & ConnDestination.State.ToString)
 
             ' Recupero i dati dall'origine in un SqlDataReader.
             Dim commandSourceData As New SqlCommand(SQLquery, Connection)
             Dim reader As SqlDataReader = commandSourceData.ExecuteReader()
+            My.Application.Log.DefaultFileLogWriter.WriteLine("Dopo executereader Con1:" & Connection.State.ToString & " Con2:" & ConnDestination.State.ToString)
 
             Using bulkTrans = ConnDestination.BeginTransaction
                 ' Set up the bulk copy object. 
@@ -832,8 +846,9 @@ Module Fusione
                 Catch ex As Exception
                     Debug.Print(ex.Message)
                 Finally
-                    reader.Close()
+                    'spostato fuori reader.Close()
                 End Try
+                reader.Close()
                 'Controllo lo stato
                 If Not okBulk Then someTrouble = True
                 bulkMessage.AppendLine(loggingTxt)
