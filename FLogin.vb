@@ -813,6 +813,7 @@ Public Class FLogin
             Next
             ProcessaGruppo(risc, "Risconti Ridotto")
         End If
+
         If ChkCespiti.Checked Then
             Dim bFound As Boolean
             Dim cespiti As String() = {"CBIL", "CFIS"}
@@ -837,6 +838,7 @@ Public Class FLogin
             Next
             ProcessaGruppo(cespiti, "Cespiti")
         End If
+
         If ChkFusioneFull.Checked Then
             Dim bFound As Boolean
             Dim fusione As String() = {"IDS_MIGRAZIONE"}
@@ -1705,9 +1707,14 @@ Public Class FLogin
         If CheckDB(TxtDB_UNO.Text, TxtTmpDB_UNO.Text) Then MostraPannelloUtente("UNO")
         If DBisTMP Then
             TxtTmpDB_UNO.BackColor = Color.FromArgb(255, 152, 251, 152)
-            FusioneToolStripMenuItem.Visible = True ' Accendo il tasto per la fusione (temporaneamento solo su TEST / TEST
+            ' Accendo il tasto per la fusione (temporaneamento solo su TEST / TEST
+            EseguiInDefinitivoToolStripMenuItem.Enabled = False
+            EseguiTraTestToolStripMenuItem1.Enabled = True
         Else
             TxtDB_UNO.BackColor = Color.FromArgb(255, 152, 251, 152)
+            'Da abilitare
+            EseguiInDefinitivoToolStripMenuItem.Enabled = True
+            EseguiTraTestToolStripMenuItem1.Enabled = False
         End If
         isDbUNO = True
 
@@ -1816,10 +1823,23 @@ Public Class FLogin
 
         End If
     End Sub
+    Private Sub EseguiTraTestToolStripMenuItem1_Click(sender As Object, e As EventArgs) Handles EseguiTraTestToolStripMenuItem1.Click
+        SUBFusione()
+    End Sub
 
-    Private Sub FusioneToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles FusioneToolStripMenuItem.Click
-
-        ToolStripMenuItemDebugging.PerformClick()
+    Private Sub EseguiInDefinitivoToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles EseguiInDefinitivoToolStripMenuItem.Click
+        If isAdmin Then
+            SUBFusione()
+        Else
+            MessageBox.Show("Operazione disponibile solo all'amministratore!", My.Application.Info.Title, MessageBoxButtons.OK, MessageBoxIcon.Warning)
+        End If
+    End Sub
+    Private Sub SUBFusione()
+        Dim b As DialogResult = MessageBox.Show("Salvataggio" & vbCrLf & "Eseguire Commit?", My.Application.Info.Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+        If b = DialogResult.No Then
+            'Se rispondo no abilito isDebugging che esegui il rollback
+            ToolStripMenuItemDebugging.PerformClick()
+        End If
 
         SUBConnettiUNO(If(DBisTMP, TxtTmpDB_UNO.Text, TxtDB_UNO.Text))
         SUBConnettiSPA(If(DBisTMP, TxtTmpDB_SPA.Text, TxtDB_SPA.Text))
@@ -1839,7 +1859,6 @@ Public Class FLogin
         prgFusion.Width = prgCopy.Width
         Me.Refresh()
         SUBProcessa()
-
     End Sub
 
 End Class

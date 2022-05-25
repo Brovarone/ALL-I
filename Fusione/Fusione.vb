@@ -410,7 +410,7 @@ Module Fusione
 #End Region
 #Region "Clienti : Dichiarazioni di Intento"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_DeclarationOfIntent", .Gruppo = MacroGruppo.Clienti})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppCustomerOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM' , 'MORANDO')", .Gruppo = MacroGruppo.Clienti})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppCustomerOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND Customer NOT IN ('ALLSYSTEM' , 'MORANDO')", .Gruppo = MacroGruppo.Clienti})
 
 #End Region
 #Region "Magazzino : Articoli"
@@ -794,11 +794,11 @@ Module Fusione
         Try
             ' Definisco le query per le righe attuali nella tabella
             If String.IsNullOrWhiteSpace(t.JoinClause) Then
-                SQLquery = "SELECT * FROM " & t.Nome & t.WhereClause
-                qryCount = "SELECT COUNT(1) FROM " & t.Nome & t.WhereClause
+                SQLquery = "SELECT * FROM " & t.Nome & t.WhereClause & t.AdditionalWhere
+                qryCount = "SELECT COUNT(1) FROM " & t.Nome & t.WhereClause & t.AdditionalWhere
             Else
-                SQLquery = "SELECT " & t.Nome & ".* " & t.JoinClause & t.WhereClause
-                qryCount = "SELECT COUNT(1) " & t.Nome & t.JoinClause & t.WhereClause
+                SQLquery = "SELECT " & t.Nome & ".* " & t.JoinClause & t.WhereClause & t.AdditionalWhere
+                qryCount = "SELECT COUNT(1) " & t.Nome & t.JoinClause & t.WhereClause & t.AdditionalWhere
             End If
 
             SqlConnection.ClearAllPools()
@@ -1048,8 +1048,8 @@ Module Fusione
 
                         Next
                         qryToExecute &= Strings.Left(sb.ToString, sb.Length - 4)
-                        'Aggiungo JOIN E WHERE (NO SU GRUPPO ACQUISTI) 
-                        qryToExecute &= t.JoinClause & If(t.Gruppo = MacroGruppo.Acquisto, String.Empty, t.WhereClause & t.AdditionalWhere)
+                        'Aggiungo JOIN e WHERE (NO SU GRUPPO ACQUISTI) 
+                        qryToExecute &= If(t.Gruppo = MacroGruppo.Acquisto, String.Empty, t.JoinClause & t.WhereClause & t.AdditionalWhere)
 
                         cmdqry.CommandText = qryToExecute
                         Debug.Print(qryToExecute)

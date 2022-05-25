@@ -109,6 +109,8 @@ Partial Class FLogin
         Me.ToolStripSeparator6 = New System.Windows.Forms.ToolStripSeparator()
         Me.BackupDatabaseToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.CopiaDatabase = New System.Windows.Forms.ToolStripMenuItem()
+        Me.UNOSuTESTUNOToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.SPASuTESTSPAToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.RiparaMaschereMagoToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripSeparator7 = New System.Windows.Forms.ToolStripSeparator()
         Me.UserSettingToolStripMenu = New System.Windows.Forms.ToolStripMenuItem()
@@ -147,14 +149,13 @@ Partial Class FLogin
         Me.toolStripSeparator5 = New System.Windows.Forms.ToolStripSeparator()
         Me.AboutToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.FusioneToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.EseguiToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem()
+        Me.EseguiTraTestToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem()
         Me.PanelDB = New System.Windows.Forms.Panel()
         Me.CHKDBTemporaneo = New System.Windows.Forms.CheckBox()
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
-        Me.UNOSuTESTUNOToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.SPASuTESTSPAToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.EseguiInDefinitivoToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabPageCancella.SuspendLayout()
@@ -932,7 +933,7 @@ Partial Class FLogin
         '
         'MenuStrip1
         '
-        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolsToolStripMenuItem, Me.FileToolStripMenuItem, Me.CespitiToolStripMenuItem, Me.SettingsToolStripMenuItem, Me.ComandiToolStripMenuItem, Me.HelpToolStripMenuItem, Me.FusioneToolStripMenuItem})
+        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolsToolStripMenuItem, Me.FileToolStripMenuItem, Me.CespitiToolStripMenuItem, Me.SettingsToolStripMenuItem, Me.ComandiToolStripMenuItem, Me.FusioneToolStripMenuItem, Me.HelpToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip1.Name = "MenuStrip1"
         Me.MenuStrip1.Size = New System.Drawing.Size(456, 24)
@@ -1012,6 +1013,18 @@ Partial Class FLogin
         Me.CopiaDatabase.Name = "CopiaDatabase"
         Me.CopiaDatabase.Size = New System.Drawing.Size(195, 22)
         Me.CopiaDatabase.Text = "Copia Database"
+        '
+        'UNOSuTESTUNOToolStripMenuItem
+        '
+        Me.UNOSuTESTUNOToolStripMenuItem.Name = "UNOSuTESTUNOToolStripMenuItem"
+        Me.UNOSuTESTUNOToolStripMenuItem.Size = New System.Drawing.Size(173, 22)
+        Me.UNOSuTESTUNOToolStripMenuItem.Text = "UNO su TEST_UNO"
+        '
+        'SPASuTESTSPAToolStripMenuItem
+        '
+        Me.SPASuTESTSPAToolStripMenuItem.Name = "SPASuTESTSPAToolStripMenuItem"
+        Me.SPASuTESTSPAToolStripMenuItem.Size = New System.Drawing.Size(173, 22)
+        Me.SPASuTESTSPAToolStripMenuItem.Text = "SPA su TEST_SPA"
         '
         'RiparaMaschereMagoToolStripMenuItem
         '
@@ -1264,17 +1277,17 @@ Partial Class FLogin
         '
         'FusioneToolStripMenuItem
         '
-        Me.FusioneToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.EseguiToolStripMenuItem1})
+        Me.FusioneToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.EseguiTraTestToolStripMenuItem1, Me.EseguiInDefinitivoToolStripMenuItem})
         Me.FusioneToolStripMenuItem.Name = "FusioneToolStripMenuItem"
         Me.FusioneToolStripMenuItem.Size = New System.Drawing.Size(60, 20)
         Me.FusioneToolStripMenuItem.Text = "Fusione"
-        Me.FusioneToolStripMenuItem.Visible = False
         '
-        'EseguiToolStripMenuItem1
+        'EseguiTraTestToolStripMenuItem1
         '
-        Me.EseguiToolStripMenuItem1.Name = "EseguiToolStripMenuItem1"
-        Me.EseguiToolStripMenuItem1.Size = New System.Drawing.Size(108, 22)
-        Me.EseguiToolStripMenuItem1.Text = "Esegui"
+        Me.EseguiTraTestToolStripMenuItem1.Enabled = False
+        Me.EseguiTraTestToolStripMenuItem1.Name = "EseguiTraTestToolStripMenuItem1"
+        Me.EseguiTraTestToolStripMenuItem1.Size = New System.Drawing.Size(180, 22)
+        Me.EseguiTraTestToolStripMenuItem1.Text = "Esegui tra TEST"
         '
         'PanelDB
         '
@@ -1324,17 +1337,12 @@ Partial Class FLogin
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
         '
-        'UNOSuTESTUNOToolStripMenuItem
+        'EseguiInDefinitivoToolStripMenuItem
         '
-        Me.UNOSuTESTUNOToolStripMenuItem.Name = "UNOSuTESTUNOToolStripMenuItem"
-        Me.UNOSuTESTUNOToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.UNOSuTESTUNOToolStripMenuItem.Text = "UNO su TEST_UNO"
-        '
-        'SPASuTESTSPAToolStripMenuItem
-        '
-        Me.SPASuTESTSPAToolStripMenuItem.Name = "SPASuTESTSPAToolStripMenuItem"
-        Me.SPASuTESTSPAToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.SPASuTESTSPAToolStripMenuItem.Text = "SPA su TEST_SPA"
+        Me.EseguiInDefinitivoToolStripMenuItem.Enabled = False
+        Me.EseguiInDefinitivoToolStripMenuItem.Name = "EseguiInDefinitivoToolStripMenuItem"
+        Me.EseguiInDefinitivoToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.EseguiInDefinitivoToolStripMenuItem.Text = "Esegui in Definitivo"
         '
         'FLogin
         '
@@ -1507,10 +1515,11 @@ Partial Class FLogin
     Friend WithEvents TestRiscontiRidottoToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ChkRiscontiRidotto As CheckBox
     Friend WithEvents FusioneToolStripMenuItem As ToolStripMenuItem
-    Friend WithEvents EseguiToolStripMenuItem1 As ToolStripMenuItem
+    Friend WithEvents EseguiTraTestToolStripMenuItem1 As ToolStripMenuItem
     Friend WithEvents TabFusione As TabPage
     Friend WithEvents ChkFusioneFull As CheckBox
     Friend WithEvents RegioneDaProvinciaToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents UNOSuTESTUNOToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents SPASuTESTSPAToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents EseguiInDefinitivoToolStripMenuItem As ToolStripMenuItem
 End Class
