@@ -1141,16 +1141,18 @@ Public Class FLogin
     Private Sub BackupDatabaseToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles BackupDatabaseToolStripMenuItem.Click
         MySqlServerBackup.Backup()
     End Sub
-    Private Sub CopiaUNOSuTESTToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles CopiaUNOSuTESTToolStripMenuItem.Click
-        MySqlServerBackup.CopiaUnoSuTest()
+    Private Sub UNOSuTESTUNOToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles UNOSuTESTUNOToolStripMenuItem.Click
+        MySqlServerBackup.CopiaDatabase(My.Settings.mDATABASE, My.Settings.mDBTEMPUNO)
+    End Sub
+
+    Private Sub SPASuTESTSPAToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles SPASuTESTSPAToolStripMenuItem.Click
+        MySqlServerBackup.CopiaDatabase(My.Settings.mDATABASE_SPA, My.Settings.mDBTEMPSPA)
     End Sub
     Private Sub TestPagheToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles TestPagheToolStripMenuItem.Click
         CaricaFlussoPaghe("")
         DataGridView1.Visible = True
         DataGridView1.BringToFront()
     End Sub
-
-
 
     Private Sub ControllaEAbilita()
         If String.IsNullOrEmpty(FolderPath) Then

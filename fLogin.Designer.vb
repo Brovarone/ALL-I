@@ -108,7 +108,7 @@ Partial Class FLogin
         Me.TestRiscontiRidottoToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripSeparator6 = New System.Windows.Forms.ToolStripSeparator()
         Me.BackupDatabaseToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.CopiaUNOSuTESTToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.CopiaDatabase = New System.Windows.Forms.ToolStripMenuItem()
         Me.RiparaMaschereMagoToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripSeparator7 = New System.Windows.Forms.ToolStripSeparator()
         Me.UserSettingToolStripMenu = New System.Windows.Forms.ToolStripMenuItem()
@@ -153,6 +153,8 @@ Partial Class FLogin
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
+        Me.UNOSuTESTUNOToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.SPASuTESTSPAToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabPageCancella.SuspendLayout()
@@ -939,7 +941,7 @@ Partial Class FLogin
         '
         'ToolsToolStripMenuItem
         '
-        Me.ToolsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.AdministratorToolStripMenuItem, Me.DisconnettiAdminToolStripMenuItem, Me.ComandiToolStripMenuItem1, Me.ToolStripSeparator6, Me.BackupDatabaseToolStripMenuItem, Me.CopiaUNOSuTESTToolStripMenuItem, Me.RiparaMaschereMagoToolStripMenuItem, Me.ToolStripSeparator7, Me.UserSettingToolStripMenu, Me.AppLogToolStripMenu})
+        Me.ToolsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.AdministratorToolStripMenuItem, Me.DisconnettiAdminToolStripMenuItem, Me.ComandiToolStripMenuItem1, Me.ToolStripSeparator6, Me.BackupDatabaseToolStripMenuItem, Me.CopiaDatabase, Me.RiparaMaschereMagoToolStripMenuItem, Me.ToolStripSeparator7, Me.UserSettingToolStripMenu, Me.AppLogToolStripMenu})
         Me.ToolsToolStripMenuItem.Name = "ToolsToolStripMenuItem"
         Me.ToolsToolStripMenuItem.Size = New System.Drawing.Size(46, 20)
         Me.ToolsToolStripMenuItem.Text = "&Tools"
@@ -1003,12 +1005,13 @@ Partial Class FLogin
         Me.BackupDatabaseToolStripMenuItem.Text = "Backup database"
         Me.BackupDatabaseToolStripMenuItem.Visible = False
         '
-        'CopiaUNOSuTESTToolStripMenuItem
+        'CopiaDatabase
         '
-        Me.CopiaUNOSuTESTToolStripMenuItem.Image = Global.ALLSystemTools.My.Resources.Resources.database_add_48
-        Me.CopiaUNOSuTESTToolStripMenuItem.Name = "CopiaUNOSuTESTToolStripMenuItem"
-        Me.CopiaUNOSuTESTToolStripMenuItem.Size = New System.Drawing.Size(195, 22)
-        Me.CopiaUNOSuTESTToolStripMenuItem.Text = "Copia UNO su TEST"
+        Me.CopiaDatabase.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.UNOSuTESTUNOToolStripMenuItem, Me.SPASuTESTSPAToolStripMenuItem})
+        Me.CopiaDatabase.Image = Global.ALLSystemTools.My.Resources.Resources.database_add_48
+        Me.CopiaDatabase.Name = "CopiaDatabase"
+        Me.CopiaDatabase.Size = New System.Drawing.Size(195, 22)
+        Me.CopiaDatabase.Text = "Copia Database"
         '
         'RiparaMaschereMagoToolStripMenuItem
         '
@@ -1321,6 +1324,18 @@ Partial Class FLogin
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
         '
+        'UNOSuTESTUNOToolStripMenuItem
+        '
+        Me.UNOSuTESTUNOToolStripMenuItem.Name = "UNOSuTESTUNOToolStripMenuItem"
+        Me.UNOSuTESTUNOToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.UNOSuTESTUNOToolStripMenuItem.Text = "UNO su TEST_UNO"
+        '
+        'SPASuTESTSPAToolStripMenuItem
+        '
+        Me.SPASuTESTSPAToolStripMenuItem.Name = "SPASuTESTSPAToolStripMenuItem"
+        Me.SPASuTESTSPAToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.SPASuTESTSPAToolStripMenuItem.Text = "SPA su TEST_SPA"
+        '
         'FLogin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -1484,7 +1499,7 @@ Partial Class FLogin
     Friend WithEvents CHKDBTemporaneo As CheckBox
     Friend WithEvents BtnCancellaRigheOrdini As Button
     Friend WithEvents RiparaMaschereMagoToolStripMenuItem As ToolStripMenuItem
-    Friend WithEvents CopiaUNOSuTESTToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents CopiaDatabase As ToolStripMenuItem
     Friend WithEvents ComandiToolStripMenuItem1 As ToolStripMenuItem
     Friend WithEvents TestOrdiniToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents TestISTATToolStripMenuItem As ToolStripMenuItem
@@ -1496,4 +1511,6 @@ Partial Class FLogin
     Friend WithEvents TabFusione As TabPage
     Friend WithEvents ChkFusioneFull As CheckBox
     Friend WithEvents RegioneDaProvinciaToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents UNOSuTESTUNOToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents SPASuTESTSPAToolStripMenuItem As ToolStripMenuItem
 End Class

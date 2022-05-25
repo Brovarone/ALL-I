@@ -20,7 +20,7 @@ Module Fusione
     Private Const pageSize As Integer = 20000
 
     Class TabelleDaEstrarre
-        Public Property QuerySelect As String
+        Public Property AdditionalWhere As String
         Public Property WhereClause As String
         Public Property JoinClause As String
         Public Property Nome As String
@@ -29,7 +29,7 @@ Module Fusione
         Public Property GeneraListaId As Boolean
         Public Property PrimaryKey As String
         Public Sub New()
-            QuerySelect = ""
+            AdditionalWhere = ""
             WhereClause = ""
             JoinClause = ""
             Nome = ""
@@ -410,7 +410,7 @@ Module Fusione
 #End Region
 #Region "Clienti : Dichiarazioni di Intento"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_DeclarationOfIntent", .Gruppo = MacroGruppo.Clienti})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppCustomerOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .Gruppo = MacroGruppo.Clienti})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppCustomerOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM' , 'MORANDO')", .Gruppo = MacroGruppo.Clienti})
 
 #End Region
 #Region "Magazzino : Articoli"
@@ -482,17 +482,17 @@ Module Fusione
         ''''NESSUNA MODIFICA'''
         '''''''''''''''''''''''
 #Region "Clienti"
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppBranches", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNaturalPerson", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNotes", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppOutstandings", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente}) ' Insoluti
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppPeople", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM' , 'MORANDO')"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppBranches", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM' , 'MORANDO')"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNaturalPerson", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM' , 'MORANDO')"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNotes", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM' , 'MORANDO')"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppOutstandings", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM' , 'MORANDO')"}) ' Insoluti
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppPeople", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM' , 'MORANDO')"})
         '
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SDDMandate"})
 #End Region
 #Region "Banche"
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Banks", .WhereClause = " WHERE IsACompanyBank = 0"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Banks", .WhereClause = " WHERE IsACompanyBank = 0", .AdditionalWhere = " AND Bank NOT IN ('0344032880 ')"})
 #End Region
 #Region "Analitica (CdC + Commesse)"
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Jobs"})
@@ -531,7 +531,7 @@ Module Fusione
         'Da Export di mago tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Storages"})
 #End Region
 #Region "Agenti"
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SalesPeople"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SalesPeople", .WhereClause = " WHERE Salesperson NOT IN ( 'GIORDANO' , 'SECURGES' , 'ZUNINO')"})
 #End Region
 #End Region
         Return True
@@ -880,6 +880,8 @@ Module Fusione
                 destConn.Open()
                 If destConn.State = ConnectionState.Open Then
                     Using destCommRowCount = New SqlCommand(qryCount, destConn)
+                        'mMetto ZERO perche' il Commit/RollBack precedente potrebbe metterci molto
+                        destCommRowCount.CommandTimeout = 0
                         Dim countEnd As Long = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())
                         Debug.Print("Ending row count = {0}", countEnd)
                         Debug.Print("{0} rows were added.", countEnd - countStart)
@@ -1046,8 +1048,8 @@ Module Fusione
 
                         Next
                         qryToExecute &= Strings.Left(sb.ToString, sb.Length - 4)
-                        'Aggiungo JOIN E WHERE
-                        qryToExecute &= t.JoinClause & t.WhereClause
+                        'Aggiungo JOIN E WHERE (NO SU GRUPPO ACQUISTI) 
+                        qryToExecute &= t.JoinClause & If(t.Gruppo = MacroGruppo.Acquisto, String.Empty, t.WhereClause & t.AdditionalWhere)
 
                         cmdqry.CommandText = qryToExecute
                         Debug.Print(qryToExecute)
@@ -1118,7 +1120,6 @@ Module Fusione
             End
         End If
         Using da As New SqlDataAdapter(SQLquery, Connection)
-            da.SelectCommand.CommandTimeout = 120
             da.FillSchema(dt, SchemaType.Source)
             'Debug.Print("Creazione fillschema : " & stopwatch2.Elapsed.ToString)
             stopwatch2.Restart()
@@ -1671,7 +1672,6 @@ Module WithDataRow
         End If
 
         Using da As New SqlDataAdapter(sqlQuery, Connection)
-            da.SelectCommand.CommandTimeout = 120
             da.FillSchema(dtNew, SchemaType.Source)
             Dim msg As String
             If pageindex = 1 Then

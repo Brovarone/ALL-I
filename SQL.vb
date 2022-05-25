@@ -181,16 +181,16 @@ Namespace MySqlServerBackup
             FLogin.prgCopy.Value = 0
             FLogin.Cursor = Cursors.Arrow
         End Sub
-        Public Sub CopiaUnoSuTest()
+        Public Sub CopiaDatabase(ByVal db1 As String, db2 As String)
             FLogin.Cursor = Cursors.WaitCursor
             FLogin.PanelUser.Enabled = False
-            FLogin.lstStatoConnessione.Items.Add("Copia Database UNO su TEST")
+            FLogin.lstStatoConnessione.Items.Add("Copia Database " & db1 & " su " & db2)
             FLogin.lstStatoConnessione.Refresh()
 
             Try
                 Dim connectionString As String = "Data Source=" & My.Settings.mSQLSERVER & "; Database=msdb;User Id=" & My.Settings.mID & ";Password=" & My.Settings.mPSW & ";"
-                Dim dbName As String = My.Settings.mDATABASE
-                Dim dbTestName As String = My.Settings.mDBTEMPUNO
+                Dim dbName As String = db1      ' My.Settings.mDATABASE
+                Dim dbTestName As String = db2  ' My.Settings.mDBTEMPUNO
 
                 'Dim backupFileName As String = "Backup_" & databaseName & "_" & DateTime.Now.ToString("yyyyMMdd_HHmm") & ".bak"
                 Dim backupFileName As String = dbName & ".bak"
