@@ -833,7 +833,7 @@ Module MagoNet
             Using bulkCopy As New SqlBulkCopy(Conn, SqlBulkCopyOptions.KeepIdentity, tr)
                 'bulkCopy.BatchSize = If(rowCount < 5000, 0, rowCount / 10)
                 bulkCopy.BatchSize = If(rowCount < 5000, 0, 5000)
-                bulkCopy.EnableStreaming = True
+                'bulkCopy.EnableStreaming = True
                 bulkCopy.BulkCopyTimeout = 0
                 bulkCopy.NotifyAfter = rowCount / 10
                 FLogin.prgCopy.Minimum = 0

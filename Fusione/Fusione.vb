@@ -835,7 +835,9 @@ Module Fusione
                 If origConn.State = ConnectionState.Open Then
                     ' Recupero i dati dall'origine in un SqlDataReader.
                     Dim commandSourceData As New SqlCommand(SQLquery, origConn)
-                    Dim reader As SqlDataReader = commandSourceData.ExecuteReader(CommandBehavior.SequentialAccess)
+                    commandSourceData.CommandTimeout = 0
+                    'Dim reader As SqlDataReader = commandSourceData.ExecuteReader(CommandBehavior.SequentialAccess)
+                    Dim reader As SqlDataReader = commandSourceData.ExecuteReader()
                     Using destConn As New SqlConnection With {.ConnectionString = GetConnectionStringSPA()}
                         destConn.Open()
                         If destConn.State = ConnectionState.Open Then
@@ -1004,7 +1006,7 @@ Module Fusione
                             Dim field As String = t.Nome & "." & f.Nome
                             Dim parameter As String = "@P" & paramIndex.ToString
                             Dim value As String = ""
-                            Select Case f.Operatore
+                            Select Case f.Operatore.ToUpper
                                 Case "+"
                                     value = field & " + " & f.Id.ToString
                                     cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
@@ -1499,7 +1501,7 @@ Module ListeID
         Dim lIDS As New List(Of IDS)
         Select Case tablename
             Case "MA_Areas"
-                lIDS.Add(New IDS With {.Chiave = True, .IdString = Suffisso, .Nome = "Area", .Operatore = "End", .MaxSize = 8})
+                lIDS.Add(New IDS With {.Chiave = True, .IdString = Suffisso, .Nome = "Area", .Operatore = "END", .MaxSize = 8})
         End Select
         Return lIDS
     End Function
