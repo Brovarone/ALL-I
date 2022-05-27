@@ -361,6 +361,8 @@ Module Fusione
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_EI_ITAsyncComm", .Gruppo = MacroGruppo.Vendita})
 #End Region
 #Region "Acquisti ( solo bolle di carico)"
+        'Adeguo gli ID su tutta la tabella ma mi copio solo il tipo documento desiderato
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDoc", .WhereClause = " WHERE DocumentType =  9830400", .Gruppo = MacroGruppo.Acquisto, .GeneraListaId = True, .PrimaryKey = "PurchaseDocId"})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocDetail", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocDetail INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocDetail.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocNotes", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocNotes INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocNotes.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocPymtSched", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocPymtSched INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocPymtSched.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
@@ -368,8 +370,6 @@ Module Fusione
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocShipping", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocShipping INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocShipping.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocSummary", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocSummary INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocSummary.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocTaxSummary", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocTaxSummary INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocTaxSummary.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
-        'Devo metterla per ultima perche' viene usata come filtro/join per quelle sopra
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDoc", .WhereClause = " WHERE DocumentType =  9830400", .Gruppo = MacroGruppo.Acquisto, .GeneraListaId = True, .PrimaryKey = "PurchaseDocId"})
 #End Region
 #Region "Ordini Clienti"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrd", .Gruppo = MacroGruppo.OrdiniClienti})
@@ -655,17 +655,22 @@ Module Fusione
     End Function
     Private Sub AggiornaIDs(ByVal IdType As Integer, ByVal value As Integer, Optional ByRef MyReturnString As String = "")
         Try
-            Using cmd = New SqlCommand("UPDATE MA_IDNumbers SET LastId =" & value.ToString & " WHERE CodeType=@CodeType",
+            Using destConn As New SqlConnection With {.ConnectionString = GetConnectionStringSPA()}
+                destConn.Open()
+                If destConn.State = ConnectionState.Open Then
+                    Using cmd = New SqlCommand("UPDATE MA_IDNumbers SET LastId =" & value.ToString & " WHERE CodeType=@CodeType",
                              ConnDestination)
-                cmd.Transaction = Trans
-                cmd.Parameters.AddWithValue("@CodeType", IdType)
-                Dim irows As Integer = cmd.ExecuteNonQuery()
-                If irows <= 0 Then
-                    cmd.CommandText = "INSERT INTO MA_IDNumbers (CodeType, LastId, TBCreatedID, TBModifiedID) VALUES (@CodeType, @Value, @TBCreatedID ,@TBModifiedID )"
-                    cmd.Parameters.AddWithValue("@Value", value)
-                    cmd.Parameters.AddWithValue("@TBCreatedID", My.Settings.mLOGINID)
-                    cmd.Parameters.AddWithValue("@TBModifiedID", My.Settings.mLOGINID)
-                    irows = cmd.ExecuteNonQuery()
+                        cmd.Transaction = Trans
+                        cmd.Parameters.AddWithValue("@CodeType", IdType)
+                        Dim irows As Integer = cmd.ExecuteNonQuery()
+                        If irows <= 0 Then
+                            cmd.CommandText = "INSERT INTO MA_IDNumbers (CodeType, LastId, TBCreatedID, TBModifiedID) VALUES (@CodeType, @Value, @TBCreatedID ,@TBModifiedID )"
+                            cmd.Parameters.AddWithValue("@Value", value)
+                            cmd.Parameters.AddWithValue("@TBCreatedID", My.Settings.mLOGINID)
+                            cmd.Parameters.AddWithValue("@TBModifiedID", My.Settings.mLOGINID)
+                            irows = cmd.ExecuteNonQuery()
+                        End If
+                    End Using
                 End If
             End Using
             Dim r As String = ReturnVarName(IdType, GetType(MagoNet.IdType))
