@@ -83,6 +83,7 @@ Public Class FLogin
             SettingsToolStripMenuItem.Enabled = yes
             CespitiToolStripMenuItem.Enabled = yes
             BtnApriLog.Enabled = yes
+            FusioneToolStripMenuItem.Enabled = yes
 
         End If
         If admin Then

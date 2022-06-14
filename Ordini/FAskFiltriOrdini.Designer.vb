@@ -294,7 +294,6 @@ Partial Class FAskFiltriOrdini
         Me.GroupPeriodo.Controls.Add(Me.ChkP_Quadrimestrali)
         Me.GroupPeriodo.Controls.Add(Me.ChkP_Semestrali)
         Me.GroupPeriodo.Controls.Add(Me.ChkP_Annuali)
-        Me.GroupPeriodo.Enabled = False
         Me.GroupPeriodo.Location = New System.Drawing.Point(6, 311)
         Me.GroupPeriodo.Name = "GroupPeriodo"
         Me.GroupPeriodo.Size = New System.Drawing.Size(228, 114)
@@ -342,9 +341,9 @@ Partial Class FAskFiltriOrdini
         Me.ChkP_Trimestrali.Enabled = False
         Me.ChkP_Trimestrali.Location = New System.Drawing.Point(110, 43)
         Me.ChkP_Trimestrali.Name = "ChkP_Trimestrali"
-        Me.ChkP_Trimestrali.Size = New System.Drawing.Size(68, 17)
+        Me.ChkP_Trimestrali.Size = New System.Drawing.Size(73, 17)
         Me.ChkP_Trimestrali.TabIndex = 15
-        Me.ChkP_Trimestrali.Text = "Trimetrali"
+        Me.ChkP_Trimestrali.Text = "Trimestrali"
         Me.ChkP_Trimestrali.UseVisualStyleBackColor = True
         '
         'ChkP_Quadrimestrali

@@ -43,7 +43,7 @@ Module Ordini
         Dim p_Trimestrali As Boolean
         Dim p_Bimestrali As Boolean
         Dim p_Mensili As Boolean
-
+        Dim p_Periodi(6) As Boolean
         Dim filtri As New StringBuilder()
 
 #Region "Regole di richiesta "
@@ -69,6 +69,13 @@ Module Ordini
                 p_Trimestrali = ff.ChkP_Trimestrali.Checked
                 p_Bimestrali = ff.ChkP_Bimestrali.Checked
                 p_Mensili = ff.ChkP_Mensili.Checked
+                p_Periodi(0) = p_Tutti
+                p_Periodi(1) = p_Mensili
+                p_Periodi(2) = p_Bimestrali
+                p_Periodi(3) = p_Trimestrali
+                p_Periodi(4) = p_Quadrimestrali
+                p_Periodi(5) = p_Semestrali
+                p_Periodi(6) = p_Annuali
                 filtri.AppendLine(" --- Filtri ---")
                 filtri.AppendLine(If(bFiltroDateOrdini, "Dal " & fromOrdDate.ToShortDateString & " al " & toOrdDate.ToShortDateString, "Fino al " & toOrdDate.ToShortDateString))
                 filtri.AppendLine("Ordine : " & If(bSingoloOrdine, nrOrd, "TUTTI"))
@@ -76,17 +83,20 @@ Module Ordini
                 filtri.AppendLine("Filiale : " & If(bSingolaFiliale, filiale, "TUTTI"))
                 filtri.AppendLine("Dalla data Fatt. :" & dataFattDa.ToShortDateString)
                 filtri.AppendLine("Alla data Fatt. :" & dataFattA.ToShortDateString)
-                filtri.AppendLine("Periodo (Tutti) : " & p_Tutti.ToString)
-                filtri.AppendLine("Periodo (Annuali) : " & p_Annuali.ToString)
-                filtri.AppendLine("Periodo (Sem.) : " & p_Semestrali.ToString)
-                filtri.AppendLine("Periodo (Quadr.) : " & p_Quadrimestrali.ToString)
-                filtri.AppendLine("Periodo (Trim.) : " & p_Trimestrali.ToString)
-                filtri.AppendLine("Periodo (Bim.) : " & p_Bimestrali.ToString)
-                filtri.AppendLine("Periodo (Mensi) : " & p_Mensili.ToString)
+                If p_Tutti Then
+                    filtri.AppendLine("Periodo : Tutti")
+                Else
+                    If p_Annuali Then filtri.AppendLine("Periodo : Annuali")
+                    If p_Semestrali Then filtri.AppendLine("Periodo : Semestrali")
+                    If p_Quadrimestrali Then filtri.AppendLine("Periodo : Quadrimestrali")
+                    If p_Trimestrali Then filtri.AppendLine("Periodo : Trimestrali")
+                    If p_Bimestrali Then filtri.AppendLine("Periodo : Bimestrali")
+                    If p_Mensili Then filtri.AppendLine("Periodo : Mensili")
+                End If
                 My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & filtri.ToString)
 
             ElseIf result = DialogResult.Cancel Then
-                Return False
+                    Return False
                 Exit Function
             End If
         End Using
@@ -197,6 +207,12 @@ Module Ordini
                         Dim sEx As String = "R:" & c.Line.ToString & " (" & c.TipoRigaServizio & "-" & c.Servizio & ")"
                         Debug.Print(sEx)
                         debugging.AppendLine(sEx)
+                        'Blocco Esclusioni Canoni dovute ai filtri di periodo
+                        If CBool(c.AlltipoRigaServizio.Canone) AndAlso Not p_Tutti AndAlso Not IsBewteenPeriodo(c, p_Periodi) Then
+                            Debug.Print(" - [ESCLUSA] Fuori filtro periodo")
+                            debugging.AppendLine(" - [ESCLUSA] Fuori filtro periodo")
+                            Continue For
+                        End If
                         If c.AlltipoRigaServizio.Consuntivo Then
                             Debug.Print(" - [ESCLUSA] Consuntivo")
                             debugging.AppendLine(" - [ESCLUSA] Consuntivo")
@@ -217,6 +233,7 @@ Module Ordini
                             debugging.AppendLine(" - [ESCLUSA] Decorrenza non raggiunta")
                             Continue For
                         End If
+
                         'Da qua sotto non fa "Continue For"
                         If c.DataProssimaFatt >= dataFattDa And c.DataProssimaFatt <= dataFattA Then
                             Debug.Print(" + [OK]")
@@ -224,14 +241,14 @@ Module Ordini
                             Debug.Print(" - [ESCLUSA] Fuori filtro data")
                             debugging.AppendLine(" - [ESCLUSA] Fuori filtro data")
                             isDaEscludere = True
-                            '26/01/2022 Vanno comunque esaminate per cercare eventuali righe sospsese da rifatturare
+                            '26/01/2022 Vanno comunque esaminate per cercare eventuali righe sospese da rifatturare
                             'DEPRECATO il Continue For
                         End If
                         If c.DataProssimaFatt > dataFattA Then
                             Debug.Print(" - [ESCLUSA] Prossima fattura non raggiunta")
                             debugging.AppendLine(" - [ESCLUSA] Prossima fattura non raggiunta")
                             isDaEscludere = True
-                            '26/01/2022 Vanno comunque esaminate per cercare eventuali righe sospsese da rifatturare
+                            '26/01/2022 Vanno comunque esaminate per cercare eventuali righe sospese da rifatturare
                             'DEPRECATO il Continue For
                         End If
 
@@ -423,8 +440,8 @@ Module Ordini
                                 debugging.AppendLine(msgLog)
 
                             Else
-                                'MI INSERISCO PER ESLCUDERE I CONTRATTI ANNUALLATI/CESSATI
-                                cOrdRow.PrecendementeCessato = True
+                                    'MI INSERISCO PER ESCLUDERE I CONTRATTI ANNUALLATI/CESSATI
+                                    cOrdRow.PrecendementeCessato = True
                                 Debug.Print(" - [ESCLUSA] Precentemente Cessato")
                                 debugging.AppendLine(" - [ESCLUSA] Precentemente Cessato")
                             End If
@@ -1363,8 +1380,6 @@ Module Ordini
                             .CIG = o.ContractCode,
                             .CUP = o.ProjectCode
                             }
-
-
         Return c
     End Function
     Private Class CurOrdRow
@@ -1590,6 +1605,26 @@ Module Ordini
         Semestrale = 1094254598
         Variabile = 1094254692
     End Enum
+    Private Function IsBewteenPeriodo(ByVal c As AllordCliContratto, periodi() As Boolean) As Boolean
+        Dim result As Boolean = False
+        If CBool(c.AlltipoRigaServizio.Canone) Then
+            Select Case c.AlltipoRigaServizio.Periodicita
+                Case Periodo.Annuale
+                    If periodi(6) Then result = True
+                Case Periodo.Semestrale
+                    If periodi(5) Then result = True
+                Case Periodo.Quadrimestrale
+                    If periodi(4) Then result = True
+                Case Periodo.Trimestrale
+                    If periodi(3) Then result = True
+                Case Periodo.Bimestrale
+                    If periodi(2) Then result = True
+                Case Periodo.Mensile
+                    If periodi(1) Then result = True
+            End Select
+        End If
+        Return result
+    End Function
     Private Function IsBetweenAnnullamento(ByVal data As Date, ByVal range As CurOrdRow, ByRef canoniResidui As Double) As Boolean
         Dim result As Boolean = False
         canoniResidui = 0
