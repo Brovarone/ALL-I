@@ -945,6 +945,40 @@ Public Module Contabilita
                                                         End With
                                                         AvanzaBarra()
                                                     Next
+                                                    'Chiudo la registrazione
+                                                    If Not isNewReg Then
+                                                        'Aggiorno la testa con quello che ho calcolato
+                                                        drPn("TotalAmount") = Math.Round(If(totDare > totAvere, totDare, totAvere), 2)
+                                                        If drPn("TotalAmount") <> quadraturaDaFile Then
+                                                            Dim avviso As String = ("Sulla registrazione rif." & drPn("RefNo").ToString & " il totale calcolato " & drPn("TotalAmount").ToString & " differisce da quello letto dal flusso " & quadraturaDaFile.ToString)
+                                                            Debug.Print(avviso)
+                                                            My.Application.Log.WriteEntry(avviso)
+                                                        End If
+                                                        drPn("LastSubId") = iLine
+                                                        dtPN.Rows.Add(drPn)
+                                                        'Creo quella nuova per quadrare
+                                                        drPnD = dtPND.NewRow
+                                                        drPnD("JournalEntryId") = idPn
+                                                        iLine += 1
+                                                        drPnD("Line") = iLine
+                                                        drPnD("PostingDate") = DataRiga
+                                                        drPnD("AccrualDate") = DataRiga
+                                                        drPnD("AccRsn") = CauRiga
+                                                        drPnD("Account") = RiscAtt
+                                                        isQDare = quadratura <= 0.001
+                                                        drPnD("DebitCreditSign") = If(quadratura > 0.001, 4980737, 4980736) 'T= Dare 4980736 / Avere 4980737
+                                                        drPnD("Amount") = Math.Abs(Math.Round(quadratura, 2))
+                                                        drPnD("FiscalAmount") = Math.Abs(Math.Round(quadratura, 2))
+                                                        drPnD("Currency") = "EUR"
+                                                        drPnD("ValueDate") = DataRiga
+                                                        drPnD("SubId") = iLine
+                                                        drPnD("TBCreatedID") = My.Settings.mLOGINID 'ID utente
+                                                        drPnD("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+                                                        AggiornaSaldoContabile(drPnD("Account"), Year(DataRiga), Month(DataRiga), isQDare, drPnD("Amount"), dvPNSaldi)
+                                                        dtPND.Rows.Add(drPnD)
+                                                        ' isNewReg = True
+                                                        ' bChiudiRegistrazione = False
+                                                    End If
 
                                                     Using cmdqry = New SqlCommand("DBCC TRACEON(610)", Connection)
                                                         cmdqry.ExecuteNonQuery()
