@@ -138,24 +138,23 @@ Partial Class FLogin
         Me.EseguiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.XLSToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.CSVToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.TestPagheToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.AnaliticaDaFattureToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.RiorganizzaCartelleToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.RegioneDaProvinciaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.FusioneToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.EseguiTraTestToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem()
+        Me.EseguiInDefinitivoToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.HelpToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ContentsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.IndexToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SearchToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.toolStripSeparator5 = New System.Windows.Forms.ToolStripSeparator()
         Me.AboutToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.FusioneToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.EseguiTraTestToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem()
         Me.PanelDB = New System.Windows.Forms.Panel()
         Me.CHKDBTemporaneo = New System.Windows.Forms.CheckBox()
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
-        Me.EseguiInDefinitivoToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabPageCancella.SuspendLayout()
@@ -1173,7 +1172,7 @@ Partial Class FLogin
         '
         'ComandiToolStripMenuItem
         '
-        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.IDToolStripMenuItem, Me.CaricaSchemaToolStripMenuItem, Me.EseguiToolStripMenuItem, Me.XLSToolStripMenuItem, Me.CSVToolStripMenuItem, Me.TestPagheToolStripMenuItem, Me.AnaliticaDaFattureToolStripMenuItem, Me.RiorganizzaCartelleToolStripMenuItem, Me.RegioneDaProvinciaToolStripMenuItem})
+        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.IDToolStripMenuItem, Me.CaricaSchemaToolStripMenuItem, Me.EseguiToolStripMenuItem, Me.XLSToolStripMenuItem, Me.CSVToolStripMenuItem, Me.AnaliticaDaFattureToolStripMenuItem, Me.RiorganizzaCartelleToolStripMenuItem, Me.RegioneDaProvinciaToolStripMenuItem})
         Me.ComandiToolStripMenuItem.Name = "ComandiToolStripMenuItem"
         Me.ComandiToolStripMenuItem.Size = New System.Drawing.Size(68, 20)
         Me.ComandiToolStripMenuItem.Text = "Comandi"
@@ -1210,12 +1209,6 @@ Partial Class FLogin
         Me.CSVToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
         Me.CSVToolStripMenuItem.Text = "CSV"
         '
-        'TestPagheToolStripMenuItem
-        '
-        Me.TestPagheToolStripMenuItem.Name = "TestPagheToolStripMenuItem"
-        Me.TestPagheToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
-        Me.TestPagheToolStripMenuItem.Text = "TestPaghe"
-        '
         'AnaliticaDaFattureToolStripMenuItem
         '
         Me.AnaliticaDaFattureToolStripMenuItem.Image = Global.ALLSystemTools.My.Resources.Resources.pie_chart_48
@@ -1234,6 +1227,27 @@ Partial Class FLogin
         Me.RegioneDaProvinciaToolStripMenuItem.Name = "RegioneDaProvinciaToolStripMenuItem"
         Me.RegioneDaProvinciaToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
         Me.RegioneDaProvinciaToolStripMenuItem.Text = "Regione da Provincia"
+        '
+        'FusioneToolStripMenuItem
+        '
+        Me.FusioneToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.EseguiTraTestToolStripMenuItem1, Me.EseguiInDefinitivoToolStripMenuItem})
+        Me.FusioneToolStripMenuItem.Name = "FusioneToolStripMenuItem"
+        Me.FusioneToolStripMenuItem.Size = New System.Drawing.Size(60, 20)
+        Me.FusioneToolStripMenuItem.Text = "Fusione"
+        '
+        'EseguiTraTestToolStripMenuItem1
+        '
+        Me.EseguiTraTestToolStripMenuItem1.Enabled = False
+        Me.EseguiTraTestToolStripMenuItem1.Name = "EseguiTraTestToolStripMenuItem1"
+        Me.EseguiTraTestToolStripMenuItem1.Size = New System.Drawing.Size(175, 22)
+        Me.EseguiTraTestToolStripMenuItem1.Text = "Esegui tra TEST"
+        '
+        'EseguiInDefinitivoToolStripMenuItem
+        '
+        Me.EseguiInDefinitivoToolStripMenuItem.Enabled = False
+        Me.EseguiInDefinitivoToolStripMenuItem.Name = "EseguiInDefinitivoToolStripMenuItem"
+        Me.EseguiInDefinitivoToolStripMenuItem.Size = New System.Drawing.Size(175, 22)
+        Me.EseguiInDefinitivoToolStripMenuItem.Text = "Esegui in Definitivo"
         '
         'HelpToolStripMenuItem
         '
@@ -1274,20 +1288,6 @@ Partial Class FLogin
         Me.AboutToolStripMenuItem.Name = "AboutToolStripMenuItem"
         Me.AboutToolStripMenuItem.Size = New System.Drawing.Size(122, 22)
         Me.AboutToolStripMenuItem.Text = "&About..."
-        '
-        'FusioneToolStripMenuItem
-        '
-        Me.FusioneToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.EseguiTraTestToolStripMenuItem1, Me.EseguiInDefinitivoToolStripMenuItem})
-        Me.FusioneToolStripMenuItem.Name = "FusioneToolStripMenuItem"
-        Me.FusioneToolStripMenuItem.Size = New System.Drawing.Size(60, 20)
-        Me.FusioneToolStripMenuItem.Text = "Fusione"
-        '
-        'EseguiTraTestToolStripMenuItem1
-        '
-        Me.EseguiTraTestToolStripMenuItem1.Enabled = False
-        Me.EseguiTraTestToolStripMenuItem1.Name = "EseguiTraTestToolStripMenuItem1"
-        Me.EseguiTraTestToolStripMenuItem1.Size = New System.Drawing.Size(180, 22)
-        Me.EseguiTraTestToolStripMenuItem1.Text = "Esegui tra TEST"
         '
         'PanelDB
         '
@@ -1336,13 +1336,6 @@ Partial Class FLogin
         Me.Label8.Size = New System.Drawing.Size(271, 13)
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
-        '
-        'EseguiInDefinitivoToolStripMenuItem
-        '
-        Me.EseguiInDefinitivoToolStripMenuItem.Enabled = False
-        Me.EseguiInDefinitivoToolStripMenuItem.Name = "EseguiInDefinitivoToolStripMenuItem"
-        Me.EseguiInDefinitivoToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.EseguiInDefinitivoToolStripMenuItem.Text = "Esegui in Definitivo"
         '
         'FLogin
         '
@@ -1465,7 +1458,6 @@ Partial Class FLogin
     Friend WithEvents EseguiToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents XLSToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents CSVToolStripMenuItem As ToolStripMenuItem
-    Friend WithEvents TestPagheToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents PanelUser As Panel
     Friend WithEvents DisconnettiAdminToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents BtnPaghe As Button

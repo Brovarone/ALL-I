@@ -1057,14 +1057,14 @@ Public Class FLogin
 
                     Case Else
                         Select Case True 'Controllo in Like il nome file
-                            'Paghe vecchio
+                            'Paghe vecchio con conto transitorio ACG
                             Case Len(filename) = 7 AndAlso filename.ToUpper Like "ALL????"
                                 lstStatoConnessione.Items.Add("Importazione Paghe")
-                                esito = CaricaFlussoPaghe(spath)
+                                esito = CaricaFlussoPaghe(spath, False)
                             'Paghe Flusso Zucchetti
                             Case filename.ToUpper Like "FILE_CONTABILE_PN_######_##-##-####"
                                 lstStatoConnessione.Items.Add("Importazione Paghe Zucchetti")
-                                esito = CaricaFlussoPaghe(spath)
+                                esito = CaricaFlussoPaghe(spath, True)
                         End Select
 
                 End Select
@@ -1151,12 +1151,6 @@ Public Class FLogin
     Private Sub SPASuTESTSPAToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles SPASuTESTSPAToolStripMenuItem.Click
         MySqlServerBackup.CopiaDatabase(My.Settings.mDATABASE_SPA, My.Settings.mDBTEMPSPA)
     End Sub
-    Private Sub TestPagheToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles TestPagheToolStripMenuItem.Click
-        CaricaFlussoPaghe("")
-        DataGridView1.Visible = True
-        DataGridView1.BringToFront()
-    End Sub
-
     Private Sub ControllaEAbilita()
         If String.IsNullOrEmpty(FolderPath) Then
             Return

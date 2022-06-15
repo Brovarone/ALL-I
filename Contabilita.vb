@@ -6,12 +6,14 @@ Imports System.Reflection.MethodBase
 Public Module Paghe
     Private dtTeste As DataTable
     Private dtRighe As DataTable
-    Private Const cTrans = "2DIP999"
+    Private Const ContoTransitorioMAGO = "2DIP999"
     Private Const ModCont = "PAGHE"
     Private Const CauRiga = "PAGHE"
     Private Const ContoTransitorioACG = "20890101"
 
-    Public Function CaricaFlussoPaghe(ByVal refPath As String) As Boolean
+    Private contoTransitorio As String
+
+    Public Function CaricaFlussoPaghe(ByVal refPath As String, ByVal IsMago As Boolean) As Boolean
         Dim result As Boolean
 
         InizializzaMascheraMatching()
@@ -19,23 +21,25 @@ Public Module Paghe
             Dim currentLine As String = rdr.ReadLine()
             While currentLine IsNot Nothing
                 Dim currentRow As String()
+                'Debug.Print(currentLine)
+                If Not String.IsNullOrWhiteSpace(currentLine) Then
+                    If String.IsNullOrWhiteSpace(Left(currentLine, 6)) Then
+                        currentRow = Testata(currentLine)
+                        dtTeste.Rows.Add(currentRow)
+                    Else
+                        currentRow = Riga(currentLine)
+                        dtRighe.Rows.Add(currentRow)
+                    End If
 
-                If String.IsNullOrWhiteSpace(Left(currentLine, 6)) Then
-                    currentRow = Testata(currentLine)
-                    dtTeste.Rows.Add(currentRow)
-                Else
-                    currentRow = Riga(currentLine)
-                    dtRighe.Rows.Add(currentRow)
+                    If currentRow IsNot Nothing Then
+                        'Process current set of fields
+                    End If
                 End If
-
-                If currentRow IsNot Nothing Then
-                    'Process current set of fields
-                End If
-
                 currentLine = rdr.ReadLine()
             End While
         End Using
         'FLogin.DataGridView1.DataSource = dtRighe
+        contoTransitorio = If(IsMago, ContoTransitorioMAGO, ContoTransitorioACG)
         result = CreaPNotaPaghe(dtTeste, dtRighe)
         Return result
     End Function
@@ -109,28 +113,28 @@ Public Module Paghe
     End Sub
     Private Sub InitalizeRighe()
 
-        dtRighe.Columns.Add("Filler0") '1
-        dtRighe.Columns.Add("CdC") '2
-        dtRighe.Columns.Add("Filler1") '21
-        dtRighe.Columns.Add("Prot") '6
-        dtRighe.Columns.Add("Imponibile") '13 ultimi 2 decimali
-        dtRighe.Columns.Add("CodIva") '2
-        dtRighe.Columns.Add("Imposta") '11
-        dtRighe.Columns.Add("Filler2") '2
-        dtRighe.Columns.Add("Filler3") ' 13
-        dtRighe.Columns.Add("ContoDare") '12
-        dtRighe.Columns.Add("ContoAvere") '12
-        dtRighe.Columns.Add("Filler4") '14
-        dtRighe.Columns.Add("Continua") '1 "C" sui dettagli " " su ultimo dettaglio
-        dtRighe.Columns.Add("TotaleDoc") '13 solo su ultima riga somma gli imponibili
-        dtRighe.Columns.Add("Cdc1") '2
-        dtRighe.Columns.Add("Filler5") '49
-        dtRighe.Columns.Add("Riferimento") '7 =0000010 x testate pn causali 267 =0000020 per pn causali 216     
-        dtRighe.Columns.Add("Filler6") '30
-        dtRighe.Columns.Add("Utente") '8
-        dtRighe.Columns.Add("DataReg") '6 'AAMMGG
-        dtRighe.Columns.Add("NrRif") '6
-        dtRighe.Columns.Add("NrSequenza") '2
+        dtRighe.Columns.Add("Filler0")      '1
+        dtRighe.Columns.Add("CdC")          '2
+        dtRighe.Columns.Add("Filler1")      '21
+        dtRighe.Columns.Add("Prot")         '6
+        dtRighe.Columns.Add("Imponibile")   '13 ultimi 2 decimali
+        dtRighe.Columns.Add("CodIva")       '2
+        dtRighe.Columns.Add("Imposta")      '11
+        dtRighe.Columns.Add("Filler2")      '2
+        dtRighe.Columns.Add("Filler3")      '13
+        dtRighe.Columns.Add("ContoDare")    '12
+        dtRighe.Columns.Add("ContoAvere")   '12
+        dtRighe.Columns.Add("Filler4")      '14
+        dtRighe.Columns.Add("Continua")     '1 "C" sui dettagli " " su ultimo dettaglio
+        dtRighe.Columns.Add("TotaleDoc")    '13 solo su ultima riga somma gli imponibili
+        dtRighe.Columns.Add("Cdc1")         '2
+        dtRighe.Columns.Add("Filler5")      '49
+        dtRighe.Columns.Add("Riferimento")  '7 =0000010 x testate pn causali 267 =0000020 per pn causali 216     
+        dtRighe.Columns.Add("Filler6")      '30
+        dtRighe.Columns.Add("Utente")       '8
+        dtRighe.Columns.Add("DataReg")      '6 'AAMMGG
+        dtRighe.Columns.Add("NrRif")        '6
+        dtRighe.Columns.Add("NrSequenza")   '2
 
     End Sub
     Private Sub InizializzaMascheraMatching()
@@ -219,7 +223,7 @@ Public Module Paghe
                                                 drPnD("PostingDate") = DataRiga
                                                 drPnD("AccrualDate") = DataRiga
                                                 drPnD("AccRsn") = CauRiga
-                                                drPnD("Account") = cTrans
+                                                drPnD("Account") = contoTransitorio
                                                 isQDare = quadratura <= 0.001
                                                 drPnD("DebitCreditSign") = If(quadratura > 0.001, 4980737, 4980736) 'T= Dare 4980736 / Avere 4980737
                                                 drPnD("Amount") = Math.Abs(Math.Round(quadratura, 2))
@@ -277,7 +281,7 @@ Public Module Paghe
                                         Dim nota As String = ""
                                         drPnD("Notes") = nota
                                         'drPnD ("CodeType")= 5177344 ' Normale / Apertura / Assestamento
-                                        Dim isDare As Boolean = .Item("ContoDare") <> ContoTransitorioACG
+                                        Dim isDare As Boolean = .Item("ContoDare") <> contoTransitorio
                                         Dim c As String = If(isDare, .Item("ContoDare"), .Item("ContoAvere"))
                                         Dim sConto As String = ""
                                         If TryTrovaContropartita(c, dvCntrp, sConto) Then
@@ -329,7 +333,7 @@ Public Module Paghe
                                 drPnD("PostingDate") = DataRiga
                                 drPnD("AccrualDate") = DataRiga
                                 drPnD("AccRsn") = CauRiga
-                                drPnD("Account") = cTrans
+                                drPnD("Account") = contoTransitorio
                                 isQDare = quadratura <= 0.001
                                 drPnD("DebitCreditSign") = If(quadratura > 0.001, 4980737, 4980736) 'T= Dare 4980736 / Avere 4980737
                                 drPnD("Amount") = Math.Abs(Math.Round(quadratura, 2))
@@ -946,7 +950,7 @@ Public Module Contabilita
                                                         AvanzaBarra()
                                                     Next
                                                     'Chiudo la registrazione
-                                                    If Not isNewReg Then
+                                                    If xlsRidotto AndAlso Not isNewReg Then
                                                         'Aggiorno la testa con quello che ho calcolato
                                                         drPn("TotalAmount") = Math.Round(If(totDare > totAvere, totDare, totAvere), 2)
                                                         If drPn("TotalAmount") <> quadraturaDaFile Then
