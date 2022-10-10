@@ -1156,7 +1156,11 @@ Public Class FLogin
             Return
         End If
         'lstStatoConnessione.Items.Add("Analisi cartella in corso...")
-
+        If Not Directory.Exists(FolderPath) Then
+            Debug.Print("Path mancante")
+            MessageBox.Show("Impossibile continuare Path mancante. Inserirlo", "Errore", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return
+        End If
         ' Fatture
         Dim bFound As Boolean
         Dim fat As String() = {"FTPA300F", "WESEIVA", "CLIENORD"}

@@ -839,8 +839,9 @@ Module Fusione
                 origConn.Open()
                 If origConn.State = ConnectionState.Open Then
                     ' Recupero i dati dall'origine in un SqlDataReader.
-                    Dim commandSourceData As New SqlCommand(SQLquery, origConn)
-                    commandSourceData.CommandTimeout = 0
+                    Dim commandSourceData As New SqlCommand(SQLquery, origConn) With {
+                        .CommandTimeout = 0
+                    }
                     'Dim reader As SqlDataReader = commandSourceData.ExecuteReader(CommandBehavior.SequentialAccess)
                     Dim reader As SqlDataReader = commandSourceData.ExecuteReader()
                     Using destConn As New SqlConnection With {.ConnectionString = GetConnectionStringSPA()}
@@ -1628,7 +1629,7 @@ Module ListeID
     End Function
 End Module
 Module WithDataRow
-    'Dublicate per eviatre errori in compilazione
+    'Dublicate per evitare errori in compilazione
     Private Const pageSize As Integer = 20000
     Private listeIDs As List(Of ListaId)
 

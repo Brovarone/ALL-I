@@ -9,7 +9,7 @@ Imports EFMago.Models
 Imports Microsoft.EntityFrameworkCore
 Imports Microsoft.EntityFrameworkCore.EF
 Imports EFCore.BulkExtensions
-'TODO: valutare implementazioni Fattura elettronica 
+'TODO: valutare implementazioni Fattura elettronica ( da ordine non ho modo, serve elaborazione successiva)
 'Todo: Dichiarazione intento lettera W ( magari impostare un campo in anagrafica cliente/ordine) e aggiungerlo agli step di pre-invio( tipo quello dei dati canoni ) ma ne verrano fuori altri
 
 Module Ordini
@@ -102,7 +102,6 @@ Module Ordini
         End Using
 #End Region
         'TODO: ordine tabella totali = Summary ??
-        'TODO: forse fatto !! gestire rifatturazione non a periodo ma infraperiodo ( Controllare su righe chiuse o cose cosi')
         Dim someTrouble As Boolean = False
         Dim bulkMessage As New StringBuilder()
         Dim errori As New StringBuilder()
@@ -255,7 +254,7 @@ Module Ordini
 #End Region
 #Region "Variabili Correnti"
                         Dim cOrdRow As CurOrdRow = EvalCurOrdRow(c)
-                        cOrdRow.CanoneDaEscludere = isDaEscludere
+                        cOrdRow.CanoneFuoriRangeDate = isDaEscludere
                         cOrdRow.Contropartita = If(String.IsNullOrWhiteSpace(c.MaItems.SaleOffset), sDefContropartita, c.MaItems.SaleOffset)
                         cOrdRow.CodIva = If(String.IsNullOrWhiteSpace(c.CodiceIva), sDefCodIva, c.CodiceIva)
                         cOrdRow.PercIva = Math.Round(codiciIva.FirstOrDefault(Function(tax) tax.TaxCode = cOrdRow.CodIva).Perc.Value, decPerc)
@@ -281,16 +280,15 @@ Module Ordini
                             Debug.Print(msgLog)
                             debugging.AppendLine(msgLog)
                             'STEP 3a: Ciclo sulle Attività per Sospensione 
+                            '---  Esclusioni di Sospensione ---
                             If CBool(att.Allattivita.Sospensione) Then
-                                '--- Controllo Esclusioni di Sospensione---
-
                                 'Fatturata
                                 If CBool(att.Fatturata) Then
                                     Debug.Print("  - [Fatturata]")
                                     debugging.AppendLine("  - [Fatturata]")
                                     Continue For
                                 End If
-                                'Mesi sospesi
+                                'Mesi sospesi ( solo se nel periodo)
                                 Dim dCanoniSospesi As Double
                                 If IsBetweenSospensione(att.DataInizio, att.DataFine, cOrdRow, dCanoniSospesi) Then
                                     cOrdRow.SospesoDaAttivita = True
@@ -307,10 +305,10 @@ Module Ordini
                                     If dCanoniRipresi > 0 Then
                                         'Setto il valore nella proprietà  Shadow
                                         att.CanoniRipresi = dCanoniRipresi
-                                        cOrdRow.QtaDaRifatturare = dCanoniRipresi
+                                        cOrdRow.QtaDaRifatturare += dCanoniRipresi
                                         attDaRifatturare.Add(att)
                                         cOrdRow.IsOk = True
-                                        msgLog = "  - [Ripresa]: il " & att.DataRifatturazione.ToString
+                                        msgLog = "  - [Ripresa]: " & att.CanoniRipresi.ToString & " mesi il " & att.DataRifatturazione.Value.ToShortDateString
                                         Debug.Print(msgLog)
                                         debugging.AppendLine(msgLog)
                                         'Segno la riga come Fatturata
@@ -322,8 +320,9 @@ Module Ordini
                                 End If
                             End If
                             'STEP 3b: Ciclo sulle Attività per Annullamento 
+                            '---  Esclusioni di Annullamento ---
                             If CBool(att.Allattivita.Annullamento) Then
-                                '--- Controllo Esclusioni di Annullamento---
+                                'Si potrebbe escluderle dall'elaborazione controllando  cOrdRow.CanoneDaEscludere
                                 cOrdRow.DataCessazione = att.DataInizio
 
                                 'Controllo la data di Inizio
@@ -406,7 +405,7 @@ Module Ordini
                                 o.ALLOrdCliAcc.TbmodifiedId = sLoginId
                                 debugging.AppendLine("Ordine: " & cOrd.OrdNo & " Impostata cessazione: " & cOrd.DataScadenzaFissa.ToShortDateString)
                                 efAllordCliAcc.Add(o.ALLOrdCliAcc)
-                            Else
+                            ElseIf o.ALLOrdCliAcc.DataCessazione <> cOrd.DataScadenzaFissa Then
                                 errori.AppendLine("Ordine: " & cOrd.OrdNo & " Cliente: " & cOrd.Cliente & " con data cessazione già valorizzata. Controllare scadenza fissa!")
                             End If
                         End If
@@ -440,8 +439,8 @@ Module Ordini
                                 debugging.AppendLine(msgLog)
 
                             Else
-                                    'MI INSERISCO PER ESCLUDERE I CONTRATTI ANNUALLATI/CESSATI
-                                    cOrdRow.PrecendementeCessato = True
+                                'MI INSERISCO PER ESCLUDERE I CONTRATTI ANNUALLATI/CESSATI
+                                cOrdRow.PrecendementeCessato = True
                                 Debug.Print(" - [ESCLUSA] Precentemente Cessato")
                                 debugging.AppendLine(" - [ESCLUSA] Precentemente Cessato")
                             End If
@@ -457,8 +456,9 @@ Module Ordini
                             '    errori.AppendLine("Ordine: " & cOrd.ordNo & " Cliente: " & cOrd.Cliente & " con data cessazione già valorizzata. Controllare cessazione!")
                             'End If
                         End If
-                        'Se ok allora Creo nuova riga di dettaglio
-                        If ((cOrdRow.IsOk AndAlso Not cOrdRow.CanoneDaEscludere) OrElse cOrdRow.DaRifatturare) AndAlso cOrdRow.QtaCorrente > 0 AndAlso Not cOrdRow.PrecendementeCessato Then
+
+                        'Se ok allora creo dettaglio
+                        If ((cOrdRow.IsOk AndAlso Not cOrdRow.CanoneFuoriRangeDate) OrElse cOrdRow.DaRifatturare) AndAlso (cOrdRow.QtaCorrente > 0 OrElse cOrdRow.QtaDaRifatturare > 0) AndAlso Not cOrdRow.PrecendementeCessato Then
 #Region "Controllo su prima riga bianca"
                             If o.MaSaleOrdDetails.Any AndAlso o.MaSaleOrdDetails.Count = 1 Then
 
@@ -480,7 +480,7 @@ Module Ordini
                             If attDaRifatturare.Any Then
                                 For Each aDaRif In attDaRifatturare
                                     If aDaRif.DataRifatturazione < cOrdRow.DataPrevistaConsegna Then
-                                        If Not cOrdRow.CanoneDaEscludere Then avvisi.AppendLine("Ordine " & cOrd.OrdNo & " Servizio " & cOrdRow.Item & " con date prevista fatturazione non congruenti !")
+                                        If Not cOrdRow.CanoneFuoriRangeDate Then avvisi.AppendLine("Ordine " & cOrd.OrdNo & " Servizio " & cOrdRow.Item & " con date prevista fatturazione non congruenti !")
                                         cOrdRow.DataPrevistaConsegna = aDaRif.DataRifatturazione
                                         cOrdRow.DataConfermaConsegna = aDaRif.DataRifatturazione
                                     End If
@@ -488,7 +488,6 @@ Module Ordini
                             End If
 #Region "Scrivo Testo descrittivo su MaSaleOrdDetails"
                             isNewRows = True
-                            'STEP 6 : Ciclo le righe Descrizioni
                             If Not bScrittoDescrizioni Then
                                 For Each d In o.ALLordCliDescrizioni
                                     iNewRowsCount += 1
@@ -598,7 +597,7 @@ Module Ordini
                             Next
 #End Region
 #Region "Scrivo MaSaleOrdDetails"
-                            If Not cOrdRow.CanoneDaEscludere Then
+                            If Not cOrdRow.CanoneFuoriRangeDate AndAlso cOrdRow.QtaCorrente > 0 Then
                                 'Scrivo il corpo solo nel caso dei canoni ( in caso di rifatturazione potrei non averne)
                                 iNewRowsCount += 1
                                 iNrRigheAValore += 1
@@ -719,7 +718,7 @@ Module Ordini
 #End Region
                         End If
 #Region "Aggiorno date prossima Fatturazione"
-                        If Not cOrdRow.CanoneDaEscludere AndAlso (cOrdRow.IsOk OrElse cOrdRow.DaRifatturare OrElse cOrdRow.SospesoDaAttivita) AndAlso Not cOrdRow.PrecendementeCessato Then
+                        If Not cOrdRow.CanoneFuoriRangedate AndAlso (cOrdRow.IsOk OrElse cOrdRow.DaRifatturare OrElse cOrdRow.SospesoDaAttivita) AndAlso Not cOrdRow.PrecendementeCessato Then
                             If cOrdRow.DataProssimaFattura < dataFattA Then avvisi.AppendLine("Ordine " & cOrd.OrdNo & " Servizio " & cOrdRow.Item & " con data prossima fatturazione antecedente alla data di fine estrazione !")
                             c.DataProssimaFatt = cOrdRow.DataProssimaFattura
                             c.DataFineElaborazione = Now
@@ -741,7 +740,7 @@ Module Ordini
                         o.Tbmodified = Now
                         o.TbmodifiedId = sLoginId
                         totOrdiniConNuoveRighe += 1
-                        msgLog = "Nuove righe N:" & iNrRigheNota.ToString & " S:" & iNrRigheAValore.ToString
+                        msgLog = "Nuove righe n:" & iNrRigheNota.ToString & " S:" & iNrRigheAValore.ToString
                         Debug.Print(msgLog)
                         debugging.AppendLine(msgLog)
                         efMaSaleOrd.Add(o)
@@ -1152,7 +1151,7 @@ Module Ordini
                             End If
 
                             'STEP 3c: Ciclo sulle Attività per Istat 
-                            'Devo assicurarmi di non adeguare nuovamente all'istat quelli antecenti a xxxxx
+                            'Devo assicurarmi di non adeguare nuovamente all'istat quelli antecenti a xxxx
                             If CBool(att.Allattivita.Istat) Then
                                 '--- Controllo Esclusioni di ISTAT---
 
@@ -1400,7 +1399,7 @@ Module Ordini
         Public Property QtaDaRifatturare As Double
         Public Property DaRifatturare As Boolean
         Public Property DataProssimaRifatturazione As Date
-        Public Property CanoneDaEscludere As Boolean
+        Public Property CanoneFuoriRangeDate As Boolean
         Public Property QtaSospesa As Double
         Public Property SospesoDaAttivita As Boolean
         Public Property QtaAnnullata As Double
@@ -1443,7 +1442,7 @@ Module Ordini
             QtaDaRifatturare = 0
             DaRifatturare = False
             DataProssimaRifatturazione = d
-            CanoneDaEscludere = False
+            CanoneFuoriRangeDate = False
             QtaSospesa = 0
             SospesoDaAttivita = False
             QtaAnnullata = 0
@@ -1630,43 +1629,40 @@ Module Ordini
         canoniResidui = 0
         If data >= range.CanoniDataIn AndAlso data <= range.CanoniDataFin Then
             result = True
-            canoniResidui = CalcolaMesi(range.CanoniDataIn, data)
+            canoniResidui = CalcolaMesi(range.CanoniDataIn, data, False)
+
         End If
         Return result
     End Function
-    Private Function IsBetweenSospensione(ByVal dataInizio As Date, ByVal dataFine As Date, ByVal range As CurOrdRow, ByRef canoniSospesi As Double) As Boolean
+    Private Function IsBetweenSospensione(ByVal dataInizioSosp As Date, ByVal dataFineSosp As Date, ByVal range As CurOrdRow, ByRef canoniSospesi As Double) As Boolean
         Dim result As Boolean = False
-        If dataInizio >= range.CanoniDataFin Then Return False
-        If dataFine <= range.CanoniDataIn Then Return False
+        If dataInizioSosp >= range.CanoniDataFin Then Return False
+        If dataFineSosp <= range.CanoniDataIn Then Return False
 
         canoniSospesi = 0
-        If (dataInizio >= range.CanoniDataIn AndAlso dataInizio <= range.CanoniDataFin) AndAlso (dataFine >= range.CanoniDataIn AndAlso dataFine <= range.CanoniDataFin) Then
+        If (dataInizioSosp >= range.CanoniDataIn AndAlso dataInizioSosp <= range.CanoniDataFin) AndAlso (dataFineSosp >= range.CanoniDataIn AndAlso dataFineSosp <= range.CanoniDataFin) Then
+            'Caso di sospensione infraperiodo ( es: 1 mese sui trimestrali)
             result = True
-            canoniSospesi = CalcolaMesi(dataInizio, dataFine)
-            'La sospensione inizia con la data di inizio periodo
-            ' If dataInizio = range.CanoniDataIn Then
-            'canoniSospesi = CalcolaMesi(dataInizio, dataFine)
-            'ElseIf dataFine = range.CanoniDataFin Then
-            'canoniSospesi = CalcolaMesi(dataInizio, dataFine)
-            'Else
-            'canoniSospesi = CalcolaMesi(range.CanoniDataIn, dataInizio)
-            'End If
+            canoniSospesi = CalcolaMesi(dataInizioSosp, dataFineSosp, False)
+
         Else
-            'Ci potrebbero essere date a cavallo del periodo di fatturazione
+            'Spesso invece vengono indicata date a cavallo del periodo di fatturazione
+            '( esempio sospeso a tempo indeterminato 31/12/xxxx)
+
             'Data Inizio antecedente al periodo con ( Data Fine compresa)
-            If dataInizio < range.CanoniDataIn AndAlso (dataFine >= range.CanoniDataIn AndAlso dataFine <= range.CanoniDataFin) Then
+            If dataInizioSosp < range.CanoniDataIn AndAlso (dataFineSosp >= range.CanoniDataIn AndAlso dataFineSosp <= range.CanoniDataFin) Then
                 result = True
-                canoniSospesi = CalcolaMesi(range.CanoniDataIn, dataFine)
+                canoniSospesi = CalcolaMesi(range.CanoniDataIn, dataFineSosp, False)
             End If
 
-            '(Data Inizio compresa) con Data Fine Successiva al periodo 
-            If (dataInizio >= range.CanoniDataIn AndAlso dataInizio <= range.CanoniDataFin) AndAlso dataFine > range.CanoniDataFin Then
+            '(Data Inizio compresa) con Data Fine Successiva al periodo [Sospensione Indeterminata] 
+            If (dataInizioSosp >= range.CanoniDataIn AndAlso dataInizioSosp <= range.CanoniDataFin) AndAlso dataFineSosp > range.CanoniDataFin Then
                 result = True
-                canoniSospesi = CalcolaMesi(dataInizio, range.CanoniDataFin)
+                canoniSospesi = CalcolaMesi(dataInizioSosp, range.CanoniDataFin, True)
             End If
 
             'Entrambe le date oltre le date periodo 
-            If (dataInizio < range.CanoniDataIn) AndAlso (dataFine > range.CanoniDataFin) Then
+            If (dataInizioSosp < range.CanoniDataIn) AndAlso (dataFineSosp > range.CanoniDataFin) Then
                 result = True
                 canoniSospesi = range.NrCanoniIniziale
             End If
@@ -1695,7 +1691,7 @@ Module Ordini
         canoniRipresi = 0
         If a.DataRifatturazione >= range.CanoniDataIn AndAlso a.DataRifatturazione <= range.CanoniDataFin Then
             result = True
-            canoniRipresi = CalcolaMesi(a.DataInizio, a.DataFine)
+            canoniRipresi = CalcolaMesi(a.DataInizio, a.DataFine, False)
         End If
         Return result
     End Function
@@ -1704,7 +1700,7 @@ Module Ordini
         canoniRipresi = 0
         If a.DataRifatturazione >= da AndAlso a.DataRifatturazione <= al Then
             result = True
-            canoniRipresi = CalcolaMesi(a.DataInizio, a.DataFine)
+            canoniRipresi = CalcolaMesi(a.DataInizio, a.DataFine, False)
         End If
         Return result
     End Function
@@ -1714,20 +1710,44 @@ Module Ordini
         'canoniSospesi = DateAndTime.DateDiff(DateInterval.Month, dataInizio, range.CanoniDataFin)
         Return Math.Round(DateAndTime.DateDiff(DateInterval.Day, d1, d2) / (365.2425 / 12), 0)
     End Function
-    Private Function CalcolaMesi(d1 As Date, d2 As Date) As Double
+
+    Private Function CalcolaMesi(ByVal d1 As Date, ByVal d2 As Date, ByVal checkGiorniSuPrimadata As Boolean) As Double
         'Logica con date 1-8=0 // 9-23= 0,5 // 23-28(31) =1
-        Dim monthNr As Double = DateAndTime.DateDiff(DateInterval.Month, d1, d2)
+        Dim monthNr As Double
+        'Determino il fine mese del primo valore
+        Dim firstEndDate As Date = New DateTime(d1.Year, d1.Month, 1).AddMonths(1).AddDays(-1)
+        Dim secondEndDate As Date = New DateTime(d2.Year, d2.Month, 1).AddMonths(1).AddDays(-1)
+        If firstEndDate.Equals(d1) Then
+            Dim d1Actual As Date = firstEndDate.AddDays(1)
+            monthNr = DateAndTime.DateDiff(DateInterval.Month, d1Actual, d2)
+        Else
+            monthNr = DateAndTime.DateDiff(DateInterval.Month, d1, d2)
+        End If
+        'Dim d As Double = (d2 - d1).TotalDays
+        'Dim monthCalcNr As Double = Math.Round(DateAndTime.DateDiff(DateInterval.Day, d1, d2) / (365.2425 / 12), 0)
 
         'Controllo su giorno come da specifiche
-        Select Case d2.Day
-            Case 1 To 8
-                monthNr += 0
-            Case 9 To 23
-                monthNr += 0.5
-            Case 24 To 31
-                monthNr += 1
-        End Select
-        'canoniSospesi = DateAndTime.DateDiff(DateInterval.Month, dataInizio, range.CanoniDataFin)
+        If checkGiorniSuPrimadata Then
+            'Se considero la prima data il valore e' invertito
+            Select Case d1.Day
+                Case 1 To 8
+                    monthNr += 1
+                Case 9 To 23
+                    monthNr += 0.5
+                Case 24 To 31
+                    monthNr += 0
+            End Select
+        Else
+            Select Case d2.Day
+                Case 1 To 8
+                    monthNr += 0
+                Case 9 To 23
+                    monthNr += 0.5
+                Case 24 To 31
+                    monthNr += 1
+            End Select
+        End If
+
         Return monthNr
     End Function
 End Module
