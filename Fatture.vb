@@ -256,7 +256,7 @@ Module Fatture
                                                                                         dtCliNatPersNew.Rows.Add(drCliNatPers)
                                                                                     End If
                                                                                 End If
-                                                                                drCli("Account") = "1CLI" & Int16.Parse((TrovaFiliale(.Item("AA").ToString))).ToString("000")
+                                                                                drCli("Account") = "1CLI" & Int16.Parse((TrovaFiliale(.Item("AA").ToString, False))).ToString("000")
                                                                                 drCli("Presentation") = 1376260
                                                                                 drCli("MailSendingType") = 12451840 'Tipo invio mail ( A: 12451841, non inviare: 12451840)
                                                                                 ''''''''''''''''''''''
@@ -290,7 +290,7 @@ Module Fatture
                                                                                 'Options
                                                                                 drCliOpt("Customer") = .Item("AA").ToString
                                                                                 drCliOpt("CustSuppType") = CustSuppType.Cliente
-                                                                                drCliOpt("Area") = TrovaFiliale(.Item("AA").ToString) ' Filiale / Ara di Vendita
+                                                                                drCliOpt("Area") = TrovaFiliale(.Item("AA").ToString, True) ' Filiale / Ara di Vendita
                                                                                 drCliOpt("UseReqForPymt") = "1"
                                                                                 Dim cat As String = dvClienOrd(iClienOrdFound).Item("C").ToString
                                                                                 Select Case cat
@@ -512,7 +512,7 @@ Module Fatture
                                                                             ScriviDatiAggiuntiviFE(dtEI, idDoc, drXLS(irxls), iLinea)
                                                                             'SVILUPPO Gestione Allegati ( da sviluppare se Carbone mi passa dei file)
 
-                                                                            drDoc("Area") = TrovaFiliale(.Item("AA").ToString)
+                                                                            drDoc("Area") = TrovaFiliale(.Item("AA").ToString, True)
                                                                             'drDoc("AreaManager") = .Item("H").ToString
                                                                             'drDoc("SalePerson") = .Item("X").ToString
                                                                             drDoc("AccrualPercAtInvoiceDate") = 100
@@ -1226,9 +1226,9 @@ Module Fatture
 
     End Function
 
-    Private Function TrovaFiliale(Codice As String) As String
+    Private Function TrovaFiliale(ByVal codice As String, ByVal isArea As Boolean) As String
         Dim esito As String
-        Dim s As String = Left(Codice, 1).ToUpper
+        Dim s As String = Left(codice, 1).ToUpper
         Select Case s
             Case "A"
                 esito = "01"    'TORINO
@@ -1249,11 +1249,19 @@ Module Fatture
             Case "I"
                 esito = "09"    'VARESE
             Case "J"
-                esito = "10"    'SEDE
+                If isArea Then
+                    esito = "10"    'Area di vendita: SEDE
+                Else
+                    esito = "12"    'Conto Pdc:  SEDE
+                End If
             Case "K"
                 esito = "11"    'CUNEO
             Case "L"
-                esito = "12"    'ALESSANDRIA
+                If isArea Then
+                    esito = "12"    'Area di vendita: ALESSANDRIA
+                Else
+                    esito = "10"    'Conto Pdc:  ALESSANDRIA
+                End If
             Case Else
                 esito = s
         End Select
