@@ -158,7 +158,7 @@ Module Fatture
                                             da.SelectCommand = cmd
                                             Dim dtISO As New DataTable("ISO")
                                             da.Fill(dtISO)
-                                            Dim dvISO As New DataView(dtCP, "", "ISOCountryCode", DataViewRowState.CurrentRows)
+                                            Dim dvISO As New DataView(dtISO, "", "ISOCountryCode", DataViewRowState.CurrentRows)
                                             'per l'anagrafica Cliente 
                                             Dim dvClienOrd As New DataView(dts.Tables("CLIENORD"), "", "AF", DataViewRowState.CurrentRows)
                                             Using adpCF As New SqlDataAdapter("Select * FROM MA_CustSupp Where CustSuppType=" & CustSuppType.Cliente, Connection)
@@ -232,7 +232,7 @@ Module Fatture
                                                                                 drCli("CustSupp") = .Item("AA").ToString
                                                                                 drCli("CustSuppType") = CustSuppType.Cliente
                                                                                 Dim sRagSoc As String = dvClienOrd(iClienOrdFound).Item("F").ToString
-                                                                                If dvClienOrd(iClienOrdFound).Item("E").ToString = "1" Then sRagSoc = If(String.IsNullOrEmpty(dvClienOrd(iClienOrdFound).Item("G").ToString), sRagSoc, sRagSoc & vbCrLf & dvClienOrd(iClienOrdFound).Item("G").ToString)
+                                                                                If dvClienOrd(iClienOrdFound).Item("E").ToString = "1" Then sRagSoc = If(String.IsNullOrEmpty(dvClienOrd(iClienOrdFound).Item("G").ToString), sRagSoc, sRagSoc & Environment.NewLine & dvClienOrd(iClienOrdFound).Item("G").ToString)
                                                                                 drCli("CompanyName") = sRagSoc '("AB" della fattura)
                                                                                 drCli("Address") = dvClienOrd(iClienOrdFound).Item("I").ToString '("AC" della fattura)
                                                                                 drCli("City") = dvClienOrd(iClienOrdFound).Item("J").ToString '("AE" della fattura)
@@ -245,7 +245,7 @@ Module Fatture
                                                                                 drCli("Telephone1") = dvClienOrd(iClienOrdFound).Item("S").ToString
                                                                                 drCli("Fax") = dvClienOrd(iClienOrdFound).Item("T").ToString
                                                                                 drCli("ISOCountryCode") = Left(dvClienOrd(iClienOrdFound).Item("M").ToString, 2).ToUpper
-                                                                                drCli("CustSuppKind") = TrovaNaturaCliFor(drCli("ISOCountryCode").ToString, dvISO, "Cliente: " & .Item("AA").ToString & " Doc. nr: " & .Item("O").ToString & vbCrLf, warnings)
+                                                                                drCli("CustSuppKind") = TrovaNaturaCliFor(drCli("ISOCountryCode").ToString, dvISO, "Cliente: " & .Item("AA").ToString & " Doc. nr: " & .Item("O").ToString & Environment.NewLine, warnings)
                                                                                 drCli("FiscalCode") = dvClienOrd(iClienOrdFound).Item("O").ToString '("AI" della fattura)
                                                                                 drCli("TaxIdNumber") = dvClienOrd(iClienOrdFound).Item("N").ToString '("AJ" della fattura)
                                                                                 drCli("Currency") = If(.Item("R").ToString = "EUR", "EUR", .Item("O").ToString)
@@ -389,7 +389,7 @@ Module Fatture
                                                                                                 If iClienOrdFound <> -1 Then myLogs = AggiornaAnagraficaSede(drXLS(irxls), dvClienOrd(iClienOrdFound), dvClienti(iCliFound), dvBranch(branchFound), dvCliOpt(iCliOptFound))
                                                                                             End Using
                                                                                         Else
-                                                                                            drSedi = CreaSede(dvSedi, drXLS(irxls), dtSediNew.NewRow, avvisi)
+                                                                                            drSedi = CreaSede(dvSedi, drXLS(irxls), dvClienOrd(iClienOrdFound), dtSediNew.NewRow, avvisi)
                                                                                             drDoc("SendDocumentsTo") = drSedi("Branch")
                                                                                             Dim sNewSede As String = "Cliente " & drSedi("CustSupp") & " , Sede : " & drSedi("Branch") & " , IPA: " & drSedi("IPACode") & " , doc: " & .Item("O").ToString
                                                                                             'Potrebbe schiantarsi quindi preferisco usare un try
@@ -412,7 +412,7 @@ Module Fatture
                                                                                         If Not okSedeFound Then
                                                                                             'Non ho trovato la sede e i dati di testa non corrispondono
                                                                                             'Creo quindi una nuova sede
-                                                                                            drSedi = CreaSede(dvSedi, drXLS(irxls), dtSediNew.NewRow, avvisi)
+                                                                                            drSedi = CreaSede(dvSedi, drXLS(irxls), dvClienOrd(iClienOrdFound), dtSediNew.NewRow, avvisi)
                                                                                             drDoc("SendDocumentsTo") = drSedi("Branch")
                                                                                             Dim sNewSede As String = "Cliente " & drSedi("CustSupp") & " , Sede : " & drSedi("Branch") & " , IPA: " & drSedi("IPACode") & " , doc: " & .Item("O").ToString
                                                                                             'Potrebbe schiantarsi quindi preferisco usare un try
@@ -1175,24 +1175,22 @@ Module Fatture
                 'Scrivi Gli ID ( faccio solo a fine elaborazione)
                 AggiornaID(IdType.DocVend, idDoc, loggingTxt)
                 idAndNumber.AppendLine(loggingTxt)
-                l_ids.Add("I02", loggingTxt)
+                l_Ids.Add("I02", loggingTxt)
                 AggiornaFiscalNumber(annualita, nrRegIva, loggingTxt)
                 idAndNumber.AppendLine(loggingTxt)
-                l_ids.Add("I02", loggingTxt)
+                l_Ids.Add("I02", loggingTxt)
             End If
             'Scrivo i Log
-            My.Application.Log.DefaultFileLogWriter.WriteLine("Documenti importati: Fatture=" & totDoc(0).ToString & " Note di Credito=" & totDoc(1).ToString & vbCrLf)
+            My.Application.Log.DefaultFileLogWriter.WriteLine("Documenti importati: Fatture=" & totDoc(0).ToString & " Note di Credito=" & totDoc(1).ToString & Environment.NewLine)
             FLogin.lstStatoConnessione.Items.Add("Documenti importati: Fatture=" & totDoc(0).ToString & " Note di Credito=" & totDoc(1).ToString)
-            If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Inserimento Dati ---" & vbCrLf & bulkMessage.ToString)
+            If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Inserimento Dati ---" & Environment.NewLine & bulkMessage.ToString)
             If errori.Length > 0 Then
-                My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & vbCrLf & errori.ToString)
+                My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & Environment.NewLine & errori.ToString)
                 FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati errori : Controllare file di Log")
                 Debug.Print(errori.ToString)
             End If
-            If sicuritalia.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Sicuritalia ---" & vbCrLf & sicuritalia.ToString)
+            If sicuritalia.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Sicuritalia ---" & Environment.NewLine & sicuritalia.ToString)
             Debug.Print(sicuritalia.ToString)
-            If warnings.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Warnings ---" & vbCrLf & " - Queste modifiche non vengono salvate - " & warnings.ToString)
-            Debug.Print(warnings.ToString)
             If listOfNewBancheCli.Count > 0 Then
                 My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Nuove Banche Clienti (completare le informazioni su Mago) ---")
                 For l = 0 To listOfNewBancheCli.Count - 1
@@ -1200,7 +1198,14 @@ Module Fatture
                 Next
                 My.Application.Log.DefaultFileLogWriter.Write(vbLf)
             End If
-            If avvisi.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Avvisi ---" & vbCrLf & avvisi.ToString)
+            If warnings.Length > 0 Then
+                My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Warnings ---" & Environment.NewLine)
+                'Riassunto Warning
+                My.Application.Log.DefaultFileLogWriter.WriteLine(RiassuntoWarning(warnings).ToString)
+                My.Application.Log.DefaultFileLogWriter.WriteLine(" - Queste modifiche non vengono salvate - " & Environment.NewLine & warnings.ToString)
+                Debug.Print(warnings.ToString)
+            End If
+            If avvisi.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Avvisi ---" & Environment.NewLine & avvisi.ToString)
             Debug.Print(avvisi.ToString)
             If listOfNewClienti.Count > 0 Then
                 My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Nuovi clienti ---")
@@ -1216,8 +1221,8 @@ Module Fatture
                 Next
                 My.Application.Log.DefaultFileLogWriter.Write(vbLf)
             End If
-            If aggiornamenti.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Aggiornamenti anagrafici (NUOVO VALORE ) [VECCHIO VALORE] ---" & vbCrLf & aggiornamenti.ToString)
-            If idAndNumber.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Id e Numeratori ---" & vbCrLf & idAndNumber.ToString)
+            If aggiornamenti.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Aggiornamenti anagrafici (NUOVO VALORE ) [VECCHIO VALORE] ---" & Environment.NewLine & aggiornamenti.ToString)
+            If idAndNumber.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Id e Numeratori ---" & Environment.NewLine & idAndNumber.ToString)
             Debug.Print(idAndNumber.ToString)
 
             Debug.Print("Gestione MA_SaleDoc" & " " & stopwatch.Elapsed.ToString)
@@ -1247,7 +1252,7 @@ Module Fatture
             Dim ISOFound As Integer = IsoView.Find(ISOCode)
             If ISOFound <> -1 Then
                 'ISO non presente !!
-                logs.Append("Controllare ISO Stato su " & errorMsg)
+                logs.Append("WTN1: Controllare ISO Stato su " & errorMsg)
             Else
                 esito = If(IsoView(ISOFound).Item("EUCountry").ToString = "1", CustSuppKind.CEE, CustSuppKind.ExtraCEE)
             End If
@@ -2083,7 +2088,7 @@ Module Fatture
             If Len(sEmail) > 128 Then log.AppendLine("A06: Email/pec troppo lunga su Sede Cliente: " & origine.Item("AA").ToString)
             destinazione("EMail") = Left(sEmail, 128).ToLower
             'drCustSede("ContactPerson") = drXLS(irxls).Item("C").ToString
-            destinazione("ISOCountryCode") = Left(dvClienOrd(iClienOrdFound).Item("M").ToString, 2).ToUpper
+            destinazione("ISOCountryCode") = Left(clienord.Item("M").ToString, 2).ToUpper
             destinazione("MailSendingType") = 12451840 'Tipo invio mail ( A: 12451841, non inviare: 12451840)
             destinazione("AdministrationReference") = origine.Item("HE").ToString
             destinazione("IPACode") = origine.Item("Z").ToString
@@ -2097,6 +2102,70 @@ Module Fatture
         End Try
 
         Return destinazione
+    End Function
+
+    Private Function RiassuntoWarning(log As StringBuilder) As StringBuilder
+        Dim t As String = log.ToString
+        Dim ac As String = Environment.NewLine
+        Dim ret As New StringBuilder
+
+        For i = 1 To 14
+            Dim nr As Integer
+            Select Case i
+                'TrovaNaturaCliFor
+                Case 1
+                    nr = ContaOccurrenze("WTN1:", t)
+                    If nr > 0 Then ret.Append("WTN1:Controllare ISO Stato: " & nr.ToString & ac)
+                'AggiornaAnagraficaCliente
+                Case 2
+                    nr = ContaOccurrenze("WA1:", t)
+                    If nr > 0 Then ret.Append("WAC:mail: " & nr.ToString & ac)
+                'AggiornaAnagraficaSede
+                Case 3
+                    nr = ContaOccurrenze("WAS1:", t)
+                    If nr > 0 Then ret.Append("WAS1:Codice Fiscale: " & nr.ToString & ac)
+                Case 4
+                    nr = ContaOccurrenze("WAS2:", t)
+                    If nr > 0 Then ret.Append("WAS2:Partita IVA inizia con 8 o 9: " & nr.ToString & ac)
+                Case 5
+                    nr = ContaOccurrenze("WAS3:", t)
+                    If nr > 0 Then ret.Append("WAS3:Partita IVA : " & nr.ToString & ac)
+                Case 6
+                    nr = ContaOccurrenze("WAS4:", t)
+                    If nr > 0 Then ret.Append("WAS4:Partita IVA inizia con 8 o 9: " & nr.ToString & ac)
+                'AggiornaAnagraficadaClienOrd
+                Case 7
+                    nr = ContaOccurrenze("WAC1:", t)
+                    If nr > 0 Then ret.Append("WAC1:Flag Persona Fisica non impostato: " & nr.ToString)
+                Case 8
+                    nr = ContaOccurrenze("WAC2:", t)
+                    If nr > 0 Then ret.Append("WAC2:Flag Persona Fisica impostato erroneamente: " & nr.ToString & ac)
+                Case 9
+                    nr = ContaOccurrenze("WAC3:", t)
+                    If nr > 0 Then ret.Append("WAC3:CONTROLLARE ISO Stato: " & nr.ToString & ac)
+                Case 10
+                    nr = ContaOccurrenze("WAC4:", t)
+                    If nr > 0 Then ret.Append("WAC4:Codice Fiscale: " & nr.ToString & ac)
+                Case 11
+                    nr = ContaOccurrenze("WAC5:", t)
+                    If nr > 0 Then ret.Append("WAC5:Partita IVA inizia con 8 o 9: " & nr.ToString & ac)
+                Case 12
+                    nr = ContaOccurrenze("WAC6:", t)
+                    If nr > 0 Then ret.Append("WAC6:Partita IVA: " & nr.ToString & ac)
+                Case 13
+                    nr = ContaOccurrenze("WAC7:", t)
+                    If nr > 0 Then ret.Append("WAC7:Partita IVA inizia con 8 o 9: " & nr.ToString & ac)
+                Case 14
+                    nr = ContaOccurrenze("WAC8:", t)
+                    If nr > 0 Then ret.Append("WAC8:Codice IPA Pubblica Amministrazione con lunghezza diversa da 6: " & nr.ToString & ac)
+                Case Else
+
+            End Select
+        Next
+        Return ret
+    End Function
+    Private Function ContaOccurrenze(cosa As String, dove As String) As Integer
+        Return (dove.Length - dove.Replace(cosa, "").Length) / cosa.Length
     End Function
 
     ''' <summary>
@@ -2143,7 +2212,7 @@ Module Fatture
                 If anagBranch.Item("CompanyName").ToString <> .Item("AB").ToString Then
                     'Potrebbe essere uguale ma avere degli a capo o invii
                     Dim sRagSoc As String = clienord.Item("F").ToString
-                    sRagSoc = If(String.IsNullOrEmpty(clienord.Item("G").ToString), sRagSoc, sRagSoc & vbCrLf & clienord.Item("G").ToString)
+                    sRagSoc = If(String.IsNullOrEmpty(clienord.Item("G").ToString), sRagSoc, sRagSoc & Environment.NewLine & clienord.Item("G").ToString)
                     If anagBranch.Item("CompanyName").ToString <> sRagSoc Then
                         avvisi.AppendLine("Ragione sociale : (" & sRagSoc & ") [" & anagBranch.Item("CompanyName") & "]")
                         anagBranch.Item("CompanyName") = sRagSoc
@@ -2175,23 +2244,23 @@ Module Fatture
                         avvisi.AppendLine("Codice Fiscale : (" & clienord.Item("O").ToString & ") [" & anagBranch.Item("FiscalCode") & "]")
                         anagBranch.Item("FiscalCode") = clienord.Item("O").ToString
                     Else
-                        warnings.AppendLine("Codice Fiscale : (" & clienord.Item("O").ToString & ") [" & anagBranch.Item("FiscalCode") & "]")
+                        warnings.AppendLine("WAS1: Codice Fiscale : (" & clienord.Item("O").ToString & ") [" & anagBranch.Item("FiscalCode") & "]")
                     End If
                 End If
                 'Sui clienti con p.Iva che inizia per 8 o 9  hanno solo CF quindi va tolta
                 If anagBranch.Item("TaxIdNumber").ToString <> clienord.Item("N").ToString AndAlso Not String.IsNullOrWhiteSpace(clienord.Item("N").ToString) Then
                     If Left(clienord.Item("N").ToString, 1) = "8" OrElse Left(clienord.Item("N").ToString, 1) = "9" Then
                         If Not String.IsNullOrWhiteSpace(anagBranch.Item("TaxIdNumber").ToString) Then
-                            warnings.AppendLine("Partita IVA inizia con 8 o 9: (Cancellata) [" & anagBranch.Item("TaxIdNumber") & "]")
+                            warnings.AppendLine("WAS2: Partita IVA inizia con 8 o 9: (Cancellata) [" & anagBranch.Item("TaxIdNumber") & "]")
                             If UpdatePIvaCodFisc Then anagBranch.Item("TaxIdNumber") = ""
                         End If
                     Else
-                        warnings.AppendLine("Partita IVA : (" & clienord.Item("N").ToString & ") [" & anagBranch.Item("TaxIdNumber") & "]")
+                        warnings.AppendLine("WAS3: Partita IVA : (" & clienord.Item("N").ToString & ") [" & anagBranch.Item("TaxIdNumber") & "]")
                         If UpdatePIvaCodFisc Then anagBranch.Item("TaxIdNumber") = clienord.Item("N").ToString
                     End If
                 End If
                 If Not String.IsNullOrWhiteSpace(anagBranch.Item("TaxIdNumber").ToString) AndAlso (Left(clienord.Item("N").ToString, 1) = "8" OrElse Left(clienord.Item("N").ToString, 1) = "9") Then
-                    warnings.AppendLine("Partita IVA inizia con 8 o 9: (Cancellata) [" & anagBranch.Item("TaxIdNumber") & "]")
+                    warnings.AppendLine("WAS4: Partita IVA inizia con 8 o 9: (Cancellata) [" & anagBranch.Item("TaxIdNumber") & "]")
                     If UpdatePIvaCodFisc Then anagBranch.Item("TaxIdNumber") = ""
                 End If
 
@@ -2272,8 +2341,8 @@ Module Fatture
                     End If
                     opt.EndEdit()
                 End If
-                If avvisi.Length > 0 Then mlog.Avvisi.Append("Cliente: " & .Item("AA").ToString & " Sede: " & anagBranch.Item("Branch") & " Doc. nr: " & .Item("O").ToString & vbCrLf & avvisi.ToString())
-                If warnings.Length > 0 Then mlog.Warning.Append("Cliente: " & .Item("AA").ToString & " Sede: " & anagBranch.Item("Branch") & " Doc. nr: " & .Item("O").ToString & vbCrLf & warnings.ToString())
+                If avvisi.Length > 0 Then mlog.Avvisi.Append("Cliente: " & .Item("AA").ToString & " Sede: " & anagBranch.Item("Branch") & " Doc. nr: " & .Item("O").ToString & Environment.NewLine & avvisi.ToString())
+                If warnings.Length > 0 Then mlog.Warning.Append("Cliente: " & .Item("AA").ToString & " Sede: " & anagBranch.Item("Branch") & " Doc. nr: " & .Item("O").ToString & Environment.NewLine & warnings.ToString())
             End With
         Catch ex As Exception
             Debug.Print(ex.Message)
@@ -2323,7 +2392,7 @@ Module Fatture
                             avvisi.AppendLine("mail : (" & Trim(Left(sEmail, 128).ToLower) & ") [" & anag.Item("EMail") & "]")
                             anag.Item("EMail") = Trim(Left(sEmail, 128).ToLower)
                         Else
-                            warnings.AppendLine("mail : (" & Trim(Left(sEmail, 128).ToLower) & ") [" & anag.Item("EMail") & "]")
+                            warnings.AppendLine("WA1: mail : (" & Trim(Left(sEmail, 128).ToLower) & ") [" & anag.Item("EMail") & "]")
                         End If
                     End If
                 End If
@@ -2379,8 +2448,8 @@ Module Fatture
                     End If
                     opt.EndEdit()
                 End If
-                If avvisi.Length > 0 Then mlog.Avvisi.Append("Cliente: " & .Item("AA").ToString & " Doc. nr: " & .Item("O").ToString & vbCrLf & avvisi.ToString())
-                If warnings.Length > 0 Then mlog.Warning.Append("Cliente: " & .Item("AA").ToString & " Doc. nr: " & .Item("O").ToString & vbCrLf & warnings.ToString())
+                If avvisi.Length > 0 Then mlog.Avvisi.Append("Cliente: " & .Item("AA").ToString & " Doc. nr: " & .Item("O").ToString & Environment.NewLine & avvisi.ToString())
+                If warnings.Length > 0 Then mlog.Warning.Append("Cliente: " & .Item("AA").ToString & " Doc. nr: " & .Item("O").ToString & Environment.NewLine & warnings.ToString())
             End With
         Catch ex As Exception
             Debug.Print(ex.Message)
@@ -2409,15 +2478,15 @@ Module Fatture
                 'Controllo tramite RegEx
                 Dim sRagSoc As String = .Item("F").ToString
                 'Solo per le aziende [colonna E = 1] controllo il secondo campo ragione sociale
-                If .Item("E").ToString = "1" Then sRagSoc = If(String.IsNullOrEmpty(.Item("G").ToString), sRagSoc, sRagSoc & vbCrLf & .Item("G").ToString)
+                If .Item("E").ToString = "1" Then sRagSoc = If(String.IsNullOrEmpty(.Item("G").ToString), sRagSoc, sRagSoc & Environment.NewLine & .Item("G").ToString)
                 If Not String.Equals(Regex.Replace(anag.Item("CompanyName").ToString, "\s", ""), Regex.Replace(sRagSoc, "\s", ""), StringComparison.OrdinalIgnoreCase) Then
                     avvisi.AppendLine("Ragione sociale : (" & sRagSoc & ") [" & anag.Item("CompanyName") & "]")
                     anag.Item("CompanyName") = sRagSoc
                 End If
                 'TODO: cond pag, iva
                 'Su clienord colonna E = 1 = azienda , = 2 persona fisica
-                If .Item("E").ToString = "2" AndAlso anag.Item("NaturalPerson").ToString = "0" Then warnings.AppendLine("Flag Persona Fisica non impostato")
-                If .Item("E").ToString = "1" AndAlso anag.Item("NaturalPerson").ToString = "1" Then warnings.AppendLine("Flag Persona Fisica impostato erroneamente")
+                If .Item("E").ToString = "2" AndAlso anag.Item("NaturalPerson").ToString = "0" Then warnings.AppendLine("WAC1: Flag Persona Fisica non impostato")
+                If .Item("E").ToString = "1" AndAlso anag.Item("NaturalPerson").ToString = "1" Then warnings.AppendLine("WAC2: Flag Persona Fisica impostato erroneamente")
 
                 'If anag.Item("NaturalPerson").ToString <> sNatP Then
                 '    avvisi.AppendLine("Persona Fisica : (" & sNatP & ") [" & anag.Item("NaturalPerson") & "]")
@@ -2451,26 +2520,26 @@ Module Fatture
                     avvisi.AppendLine("ISO Stato: (" & iso & ") [" & anag.Item("ISOCountryCode") & "]")
                     anag.Item("ISOCountryCode") = iso
                 ElseIf iso <> "IT" Then
-                    warnings.AppendLine("CONTROLLARE ISO Stato ")
+                    warnings.AppendLine("WAC3: CONTROLLARE ISO Stato ")
                 End If
                 If anag.Item("FiscalCode").ToString <> .Item("O").ToString AndAlso Not String.IsNullOrWhiteSpace(.Item("O").ToString) Then
-                    warnings.AppendLine("Codice Fiscale : (" & .Item("O").ToString & ") [" & anag.Item("FiscalCode") & "]")
+                    warnings.AppendLine("WAC4: Codice Fiscale : (" & .Item("O").ToString & ") [" & anag.Item("FiscalCode") & "]")
                     If UpdatePIvaCodFisc Then anag.Item("FiscalCode") = .Item("O").ToString
                 End If
                 'Sui clienti con p.Iva che inizia per 8 o 9  hanno solo CF quindi va tolta
                 If anag.Item("TaxIdNumber").ToString <> .Item("N").ToString AndAlso Not String.IsNullOrWhiteSpace(.Item("N").ToString) Then
                     If Left(.Item("N").ToString, 1) = "8" OrElse Left(.Item("N").ToString, 1) = "9" Then
                         If Not String.IsNullOrWhiteSpace(anag.Item("TaxIdNumber").ToString) Then
-                            warnings.AppendLine("Partita IVA inizia con 8 o 9: (Cancellata) [" & anag.Item("TaxIdNumber") & "]")
+                            warnings.AppendLine("WAC5: Partita IVA inizia con 8 o 9: (Cancellata) [" & anag.Item("TaxIdNumber") & "]")
                             If UpdatePIvaCodFisc Then anag.Item("TaxIdNumber") = ""
                         End If
                     Else
-                        warnings.AppendLine("Partita IVA : (" & .Item("N").ToString & ") [" & anag.Item("TaxIdNumber") & "]")
+                        warnings.AppendLine("WAC6: Partita IVA : (" & .Item("N").ToString & ") [" & anag.Item("TaxIdNumber") & "]")
                         If UpdatePIvaCodFisc Then anag.Item("TaxIdNumber") = .Item("N").ToString
                     End If
                 End If
                 If Not String.IsNullOrWhiteSpace(anag.Item("TaxIdNumber").ToString) AndAlso (Left(.Item("N").ToString, 1) = "8" OrElse Left(.Item("N").ToString, 1) = "9") Then
-                    warnings.AppendLine("Partita IVA inizia con 8 o 9: (Cancellata) [" & anag.Item("TaxIdNumber") & "]")
+                    warnings.AppendLine("WAC7: Partita IVA inizia con 8 o 9: (Cancellata) [" & anag.Item("TaxIdNumber") & "]")
                     If UpdatePIvaCodFisc Then anag.Item("TaxIdNumber") = ""
                 End If
                 If anag.Item("Telephone1").ToString <> .Item("S").ToString AndAlso Not String.IsNullOrWhiteSpace(.Item("S").ToString) Then
@@ -2496,7 +2565,7 @@ Module Fatture
                     avvisi.AppendLine("Pubblica Amministrazione : (1) [" & o.Item("PublicAuthority") & "]")
                     o.Item("PublicAuthority") = "1"
                     o.EndEdit()
-                    If anag.Item("IPACode").ToString.Length <> 6 Then warnings.AppendLine("Codice IPA Pubblica Amministrazione con lunghezza diversa da 6: [" & anag.Item("IPACode").ToString & "]")
+                    If anag.Item("IPACode").ToString.Length <> 6 Then warnings.AppendLine("WAC8: Codice IPA Pubblica Amministrazione con lunghezza diversa da 6: [" & anag.Item("IPACode").ToString & "]")
                     If o.Item("PASplitPayment").ToString <> "1" Then
                         o.BeginEdit()
                         avvisi.AppendLine("Split Payment : (1) [" & o.Item("PASplitPayment") & "]")
@@ -2531,8 +2600,8 @@ Module Fatture
                     End If
                 End If
 
-                If avvisi.Length > 0 Then mlog.Avvisi.Append("Cliente: " & origine.Item("AA").ToString & " Doc. nr: " & origine.Item("O").ToString & vbCrLf & avvisi.ToString())
-                If warnings.Length > 0 Then mlog.Warning.Append("Cliente: " & origine.Item("AA").ToString & " Doc. nr: " & origine.Item("O").ToString & vbCrLf & warnings.ToString())
+                If avvisi.Length > 0 Then mlog.Avvisi.Append("Cliente: " & origine.Item("AA").ToString & " Doc. nr: " & origine.Item("O").ToString & Environment.NewLine & avvisi.ToString())
+                If warnings.Length > 0 Then mlog.Warning.Append("Cliente: " & origine.Item("AA").ToString & " Doc. nr: " & origine.Item("O").ToString & Environment.NewLine & warnings.ToString())
 
             End With
 
@@ -2841,8 +2910,8 @@ Module MovimentiAnaliticiDaFatture
 
                                                                 End If
 
-                                                                If bIsAnnoPrecedente AndAlso annidiversiP.Length > 0 Then errorAnniDiversi.AppendLine("Doc: " & currentDocNo & vbCrLf & annidiversiP.ToString)
-                                                                If bIsAnnoSuccessivo AndAlso annidiversiS.Length > 0 Then warningAnniDiversi.AppendLine("Doc: " & currentDocNo & vbCrLf & annidiversiS.ToString)
+                                                                If bIsAnnoPrecedente AndAlso annidiversiP.Length > 0 Then errorAnniDiversi.AppendLine("Doc: " & currentDocNo & Environment.NewLine & annidiversiP.ToString)
+                                                                If bIsAnnoSuccessivo AndAlso annidiversiS.Length > 0 Then warningAnniDiversi.AppendLine("Doc: " & currentDocNo & Environment.NewLine & annidiversiS.ToString)
                                                                 Debug.Print("Doc: " & .Item("DocNo"))
                                                                 currentSaleDocId = .Item("SaleDocId")
                                                                 currentDocNo = .Item("DocNo").ToString
@@ -3178,8 +3247,8 @@ Module MovimentiAnaliticiDaFatture
                                                         End If
 
                                                     End If
-                                                    If bIsAnnoPrecedente AndAlso annidiversiP.Length > 0 Then errorAnniDiversi.AppendLine("Doc: " & currentDocNo & vbCrLf & annidiversiP.ToString)
-                                                    If bIsAnnoSuccessivo AndAlso annidiversiS.Length > 0 Then warningAnniDiversi.AppendLine("Doc: " & currentDocNo & vbCrLf & annidiversiS.ToString)
+                                                    If bIsAnnoPrecedente AndAlso annidiversiP.Length > 0 Then errorAnniDiversi.AppendLine("Doc: " & currentDocNo & Environment.NewLine & annidiversiP.ToString)
+                                                    If bIsAnnoSuccessivo AndAlso annidiversiS.Length > 0 Then warningAnniDiversi.AppendLine("Doc: " & currentDocNo & Environment.NewLine & annidiversiS.ToString)
 
                                                     Using cmdqry = New SqlCommand("DBCC TRACEON(610)", Connection)
                                                         cmdqry.ExecuteNonQuery()
@@ -3240,10 +3309,10 @@ Module MovimentiAnaliticiDaFatture
             AggiornaNonFiscalNumber(CodeType.MovAna, Annualita, iRefNo)
         End If
         'Scrivo i LOG
-        If errori.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & vbCrLf & errori.ToString)
-        If errorAnniDiversi.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Riparti di competenze analitiche su anni precedenti NON creati! ---" & vbCrLf & errorAnniDiversi.ToString)
-        If warningAnniDiversi.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Riparti di competenze analitiche su anni successivi creati! ---" & vbCrLf & warningAnniDiversi.ToString)
-        If IsDebugging AndAlso debugging.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Debugging ---" & vbCrLf & debugging.ToString)
+        If errori.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & Environment.NewLine & errori.ToString)
+        If errorAnniDiversi.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Riparti di competenze analitiche su anni precedenti NON creati! ---" & Environment.NewLine & errorAnniDiversi.ToString)
+        If warningAnniDiversi.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Riparti di competenze analitiche su anni successivi creati! ---" & Environment.NewLine & warningAnniDiversi.ToString)
+        If IsDebugging AndAlso debugging.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Debugging ---" & Environment.NewLine & debugging.ToString)
 
         Return Not someTrouble
 
@@ -3415,7 +3484,7 @@ Module SEPA
             End Try
 
             'Scrivo i LOG
-            'If errori.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & vbCrLf & errori.ToString)
+            'If errori.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & Environment.NewLine & errori.ToString)
             Debug.Print("Aggiornamento sepa" & " " & stopwatch.Elapsed.ToString)
 
         End If
@@ -3540,8 +3609,8 @@ Module SEPA
             End Try
 
             'Scrivo i LOG
-            If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Inserimento Dati ---" & vbCrLf & bulkMessage.ToString)
-            If errori.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & vbCrLf & errori.ToString)
+            If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Inserimento Dati ---" & Environment.NewLine & bulkMessage.ToString)
+            If errori.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & Environment.NewLine & errori.ToString)
             Debug.Print("Aggiornamento sepa" & " " & stopwatch.Elapsed.ToString)
 
         End If
