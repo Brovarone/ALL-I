@@ -153,6 +153,12 @@ Module Fatture
                                             Dim dtTax As New DataTable("CodIva")
                                             da.Fill(dtTax)
                                             Dim dvTax As New DataView(dtTax, "", "ACGCode", DataViewRowState.CurrentRows)
+                                            'per gli ISO Stati 
+                                            cmd = New SqlCommand("Select ISOCountryCode, EUCountry FROM MA_ISOCountryCodes", Connection)
+                                            da.SelectCommand = cmd
+                                            Dim dtISO As New DataTable("ISO")
+                                            da.Fill(dtISO)
+                                            Dim dvISO As New DataView(dtCP, "", "ISOCountryCode", DataViewRowState.CurrentRows)
                                             'per l'anagrafica Cliente 
                                             Dim dvClienOrd As New DataView(dts.Tables("CLIENORD"), "", "AF", DataViewRowState.CurrentRows)
                                             Using adpCF As New SqlDataAdapter("Select * FROM MA_CustSupp Where CustSuppType=" & CustSuppType.Cliente, Connection)
@@ -239,6 +245,7 @@ Module Fatture
                                                                                 drCli("Telephone1") = dvClienOrd(iClienOrdFound).Item("S").ToString
                                                                                 drCli("Fax") = dvClienOrd(iClienOrdFound).Item("T").ToString
                                                                                 drCli("ISOCountryCode") = Left(dvClienOrd(iClienOrdFound).Item("M").ToString, 2).ToUpper
+                                                                                drCli("CustSuppKind") = TrovaNaturaCliFor(drCli("ISOCountryCode").ToString, dvISO, "Cliente: " & .Item("AA").ToString & " Doc. nr: " & .Item("O").ToString & vbCrLf, warnings)
                                                                                 drCli("FiscalCode") = dvClienOrd(iClienOrdFound).Item("O").ToString '("AI" della fattura)
                                                                                 drCli("TaxIdNumber") = dvClienOrd(iClienOrdFound).Item("N").ToString '("AJ" della fattura)
                                                                                 drCli("Currency") = If(.Item("R").ToString = "EUR", "EUR", .Item("O").ToString)
@@ -1225,7 +1232,28 @@ Module Fatture
         Return Not someTrouble
 
     End Function
+    ''' <summary>
+    ''' Passando il codice ISO restituisce l'enumerativo corretto
+    ''' </summary>
+    ''' <param name="ISOCode"></param>
+    ''' <param name="IsoView"></param>
+    ''' ''' <returns></returns>
+    Private Function TrovaNaturaCliFor(ISOCode As String, IsoView As DataView, errorMsg As String, ByRef logs As StringBuilder) As Integer
+        Dim esito As Integer
 
+        If ISOCode = "IT" Then
+            esito = CustSuppKind.Nazionale
+        Else
+            Dim ISOFound As Integer = IsoView.Find(ISOCode)
+            If ISOFound <> -1 Then
+                'ISO non presente !!
+                logs.Append("Controllare ISO Stato su " & errorMsg)
+            Else
+                esito = If(IsoView(ISOFound).Item("EUCountry").ToString = "1", CustSuppKind.CEE, CustSuppKind.ExtraCEE)
+            End If
+        End If
+        Return esito
+    End Function
     Private Function TrovaFiliale(ByVal codice As String, ByVal isArea As Boolean) As String
         Dim esito As String
         Dim s As String = Left(codice, 1).ToUpper
@@ -2025,7 +2053,7 @@ Module Fatture
             End If
         End If
     End Sub
-    Private Function CreaSede(vistaSedi As DataView, origine As DataRow, destinazione As DataRow, ByRef log As StringBuilder) As DataRow
+    Private Function CreaSede(vistaSedi As DataView, origine As DataRow, clienord As DataRowView, destinazione As DataRow, ByRef log As StringBuilder) As DataRow
 
         vistaSedi.RowFilter = "CustSupp='" & origine.Item("AA").ToString & "' AND CustSuppType=" & CustSuppType.Cliente
         'Cerco tra le sedi esistenti in modo da non duplicare il numero del codice/contatore
@@ -2055,7 +2083,7 @@ Module Fatture
             If Len(sEmail) > 128 Then log.AppendLine("A06: Email/pec troppo lunga su Sede Cliente: " & origine.Item("AA").ToString)
             destinazione("EMail") = Left(sEmail, 128).ToLower
             'drCustSede("ContactPerson") = drXLS(irxls).Item("C").ToString
-            destinazione("ISOCountryCode") = "IT"
+            destinazione("ISOCountryCode") = Left(dvClienOrd(iClienOrdFound).Item("M").ToString, 2).ToUpper
             destinazione("MailSendingType") = 12451840 'Tipo invio mail ( A: 12451841, non inviare: 12451840)
             destinazione("AdministrationReference") = origine.Item("HE").ToString
             destinazione("IPACode") = origine.Item("Z").ToString

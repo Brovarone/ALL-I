@@ -364,6 +364,12 @@ Module MagoNet
         Public Shared FornitoreIgnora As Integer = 6094849
         Public Shared IgnoraIgnora As Integer = 6094850
     End Structure
+    Friend Enum CustSuppKind As Integer
+        'Natura cliente/fornitore , 118
+        Nazionale = 7733248
+        CEE = 7733249
+        ExtraCEE = 7733250
+    End Enum
     Friend Enum DocumentType As Integer
         'Tipo documento , 52
         Fattura = 3407874
