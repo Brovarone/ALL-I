@@ -460,19 +460,21 @@ Module Fatture
                                                                             'Scrivo la testa della Fattura
                                                                             ''''''''''''''''''''''
                                                                             'TP01H Colonna M = fattura o nota di credito
+                                                                            Dim isNazionale As Boolean = If(iCliFound <> -1, dvClienti(iCliFound)("CustSuppKind"), drCli("CustSuppKind")) = CustSuppKind.Nazionale
                                                                             'Per il Modello contabile uso quelle standard di mago
                                                                             Select Case .Item("U").ToString.ToUpper
+
                                                                                 Case "A"
                                                                                     drDoc("DocumentType") = DocumentType.FatturaAccompagnatoria
-                                                                                    drDoc("AccTpl") = If(dvClienti(iCliFound)("CustSuppKind") = CustSuppKind.Nazionale, dtDefVendite.Rows(0).Item("AccompanyingInvoiceAccTpl"), dtDefVendite.Rows(0).Item("EUInvoiceAccTpl"))
+                                                                                    drDoc("AccTpl") = If(isNazionale, dtDefVendite.Rows(0).Item("AccompanyingInvoiceAccTpl"), dtDefVendite.Rows(0).Item("EUInvoiceAccTpl"))
                                                                                     totDoc(0) += 1 ' Fatture
                                                                                 Case "F"
                                                                                     drDoc("DocumentType") = DocumentType.Fattura
-                                                                                    drDoc("AccTpl") = If(dvClienti(iCliFound)("CustSuppKind") = CustSuppKind.Nazionale, dtDefVendite.Rows(0).Item("InvoiceAccTpl"), dtDefVendite.Rows(0).Item("EUInvoiceAccTpl"))
+                                                                                    drDoc("AccTpl") = If(isNazionale, dtDefVendite.Rows(0).Item("InvoiceAccTpl"), dtDefVendite.Rows(0).Item("EUInvoiceAccTpl"))
                                                                                     totDoc(0) += 1 ' Fatture
                                                                                 Case "N"
                                                                                     drDoc("DocumentType") = DocumentType.NotaCredito
-                                                                                    drDoc("AccTpl") = If(dvClienti(iCliFound)("CustSuppKind") = CustSuppKind.Nazionale, dtDefVendite.Rows(0).Item("CreditNoteAccTpl"), dtDefVendite.Rows(0).Item("EUCreditNoteAccTpl"))
+                                                                                    drDoc("AccTpl") = If(isNazionale, dtDefVendite.Rows(0).Item("CreditNoteAccTpl"), dtDefVendite.Rows(0).Item("EUCreditNoteAccTpl"))
                                                                                     totDoc(1) += 1 ' Note di Credito
                                                                                     'Controllo su DDT collegate
                                                                                     If .Item("FH").ToString = "1000" Then avvisi.AppendLine("A12: doc: " & .Item("O").ToString() & " presenti ddt collegate")
@@ -1172,6 +1174,8 @@ Module Fatture
                     End Using
                 End Using
             Catch ex As Exception
+                My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & "OPERAZIONE INTERROTTA: " & GetCurrentMethod.Name)
+                My.Application.Log.DefaultFileLogWriter.WriteLine(ex.Message & Environment.NewLine)
                 Debug.Print(ex.Message)
                 Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
@@ -1185,10 +1189,11 @@ Module Fatture
                 AggiornaFiscalNumber(annualita, nrRegIva, loggingTxt)
                 idAndNumber.AppendLine(loggingTxt)
                 l_Ids.Add("I02", loggingTxt)
+                'Confermo scrittura
+                My.Application.Log.DefaultFileLogWriter.WriteLine("Documenti importati: Fatture=" & totDoc(0).ToString & " Note di Credito=" & totDoc(1).ToString & Environment.NewLine)
+                FLogin.lstStatoConnessione.Items.Add("Documenti importati: Fatture=" & totDoc(0).ToString & " Note di Credito=" & totDoc(1).ToString)
             End If
             'Scrivo i Log
-            My.Application.Log.DefaultFileLogWriter.WriteLine("Documenti importati: Fatture=" & totDoc(0).ToString & " Note di Credito=" & totDoc(1).ToString & Environment.NewLine)
-            FLogin.lstStatoConnessione.Items.Add("Documenti importati: Fatture=" & totDoc(0).ToString & " Note di Credito=" & totDoc(1).ToString)
             If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Inserimento Dati ---" & Environment.NewLine & bulkMessage.ToString)
             If errori.Length > 0 Then
                 My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & Environment.NewLine & errori.ToString)
