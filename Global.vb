@@ -373,7 +373,7 @@ Module MagoNet
     Friend Enum DocumentType As Integer
         'Tipo documento , 52
         Fattura = 3407874
-        FatturaAcc = 3407875
+        FatturaAccompagnatoria = 3407875
         NotaCredito = 3407876
     End Enum
     Friend Enum CrossReference As Integer

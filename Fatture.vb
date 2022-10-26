@@ -153,6 +153,11 @@ Module Fatture
                                             Dim dtTax As New DataTable("CodIva")
                                             da.Fill(dtTax)
                                             Dim dvTax As New DataView(dtTax, "", "ACGCode", DataViewRowState.CurrentRows)
+                                            'per i Default Vendite
+                                            cmd = New SqlCommand("Select InvoiceAccTpl, AccompanyingInvoiceAccTpl, EUInvoiceAccTpl, CreditNoteAccTpl, EUCreditNoteAccTpl FROM MA_UserDefaultSales WHERE Branch = '*' AND WorkerID = 0", Connection)
+                                            da.SelectCommand = cmd
+                                            Dim dtDefVendite As New DataTable("DefVendite")
+                                            da.Fill(dtDefVendite)
                                             'per gli ISO Stati 
                                             cmd = New SqlCommand("Select ISOCountryCode, EUCountry FROM MA_ISOCountryCodes", Connection)
                                             da.SelectCommand = cmd
@@ -458,16 +463,16 @@ Module Fatture
                                                                             'Per il Modello contabile uso quelle standard di mago
                                                                             Select Case .Item("U").ToString.ToUpper
                                                                                 Case "A"
-                                                                                    drDoc("DocumentType") = DocumentType.FatturaAcc
-                                                                                    drDoc("AccTpl") = "FE"
+                                                                                    drDoc("DocumentType") = DocumentType.FatturaAccompagnatoria
+                                                                                    drDoc("AccTpl") = If(dvClienti(iCliFound)("CustSuppKind") = CustSuppKind.Nazionale, dtDefVendite.Rows(0).Item("AccompanyingInvoiceAccTpl"), dtDefVendite.Rows(0).Item("EUInvoiceAccTpl"))
                                                                                     totDoc(0) += 1 ' Fatture
                                                                                 Case "F"
                                                                                     drDoc("DocumentType") = DocumentType.Fattura
-                                                                                    drDoc("AccTpl") = "FE"
+                                                                                    drDoc("AccTpl") = If(dvClienti(iCliFound)("CustSuppKind") = CustSuppKind.Nazionale, dtDefVendite.Rows(0).Item("InvoiceAccTpl"), dtDefVendite.Rows(0).Item("EUInvoiceAccTpl"))
                                                                                     totDoc(0) += 1 ' Fatture
                                                                                 Case "N"
                                                                                     drDoc("DocumentType") = DocumentType.NotaCredito
-                                                                                    drDoc("AccTpl") = "NE"
+                                                                                    drDoc("AccTpl") = If(dvClienti(iCliFound)("CustSuppKind") = CustSuppKind.Nazionale, dtDefVendite.Rows(0).Item("CreditNoteAccTpl"), dtDefVendite.Rows(0).Item("EUCreditNoteAccTpl"))
                                                                                     totDoc(1) += 1 ' Note di Credito
                                                                                     'Controllo su DDT collegate
                                                                                     If .Item("FH").ToString = "1000" Then avvisi.AppendLine("A12: doc: " & .Item("O").ToString() & " presenti ddt collegate")
@@ -478,6 +483,7 @@ Module Fatture
                                                                                     errori.AppendLine("E18: Tipo documento sconosciuto inserito come fattura: " & .Item("O").ToString)
                                                                                     l_Err.Add("E18", "Tipo documento sconosciuto inserito come fattura: " & .Item("O").ToString)
                                                                             End Select
+                                                                            If String.IsNullOrWhiteSpace(drDoc("AccTpl")) Then errori.AppendLine("E22: Modello contabile di Default non trovato per " & .Item("O").ToString)
                                                                             drDoc("DocNo") = .Item("O").ToString()
                                                                             drDoc("DocumentDate") = MagoFormatta(.Item("Q").ToString, GetType(DateTime)).DataTempo
                                                                             drDoc("TaxJournal") = .Item("N").ToString
@@ -722,7 +728,7 @@ Module Fatture
                                                                             drDocDet("DepartureDate") = MagoFormatta(.Item("Q").ToString, GetType(DateTime)).DataTempo
                                                                             Select Case .Item("U").ToString.ToUpper
                                                                                 Case "A"
-                                                                                    drDocDet("ReferenceDocType") = DocumentType.FatturaAcc
+                                                                                    drDocDet("ReferenceDocType") = DocumentType.FatturaAccompagnatoria
                                                                                 Case "N"
                                                                                     drDocDet("ReferenceDocType") = DocumentType.NotaCredito
                                                                                 Case Else '"F"
@@ -911,17 +917,17 @@ Module Fatture
                                                                             If isNewCliente Then
                                                                                 If Not String.IsNullOrWhiteSpace(.Item("FI").ToString) Then
                                                                                     Dim iCP As Integer = dvCP.Find(.Item("FI").ToString)
+#Disable Warning BC42104 ' La variabile è stata usata prima dell'assegnazione di un valore
                                                                                     If iCP <> -1 Then
-#Disable Warning BC42104 ' Variable is used before it has been assigned a value
                                                                                         drCli("Payment") = dvCP.Item(iCP).Item("Payment").ToString
-#Enable Warning BC42104 ' Variable is used before it has been assigned a value
                                                                                     Else
                                                                                         drCli("Payment") = .Item("FI").ToString
                                                                                     End If
                                                                                 End If
-#Disable Warning BC42104 ' Variable is used before it has been assigned a value
+
                                                                                 If .Item("DU").ToString = ACGIVASplit Then drCliOpt("PASplitPayment") = "1"
-#Enable Warning BC42104 ' Variable is used before it has been assigned a value
+#Enable Warning BC42104 ' La variabile è stata usata prima dell'assegnazione di un valore
+
                                                                                 If Not String.IsNullOrWhiteSpace(drDoc("CompanyBank")) Then drCli("CompanyBank") = drDoc("CompanyBank")
                                                                                 If Not String.IsNullOrWhiteSpace(drDoc("CompanyPymtCA")) Then drCli("CustomerCompanyCA") = drDoc("CompanyPymtCA")
                                                                                 If Not String.IsNullOrWhiteSpace(drDoc("CustomerBank")) Then drCli("CustSuppBank") = drDoc("CustomerBank")
@@ -2119,7 +2125,7 @@ Module Fatture
                 'AggiornaAnagraficaCliente
                 Case 2
                     nr = ContaOccurrenze("WA1:", t)
-                    If nr > 0 Then ret.Append("WAC:mail: " & nr.ToString & ac)
+                    If nr > 0 Then ret.Append("WA1:mail: " & nr.ToString & ac)
                 'AggiornaAnagraficaSede
                 Case 3
                     nr = ContaOccurrenze("WAS1:", t)
@@ -2129,7 +2135,7 @@ Module Fatture
                     If nr > 0 Then ret.Append("WAS2:Partita IVA inizia con 8 o 9: " & nr.ToString & ac)
                 Case 5
                     nr = ContaOccurrenze("WAS3:", t)
-                    If nr > 0 Then ret.Append("WAS3:Partita IVA : " & nr.ToString & ac)
+                    If nr > 0 Then ret.Append("WAS3:Partita IVA: " & nr.ToString & ac)
                 Case 6
                     nr = ContaOccurrenze("WAS4:", t)
                     If nr > 0 Then ret.Append("WAS4:Partita IVA inizia con 8 o 9: " & nr.ToString & ac)
@@ -2677,7 +2683,7 @@ Module MovimentiAnaliticiDaFatture
                     FLogin.prgCopy.Maximum = dtFatt.Rows.Count
                     FLogin.prgCopy.Step = 1
                     'Creo un adapter solo per aggiornare il flag di "Generato movimento analitico"
-                    Dim sqry As String = "Select SaleDocId, PostedToCostAccounting FROM MA_SaleDoc WHERE (DocumentType=" & DocumentType.Fattura & " Or DocumentType=" & DocumentType.FatturaAcc & " Or DocumentType=" & DocumentType.NotaCredito & ")  AND ( DocumentDate >=@FromDate AND DocumentDate <=@ToDate ) "
+                    Dim sqry As String = "Select SaleDocId, PostedToCostAccounting FROM MA_SaleDoc WHERE (DocumentType=" & DocumentType.Fattura & " Or DocumentType=" & DocumentType.FatturaAccompagnatoria & " Or DocumentType=" & DocumentType.NotaCredito & ")  AND ( DocumentDate >=@FromDate AND DocumentDate <=@ToDate ) "
                     Using daSaleDoc As New SqlDataAdapter(sqry, Connection)
                         daSaleDoc.SelectCommand.Parameters.AddWithValue("@FromDate", sFromDate)
                         daSaleDoc.SelectCommand.Parameters.AddWithValue("@ToDate", sToDate)
@@ -2709,7 +2715,7 @@ Module MovimentiAnaliticiDaFatture
                         Using dtMovAna As DataTable = CaricaSchema("MA_CostAccEntries", True)
                             Using dtMovAnaD As DataTable = CaricaSchema("MA_CostAccEntriesDetail", True)
                                 Using dtCR As DataTable = CaricaSchema("MA_CrossReferences", True)
-                                    sqry = "SELECT MA_SaleDocSummary.* FROM MA_SaleDocSummary JOIN MA_SaleDoc ON MA_SaleDoc.SaleDocId = MA_SaleDocSummary.SaleDocId WHERE (MA_SaleDoc.DocumentType=" & DocumentType.Fattura & " OR MA_SaleDoc.DocumentType=" & DocumentType.FatturaAcc & " OR MA_SaleDoc.DocumentType=" & DocumentType.NotaCredito & ")  AND ( MA_SaleDoc.DocumentDate >=@FromDate AND MA_SaleDoc.DocumentDate <=@ToDate ) "
+                                    sqry = "SELECT MA_SaleDocSummary.* FROM MA_SaleDocSummary JOIN MA_SaleDoc ON MA_SaleDoc.SaleDocId = MA_SaleDocSummary.SaleDocId WHERE (MA_SaleDoc.DocumentType=" & DocumentType.Fattura & " OR MA_SaleDoc.DocumentType=" & DocumentType.FatturaAccompagnatoria & " OR MA_SaleDoc.DocumentType=" & DocumentType.NotaCredito & ")  AND ( MA_SaleDoc.DocumentDate >=@FromDate AND MA_SaleDoc.DocumentDate <=@ToDate ) "
                                     Using daSaleDocSummary As New SqlDataAdapter(sqry, Connection)
                                         daSaleDocSummary.SelectCommand.Parameters.AddWithValue("@FromDate", sFromDate)
                                         daSaleDocSummary.SelectCommand.Parameters.AddWithValue("@ToDate", sToDate)
@@ -3434,7 +3440,7 @@ Module SEPA
             Try
                 'Creo Datatable con valori di DEFAULT nelle colonne
                 EditTestoBarra("Carico Schema: Fatture")
-                Using da As New SqlDataAdapter("SELECT Saledocid, DocNo, DocumentType, BankAuthorization FROM MA_SaleDoc Where  (DocumentType=" & DocumentType.Fattura & " Or DocumentType=" & DocumentType.FatturaAcc & " Or DocumentType=" & DocumentType.NotaCredito & ")", Connection)
+                Using da As New SqlDataAdapter("SELECT Saledocid, DocNo, DocumentType, BankAuthorization FROM MA_SaleDoc Where  (DocumentType=" & DocumentType.Fattura & " Or DocumentType=" & DocumentType.FatturaAccompagnatoria & " Or DocumentType=" & DocumentType.NotaCredito & ")", Connection)
                     Dim dtDoc As New DataTable("Doc")
                     da.Fill(dtDoc)
                     Dim dvDoc As New DataView(dtDoc, "", "DocNo", DataViewRowState.CurrentRows)
@@ -3513,7 +3519,7 @@ Module SEPA
             FLogin.prgCopy.Step = 1
             Try
                 EditTestoBarra("Carico Dati: Fatture")
-                Using da As New SqlDataAdapter("SELECT SaleDocId, DocNo, DocumentType, ALL_UMRCode, ALL_IBAN FROM MA_SaleDoc Where  (DocumentType=" & DocumentType.Fattura & " Or DocumentType=" & DocumentType.FatturaAcc & " Or DocumentType=" & DocumentType.NotaCredito & ")", Connection)
+                Using da As New SqlDataAdapter("SELECT SaleDocId, DocNo, DocumentType, ALL_UMRCode, ALL_IBAN FROM MA_SaleDoc Where  (DocumentType=" & DocumentType.Fattura & " Or DocumentType=" & DocumentType.FatturaAccompagnatoria & " Or DocumentType=" & DocumentType.NotaCredito & ")", Connection)
                     Dim dtDoc As New DataTable("Doc")
                     da.Fill(dtDoc)
                     Dim dvDoc As New DataView(dtDoc, "", "DocNo", DataViewRowState.CurrentRows)

@@ -21,7 +21,8 @@
 		E19: Doc: " & drDoc("DocNo") & " con Codice iva Spese Bolli senza corrispondenza: " & .Item("CQ").ToString
 		E20: Doc: " & drDoc("DocNo") & " numero ODA / NSO assente ---SICURITALIA---
 		E21: Doc: " & .Item("O").ToString & " senza corrispondenza di contropartita : " & sDescri)
-
+		E22: Modello contabile di Default non trovato per "& .Item("O").ToString
+		
 		A12: note di credito con riferimento ddt
 Modulo Analitica da fatture
 	Errori
