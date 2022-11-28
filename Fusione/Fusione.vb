@@ -1629,7 +1629,7 @@ Module ListeID
     End Function
 End Module
 Module WithDataRow
-    'Dublicate per evitare errori in compilazione
+    'Duplicate per evitare errori in compilazione
     Private Const pageSize As Integer = 20000
     Private listeIDs As List(Of ListaId)
 
