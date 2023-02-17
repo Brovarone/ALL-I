@@ -114,13 +114,16 @@ Aggiungere creazione di LOG per tutte le cassistische strane di errore che posso
 -------------------------------
 ---     MIGRAZIONE SPA      ---
 -------------------------------
+Ufficiale febbraio 2023 con data 1/4/2023
 
 §: Si usera' il DB della UNO che ha lo storico di fatture e altro.
+Cambiato e si userà quello della SPA !
 
-1-ipotesi:  Per ogni tabella interessata ( VENDITE, FATTURE ELETTRONICHE (anche passive), CONTABILITA', ANALITICA ,PARTITE ( ditinte..),  RIF. INCROCIATI,...) per ogni colonna ID aumento il valore di un tot a seconda del tipo ID.
+0- Devo passare un fogli excel con l'elenco degli ids che mi serve aggiungere.
+1-ipotesi:  Per ogni tabella interessata ( VENDITE, FATTURE ELETTRONICHE (anche passive), CONTABILITA', ANALITICA ,PARTITE ( distinte..),  RIF. INCROCIATI,...) per ogni colonna ID aumento il valore di un tot a seconda del tipo ID.
 	In questo modo posso elaborare le tabelle in una volta  senza rincorrere gli id /documenti collegati, basta avere il valore da incrementare.
 1-bis: per ogni tabella lancio query di update	
-2: esporto da SPA e importo su UNO
+2: eseguo una bulk-insert sul database di destinazione ( da UNO  su SPA)
 3: aggiorno i contatori id al nuovo valore incrementato. Non dovrei avere doppioni. 
 4: contatori non fiscali ?
 
@@ -136,3 +139,12 @@ Liquidazioni ivai Inviate
 Comunicazioni dati doc. iva
 
 Mandati??
+
+
+------------
+json
+If you must convert the JSON to a C# type first then create a C# type that matches the JSON. 
+Visual Studio has a code generator for this purpose. First, copy the JSON. 
+In Visual Studio select Edit -> Paste Special -> Paste JSON as Classes. 
+From here you can use standard C# deserialization. Use NewtonSoft in .NET 4+ projects or the System.Text.Json namespace for .NET Core. Similar to the SQL example above table, once you have the deserialized data you can convert the C# type to whatever you like.
+------------
