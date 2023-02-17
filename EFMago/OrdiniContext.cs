@@ -18,7 +18,7 @@ namespace EFMago.Models
         public OrdiniContext()
         {
         }
-        
+
         public OrdiniContext(DbContextOptions<OrdiniContext> options)
             : base(options)
         {
@@ -77,11 +77,11 @@ namespace EFMago.Models
         public virtual DbSet<MaTaxCodesLang> MaTaxCodesLang { get; set; }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-         // if (!optionsBuilder.IsConfigured)
-         //  {
-         //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-         //       optionsBuilder.UseSqlServer("Server=ACERBO\\SQLEXPRESS; Database=DEMON;User Id=sa;Password=euroufficio");
-         //   }
+            // if (!optionsBuilder.IsConfigured)
+            //  {
+            //#warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
+            //       optionsBuilder.UseSqlServer("Server=ACERBO\\SQLEXPRESS; Database=DEMON;User Id=sa;Password=euroufficio");
+            //   }
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -137,7 +137,7 @@ namespace EFMago.Models
                 entity.HasOne(d => d.AllordCliAttivita)
                     .WithOne(p => p.Allattivita)
                     .HasForeignKey<Allattivita>(d => d.Attivita)
-                    .HasPrincipalKey<AllordCliAttivita> (p => p.Attivita)
+                    .HasPrincipalKey<AllordCliAttivita>(p => p.Attivita)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_AllAttivita_Attivita_00");
 
@@ -174,39 +174,39 @@ namespace EFMago.Models
                    .OnDelete(DeleteBehavior.ClientSetNull);
             });
 
-             modelBuilder.Entity<Alldescrizioni>(entity =>
-            {
-                entity.HasKey(e => e.Codice)
-                    .IsClustered(false);
+            modelBuilder.Entity<Alldescrizioni>(entity =>
+           {
+               entity.HasKey(e => e.Codice)
+                   .IsClustered(false);
 
-                entity.ToTable("ALLDescrizioni");
+               entity.ToTable("ALLDescrizioni");
 
-                entity.Property(e => e.Codice)
-                    .HasMaxLength(12)
-                    .IsUnicode(false);
+               entity.Property(e => e.Codice)
+                   .HasMaxLength(12)
+                   .IsUnicode(false);
 
-                entity.Property(e => e.Testo)
-                    .HasMaxLength(128)
-                    .IsUnicode(false)
-                    .HasDefaultValueSql("('')");
-                
-                entity.Property(e => e.Tbcreated)
-                    .HasColumnName("TBCreated")
-                    .HasColumnType("datetime")
-                    .HasDefaultValueSql("(getdate())");
+               entity.Property(e => e.Testo)
+                   .HasMaxLength(128)
+                   .IsUnicode(false)
+                   .HasDefaultValueSql("('')");
 
-                entity.Property(e => e.TbcreatedId).HasColumnName("TBCreatedID");
+               entity.Property(e => e.Tbcreated)
+                   .HasColumnName("TBCreated")
+                   .HasColumnType("datetime")
+                   .HasDefaultValueSql("(getdate())");
 
-                entity.Property(e => e.Tbmodified)
-                    .HasColumnName("TBModified")
-                    .HasColumnType("datetime")
-                    .HasDefaultValueSql("(getdate())");
+               entity.Property(e => e.TbcreatedId).HasColumnName("TBCreatedID");
 
-                entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
+               entity.Property(e => e.Tbmodified)
+                   .HasColumnName("TBModified")
+                   .HasColumnType("datetime")
+                   .HasDefaultValueSql("(getdate())");
 
-            });
-			
-			modelBuilder.Entity<AllordCliAcc>(entity =>
+               entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
+
+           });
+
+            modelBuilder.Entity<AllordCliAcc>(entity =>
             {
                 entity.HasKey(e => e.IdOrdCli)
                     .IsClustered(false);
@@ -249,6 +249,10 @@ namespace EFMago.Models
                 entity.Property(e => e.DataDecorrenza)
                     .HasColumnType("datetime")
                     .HasDefaultValueSql("('17991231')");
+
+                entity.Property(e => e.DataPrevistaScadenza)
+                 .HasColumnType("datetime")
+                 .HasDefaultValueSql("('17991231')");
 
                 entity.Property(e => e.DataRiduzione)
                     .HasColumnType("datetime")
@@ -311,7 +315,7 @@ namespace EFMago.Models
                     .HasDefaultValueSql("('')");
 
                 entity.Property(e => e.Nota)
-                    .HasMaxLength(128)
+                    .HasMaxLength(255)
                     .IsUnicode(false)
                     .HasDefaultValueSql("('')");
 
@@ -326,8 +330,8 @@ namespace EFMago.Models
                 entity.Property(e => e.SedeInvioDoc)
                     .HasMaxLength(8)
                     .IsUnicode(false)
-                    .HasDefaultValueSql("('')"); 
-           
+                    .HasDefaultValueSql("('')");
+
                 entity.Property(e => e.Tbcreated)
                     .HasColumnName("TBCreated")
                     .HasColumnType("datetime")
@@ -343,7 +347,7 @@ namespace EFMago.Models
                 entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
 
                 entity.Property(e => e.TipoContratto).HasDefaultValueSql("((1108934656))");
-                
+
                 entity.Property(e => e.Vettore)
                     .HasColumnName("Vettore")
                     .HasMaxLength(8)
@@ -699,7 +703,7 @@ namespace EFMago.Models
                 entity.Property(e => e.TipoRigaServizio)
                     .HasMaxLength(12)
                     .IsUnicode(false);
-
+                                
                 entity.Property(e => e.Agosto)
                     .HasMaxLength(1)
                     .IsUnicode(false)
@@ -715,18 +719,6 @@ namespace EFMago.Models
                 entity.Property(e => e.Cadenza).HasDefaultValueSql("((2009399296))");
 
                 entity.Property(e => e.Campagna)
-                    .HasMaxLength(1)
-                    .IsUnicode(false)
-                    .IsFixedLength()
-                    .HasDefaultValueSql("('0')");
-
-                entity.Property(e => e.Canone)
-                    .HasMaxLength(1)
-                    .IsUnicode(false)
-                    .IsFixedLength()
-                    .HasDefaultValueSql("('0')");
-
-                entity.Property(e => e.Consuntivo)
                     .HasMaxLength(1)
                     .IsUnicode(false)
                     .IsFixedLength()
@@ -813,11 +805,7 @@ namespace EFMago.Models
 
                 entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
 
-                entity.Property(e => e.UnaTantum)
-                    .HasMaxLength(1)
-                    .IsUnicode(false)
-                    .IsFixedLength()
-                    .HasDefaultValueSql("('0')");
+                entity.Property(e => e.TipologiaServizio).HasDefaultValueSql("((1276116992))");
 
                 // AGGIUNTO DA ME
                 entity.HasOne(d => d.AllordCliContratto)
@@ -2209,7 +2197,7 @@ namespace EFMago.Models
                 entity.Property(e => e.CrrefType)
                     .HasColumnName("CRRefType")
                     .HasDefaultValueSql("((27066368))");
-                                
+
                 entity.Property(e => e.Customer)
                     .HasMaxLength(12)
                     .IsUnicode(false)
@@ -2946,8 +2934,8 @@ namespace EFMago.Models
                     .HasConstraintName("FK_SaleOrdTax_SaleOrd_00");
             });
 
-// Blocco Item
- 
+            // Blocco Item
+
             modelBuilder.Entity<MaItemsIntrastat>(entity =>
             {
                 entity.HasKey(e => e.Item)

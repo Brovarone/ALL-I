@@ -45,7 +45,12 @@ Module Variabili
     'Nuovo tracciato introduce altri campi quindi se reimporto cose vecchie mi si schianta
     Public bOldtrack As Boolean = False
     Public IsDebugging As Boolean = False
-    Public Const IsDeprecated As Boolean = False ' Da utilizzare per funzioni DEPRECATE da All-System
+    ''' <summary>
+    ''' Da utilizzare per funzioni DEPRECATE da All-System <br />
+    ''' Se False NON viene eseguito il codice <br />
+    ''' If IsDeprecated Then [...]
+    ''' </summary>
+    Public Const IsDeprecated As Boolean = False
     Public FolderPath As String ' percorso globale
 
     'Contesto LINQ2EF Core

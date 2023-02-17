@@ -1919,18 +1919,6 @@ namespace EFMago.Models
                     .IsFixedLength()
                     .HasDefaultValueSql("('0')");
 
-                entity.Property(e => e.Canone)
-                    .HasMaxLength(1)
-                    .IsUnicode(false)
-                    .IsFixedLength()
-                    .HasDefaultValueSql("('0')");
-
-                entity.Property(e => e.Consuntivo)
-                    .HasMaxLength(1)
-                    .IsUnicode(false)
-                    .IsFixedLength()
-                    .HasDefaultValueSql("('0')");
-
                 entity.Property(e => e.Descrizione)
                     .HasMaxLength(64)
                     .IsUnicode(false)
@@ -2012,11 +2000,7 @@ namespace EFMago.Models
 
                 entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
 
-                entity.Property(e => e.UnaTantum)
-                    .HasMaxLength(1)
-                    .IsUnicode(false)
-                    .IsFixedLength()
-                    .HasDefaultValueSql("('0')");
+                entity.Property(e => e.TipologiaServizio).HasDefaultValueSql("((1276116992))");
 
                 // AGGIUNTO DA ME
                 entity.HasOne(d => d.AllordCliContratto)

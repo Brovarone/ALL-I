@@ -4,10 +4,23 @@ Imports System.Text
 Imports System.Text.RegularExpressions
 
 Module Fatture
-    'TODO: creare dei parametri
-    Private Const UpdatePIvaCodFisc As Boolean = False '12/04/2021 Usato per determinare se aggiornare o meno codice fiscale e P.iva
-    Private Const UpdateEmailCliente As Boolean = False '08/07/2021 Usato per determinare se aggiornare o meno partita iva
-    Private Const UpdateProvincia As Boolean = False '12/04/2022 Usato per determinare se aggiornare o meno la Provincia
+    'TODO: creare dei parametri: vedere qui' per modificare setting attuali http://www.blackbeltcoder.com/Articles/winforms/a-custom-settings-class-for-winforms
+    ''' <summary>
+    ''' 12/04/2021 Usato per determinare se aggiornare o meno codice fiscale e P.iva
+    ''' </summary>
+    Private Const UpdatePIvaCodFisc As Boolean = False
+    ''' <summary>
+    ''' 08/07/2021 Usato per determinare se aggiornare o meno email
+    ''' </summary>
+    Private Const UpdateEmailCliente As Boolean = False
+    ''' <summary>
+    ''' 12/04/2022 Usato per determinare se aggiornare o meno la Provincia
+    ''' </summary>
+    Private Const UpdateProvincia As Boolean = False
+    ''' <summary>
+    ''' 12/01/2023 Numero minimo colonne previste dal CSV
+    ''' </summary>
+    Private Const NrColonneCsv As Integer = 241
 
     Public Function FattEleCSV(dts As DataSet, Optional bConIntestazione As Boolean = False) As Boolean
         'QUESTO CSV HA I VALORI MONETARI CON IL PUNTO
@@ -77,6 +90,15 @@ Module Fatture
         Dim i As Integer = 0
         If bConIntestazione Then i = 1 ' Se c'e' l'intestazione parto dalla seconda riga
         Dim dtXLS As DataTable = dts.Tables("Foglio1")
+        If dtXLS.Rows.Count > 0 AndAlso dtXLS.Columns.Count < NrColonneCsv Then
+            Dim m As String
+            m = "OPERAZIONE INTERROTTA" & Environment.NewLine & "Numero colonne non congruo" & Environment.NewLine & "Attese " & NrColonneCsv.ToString & " trovate " & dtXLS.Columns.Count
+            My.Application.Log.DefaultFileLogWriter.WriteLine(m)
+            FLogin.lstStatoConnessione.Items.Add("OPERAZIONE INTERROTTA")
+            FLogin.lstStatoConnessione.Items.Add("Numero colonne non congruo. Attese " & NrColonneCsv.ToString & " trovate " & dtXLS.Columns.Count)
+            someTrouble = True
+
+        End If
         Dim drXLS As DataRow() = dtXLS.Select()
         If drXLS.Length > 0 Then
             'Identificatore  Documento
@@ -250,7 +272,7 @@ Module Fatture
                                                                                 drCli("Telephone1") = dvClienOrd(iClienOrdFound).Item("S").ToString
                                                                                 drCli("Fax") = dvClienOrd(iClienOrdFound).Item("T").ToString
                                                                                 drCli("ISOCountryCode") = Left(dvClienOrd(iClienOrdFound).Item("M").ToString, 2).ToUpper
-                                                                                drCli("CustSuppKind") = TrovaNaturaCliFor(drCli("ISOCountryCode").ToString, dvISO, "Cliente: " & .Item("AA").ToString & " Doc. nr: " & .Item("O").ToString & Environment.NewLine, warnings)
+                                                                                drCli("CustSuppKind") = TrovaNaturaCliFor(drCli("ISOCountryCode").ToString, dvISO, "Cliente: " & .Item("AA").ToString & " Doc. nr: " & .Item("O").ToString & Environment.NewLine, errori)
                                                                                 drCli("FiscalCode") = dvClienOrd(iClienOrdFound).Item("O").ToString '("AI" della fattura)
                                                                                 drCli("TaxIdNumber") = dvClienOrd(iClienOrdFound).Item("N").ToString '("AJ" della fattura)
                                                                                 drCli("Currency") = If(.Item("R").ToString = "EUR", "EUR", .Item("O").ToString)
@@ -258,14 +280,28 @@ Module Fatture
                                                                                 If drCli("NaturalPerson") = "1" Then
                                                                                     Dim cognomeNome As String() = Split(dvClienOrd(iClienOrdFound).Item("G").ToString, "*")
                                                                                     If UBound(cognomeNome) <> -1 Then
-                                                                                        drCliNatPers = dtCliNatPersNew.NewRow
-                                                                                        drCliNatPers("CustSuppType") = CustSuppType.Cliente
-                                                                                        drCliNatPers("CustSupp") = .Item("AA").ToString
-                                                                                        drCliNatPers("Name") = cognomeNome(1)
-                                                                                        drCliNatPers("LastName") = cognomeNome(0)
-                                                                                        drCliNatPers("TBCreatedID") = My.Settings.mLOGINID 'ID utente
-                                                                                        drCliNatPers("TBModifiedID") = My.Settings.mLOGINID 'ID utente
-                                                                                        dtCliNatPersNew.Rows.Add(drCliNatPers)
+                                                                                        Dim ok As Boolean = False
+                                                                                        If cognomeNome.Length = 2 Then
+                                                                                            ok = True
+                                                                                        ElseIf cognomeNome.Length > 2 Then
+                                                                                            'Cognomi composti controllare su Mago
+                                                                                            avvisi.AppendLine("ANC1: Controllare correttezza Nome e Cognome: Cliente " & .Item("AA").ToString & ": " & .Item("AB").ToString)
+                                                                                            ok = True
+                                                                                        Else
+                                                                                            'Assenza carattere split
+                                                                                            errori.AppendLine("ENC1: Impossibile determinare Nome e Cognome: Cliente " & .Item("AA").ToString & ": " & .Item("AB").ToString)
+                                                                                            ok = False
+                                                                                        End If
+                                                                                        If ok Then
+                                                                                            drCliNatPers = dtCliNatPersNew.NewRow
+                                                                                            drCliNatPers("CustSuppType") = CustSuppType.Cliente
+                                                                                            drCliNatPers("CustSupp") = .Item("AA").ToString
+                                                                                            drCliNatPers("Name") = cognomeNome(1)
+                                                                                            drCliNatPers("LastName") = cognomeNome(0)
+                                                                                            drCliNatPers("TBCreatedID") = My.Settings.mLOGINID 'ID utente
+                                                                                            drCliNatPers("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+                                                                                            dtCliNatPersNew.Rows.Add(drCliNatPers)
+                                                                                        End If
                                                                                     End If
                                                                                 End If
                                                                                 drCli("Account") = "1CLI" & Int16.Parse((TrovaFiliale(.Item("AA").ToString, False))).ToString("000")
@@ -1194,6 +1230,7 @@ Module Fatture
                 FLogin.lstStatoConnessione.Items.Add("Documenti importati: Fatture=" & totDoc(0).ToString & " Note di Credito=" & totDoc(1).ToString)
             End If
             'Scrivo i Log
+            'TODO: riorganizzare, magari crearne 2 uno compatto con errori e avvisi e uno di dettaglio. vedi sotto NUOVI LOG
             If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Inserimento Dati ---" & Environment.NewLine & bulkMessage.ToString)
             If errori.Length > 0 Then
                 My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & Environment.NewLine & errori.ToString)
@@ -1210,10 +1247,11 @@ Module Fatture
                 My.Application.Log.DefaultFileLogWriter.Write(vbLf)
             End If
             If warnings.Length > 0 Then
-                My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Warnings ---" & Environment.NewLine)
+                My.Application.Log.DefaultFileLogWriter.WriteLine(" ------------ Riassunto Warnings ------------")
+                My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Queste modifiche non vengono salvate ---")
                 'Riassunto Warning
                 My.Application.Log.DefaultFileLogWriter.WriteLine(RiassuntoWarning(warnings).ToString)
-                My.Application.Log.DefaultFileLogWriter.WriteLine(" - Queste modifiche non vengono salvate - " & Environment.NewLine & warnings.ToString)
+                My.Application.Log.DefaultFileLogWriter.WriteLine(" - Dettaglio Warnings - " & Environment.NewLine & warnings.ToString)
                 Debug.Print(warnings.ToString)
             End If
             If avvisi.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Avvisi ---" & Environment.NewLine & avvisi.ToString)
@@ -1248,6 +1286,16 @@ Module Fatture
         Return Not someTrouble
 
     End Function
+
+    Private Function GetNumeroColonne(dt As DataTable) As Integer
+
+        If dt.Rows.Count > 0 AndAlso dt.Columns.Count >= NrColonneCsv Then
+            Return dt.Columns.Count
+        Else
+            Return False
+        End If
+    End Function
+
     ''' <summary>
     ''' Passando il codice ISO restituisce l'enumerativo corretto
     ''' </summary>
@@ -1255,20 +1303,30 @@ Module Fatture
     ''' <param name="IsoView"></param>
     ''' ''' <returns></returns>
     Private Function TrovaNaturaCliFor(ISOCode As String, IsoView As DataView, errorMsg As String, ByRef logs As StringBuilder) As Integer
-        Dim esito As Integer
+        Dim esito As Integer = CustSuppKind.Nazionale
+        Try
 
-        If ISOCode = "IT" Then
-            esito = CustSuppKind.Nazionale
-        Else
-            Dim ISOFound As Integer = IsoView.Find(ISOCode)
-            If ISOFound <> -1 Then
-                'ISO non presente !!
-                logs.Append("WTN1: Controllare ISO Stato su " & errorMsg)
+            If ISOCode = "IT" Then
+                esito = CustSuppKind.Nazionale
             Else
-                esito = If(IsoView(ISOFound).Item("EUCountry").ToString = "1", CustSuppKind.CEE, CustSuppKind.ExtraCEE)
+                Dim ISOFound As Integer = IsoView.Find(ISOCode)
+                If ISOFound = -1 Then
+                    'ISO non presente !!
+                    logs.Append("ETN1: ISO Stato non presente o incoerente sul " & errorMsg)
+                    esito = CustSuppKind.Nazionale
+                Else
+                    esito = If(IsoView(ISOFound).Item("EUCountry").ToString = "1", CustSuppKind.CEE, CustSuppKind.ExtraCEE)
+                End If
             End If
-        End If
-        Return esito
+            Return esito
+        Catch ex As Exception
+            My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & "OPERAZIONE INTERROTTA: " & GetCurrentMethod.Name)
+            My.Application.Log.DefaultFileLogWriter.WriteLine(ex.Message & Environment.NewLine)
+            Debug.Print(ex.Message)
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
+            Return esito
+        End Try
     End Function
     Private Function TrovaFiliale(ByVal codice As String, ByVal isArea As Boolean) As String
         Dim esito As String
@@ -2126,49 +2184,49 @@ Module Fatture
                 'TrovaNaturaCliFor
                 Case 1
                     nr = ContaOccurrenze("WTN1:", t)
-                    If nr > 0 Then ret.Append("WTN1:Controllare ISO Stato: " & nr.ToString & ac)
+                    If nr > 0 Then ret.Append("WTN1:ISO Stato non presente o incoerente: " & nr.ToString & ac)
                 'AggiornaAnagraficaCliente
                 Case 2
                     nr = ContaOccurrenze("WA1:", t)
-                    If nr > 0 Then ret.Append("WA1:mail: " & nr.ToString & ac)
+                    If nr > 0 Then ret.Append("WA1 - Mail: " & nr.ToString & ac)
                 'AggiornaAnagraficaSede
                 Case 3
                     nr = ContaOccurrenze("WAS1:", t)
-                    If nr > 0 Then ret.Append("WAS1:Codice Fiscale: " & nr.ToString & ac)
+                    If nr > 0 Then ret.Append("WAS1 - Codice Fiscale: " & nr.ToString & ac)
                 Case 4
                     nr = ContaOccurrenze("WAS2:", t)
-                    If nr > 0 Then ret.Append("WAS2:Partita IVA inizia con 8 o 9: " & nr.ToString & ac)
+                    If nr > 0 Then ret.Append("WAS2 - Partita IVA inizia con 8 o 9: " & nr.ToString & ac)
                 Case 5
                     nr = ContaOccurrenze("WAS3:", t)
-                    If nr > 0 Then ret.Append("WAS3:Partita IVA: " & nr.ToString & ac)
+                    If nr > 0 Then ret.Append("WAS3 - Partita IVA: " & nr.ToString & ac)
                 Case 6
                     nr = ContaOccurrenze("WAS4:", t)
-                    If nr > 0 Then ret.Append("WAS4:Partita IVA inizia con 8 o 9: " & nr.ToString & ac)
+                    If nr > 0 Then ret.Append("WAS4 - Partita IVA inizia con 8 o 9: " & nr.ToString & ac)
                 'AggiornaAnagraficadaClienOrd
                 Case 7
                     nr = ContaOccurrenze("WAC1:", t)
-                    If nr > 0 Then ret.Append("WAC1:Flag Persona Fisica non impostato: " & nr.ToString)
+                    If nr > 0 Then ret.Append("WAC1 - Flag Persona Fisica non impostato: " & nr.ToString & ac)
                 Case 8
                     nr = ContaOccurrenze("WAC2:", t)
-                    If nr > 0 Then ret.Append("WAC2:Flag Persona Fisica impostato erroneamente: " & nr.ToString & ac)
+                    If nr > 0 Then ret.Append("WAC2 - Flag Persona Fisica impostato erroneamente: " & nr.ToString & ac)
                 Case 9
                     nr = ContaOccurrenze("WAC3:", t)
-                    If nr > 0 Then ret.Append("WAC3:CONTROLLARE ISO Stato: " & nr.ToString & ac)
+                    If nr > 0 Then ret.Append("WAC3 - Controllare ISO Stato: " & nr.ToString & ac)
                 Case 10
                     nr = ContaOccurrenze("WAC4:", t)
-                    If nr > 0 Then ret.Append("WAC4:Codice Fiscale: " & nr.ToString & ac)
+                    If nr > 0 Then ret.Append("WAC4 - Codice Fiscale: " & nr.ToString & ac)
                 Case 11
                     nr = ContaOccurrenze("WAC5:", t)
-                    If nr > 0 Then ret.Append("WAC5:Partita IVA inizia con 8 o 9: " & nr.ToString & ac)
+                    If nr > 0 Then ret.Append("WAC5 - Partita IVA inizia con 8 o 9: " & nr.ToString & ac)
                 Case 12
                     nr = ContaOccurrenze("WAC6:", t)
-                    If nr > 0 Then ret.Append("WAC6:Partita IVA: " & nr.ToString & ac)
+                    If nr > 0 Then ret.Append("WAC6 - Partita IVA: " & nr.ToString & ac)
                 Case 13
                     nr = ContaOccurrenze("WAC7:", t)
-                    If nr > 0 Then ret.Append("WAC7:Partita IVA inizia con 8 o 9: " & nr.ToString & ac)
+                    If nr > 0 Then ret.Append("WAC7 - Partita IVA inizia con 8 o 9: " & nr.ToString & ac)
                 Case 14
                     nr = ContaOccurrenze("WAC8:", t)
-                    If nr > 0 Then ret.Append("WAC8:Codice IPA Pubblica Amministrazione con lunghezza diversa da 6: " & nr.ToString & ac)
+                    If nr > 0 Then ret.Append("WAC8 - Codice IPA Pubblica Amministrazione con lunghezza diversa da 6: " & nr.ToString & ac)
                 Case Else
 
             End Select
@@ -2244,10 +2302,12 @@ Module Fatture
                 End If
                 Dim iso As String = Left(clienord.Item("M").ToString, 2).ToUpper
                 If iso = "IT" AndAlso anagBranch.Item("ISOCountryCode").ToString <> iso AndAlso Not String.IsNullOrWhiteSpace(iso) Then
-                    avvisi.AppendLine("ISO Stato: (" & iso & ") [" & anagBranch.Item("ISOCountryCode") & "]")
-                    anagBranch.Item("ISOCountryCode") = iso
+                    '04/01/2023 : DEPRECATO Iso non deve essere sovrascritto.
+                    'sposto log da Avvisi a Warnings e depreco la riga dove sovrascrivo
+                    warnings.AppendLine("ISO Stato: (" & iso & ") [" & anagBranch.Item("ISOCountryCode") & "]")
+                    If IsDeprecated Then anagBranch.Item("ISOCountryCode") = iso
                 ElseIf iso <> "IT" Then
-                    avvisi.AppendLine("CONTROLLARE ISO Stato ")
+                    warnings.AppendLine("CONTROLLARE ISO Stato ")
                 End If
                 '12/04/2021 : Silvia mi dice di non aggiornare Cod.Fisc. e P.Iva ma di segnalarli solo.
                 If anagBranch.Item("FiscalCode").ToString <> clienord.Item("O").ToString AndAlso Not String.IsNullOrWhiteSpace(clienord.Item("O").ToString) Then
@@ -2528,10 +2588,12 @@ Module Fatture
                 End If
                 Dim iso As String = Left(.Item("M").ToString, 2).ToUpper
                 If iso = "IT" AndAlso anag.Item("ISOCountryCode").ToString <> iso AndAlso Not String.IsNullOrWhiteSpace(iso) Then
-                    avvisi.AppendLine("ISO Stato: (" & iso & ") [" & anag.Item("ISOCountryCode") & "]")
-                    anag.Item("ISOCountryCode") = iso
+                    '04/01/2023 : DEPRECATO Iso non deve essere sovrascritto
+                    'sposto log da Avvisi a Warnings e depreco la riga dove sovrascrivo
+                    warnings.AppendLine("ISO Stato: (" & iso & ") [" & anag.Item("ISOCountryCode") & "]")
+                    If IsDeprecated Then anag.Item("ISOCountryCode") = iso
                 ElseIf iso <> "IT" Then
-                    warnings.AppendLine("WAC3: CONTROLLARE ISO Stato ")
+                    warnings.AppendLine("WAC3: Controllare ISO Stato ")
                 End If
                 If anag.Item("FiscalCode").ToString <> .Item("O").ToString AndAlso Not String.IsNullOrWhiteSpace(.Item("O").ToString) Then
                     warnings.AppendLine("WAC4: Codice Fiscale : (" & .Item("O").ToString & ") [" & anag.Item("FiscalCode") & "]")

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 // Code scaffolded by EF Core assumes nullable reference types (NRTs) are not used or disabled.
 // If you have enabled NRTs for your project, then un-comment the following line:
@@ -30,10 +31,56 @@ namespace EFMago.Models
 
         // Creato da me
         [NotMapped]
-        public double? CanoniRipresi { get; set; }
+        public double CanoniRipresi { get; set; }
         public virtual MaSaleOrd SaleOrd { get; set; }
         public virtual Allattivita Allattivita { get; set; }
         public virtual AllordCliContratto AllordCliContratto { get; set; }
 
+        public string GetTipoAttivita()
+        {
+            string tipoAttivita;
+            if (FormatHelper.StringToBoolean(Allattivita.Sospensione))
+            {
+                tipoAttivita = "S";
+            }
+            else if (FormatHelper.StringToBoolean(Allattivita.Annullamento))
+            {
+                tipoAttivita = "A";
+            }
+            else if (FormatHelper.StringToBoolean(Allattivita.Istat))
+            {
+                tipoAttivita = "I";
+            }
+            else
+            {
+                tipoAttivita = "X";
+            }
+            return tipoAttivita;
+        }
+
     }
+
+    internal class FormatHelper
+        {
+            public static Boolean StringToBoolean(String str)
+            {
+                return StringToBoolean(str, false);
+            }
+
+            public static Boolean StringToBoolean(String str, Boolean bDefault)
+            {
+            String[] BooleanStringOff = { "0", "off", "no" };
+
+                if (String.IsNullOrEmpty(str))
+                    return bDefault;
+                else if (BooleanStringOff.Contains(str, StringComparer.InvariantCultureIgnoreCase))
+                    return false;
+
+                Boolean result;
+                if (!Boolean.TryParse(str, out result))
+                    result = true;
+
+                return result;
+            }
+        }
 }

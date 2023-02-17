@@ -29,10 +29,8 @@ namespace EFMago.Models
         public DateTime Tbmodified { get; set; }
         public int TbcreatedId { get; set; }
         public int TbmodifiedId { get; set; }
-        public string Consuntivo { get; set; }
-        public string Canone { get; set; }
-        public string UnaTantum { get; set; }
         public string Campagna { get; set; }
+        public int? TipologiaServizio { get; set; }
         // Creato da me
         public virtual AllordCliContratto AllordCliContratto { get; set; }
 

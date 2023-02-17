@@ -2,9 +2,9 @@
 Imports System.Text
 Imports System.Data.SqlClient
 Imports System.IO
-Imports System.Reflection.MethodBase
+Imports System.Configuration.SettingsBase
 Imports System.Xml
-Imports System.Threading
+Imports Bluegrams.Application
 Imports EFMago.Models
 Imports ALLSystemTools.SqlTools
 
@@ -19,6 +19,8 @@ Imports Microsoft.EntityFrameworkCore
 'Publishing folder: Installer/
 'Installation Folder: https://raw.githubusercontent.com/Brovarone/ALL-I/master/Installer/
 'Update: https://raw.githubusercontent.com/Brovarone/ALL-I/master/Installer/
+'qui :https://github.com/Nucs/JsonSettings
+'qui: https://github.com/bluegrams/SettingsProviders ( per ora questo)
 
 'Da testare x csv
 'Imports FileHelpers.ExcelNPOIStorage
@@ -33,7 +35,10 @@ Imports Microsoft.EntityFrameworkCore
 
 
 'LINQ 2 Entity framework 
+'EF Database-First
 'scaffold-dbcontext "Server=ACERBO\SQLEXPRESS; Database=DEMON;User Id=sa;Password=euroufficio" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Context MagoContext -Project EFMago  -StartupProject ALL-I -Force
+'Step 2: Migration
+
 Public Class FLogin
     'Ma_Saledoc  / Doc
     Public AdpDoc As SqlDataAdapter
@@ -191,22 +196,8 @@ Public Class FLogin
 
         Me.DtDataInizio.Text = (New DateTime(anno, mese, 1)).ToString("d")
         DataInizio = DtDataInizio.Value.ToString("yyyy-MM-dd")
-        'Carico dal file config
-        TxtDB_UNO.Text = My.Settings.mDATABASE
-        TxtDB_SPA.Text = My.Settings.mDATABASE_SPA
-        txtSERVER.Text = My.Settings.mSQLSERVER
-        txtID.Text = My.Settings.mID
-        txtPSW.Text = My.Settings.mPSW
-        txtPath.Text = My.Settings.mPATH
-        txtLoginId.Text = My.Settings.mLOGINID
-        TxtTmpDB_UNO.Text = My.Settings.mDBTEMPUNO
-        TxtTmpDB_SPA.Text = My.Settings.mDBTEMPSPA
-        FolderPath = txtPath.Text
-        'Aggiungo la possibilità di eseguire il mio textChanged ( SULL'EVENTO LEAVE)
-        For Each tx As TextBox In Me.PanelAdmin.Controls.OfType(Of TextBox)()
-            'If tx.Name = txtPath.Name Then Continue For
-            AddHandler tx.Leave, AddressOf MioTextChanged
-        Next
+
+        LoadSettings()
         PanelAdmin.Visible = False
 
         'Controllo quali pulsanti abilitare in base all'esistenza o meno del file
@@ -218,6 +209,64 @@ Public Class FLogin
         lstStatoConnessione.Top = 170
         lstStatoConnessione.Size = New Size(429, 170)
         lstStatoConnessione.BringToFront()
+    End Sub
+    Private Sub LoadSettings()
+        Dim n As String = "settings.json"
+        Dim s As String = My.Application.Info.DirectoryPath + "\" + n
+        'Controllo esistenza del file 
+        If System.IO.File.Exists(s) Then
+            'Carico dal file Json
+            'Parametri Config dal nuovo gestore
+            PortableJsonSettingsProvider.SettingsFileName = n
+            PortableJsonSettingsProvider.SettingsDirectory = My.Application.Info.DirectoryPath  '"Some\custom\location"
+            PortableJsonSettingsProvider.ApplyProvider(My.MySettings.[Default])
+
+            'Carico dal file config
+            TxtDB_UNO.Text = My.Settings.mDATABASE
+            TxtDB_SPA.Text = My.Settings.mDATABASE_SPA
+            txtSERVER.Text = My.Settings.mSQLSERVER
+            txtID.Text = My.Settings.mID
+            txtPSW.Text = My.Settings.mPSW
+            txtPath.Text = My.Settings.mPATH
+            txtLoginId.Text = My.Settings.mLOGINID
+            TxtTmpDB_UNO.Text = My.Settings.mDBTEMPUNO
+            TxtTmpDB_SPA.Text = My.Settings.mDBTEMPSPA
+            FolderPath = txtPath.Text
+        Else
+            'Carico dal file config
+            TxtDB_UNO.Text = My.Settings.mDATABASE
+            TxtDB_SPA.Text = My.Settings.mDATABASE_SPA
+            txtSERVER.Text = My.Settings.mSQLSERVER
+            txtID.Text = My.Settings.mID
+            txtPSW.Text = My.Settings.mPSW
+            txtPath.Text = My.Settings.mPATH
+            txtLoginId.Text = My.Settings.mLOGINID
+            TxtTmpDB_UNO.Text = My.Settings.mDBTEMPUNO
+            TxtTmpDB_SPA.Text = My.Settings.mDBTEMPSPA
+            FolderPath = txtPath.Text
+            'Imposto nuovo gestore
+            PortableJsonSettingsProvider.SettingsFileName = n
+            PortableJsonSettingsProvider.SettingsDirectory = My.Application.Info.DirectoryPath  '"Some\custom\location"
+            PortableJsonSettingsProvider.ApplyProvider(My.MySettings.[Default])
+            'Salvo sul nuovo file
+            My.Settings.mDATABASE = TxtDB_UNO.Text
+            My.Settings.mDATABASE_SPA = TxtDB_SPA.Text
+            My.Settings.mSQLSERVER = txtSERVER.Text
+            My.Settings.mID = txtID.Text
+            My.Settings.mPSW = txtPSW.Text
+            My.Settings.mPATH = txtPath.Text
+            My.Settings.mLOGINID = txtLoginId.Text
+            My.Settings.mDBTEMPUNO = TxtTmpDB_UNO.Text
+            My.Settings.mDBTEMPSPA = TxtTmpDB_SPA.Text
+            txtPath.Text = FolderPath
+        End If
+
+        'Aggiungo la possibilità di eseguire il mio textChanged ( SULL'EVENTO LEAVE)
+        For Each tx As TextBox In Me.PanelAdmin.Controls.OfType(Of TextBox)()
+            'If tx.Name = txtPath.Name Then Continue For
+            AddHandler tx.Leave, AddressOf MioTextChanged
+        Next
+
     End Sub
     Private Sub MioTextChanged(ByVal sender As Object, ByVal e As System.EventArgs)
         Dim tb As TextBox = DirectCast(sender, TextBox)
