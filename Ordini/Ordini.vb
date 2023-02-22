@@ -389,13 +389,18 @@ Module Ordini
                                 If IsBetweenAnnullamento_Attivita(cOrdRow, msg) Then
                                     Debug.Print(msg)
                                     debugging.AppendLine(msg)
+                                    cOrdRow.PeriodoDataFin = cOrdRow.DataCessazioneDaAttivita
+
                                 End If
                             End If
 
                             'Priorità 2: Scadenza Fissa
                             If Not bEsci AndAlso cOrdRow.HaScadenzaFissa Then
                                 bEsci = True
-                                If IsBetweenAnnullamento_ScadenzaFissa(cOrdRow, msg) Then debugging.AppendLine(msg)
+                                If IsBetweenAnnullamento_ScadenzaFissa(cOrdRow, msg) Then
+                                    debugging.AppendLine(msg)
+                                    cOrdRow.PeriodoDataFin = cOrdRow.DataScadenzaFissa
+                                End If
                                 'Scrivo Data e Motivo Cessazione
                                 If o.ALLOrdCliAcc.DataCessazione = sDataNulla Then
                                     o.ALLOrdCliAcc.DataCessazione = cOrdRow.DataScadenzaFissa
@@ -408,10 +413,11 @@ Module Ordini
                             End If
 
                             'Priorità 3: Cessazione
-                            If Not bEsci AndAlso cOrdRow.HaScadenzaFissa Then
+                            If Not bEsci AndAlso cOrdRow.HaDataCessazione Then
                                 bEsci = True
                                 If IsBetweenAnnullamento_Cessazione(cOrdRow, msg) Then
                                     debugging.AppendLine(msg)
+                                    cOrdRow.PeriodoDataFin = cOrdRow.DataCessazione
                                     'Scrivo Motivo Cessazione
                                     If String.IsNullOrWhiteSpace(o.ALLOrdCliAcc.MotivoCessazione) Then
                                         'o.ALLOrdCliAcc.DataCessazione = cOrdRow.DataCessazione
@@ -530,10 +536,6 @@ Module Ordini
                                     }
                                 Debug.Print("### R Ord:" & r.Position.ToString)
                                 debugging.AppendLine(" *R:" & r.Position.ToString)
-                                'todo : in base a risposta priorità
-                                cOrdRow.PeriodoDataFin = If(cOrdRow.HaScadenzaFissa, cOrdRow.DataScadenzaFissa, cOrdRow.CanoniDataFin)
-                                cOrdRow.PeriodoDataFin = If(cOrdRow.HaAnnullatoDaAttivita, cOrdRow.DataCessazione, cOrdRow.PeriodoDataFin)
-                                cOrdRow.PeriodoDataFin = If(cOrdRow.HaAnnullatoDaAttivita, cOrdRow.HaAnnullatoDaAttivita, cOrdRow.PeriodoDataFin)
                                 Dim periodoDataFine As String = cOrdRow.PeriodoDataFin.ToShortDateString
                                 Dim periodo As String = "Periodo dal " & cOrdRow.PeriodoDataIn.ToShortDateString & " al " & periodoDataFine
                                 If cOrdRow.IsUnaTantum Then
