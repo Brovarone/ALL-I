@@ -1099,6 +1099,7 @@ Public Class FLogin
                         lstStatoConnessione.Items.Add("Apertura file con IDS per Migrazione")
                         dsXLS = LoadXLS(spath, True, True)
                         Dim bok As Boolean
+                        'Lenta, deprecata
                         'bok = EseguiFusione(dsXLS)
                         My.Application.Log.WriteEntry("Esegui Commit : " & (Not IsDebugging).ToString)
                         bok = EseguiFusioneSQL(dsXLS)
@@ -1885,7 +1886,7 @@ Public Class FLogin
     Private Sub SUBFusione()
         Dim b As DialogResult = MessageBox.Show("Salvataggio" & vbCrLf & "Eseguire Commit?", My.Application.Info.Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question)
         If b = DialogResult.No Then
-            'Se rispondo no abilito isDebugging che esegui il rollback
+            'Se rispondo no abilito isDebugging che esegue il rollback
             ToolStripMenuItemDebugging.PerformClick()
         End If
 
