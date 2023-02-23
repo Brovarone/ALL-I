@@ -5,7 +5,7 @@ Module FusioneWithDataRow
     Private Const pageSize As Integer = 20000
     Private listeIDs As List(Of ListaId)
 
-    Class TabelleDaEstrarre
+    Class TabelleDaEstrarreWithDataRow
         Public Property QuerySelect As String
         Public Property WhereClause As String
         Public Property JoinClause As String
