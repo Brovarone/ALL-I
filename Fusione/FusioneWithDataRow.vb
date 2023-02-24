@@ -25,7 +25,7 @@ Module FusioneWithDataRow
             PrimaryKey = ""
         End Sub
     End Class
-    Private Class ListaId
+    Friend Class ListaId
         Public Property Ids As List(Of Integer)
         Public Property Nome As String
         Public Sub New()
