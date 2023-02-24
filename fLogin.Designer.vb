@@ -1237,16 +1237,15 @@ Partial Class FLogin
         '
         'EseguiTraTestToolStripMenuItem1
         '
-        Me.EseguiTraTestToolStripMenuItem1.Enabled = False
         Me.EseguiTraTestToolStripMenuItem1.Name = "EseguiTraTestToolStripMenuItem1"
-        Me.EseguiTraTestToolStripMenuItem1.Size = New System.Drawing.Size(175, 22)
+        Me.EseguiTraTestToolStripMenuItem1.Size = New System.Drawing.Size(180, 22)
         Me.EseguiTraTestToolStripMenuItem1.Text = "Esegui tra TEST"
         '
         'EseguiInDefinitivoToolStripMenuItem
         '
         Me.EseguiInDefinitivoToolStripMenuItem.Enabled = False
         Me.EseguiInDefinitivoToolStripMenuItem.Name = "EseguiInDefinitivoToolStripMenuItem"
-        Me.EseguiInDefinitivoToolStripMenuItem.Size = New System.Drawing.Size(175, 22)
+        Me.EseguiInDefinitivoToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.EseguiInDefinitivoToolStripMenuItem.Text = "Esegui in Definitivo"
         '
         'HelpToolStripMenuItem
