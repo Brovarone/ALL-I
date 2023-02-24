@@ -15,8 +15,6 @@ Module Fusione
     Private tabelle As List(Of TabelleDaEstrarre)
     Private tabelleNoEdit As List(Of TabelleDaEstrarre)
     Private listeIDs As List(Of ListaId)
-    'todo Prov a mettere 100k , lento, abbassare a 20k
-    Private Const pageSize As Integer = 20000
 
     Class TabelleDaEstrarre
         Public Property AdditionalWhere As String
@@ -58,6 +56,7 @@ Module Fusione
         Agenti = 6
         Clienti = 7
         Articoli = 8
+        Partite = 9
     End Enum
     ''' <summary>
     ''' Restituisce il nome del MacroGruppo
@@ -87,130 +86,6 @@ Module Fusione
             Case Else
                 Return ""
         End Select
-    End Function
-    ''' <summary>
-    ''' Deprecata. Lenta. Usare EseguiFusioneSql
-    ''' </summary>
-    ''' <param name="dts"></param>
-    ''' <returns></returns>
-    Public Function EseguiFusione(dts As DataSet) As Boolean
-        Dim ok As Boolean
-        Dim someTrouble As Boolean
-
-        'Popolo lista con le tabelle e cosa fare
-        ok = EstraiTabelle()
-        If Not ok Then someTrouble = True
-
-        'Carico IDs da file xls partenza
-        dtIDS = dts.Tables("IDS")
-        dvIDS = New DataView(dtIDS, "", "Key", DataViewRowState.CurrentRows)
-        'Carico IDS da database di destinazione
-        Using adpIDS As New SqlDataAdapter("Select * FROM MA_IDNumbers", ConnDestination)
-            dtNewIds = New DataTable
-            adpIDS.FillSchema(dtNewIds, SchemaType.Source)
-            adpIDS.Fill(dtNewIds)
-            dvNewIds = New DataView(dtNewIds, "", "CodeType", DataViewRowState.CurrentRows)
-        End Using
-
-        'Processo una tabella alla volta
-        listeIDs = New List(Of ListaId)
-        Try
-            Dim stopwatch As New System.Diagnostics.Stopwatch
-            stopwatch.Start()
-            FLogin.lstStatoConnessione.Items.Add("Processo tabelle in corso...")
-            FLogin.prgCopy.Value = 0
-            FLogin.prgCopy.Step = 1
-            FLogin.prgCopy.Maximum = tabelle.Count + tabelleNoEdit.Count
-
-            Dim stopwatch2 As New System.Diagnostics.Stopwatch
-            stopwatch2.Start()
-            For Each t In tabelle
-                'Estraggo la ListaIDS
-                Dim lIDS As New List(Of IDS)
-                lIDS = EstraiListaIds(t, dvIDS)
-                EditTestoBarra("Carico dati: " & t.Nome)
-                Dim pageindex As Integer = 1
-                Dim dt As New DataTable
-                Dim newDt As New DataTable
-
-                'Prova con DataRow ( lenta)
-                'Dim dtVuota As New DataTable
-                'Dim dtNuova As New DataTable
-                'dtVuota = GetSchemaAndPaging(t, 1)
-                'dtNuova = CaricaConDatarow(dtVuota, t, lIDS, 1)
-
-                'Metodo Datatable
-                'Primo caricamento 
-                dt = CaricaDati(t, False, pageindex)
-                If t.Paging Then
-                    While t.Paging = True
-                        newDt = New DataTable
-                        newDt = ModificaDati(t.Gruppo, dt, lIDS, ok)
-                        If Not ok Then someTrouble = True
-                        ok = ScriviDati(newDt, Not IsDebugging)
-                        pageindex += 1
-                        'Carica nuovi dati
-                        dt = New DataTable
-                        dt = CaricaDati(t, False, pageindex)
-                        FLogin.prgFusion.PerformStep()
-                        FLogin.prgFusion.Update()
-                        Application.DoEvents()
-                    End While
-                End If
-                'Ultimo ciclo while + Se non ho paging
-                newDt = New DataTable
-                newDt = ModificaDati(t.Gruppo, dt, lIDS, ok)
-                If Not ok Then someTrouble = True
-                ok = ScriviDati(newDt, Not IsDebugging)
-                FLogin.prgFusion.Visible = False
-                AvanzaBarra()
-            Next
-            My.Application.Log.WriteEntry("Processo tabelle in : " & stopwatch2.Elapsed.ToString)
-            stopwatch2.Restart()
-
-            'ciclo le tabelle senza Edit
-            For Each t In tabelleNoEdit
-                EditTestoBarra("Carico dati: " & t.Nome)
-                Dim pageindex As Integer = 1
-                Dim dt As New DataTable
-                'Primo caricamento
-                dt = CaricaDati(t, False, pageindex)
-                If t.Paging Then
-                    While t.Paging = True
-                        ok = ScriviDati(dt, Not IsDebugging)
-                        pageindex += 1
-                        'Carica nuovi dati
-                        dt = New DataTable
-                        dt = CaricaDati(t, False, pageindex)
-                    End While
-                End If
-                'Ultimo ciclo while + Se non ho paging
-                ok = ScriviDati(dt, Not IsDebugging)
-                AvanzaBarra()
-            Next
-            My.Application.Log.WriteEntry("Processo tabelle No edit in : " & stopwatch2.Elapsed.ToString)
-            stopwatch2.Restart()
-            'Edit IDS
-            If Not IsDebugging Then
-                ok = ScriviIds(dvIDS)
-                If Not ok Then someTrouble = True
-            End If
-            stopwatch2.Stop()
-            stopwatch.Stop()
-            Debug.Print(stopwatch.Elapsed.ToString)
-            FLogin.lstStatoConnessione.Items.Add("Processo eseguito in : " & stopwatch.Elapsed.ToString)
-            My.Application.Log.WriteEntry("Processo eseguito in : " & stopwatch.Elapsed.ToString)
-        Catch ex As Exception
-            Debug.Print(ex.Message)
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# EseguiFusione " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-            If Not IsDebugging Then
-                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
-                mb.ShowDialog()
-            End If
-            Return False
-        End Try
-        My.Application.Log.WriteEntry("Fine processo")
-        Return someTrouble
     End Function
     Public Function EseguiFusioneSQL(dts As DataSet) As Boolean
         Dim ok As Boolean
@@ -377,12 +252,18 @@ Module Fusione
             My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# ATTIVA VINCOLI E RELAZIONI " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
         End Try
     End Sub
+    Private Function EstraitabelleItem() As Boolean
+        tabelle = New List(Of TabelleDaEstrarre)
+        tabelleNoEdit = New List(Of TabelleDaEstrarre)
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Items", .Gruppo = MacroGruppo.Articoli})
+        Return True
 
+    End Function
     ''' <summary>
     ''' Estraggo le tabelle
     ''' </summary>
     ''' <returns></returns>
-    Private Function EstraiTabelle() As Boolean
+    Friend Function EstraiTabelle() As Boolean
         EditTestoBarra("Creazione elenco lavori")
         FLogin.lstStatoConnessione.Items.Add("Creazione elenco lavori")
         tabelle = New List(Of TabelleDaEstrarre)
@@ -454,7 +335,11 @@ Module Fusione
 #Region "Clienti : Dichiarazioni di Intento"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_DeclarationOfIntent", .Gruppo = MacroGruppo.Clienti})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppCustomerOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND Customer NOT IN ('ALLSYSTEM' , 'MORANDO')", .Gruppo = MacroGruppo.Clienti})
-
+#End Region
+#Region "Partite"
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND Settled = '0'", .Gruppo = MacroGruppo.Partite})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .JoinClause = " FROM MA_PyblsRcvblsDetails INNER JOIN MA_PyblsRcvbls ON MA_PyblsRcvblsDetails.PymtSchedId = MA_PyblsRcvbls.PymtSchedId", .WhereClause = " WHERE MA_PyblsRcvbls.CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND Settled = '0'", .Gruppo = MacroGruppo.Partite})
+        'TODO Vedere come gestire il closed sulle rate 
 #End Region
 #Region "Magazzino : Articoli"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Items", .Gruppo = MacroGruppo.Articoli})
@@ -584,7 +469,7 @@ Module Fusione
     ''' Eseguo le modifiche ai dati
     ''' </summary>
     ''' <returns></returns>
-    Private Function ModificaDati(ByVal g As MacroGruppo, ByVal dt As DataTable, ByVal lids As List(Of IDS), ByRef result As Boolean) As DataTable
+    Friend Function ModificaDati(ByVal g As MacroGruppo, ByVal dt As DataTable, ByVal lids As List(Of IDS), ByRef result As Boolean) As DataTable
         Dim newDt As New DataTable
         Select Case g
             Case MacroGruppo.Vendita, MacroGruppo.Analitica, MacroGruppo.OrdiniClienti, MacroGruppo.Cespiti, MacroGruppo.Agenti, MacroGruppo.Clienti, MacroGruppo.Articoli
@@ -610,7 +495,7 @@ Module Fusione
         Return newDt
     End Function
 
-    Private Function ScriviIds(ByVal dv As DataView) As Boolean
+    Friend Function ScriviIds(ByVal dv As DataView) As Boolean
         Try
             'Vendite
             Dim found As Integer = dv.Find("SaleDocId")
@@ -744,7 +629,7 @@ Module Fusione
                             If Not String.IsNullOrWhiteSpace(r.Item(f.Nome).ToString) AndAlso r.Item(f.Nome) <> f.IdString Then
                                 r.Item(f.Nome) = String.Empty
                             End If
-                        Case IdsOp.Uguale '"="
+                        Case IdsOp.Sovrascrivi '"OVERWRITE"
                             r.Item(f.Nome) = f.Id
                     End Select
                 Next
@@ -923,7 +808,7 @@ Module Fusione
     ''' Eseguo la preparazione alla BULK INSERT dell'intero dataset nel database di destinazione
     ''' </summary>
     ''' <returns></returns>
-    Private Function ScriviDati(dt As DataTable, ByVal Commit As Boolean) As Boolean
+    Friend Function ScriviDati(dt As DataTable, ByVal Commit As Boolean) As Boolean
         'dsDestination 
         'ConnectionSpa
 
@@ -1002,7 +887,6 @@ Module Fusione
                         '    cmdqry.CommandText = "ALTER TABLE " & t.Nome & " NOCHECK CONSTRAINT ALL"
                         '    cmdqry.ExecuteNonQuery()
 
-                        'cmdqry.CommandText = "UPDATE " & t.Nome & " SET "
                         Dim sb As New StringBuilder
                         Dim paramIndex As Integer = 0
                         For Each f As IDS In lids
@@ -1011,6 +895,7 @@ Module Fusione
                             Dim parameter As String = "@P" & paramIndex.ToString
                             Dim value As String = ""
                             Select Case f.Operatore.ToUpper
+                                'TODO: MODIFICARE LOGICA INSERENDO CASE PER GESTIRE VALORI A 0 IN QUAL CASO NON DEVO SOMMARE
                                 Case IdsOp.Somma ' "+"
                                     value = field & " + " & f.Id.ToString
                                     cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
@@ -1033,7 +918,7 @@ Module Fusione
                                 Case IdsOp.Salva '"SAVE"
                                     value = "(CASE WHEN " & field & " <>'' AND " & field & " <> '" & f.IdString & "'  THEN '' ELSE " & field & " END)"
                                     cmdqry.Parameters.Add(parameter, SqlDbType.VarChar, f.MaxSize).Value = value
-                                Case IdsOp.Uguale '"="
+                                Case IdsOp.Sovrascrivi '"OVERWRITE"
                                     ' value = f.Id.ToString
                                     cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
 
@@ -1096,187 +981,6 @@ Module Fusione
         Return result
     End Function
 
-    Private Function CaricaDati(t As TabelleDaEstrarre, Optional withConstraint As Boolean = True, Optional pageindex As Integer = 1, Optional ByVal withData As Boolean = True) As DataTable
-        Dim result As New StringBuilder()
-        Dim stopwatch As New Stopwatch
-        Dim stopwatch2 As New Stopwatch
-        stopwatch.Start()
-        stopwatch2.Start()
-        Debug.Print("Carico Dati: " & t.Nome)
-        Dim dt As New DataTable(t.Nome)
-        Dim SQLquery As String
-        Dim qryCount As String
-        Dim errorLevel As String = ""
-        Dim pageTot As Integer
-
-        If withData Then
-            SQLquery = "SELECT * FROM " & t.Nome & t.JoinClause & t.WhereClause
-            qryCount = "SELECT COUNT(1) FROM " & t.Nome & t.JoinClause & t.WhereClause
-
-        Else
-            SQLquery = "SELECT * FROM " & t.Nome & " WHERE 1=2"
-            qryCount = "SELECT COUNT(1) FROM " & t.Nome
-        End If
-        If Connection.State <> ConnectionState.Open Then
-            MessageBox.Show("Connessione non aperta.")
-            End
-        End If
-        Using da As New SqlDataAdapter(SQLquery, Connection)
-            da.FillSchema(dt, SchemaType.Source)
-            'Debug.Print("Creazione fillschema : " & stopwatch2.Elapsed.ToString)
-            stopwatch2.Restart()
-            Dim msg As String
-            If pageindex = 1 Then
-                Using cmd As New SqlCommand(qryCount, Connection)
-                    cmd.CommandTimeout = 0
-                    cmd.CommandType = CommandType.Text
-                    Dim rowsCount As Integer = CInt(cmd.ExecuteScalar())
-                    If rowsCount > pageSize Then
-                        t.Paging = True
-                        pageTot = Math.Ceiling(rowsCount / pageSize)
-                        msg = "Estrazione dati : " & t.Nome & "(" & rowsCount.ToString & ") Paging (" & pageTot.ToString & ")"
-                        'Faccio vedere la nuova barra
-                        FLogin.prgFusion.Value = 0
-                        FLogin.prgFusion.Step = 1
-                        FLogin.prgFusion.Maximum = pageTot
-                        FLogin.prgFusion.Text = t.Nome & " - Tot page: " & pageTot.ToString
-                        FLogin.prgFusion.Visible = True
-                        FLogin.prgFusion.PerformStep()
-                        FLogin.prgFusion.Update()
-                        Application.DoEvents()
-                    Else
-                        msg = "Estrazione dati : " & t.Nome & "(" & rowsCount.ToString & ") No Paging"
-                    End If
-                End Using
-                'Aqggiungo la lista ID alla collection
-                If t.GeneraListaId Then listeIDs.Add(New ListaId With {.Nome = t.Nome})
-                FLogin.lstStatoConnessione.Items.Add(msg)
-                My.Application.Log.WriteEntry(msg)
-            End If
-            If t.Paging Then
-                msg = "--- Page: " & pageindex.ToString
-                FLogin.lstStatoConnessione.Items.Add(msg)
-                My.Application.Log.WriteEntry(msg)
-                Dim qry As String = "SELECT * FROM " & t.Nome & " ORDER BY " & dt.PrimaryKey(0).ColumnName.ToString & " OFFSET (" & (pageindex - 1) * pageSize & ") ROWS FETCH NEXT " & pageSize & " ROWS ONLY"
-                da.SelectCommand.CommandText = qry
-                da.Fill(dt)
-                Dim rowsReturned As Integer = dt.Rows.Count
-                'Se ho estratto tutto posso uscire dal paging
-                If rowsReturned <> pageSize Then t.Paging = False
-
-            Else
-                da.Fill(dt)
-            End If
-            Debug.Print("Riempimento tabella : " & stopwatch2.Elapsed.ToString)
-            My.Application.Log.WriteEntry("Riempimento tabella : " & stopwatch2.Elapsed.ToString)
-            'Aggiungo gli id
-            If t.GeneraListaId Then AggiungiIds(dt, t.Nome, listeIDs, t.PrimaryKey)
-            stopwatch2.Restart()
-            If withConstraint Then
-                Using cmd As New SqlCommand("sys.sp_recompile", Connection)
-                    cmd.CommandTimeout = 0
-                    cmd.CommandType = CommandType.StoredProcedure
-                    cmd.Parameters.Add("@objname", SqlDbType.NVarChar, 776)
-                    cmd.Parameters(0).Value = t.Nome  '"sp_helpconstraint"
-                    cmd.ExecuteNonQuery()
-                    'Debug.Print("recompile : " & stopwatch2.Elapsed.ToString)
-                    stopwatch2.Restart()
-
-                    cmd.CommandText = "sp_helpconstraint"
-                    'cmd.Parameters.Clear()
-                    'cmd.Parameters.Add("@objname", SqlDbType.NVarChar, 776)
-                    'cmd.Parameters(0).Value = t.Nome
-                    cmd.Parameters.Add("@nomsg", SqlDbType.VarChar, 5)
-                    cmd.Parameters(1).Value = "nomsg"
-                    Dim dr As SqlDataReader = cmd.ExecuteReader()
-                    'Debug.Print("Executereader : " & stopwatch2.Elapsed.ToString)
-                    stopwatch2.Restart()
-
-                    'Iterate over the constraints records in the DataReader.
-                    While dr.Read()
-                        Try
-                            ' Select the default value constraints only.
-                            Dim constraintType As String = dr("constraint_type").ToString()
-                            'Dim constraintType As String = dr(1).ToString()
-                            If (constraintType.StartsWith("DEFAULT")) Then
-                                Dim constraintKeys As String = dr("constraint_keys").ToString()
-                                Dim colName As String = constraintType.Substring((constraintType.LastIndexOf("column") + 7))
-                                Dim defaultValue As String
-                                If dt.Columns.Contains(colName) Then
-
-                                    Select Case dt.Columns(colName).DataType
-                                        Case GetType(Integer), GetType(Short)
-                                            errorLevel = "Integer " & colName
-                                            'defaultValue = constraintKeys.Substring(2, constraintKeys.Length - 4)
-                                            defaultValue = constraintKeys.Replace("(", "").Replace(")", "")
-                                        Case GetType(Date)
-                                            errorLevel = "Date " & colName
-                                            defaultValue = constraintKeys.Substring(1, constraintKeys.Length - 2)
-                                            Select Case defaultValue
-                                                Case "getdate()"
-                                                    defaultValue = sOggi
-                                                Case Else
-                                                    defaultValue = defaultValue.Substring(1, 4) & "-" & defaultValue.Substring(5, 2) & "-" & defaultValue.Substring(7, 2)
-                                            End Select
-                                        Case GetType(Double)
-                                            errorLevel = "Double " & colName
-                                            'defaultValue = constraintKeys.Substring(2, constraintKeys.Length - 4)
-                                            defaultValue = constraintKeys.Replace("(", "").Replace(")", "")
-                                        Case GetType(Guid)
-                                            errorLevel = "Guid " & colName
-                                            defaultValue = Guid.Empty.ToString
-                                        Case GetType(String)
-                                            errorLevel = "String " & colName
-                                            'If dt.Columns(colName).MaxLength = 1 Then
-                                            'defaultValue = constraintKeys.Substring(2, constraintKeys.Length - 4)
-                                            defaultValue = constraintKeys.Replace("(", "").Replace(")", "").Replace("'", "")
-                                            'Else
-                                            'defaultValue = constraintKeys.Substring(1, constraintKeys.Length - 2)
-                                            'End If
-                                        Case Else
-                                            errorLevel = "Case Else " & colName
-                                            'defaultValue = constraintKeys.Substring(1, constraintKeys.Length - 2)
-                                            defaultValue = constraintKeys.Replace("(", "").Replace(")", "")
-                                    End Select
-
-                                    ' Only strips single quotes for numeric default types
-                                    ' add necessary handling as required for nonnumeric defaults
-
-                                    dt.Columns(colName).DefaultValue = defaultValue
-
-                                    result.Append("Column: " & colName & " Default: " & defaultValue & Environment.NewLine)
-                                End If
-
-                            End If
-                        Catch ex As Exception
-                            Debug.Print(ex.Message)
-                            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in CaricaDati: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-                            If Not IsDebugging Then
-                                Dim mb As New MessageBoxWithDetails(errorLevel & Environment.NewLine & ex.Message, GetCurrentMethod.Name, ex.StackTrace)
-                                mb.ShowDialog()
-                            End If
-                        End Try
-                        Application.DoEvents()
-                    End While
-                    dr.Close()
-                End Using
-            End If
-        End Using
-
-        'Debug.Print(result.ToString())
-        Debug.Print("Carica Dati : " & t.Nome & " " & stopwatch.Elapsed.ToString)
-        stopwatch.Stop()
-        stopwatch2.Stop()
-        Application.DoEvents()
-        Return dt
-    End Function
-
-    Private Sub AggiungiIds(dt As DataTable, nome As String, listeIDs As List(Of ListaId), primarykey As String)
-        Dim l As ListaId = listeIDs.Find(Function(x) x.Nome.Contains(nome))
-        For Each dr As DataRow In dt.Rows
-            l.Ids.Add(dr.Item(primarykey))
-        Next
-    End Sub
 End Module
 
 ''' <summary>
@@ -1287,7 +991,7 @@ Module IdsOp
     Friend Const Prefisso As String = "ADD"
     Friend Const Suffisso As String = "END"
     Friend Const Salva As String = "SAVE"
-    Friend Const Uguale As String = "="
+    Friend Const Sovrascrivi As String = "OVERWRITE"
     Friend Const Nulla As String = ""
 
 End Module
@@ -1353,20 +1057,20 @@ Module ListeID
             Select Case tablename
                 Case "MA_SaleDoc"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = saleDocId, .Nome = "SaleDocId", .Operatore = IdsOp.Somma})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PymtSchedId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "JournalEntryId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "IntrastatId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvEntryId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "AdvancePymtSchedId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectionDocumentId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectedDocumentId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InventoryIDReturn", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ParagonID", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ProFormaInvoiceID", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PureJECollectionPaymentId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectionDocumentIdInCN", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "WorkerIDIssue", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ExtAccAEID", .Operatore = IdsOp.Uguale})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PymtSchedId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "JournalEntryId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "IntrastatId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvEntryId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "AdvancePymtSchedId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectionDocumentId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectedDocumentId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InventoryIDReturn", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ParagonID", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ProFormaInvoiceID", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PureJECollectionPaymentId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectionDocumentIdInCN", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "WorkerIDIssue", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ExtAccAEID", .Operatore = IdsOp.Sovrascrivi})
                     'Aggiungo campo aggiuntivo cost center
                     lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
                     lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
@@ -1390,15 +1094,15 @@ Module ListeID
                     Else
                         lIDS.Add(New IDS With {.Id = CInt(dv(fOrdine)("NewKey")), .Nome = "SaleOrdId", .Operatore = IdsOp.Somma})
                     End If
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "MOId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReturnFromCustomerId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocumentId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "DocIdToBeUnloaded", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvoiceId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvoiceForAdvanceID", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ProFormaInvoiceID", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "TRId", .Operatore = IdsOp.Uguale})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "MOId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReturnFromCustomerId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocumentId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "DocIdToBeUnloaded", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvoiceId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvoiceForAdvanceID", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ProFormaInvoiceID", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "TRId", .Operatore = IdsOp.Sovrascrivi})
             End Select
         End If
         Return lIDS
@@ -1425,23 +1129,23 @@ Module ListeID
             Select Case tablename
                 Case "MA_PurchaseDoc"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseDocId, .Nome = "PurchaseDocId", .Operatore = IdsOp.Somma})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PymtSchedId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "JournalEntryId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "IntrastatId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvEntryId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "RMAId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InspectionOrdId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ScrapInvEntryId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReturnInvEntryId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "AdvancePymtSchedId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "AdjValueOnlyInvEntryId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectionDocumentId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectedDocumentId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PureJECollectionPaymentId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectionDocumentIdInCN", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "WorkerIDIssue", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PureJETaxTransferId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ExtAccAEID", .Operatore = IdsOp.Uguale})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PymtSchedId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "JournalEntryId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "IntrastatId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvEntryId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "RMAId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InspectionOrdId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ScrapInvEntryId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReturnInvEntryId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "AdvancePymtSchedId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "AdjValueOnlyInvEntryId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectionDocumentId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectedDocumentId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PureJECollectionPaymentId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CorrectionDocumentIdInCN", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "WorkerIDIssue", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PureJETaxTransferId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ExtAccAEID", .Operatore = IdsOp.Sovrascrivi})
                     'Campi accessori
                     lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
                 Case "MA_PurchaseDocNotes", "MA_PurchaseDocShipping", "MA_PurchaseDocSummary", "MA_PurchaseDocTaxSummary"
@@ -1455,7 +1159,7 @@ Module ListeID
                     lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
                     'todo: aspettare conferma su Ordini Fornitore. per ora non eseguo somma ma solo uguale
                     If 1 = 1 Then
-                        lIDS.Add(New IDS With {.Id = 0, .Nome = "PurchaseOrdId", .Operatore = IdsOp.Uguale})
+                        lIDS.Add(New IDS With {.Id = 0, .Nome = "PurchaseOrdId", .Operatore = IdsOp.Sovrascrivi})
                     Else
                         Dim fOrdine As Integer = dv.Find("PurchaseOrdId")
                         If fOrdine = -1 Then
@@ -1469,17 +1173,17 @@ Module ListeID
                             lIDS.Add(New IDS With {.Id = CInt(dv(fOrdine)("NewKey")), .Nome = "PurchaseOrdId", .Operatore = IdsOp.Somma})
                         End If
                     End If
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InspectionOrdId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InspectionBillId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "RMAId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "BillOfLadingId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "MOId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "SaleDocId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocumentId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvoiceForAdvanceID", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "SuppQuotaId", .Operatore = IdsOp.Uguale})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InspectionOrdId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InspectionBillId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "RMAId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "BillOfLadingId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "MOId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "SaleDocId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocumentId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "InvoiceForAdvanceID", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "SuppQuotaId", .Operatore = IdsOp.Sovrascrivi})
             End Select
         End If
         Return lIDS
@@ -1513,11 +1217,11 @@ Module ListeID
                 Case "MA_SaleOrdDetails"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = IdsOp.Somma})
                     lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ProductionPlanId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ProductionJobId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceQuotationId", .Operatore = IdsOp.Uguale})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = IdsOp.Uguale})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ProductionPlanId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ProductionJobId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceQuotationId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = IdsOp.Sovrascrivi})
                 Case "ALLOrdCliDescrizioni", "ALLOrdCliContratto", "ALLOrdCliTipologiaServizi", "ALLOrdCliAttivita"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = IdsOp.Somma})
                 Case "ALLOrdFiglio"
@@ -1642,6 +1346,60 @@ Module ListeID
                 lIDS.Add(New IDS With {.Chiave = True, .IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
         End Select
 
+        Return lIDS
+    End Function
+    ''' <summary>
+    ''' Solo Partite Cliente Aperte
+    ''' </summary>
+    ''' <param name="dv"></param>
+    ''' <returns></returns>
+    Private Function IdsPartite(ByVal dv As DataView, ByVal tablename As String) As List(Of IDS)
+
+        Dim lIDS As New List(Of IDS)
+        Dim PymtSchedId As Integer
+        Dim saleDocId As Integer
+        Dim found As Integer = dv.Find("PymtSchedId")
+        If found = -1 Then
+            Debug.Print("Partite PymtSchedId: non trovato")
+            My.Application.Log.WriteEntry("Partite PymtSchedId: non trovato")
+            If Not IsDebugging Then
+                MessageBox.Show("Impossibile continuare, Partite PymtSchedId: non trovato nel file IDS")
+                End
+            End If
+        Else
+            PymtSchedId = CInt(dv(found)("NewKey"))
+            Dim foundVen As Integer = dv.Find("SaleDocId")
+            If foundVen - 1 Then
+                Debug.Print("Vendite SaleDocId: non trovato")
+                My.Application.Log.WriteEntry("Fatture SaleDocId: non trovato")
+                If Not IsDebugging Then
+                    MessageBox.Show("Impossibile continuare,Vendite SaleDocId: non trovato nel file IDS")
+                    End
+                End If
+            Else
+                saleDocId = CInt(dv(foundVen)("NewKey"))
+                Select Case tablename
+                    Case "MA_PyblsRcvbls"
+                        lIDS.Add(New IDS With {.Chiave = True, .Id = PymtSchedId, .Nome = "PymtSchedId", .Operatore = IdsOp.Somma})
+                        lIDS.Add(New IDS With {.Id = 0, .Nome = "JournalEntryId", .Operatore = IdsOp.Sovrascrivi})
+                        lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = IdsOp.Sovrascrivi})
+                        'Campi accessori
+                        lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                        lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
+                    Case "MA_PyblsRcvblsDetails"
+                        lIDS.Add(New IDS With {.Chiave = True, .Id = PymtSchedId, .Nome = "PymtSchedId", .Operatore = IdsOp.Somma})
+                        lIDS.Add(New IDS With {.Id = 0, .Nome = "PresentationJEId", .Operatore = IdsOp.Sovrascrivi})
+                        lIDS.Add(New IDS With {.Id = 0, .Nome = "JournalEntryId", .Operatore = IdsOp.Sovrascrivi})
+                        lIDS.Add(New IDS With {.Id = saleDocId, .Nome = "DocumentId", .Operatore = IdsOp.Somma}) ' = id Documento di vendita
+                        'lIDS.Add(New IDS With {.Id = 0, .Nome = "DocumentType", .Operatore = IdsOp.Uguale})  '=3801088 = Documenti Di vendita
+                        lIDS.Add(New IDS With {.Id = 0, .Nome = "CollectionJEId", .Operatore = IdsOp.Sovrascrivi})
+                        lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
+                        lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                        'RIBA -> Nulla da modificare
+                        'Mandato RID -> Nulla da Modificare
+                End Select
+            End If
+        End If
         Return lIDS
     End Function
 End Module
