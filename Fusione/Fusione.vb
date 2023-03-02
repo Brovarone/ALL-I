@@ -389,9 +389,6 @@ Module Fusione
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .JoinClause = " FROM MA_PyblsRcvblsDetails INNER JOIN MA_PyblsRcvbls ON MA_PyblsRcvblsDetails.PymtSchedId = MA_PyblsRcvbls.PymtSchedId", .WhereClause = " WHERE MA_PyblsRcvbls.CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND Settled = '0'", .Gruppo = MacroGruppo.Partite})
         'TODO Vedere come gestire il closed sulle rate 
 #End Region
-#Region "Magazzino : Articoli"
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Items", .Gruppo = MacroGruppo.Articoli})
-#End Region
 
 #Region "Note"
         '--Tabelle della UNO a 0 Records
@@ -499,7 +496,7 @@ Module Fusione
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "ALLNoteFoxPro"})
 #End Region
 #Region " Articoli"
-
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Items"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemCustomers"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemNotes"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsGoodsData"})
@@ -507,8 +504,8 @@ Module Fusione
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsKit"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsSubstitute"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemTypes"})
-        'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemSuppliers"})
-        'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemSuppliersPriceLists"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemSuppliers"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemSuppliersPriceLists"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsFiscalData", .WhereClause = " WHERE FiscalYear = 2023"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsFiscalDataDomCurr", .WhereClause = " WHERE FiscalYear = 2023"})
 
@@ -1336,6 +1333,7 @@ Module ListeID
         Return lIDS
     End Function
     ''' <summary>
+    ''' DEPRECATA
     ''' Viene controllata contropartita
     ''' </summary>
     ''' <returns></returns>
