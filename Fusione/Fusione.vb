@@ -78,6 +78,7 @@ Module Fusione
         Partite = 9
         CrossRef = 10
         Fornitori = 11
+        OrdiniFornitori = 12
     End Enum
     ''' <summary>
     ''' Restituisce il nome del MacroGruppo
@@ -110,6 +111,8 @@ Module Fusione
                 Return "Cross Reference"
             Case 11
                 Return "Fornitori"
+            Case 12
+                Return "Ordini Fornitori"
             Case Else
                 Return ""
         End Select
@@ -363,6 +366,16 @@ Module Fusione
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "ALLOrdPadre", .Gruppo = MacroGruppo.OrdiniClienti})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "ALLCespiti", .Gruppo = MacroGruppo.OrdiniClienti})
 
+#End Region
+#Region "Ordini Fornitori"
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrd", .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdDetails", .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdNotes", .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdPymtSched", .Gruppo = MacroGruppo.OrdiniFornitori})
+        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdReferences", .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdShipping", .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdSummary", .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MMA_PurchaseOrdTaxSummary", .Gruppo = MacroGruppo.OrdiniFornitori})
 #End Region
 #Region "Cespiti"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssets", .WhereClause = " WHERE DisposalType <> 7143424", .Gruppo = MacroGruppo.Cespiti})
@@ -656,7 +669,8 @@ Module Fusione
                 For Each f As IDS In id
                     Select Case f.Operatore
                         Case IdsOp.Somma '"+"
-                            r.Item(f.Nome) = CInt(r.Item(f.Nome)) + f.Id
+                            Dim iAttuale As Integer = CInt(r.Item(f.Nome))
+                            If iAttuale > 0 Then r.Item(f.Nome) = iAttuale + f.Id
                         Case IdsOp.Nulla '""
                             r.Item(f.Nome) = f.Id
                         Case IdsOp.Somma, IdsOp.Suffisso '"ADD", "END"
@@ -1083,6 +1097,9 @@ Module ListeID
             Case MacroGruppo.OrdiniClienti
                 EditTestoBarra("Modifiche: Ordini Clienti")
                 lIDS = IdsOrdiniClienti(dvids, n)
+            Case MacroGruppo.OrdiniFornitori
+                EditTestoBarra("Modifiche: Ordini Fornitori")
+                lIDS = IdsOrdiniFornitori(dvids, n)
             Case MacroGruppo.Cespiti
                 EditTestoBarra("Modifiche: Cespiti")
                 lIDS = IdsCespiti(n)
@@ -1128,7 +1145,17 @@ Module ListeID
             Select Case tablename
                 Case "MA_SaleDoc"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = SaleDocId, .Nome = "SaleDocId", .Operatore = IdsOp.Somma})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PymtSchedId", .Operatore = IdsOp.Sovrascrivi})
+                    Dim fPartita As Integer = dv.Find("PymtSchedId")
+                    If fPartita = -1 Then
+                        Debug.Print("Fatture: PymtSchedId: non trovato")
+                        My.Application.Log.WriteEntry("Fatture: PymtSchedId: non trovato")
+                        If Not IsDebugging Then
+                            MessageBox.Show("Impossibile continuare, Fatture: PymtSchedId: non trovato nel file IDS")
+                            End
+                        End If
+                    Else
+                        lIDS.Add(New IDS With {.Id = CInt(dv(fPartita)("NewKey")), .Nome = "PymtSchedId", .Operatore = IdsOp.Somma})
+                    End If
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "JournalEntryId", .Operatore = IdsOp.Sovrascrivi})
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "IntrastatId", .Operatore = IdsOp.Sovrascrivi})
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "InvEntryId", .Operatore = IdsOp.Sovrascrivi})
@@ -1307,6 +1334,46 @@ Module ListeID
                 Case "ALLCespiti"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = IdsOp.Somma})
                     lIDS.Add(New IDS With {.IdString = PrefissoCespiti, .Nome = "Cespite", .Operatore = IdsOp.Prefisso, .MaxSize = 10})
+            End Select
+        End If
+
+        Return lIDS
+    End Function
+    ''' <summary>
+    ''' Incremento PurchaseOrdId sugli Ordini
+    ''' </summary>
+    ''' <param name="dv"></param>
+    ''' <returns></returns>
+    Private Function IdsOrdiniFornitori(ByVal dv As DataView, ByVal tablename As String) As List(Of IDS)
+        Dim lIDS As New List(Of IDS)
+        Dim PurchaseOrdId As Integer
+        Dim found As Integer = dv.Find("PurchaseOrdId")
+        If found = -1 Then
+            Debug.Print("Ordini PurchaseOrdId: non trovato")
+            My.Application.Log.WriteEntry("Ordini PurchaseOrdId: non trovato")
+            If Not IsDebugging Then
+                MessageBox.Show("Impossibile continuare, Ordini PurchaseOrdId: non trovato nel file IDS")
+                End
+            End If
+        Else
+            PurchaseOrdId = CInt(dv(found)("NewKey"))
+            Select Case tablename
+                Case "MA_PurchaseOrdNotes", "MA_PurchaseOrdPymtSched", "MA_PurchaseOrdShipping", "MA_PurchaseOrdSummary", "MA_PurchaseOrdTaxSummary"
+                    '"MA_PurchaseOrdReferences"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseOrdId, .Nome = "PurchaseOrdId", .Operatore = IdsOp.Somma})
+                Case "MA_PurchaseOrd"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseOrdId, .Nome = "PurchaseOrdId", .Operatore = IdsOp.Somma})
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                    'lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
+                Case "MA_PurchaseOrdDetails"
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseOrdId, .Nome = "PurchaseOrdId", .Operatore = IdsOp.Somma})
+                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "PurchaseReqId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "SuppQuotaId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "MOId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "SaleOrdId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocId", .Operatore = IdsOp.Sovrascrivi})
+                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = IdsOp.Sovrascrivi})
             End Select
         End If
 
