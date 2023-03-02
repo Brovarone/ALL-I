@@ -25,6 +25,7 @@ Module Fusione
         Public Property Gruppo As MacroGruppo
         Public Property GeneraListaId As Boolean
         Public Property PrimaryKey As String
+        Public Property Coppia_CR As CR
         Public Sub New()
             AdditionalWhere = ""
             WhereClause = ""
@@ -36,7 +37,25 @@ Module Fusione
             PrimaryKey = ""
         End Sub
     End Class
+    Friend Class AccoppiamentiCrossReference
+        Public Property OrdCli_NdC As New CR With {.Origine = 27066372, .Derivato = 27066389, .id = 1}
+        Public Property OrdCli_FatImmm As New CR With {.Origine = 27066372, .Derivato = 27066387, .id = 2}
+        Public Property OrdFor_BdC As New CR With {.Origine = 27066374, .Derivato = 27066400, .id = 3}
+        '  Public Property OrdFor_FatAcq As New CR With {.Origine = 27066374, .Derivato = 27066402}
+        Public Property DDT_FatImm As New CR With {.Origine = 27066383, .Derivato = 27066387, .id = 4}
+        Public Property FatImm_ParCli As New CR With {.Origine = 27066387, .Derivato = 27066423, .id = 5}
+        Public Property FatImm_NdC As New CR With {.Origine = 27066387, .Derivato = 27066389, .id = 6}
+        Public Property FatImm_FatImm As New CR With {.Origine = 27066387, .Derivato = 27066387, .id = 7}
+        Public Property NdC_OrdCli As New CR With {.Origine = 27066389, .Derivato = 27066372, .id = 8}
+        Public Property BdC_ResFor As New CR With {.Origine = 27066400, .Derivato = 27066381, .id = 9}
+        Public Property BdC_FatImm As New CR With {.Origine = 27066400, .Derivato = 27066387, .id = 10}
+        Public Property BdC_NdCRic As New CR With {.Origine = 27066400, .Derivato = 27066404, .id = 11}
+        Public Property NdCRic_NdCRic As New CR With {.Origine = 27066404, .Derivato = 27066404, .id = 12}
+        Public Property ParFor_NdCRic As New CR With {.Origine = 27066422, .Derivato = 27066404, .id = 13}
+        Public Property ParCli_NdC As New CR With {.Origine = 27066423, .Derivato = 27066389, .id = 14}
+        Public Property Parc_ParFor As New CR With {.Origine = 27066425, .Derivato = 27066422, .id = 15}
 
+    End Class
     Private Class ListaId
         Public Property Ids As List(Of Integer)
         Public Property Nome As String
@@ -57,6 +76,8 @@ Module Fusione
         Clienti = 7
         Articoli = 8
         Partite = 9
+        CrossRef = 10
+        Fornitori = 11
     End Enum
     ''' <summary>
     ''' Restituisce il nome del MacroGruppo
@@ -83,6 +104,12 @@ Module Fusione
                 Return "Clienti"
             Case 8
                 Return "Articoli"
+            Case 9
+                Return "Partite"
+            Case 10
+                Return "Cross Reference"
+            Case 11
+                Return "Fornitori"
             Case Else
                 Return ""
         End Select
@@ -92,7 +119,8 @@ Module Fusione
         Dim someTrouble As Boolean
 
         'Popolo lista con le tabelle e cosa fare
-        ok = EstraiTabelle()
+        'ok = EstraiTabelle()
+        ok = EstraitabelleCR()
         If Not ok Then someTrouble = True
 
         'Carico IDs da file xls partenza
@@ -259,6 +287,26 @@ Module Fusione
         Return True
 
     End Function
+    Private Function EstraitabelleCR() As Boolean
+        tabelle = New List(Of TabelleDaEstrarre)
+        tabelleNoEdit = New List(Of TabelleDaEstrarre)
+        Dim cr As New AccoppiamentiCrossReference
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.OrdCli_NdC.WhereClause, .Coppia_CR = cr.OrdCli_NdC, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.OrdCli_FatImmm.WhereClause, .Coppia_CR = cr.OrdCli_FatImmm, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.OrdFor_BdC.WhereClause, .Coppia_CR = cr.OrdFor_BdC, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.DDT_FatImm.WhereClause, .Coppia_CR = cr.DDT_FatImm, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.FatImm_ParCli.WhereClause, .Coppia_CR = cr.FatImm_ParCli, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.FatImm_NdC.WhereClause, .Coppia_CR = cr.FatImm_NdC, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.FatImm_FatImm.WhereClause, .Coppia_CR = cr.FatImm_FatImm, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.NdC_OrdCli.WhereClause, .Coppia_CR = cr.NdC_OrdCli, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.BdC_ResFor.WhereClause, .Coppia_CR = cr.BdC_ResFor, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.BdC_FatImm.WhereClause, .Coppia_CR = cr.BdC_FatImm, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.BdC_NdCRic.WhereClause, .Coppia_CR = cr.BdC_NdCRic, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.ParFor_NdCRic.WhereClause, .Coppia_CR = cr.ParFor_NdCRic, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.ParCli_NdC.WhereClause, .Coppia_CR = cr.ParCli_NdC, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.Parc_ParFor.WhereClause, .Coppia_CR = cr.Parc_ParFor, .Gruppo = MacroGruppo.CrossRef})
+        Return True
+    End Function
     ''' <summary>
     ''' Estraggo le tabelle
     ''' </summary>
@@ -330,11 +378,15 @@ Module Fusione
 
 #End Region
 #Region "Agenti"
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Areas", .Gruppo = MacroGruppo.Agenti})
+        'Non serve piu' Non viene esso suffisso
+        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Areas", .Gruppo = MacroGruppo.Agenti})
 #End Region
 #Region "Clienti : Dichiarazioni di Intento"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_DeclarationOfIntent", .Gruppo = MacroGruppo.Clienti})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppCustomerOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND Customer NOT IN ('ALLSYSTEM' , 'MORANDO')", .Gruppo = MacroGruppo.Clienti})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppCustomerOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND Customer NOT IN ('ALLSYSTEM')", .Gruppo = MacroGruppo.Clienti})
+#End Region
+#Region "Fornitori"
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppSupplierOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .AdditionalWhere = " AND Supplier NOT IN ('ABC')", .Gruppo = MacroGruppo.Fornitori})
 #End Region
 #Region "Partite"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND Settled = '0'", .Gruppo = MacroGruppo.Partite})
@@ -410,17 +462,25 @@ Module Fusione
         ''''NESSUNA MODIFICA'''
         '''''''''''''''''''''''
 #Region "Clienti"
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM' , 'MORANDO')"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppBranches", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM' , 'MORANDO')"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNaturalPerson", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM' , 'MORANDO')"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNotes", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM' , 'MORANDO')"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppOutstandings", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM' , 'MORANDO')"}) ' Insoluti
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppPeople", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM' , 'MORANDO')"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM')"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppBranches", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM')"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNaturalPerson", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM')"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNotes", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM')"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppOutstandings", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM')"}) ' Insoluti
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppPeople", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM')"})
         '
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SDDMandate"})
 #End Region
+#Region "Fornitori"
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppBranches", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .AdditionalWhere = " AND CustSupp NOT IN ('ABC')"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNaturalPerson", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .AdditionalWhere = " AND CustSupp NOT IN ('ABC')"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNotes", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .AdditionalWhere = " AND CustSupp NOT IN ('ABC')"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppOutstandings", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .AdditionalWhere = " AND CustSupp NOT IN ('ABC')"}) ' Insoluti
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppPeople", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .AdditionalWhere = " AND CustSupp NOT IN ('ABC')"})
+#End Region
 #Region "Banche"
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Banks", .WhereClause = " WHERE IsACompanyBank = 0", .AdditionalWhere = " AND Bank NOT IN ('0344032880 ')"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Banks", .WhereClause = " WHERE IsACompanyBank = 0"})
 #End Region
 #Region "Analitica (CdC + Commesse)"
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Jobs"})
@@ -655,8 +715,18 @@ Module Fusione
         Public Property IdString As String
         Public Property Operatore As String
         Public Property MaxSize As Integer
+        Public Property Cr As CR
 
     End Class
+    Friend Class CR
+        Public id As Integer
+        Public Property Origine As Integer
+        Public Property Derivato As Integer
+        Public Function WhereClause() As String
+            Return " WHERE OriginDocType =  " & Origine & " AND DerivedDocType = " & Derivato & " "
+        End Function
+    End Class
+
     ''' <summary>
     ''' Eseguo la preparazione alla BULK INSERT SQL nel database di destinazione usando una SQLDatareader 
     ''' </summary>
@@ -680,11 +750,11 @@ Module Fusione
         Try
             ' Definisco le query per le righe attuali nella tabella
             If String.IsNullOrWhiteSpace(t.JoinClause) Then
-                SQLquery = "SELECT * FROM " & t.Nome & t.WhereClause & t.AdditionalWhere
-                qryCount = "SELECT COUNT(1) FROM " & t.Nome & t.WhereClause & t.AdditionalWhere
+                SQLquery = "Select * FROM " & t.Nome & t.WhereClause & t.AdditionalWhere
+                qryCount = "Select COUNT(1) FROM " & t.Nome & t.WhereClause & t.AdditionalWhere
             Else
-                SQLquery = "SELECT " & t.Nome & ".* " & t.JoinClause & t.WhereClause & t.AdditionalWhere
-                qryCount = "SELECT COUNT(1) " & t.Nome & t.JoinClause & t.WhereClause & t.AdditionalWhere
+                SQLquery = "Select " & t.Nome & ".* " & t.JoinClause & t.WhereClause & t.AdditionalWhere
+                qryCount = "Select COUNT(1) " & t.Nome & t.JoinClause & t.WhereClause & t.AdditionalWhere
             End If
 
             SqlConnection.ClearAllPools()
@@ -1030,6 +1100,12 @@ Module ListeID
             Case MacroGruppo.Articoli
                 EditTestoBarra("Modifiche: Articoli")
                 lIDS = IdsArticoli(n)
+            Case MacroGruppo.Partite
+                EditTestoBarra("Modifiche: Partite")
+                lIDS = IdsPartite(dvids, n)
+            Case MacroGruppo.CrossRef
+                EditTestoBarra("Modifiche: Cross Reference")
+                lIDS = IdsCrossRef(dvids, table)
         End Select
 
         Return lIDS
@@ -1043,7 +1119,7 @@ Module ListeID
     Private Function IdsVendite(ByVal dv As DataView, ByVal tablename As String) As List(Of IDS)
 
         Dim lIDS As New List(Of IDS)
-        Dim saleDocId As Integer
+        Dim SaleDocId As Integer
         Dim found As Integer = dv.Find("SaleDocId")
         If found = -1 Then
             Debug.Print("Vendite SaleDocId: non trovato")
@@ -1053,10 +1129,10 @@ Module ListeID
                 End
             End If
         Else
-            saleDocId = CInt(dv(found)("NewKey"))
+            SaleDocId = CInt(dv(found)("NewKey"))
             Select Case tablename
                 Case "MA_SaleDoc"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = saleDocId, .Nome = "SaleDocId", .Operatore = IdsOp.Somma})
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleDocId, .Nome = "SaleDocId", .Operatore = IdsOp.Somma})
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "PymtSchedId", .Operatore = IdsOp.Sovrascrivi})
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "JournalEntryId", .Operatore = IdsOp.Sovrascrivi})
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "IntrastatId", .Operatore = IdsOp.Sovrascrivi})
@@ -1073,15 +1149,15 @@ Module ListeID
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "ExtAccAEID", .Operatore = IdsOp.Sovrascrivi})
                     'Aggiungo campo aggiuntivo cost center
                     lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
-                    lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
+                    'lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                 Case "MA_SaleDocComponents", "MA_SaleDocManufReasons", "MA_SaleDocNotes", "MA_SaleDocShipping", "MA_SaleDocSummary", "MA_SaleDocTaxSummary"
                     '"MA_SaleDocReferences", "MA_EIEventViewer", "MA_EI_ITDocAdditionalData", "MA_EI_ITAsyncComm"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = saleDocId, .Nome = "SaleDocId", .Operatore = IdsOp.Somma})
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleDocId, .Nome = "SaleDocId", .Operatore = IdsOp.Somma})
                 Case "MA_SaleDocPymtSched"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = saleDocId, .Nome = "SaleDocId", .Operatore = IdsOp.Somma})
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleDocId, .Nome = "SaleDocId", .Operatore = IdsOp.Somma})
                     lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
                 Case "MA_SaleDocDetail"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = saleDocId, .Nome = "SaleDocId", .Operatore = IdsOp.Somma})
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleDocId, .Nome = "SaleDocId", .Operatore = IdsOp.Somma})
                     lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
                     Dim fOrdine As Integer = dv.Find("SaleOrdId")
                     If fOrdine = -1 Then
@@ -1213,7 +1289,7 @@ Module ListeID
                 Case "MA_SaleOrd"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = IdsOp.Somma})
                     lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
-                    lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
+                    'lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                 Case "MA_SaleOrdDetails"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = IdsOp.Somma})
                     lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
@@ -1282,12 +1358,12 @@ Module ListeID
         Dim lIDS As New List(Of IDS)
         Select Case tablename
             Case "MA_Areas"
-                lIDS.Add(New IDS With {.Chiave = True, .IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
+                'lIDS.Add(New IDS With {.Chiave = True, .IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
         End Select
         Return lIDS
     End Function
     ''' <summary>
-    ''' Dichiarazioni di Intento
+    ''' Dichiarazioni di Intento. Clienti
     ''' </summary>
     ''' <returns></returns>
     Private Function IdsClienti(ByVal dv As DataView, ByVal tablename As String) As List(Of IDS)
@@ -1309,7 +1385,19 @@ Module ListeID
                 End If
 
             Case "MA_CustSuppCustomerOptions"
-                lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
+                'lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
+        End Select
+        Return lIDS
+    End Function
+    ''' <summary>
+    ''' Fornitori
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function IdsFornitori(ByVal dv As DataView, ByVal tablename As String) As List(Of IDS)
+        Dim lIDS As New List(Of IDS)
+        Select Case tablename
+            Case "MA_CustSuppSupplierOptions"
+                ' lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
         End Select
         Return lIDS
     End Function
@@ -1385,7 +1473,7 @@ Module ListeID
                         lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = IdsOp.Sovrascrivi})
                         'Campi accessori
                         lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
-                        lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
+                        'lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                     Case "MA_PyblsRcvblsDetails"
                         lIDS.Add(New IDS With {.Chiave = True, .Id = PymtSchedId, .Nome = "PymtSchedId", .Operatore = IdsOp.Somma})
                         lIDS.Add(New IDS With {.Id = 0, .Nome = "PresentationJEId", .Operatore = IdsOp.Sovrascrivi})
@@ -1393,13 +1481,134 @@ Module ListeID
                         lIDS.Add(New IDS With {.Id = saleDocId, .Nome = "DocumentId", .Operatore = IdsOp.Somma}) ' = id Documento di vendita
                         'lIDS.Add(New IDS With {.Id = 0, .Nome = "DocumentType", .Operatore = IdsOp.Uguale})  '=3801088 = Documenti Di vendita
                         lIDS.Add(New IDS With {.Id = 0, .Nome = "CollectionJEId", .Operatore = IdsOp.Sovrascrivi})
-                        lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
+                        'lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                         lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
                         'RIBA -> Nulla da modificare
                         'Mandato RID -> Nulla da Modificare
                 End Select
             End If
         End If
+        Return lIDS
+    End Function
+    ''' <summary>
+    ''' Riferimenti Incrociati
+    ''' </summary>
+    Private Function IdsCrossRef(ByVal dv As DataView, ByVal tablename As TabelleDaEstrarre) As List(Of IDS)
+
+        Dim lIDS As New List(Of IDS)
+        Dim PymtSchedId As Integer
+        Dim SaleDocId As Integer
+        Dim SaleOrdId As Integer
+        Dim PurchaseDocId As Integer
+        Dim PurchaseOrdId As Integer
+        Dim FeeId As Integer
+        Dim ok As Boolean = True
+
+#Region "Controllo presenza ids"
+        Dim f As Integer = dv.Find("PymtSchedId")
+        If f = -1 Then
+            Debug.Print("Partite PymtSchedId: non trovato")
+            My.Application.Log.WriteEntry("Partite PymtSchedId: non trovato")
+            ok = False
+            If Not IsDebugging Then
+                MessageBox.Show("Impossibile continuare, Partite PymtSchedId: non trovato nel file IDS")
+                End
+            End If
+        End If
+        Dim fVen As Integer = dv.Find("SaleDocId")
+        If fVen - 1 Then
+            Debug.Print("Vendite SaleDocId: non trovato")
+            My.Application.Log.WriteEntry("Fatture SaleDocId: non trovato")
+            ok = False
+            If Not IsDebugging Then
+                MessageBox.Show("Impossibile continuare, Vendite SaleDocId: non trovato nel file IDS")
+                End
+            End If
+        End If
+        Dim fOrdCli As Integer = dv.Find("SaleOrdId")
+        If fOrdCli - 1 Then
+            Debug.Print("Ordini SaleOrdId: non trovato")
+            My.Application.Log.WriteEntry("Ordini SaleOrdId: non trovato")
+            ok = False
+            If Not IsDebugging Then
+                MessageBox.Show("Impossibile continuare, Ordini SaleOrdId: non trovato nel file IDS")
+                End
+            End If
+        End If
+        Dim fAcq As Integer = dv.Find("PurchaseDocId")
+        If fAcq - 1 Then
+            Debug.Print("Acquisti PurchaseDocId: non trovato")
+            My.Application.Log.WriteEntry("Acquisti PurchaseDocId: non trovato")
+            ok = False
+            If Not IsDebugging Then
+                MessageBox.Show("Impossibile continuare, Acquisti PurchaseDocId: non trovato nel file IDS")
+                End
+            End If
+        End If
+        Dim fOrdFor As Integer = dv.Find("PurchaseOrdId")
+        If fOrdCli - 1 Then
+            Debug.Print("Ordini PurchaseOrdId: non trovato")
+            My.Application.Log.WriteEntry("Ordini PurchaseOrdId: non trovato")
+            ok = False
+            If Not IsDebugging Then
+                MessageBox.Show("Impossibile continuare, Ordini PurchaseOrdId: non trovato nel file IDS")
+                End
+            End If
+        End If
+        Dim fParcella As Integer = dv.Find("FeeId")
+        If fParcella - 1 Then
+            Debug.Print("Parcella FeeId: non trovato")
+            My.Application.Log.WriteEntry("Parcella FeeId: non trovato")
+            ok = False
+            If Not IsDebugging Then
+                MessageBox.Show("Impossibile continuare, Parcella FeeId: non trovato nel file IDS")
+                End
+            End If
+        End If
+#End Region
+
+        If ok Then
+            PymtSchedId = CInt(dv(f)("NewKey"))
+            SaleDocId = CInt(dv(fVen)("NewKey"))
+            SaleOrdId = CInt(dv(fOrdCli)("NewKey"))
+            PurchaseDocId = CInt(dv(fAcq)("NewKey"))
+            PurchaseOrdId = CInt(dv(fOrdFor)("NewKey"))
+            FeeId = CInt(dv(fParcella)("NewKey"))
+            Dim cr As New AccoppiamentiCrossReference
+            Select Case tablename.Coppia_CR.id
+                Case cr.OrdCli_NdC.id, cr.OrdCli_FatImmm.id
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = PymtSchedId, .Nome = "OriginDocType", .Operatore = IdsOp.Somma})
+                    lIDS.Add(New IDS With {.Id = SaleDocId, .Nome = "DerivedDocID", .Operatore = IdsOp.Somma})
+                Case cr.OrdFor_BdC.id
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseOrdId, .Nome = "OriginDocType", .Operatore = IdsOp.Somma})
+                    lIDS.Add(New IDS With {.Id = PurchaseDocId, .Nome = "DerivedDocID", .Operatore = IdsOp.Somma})
+                Case cr.DDT_FatImm.id, cr.FatImm_FatImm.id, cr.FatImm_NdC.id
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleDocId, .Nome = "OriginDocType", .Operatore = IdsOp.Somma})
+                    lIDS.Add(New IDS With {.Id = SaleDocId, .Nome = "DerivedDocID", .Operatore = IdsOp.Somma})
+                Case cr.FatImm_ParCli.id
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleDocId, .Nome = "OriginDocType", .Operatore = IdsOp.Somma})
+                    lIDS.Add(New IDS With {.Id = PymtSchedId, .Nome = "DerivedDocID", .Operatore = IdsOp.Somma})
+                Case cr.NdC_OrdCli.id
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleDocId, .Nome = "OriginDocType", .Operatore = IdsOp.Somma})
+                    lIDS.Add(New IDS With {.Id = SaleOrdId, .Nome = "DerivedDocID", .Operatore = IdsOp.Somma})
+                Case cr.BdC_ResFor.id, cr.BdC_FatImm.id, cr.BdC_NdCRic.id
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseDocId, .Nome = "OriginDocType", .Operatore = IdsOp.Somma})
+                    lIDS.Add(New IDS With {.Id = SaleOrdId, .Nome = "DerivedDocID", .Operatore = IdsOp.Somma})
+                Case cr.ParFor_NdCRic.id
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = PymtSchedId, .Nome = "OriginDocType", .Operatore = IdsOp.Somma})
+                    lIDS.Add(New IDS With {.Id = PurchaseDocId, .Nome = "DerivedDocID", .Operatore = IdsOp.Somma})
+                Case cr.ParCli_NdC.id
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = PymtSchedId, .Nome = "OriginDocType", .Operatore = IdsOp.Somma})
+                    lIDS.Add(New IDS With {.Id = SaleDocId, .Nome = "DerivedDocID", .Operatore = IdsOp.Somma})
+                Case cr.Parc_ParFor.id
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = FeeId, .Nome = "OriginDocType", .Operatore = IdsOp.Somma})
+                    lIDS.Add(New IDS With {.Id = PymtSchedId, .Nome = "DerivedDocID", .Operatore = IdsOp.Somma})
+                Case Else
+                    MessageBox.Show("Coppia non trovata")
+
+            End Select
+        End If
+
         Return lIDS
     End Function
 End Module
