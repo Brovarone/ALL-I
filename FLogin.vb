@@ -889,7 +889,7 @@ Public Class FLogin
             ProcessaGruppo(cespiti, "Cespiti")
         End If
 
-        If ChkFusioneFull.Checked OrElse ChkFusioneCR.Checked OrElse ChkFusioneItem.Checked OrElse ChkFusionePartite.Checked Then
+        If ChkFusioneFull.Checked OrElse ChkFusioneCR.Checked OrElse ChkFusioneParcelle.Checked OrElse ChkFusionePartite.Checked Then
             Dim bFound As Boolean
             Dim fusione As String() = {"IDS_MIGRAZIONE"}
             Dim fusioneFound As Boolean() = {False}
@@ -1935,4 +1935,13 @@ Public Class FLogin
         Me.Refresh()
         SUBProcessa()
     End Sub
+
+    Private Sub EseguiStep_Click(sender As Object, e As EventArgs) Handles EseguiStep.Click
+        MostraNascondi(True)
+        lstStatoConnessione.Location = New Point(12, 270)
+        lstStatoConnessione.Size = New Size(429, 69)
+        TabControl1.Enabled = True
+    End Sub
+
+
 End Class

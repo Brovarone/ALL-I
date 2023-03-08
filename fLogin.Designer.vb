@@ -42,6 +42,12 @@ Partial Class FLogin
         Me.BtnApriLog = New System.Windows.Forms.Button()
         Me.DtDataInizio = New System.Windows.Forms.DateTimePicker()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
+        Me.TabFusione = New System.Windows.Forms.TabPage()
+        Me.ChkFusionePartite = New System.Windows.Forms.CheckBox()
+        Me.ChkFusioneCR = New System.Windows.Forms.CheckBox()
+        Me.ChkFusioneParcelle = New System.Windows.Forms.CheckBox()
+        Me.BtnFusione = New System.Windows.Forms.Button()
+        Me.ChkFusioneFull = New System.Windows.Forms.CheckBox()
         Me.TabPageCancella = New System.Windows.Forms.TabPage()
         Me.BtnCancellaAnaliticaDaFatt = New System.Windows.Forms.Button()
         Me.BtnCancellaPNota = New System.Windows.Forms.Button()
@@ -77,8 +83,6 @@ Partial Class FLogin
         Me.ChkPNotaCliDaPartitario = New System.Windows.Forms.CheckBox()
         Me.TabCespiti = New System.Windows.Forms.TabPage()
         Me.ChkCespiti = New System.Windows.Forms.CheckBox()
-        Me.TabFusione = New System.Windows.Forms.TabPage()
-        Me.ChkFusioneFull = New System.Windows.Forms.CheckBox()
         Me.BtnProcessa = New System.Windows.Forms.Button()
         Me.lblDataInizio = New System.Windows.Forms.Label()
         Me.txtPath = New System.Windows.Forms.TextBox()
@@ -126,6 +130,10 @@ Partial Class FLogin
         Me.PrintPreviewToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.toolStripSeparator2 = New System.Windows.Forms.ToolStripSeparator()
         Me.ExitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.FusioneToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.EseguiTraTestToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem()
+        Me.EseguiInDefinitivoToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.EseguiStep = New System.Windows.Forms.ToolStripMenuItem()
         Me.CespitiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ImportaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.CancellaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -141,9 +149,6 @@ Partial Class FLogin
         Me.AnaliticaDaFattureToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.RiorganizzaCartelleToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.RegioneDaProvinciaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.FusioneToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.EseguiTraTestToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem()
-        Me.EseguiInDefinitivoToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.HelpToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ContentsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.IndexToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -155,12 +160,9 @@ Partial Class FLogin
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
-        Me.BtnFusione = New System.Windows.Forms.Button()
-        Me.ChkFusioneItem = New System.Windows.Forms.CheckBox()
-        Me.ChkFusioneCR = New System.Windows.Forms.CheckBox()
-        Me.ChkFusionePartite = New System.Windows.Forms.CheckBox()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
+        Me.TabFusione.SuspendLayout()
         Me.TabPageCancella.SuspendLayout()
         Me.TabOrdini.SuspendLayout()
         Me.TabPageFatture.SuspendLayout()
@@ -169,7 +171,6 @@ Partial Class FLogin
         Me.TabPagePartite.SuspendLayout()
         Me.TabPagePnota.SuspendLayout()
         Me.TabCespiti.SuspendLayout()
-        Me.TabFusione.SuspendLayout()
         Me.PanelUser.SuspendLayout()
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.MenuStrip1.SuspendLayout()
@@ -366,6 +367,70 @@ Partial Class FLogin
         Me.TabControl1.SelectedIndex = 0
         Me.TabControl1.Size = New System.Drawing.Size(330, 127)
         Me.TabControl1.TabIndex = 42
+        '
+        'TabFusione
+        '
+        Me.TabFusione.BackColor = System.Drawing.SystemColors.Control
+        Me.TabFusione.Controls.Add(Me.ChkFusionePartite)
+        Me.TabFusione.Controls.Add(Me.ChkFusioneCR)
+        Me.TabFusione.Controls.Add(Me.ChkFusioneParcelle)
+        Me.TabFusione.Controls.Add(Me.BtnFusione)
+        Me.TabFusione.Controls.Add(Me.ChkFusioneFull)
+        Me.TabFusione.Location = New System.Drawing.Point(4, 22)
+        Me.TabFusione.Name = "TabFusione"
+        Me.TabFusione.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabFusione.Size = New System.Drawing.Size(322, 101)
+        Me.TabFusione.TabIndex = 8
+        Me.TabFusione.Text = "Fusione"
+        '
+        'ChkFusionePartite
+        '
+        Me.ChkFusionePartite.AutoSize = True
+        Me.ChkFusionePartite.Location = New System.Drawing.Point(15, 72)
+        Me.ChkFusionePartite.Name = "ChkFusionePartite"
+        Me.ChkFusionePartite.Size = New System.Drawing.Size(96, 17)
+        Me.ChkFusionePartite.TabIndex = 5
+        Me.ChkFusionePartite.Text = "Fusione Partite"
+        Me.ChkFusionePartite.UseVisualStyleBackColor = True
+        '
+        'ChkFusioneCR
+        '
+        Me.ChkFusioneCR.AutoSize = True
+        Me.ChkFusioneCR.Location = New System.Drawing.Point(15, 26)
+        Me.ChkFusioneCR.Name = "ChkFusioneCR"
+        Me.ChkFusioneCR.Size = New System.Drawing.Size(81, 17)
+        Me.ChkFusioneCR.TabIndex = 4
+        Me.ChkFusioneCR.Text = "Fusione CR"
+        Me.ChkFusioneCR.UseVisualStyleBackColor = True
+        '
+        'ChkFusioneParcelle
+        '
+        Me.ChkFusioneParcelle.AutoSize = True
+        Me.ChkFusioneParcelle.Location = New System.Drawing.Point(15, 49)
+        Me.ChkFusioneParcelle.Name = "ChkFusioneParcelle"
+        Me.ChkFusioneParcelle.Size = New System.Drawing.Size(104, 17)
+        Me.ChkFusioneParcelle.TabIndex = 3
+        Me.ChkFusioneParcelle.Text = "Fusione Parcelle"
+        Me.ChkFusioneParcelle.UseVisualStyleBackColor = True
+        '
+        'BtnFusione
+        '
+        Me.BtnFusione.Location = New System.Drawing.Point(237, 6)
+        Me.BtnFusione.Name = "BtnFusione"
+        Me.BtnFusione.Size = New System.Drawing.Size(75, 37)
+        Me.BtnFusione.TabIndex = 2
+        Me.BtnFusione.Text = "Esegui Fusione"
+        Me.BtnFusione.UseVisualStyleBackColor = True
+        '
+        'ChkFusioneFull
+        '
+        Me.ChkFusioneFull.AutoSize = True
+        Me.ChkFusioneFull.Location = New System.Drawing.Point(6, 6)
+        Me.ChkFusioneFull.Name = "ChkFusioneFull"
+        Me.ChkFusioneFull.Size = New System.Drawing.Size(82, 17)
+        Me.ChkFusioneFull.TabIndex = 1
+        Me.ChkFusioneFull.Text = "Fusione Full"
+        Me.ChkFusioneFull.UseVisualStyleBackColor = True
         '
         'TabPageCancella
         '
@@ -743,31 +808,6 @@ Partial Class FLogin
         Me.ChkCespiti.Text = "Cespiti"
         Me.ChkCespiti.UseVisualStyleBackColor = True
         '
-        'TabFusione
-        '
-        Me.TabFusione.BackColor = System.Drawing.SystemColors.Control
-        Me.TabFusione.Controls.Add(Me.ChkFusionePartite)
-        Me.TabFusione.Controls.Add(Me.ChkFusioneCR)
-        Me.TabFusione.Controls.Add(Me.ChkFusioneItem)
-        Me.TabFusione.Controls.Add(Me.BtnFusione)
-        Me.TabFusione.Controls.Add(Me.ChkFusioneFull)
-        Me.TabFusione.Location = New System.Drawing.Point(4, 22)
-        Me.TabFusione.Name = "TabFusione"
-        Me.TabFusione.Padding = New System.Windows.Forms.Padding(3)
-        Me.TabFusione.Size = New System.Drawing.Size(322, 101)
-        Me.TabFusione.TabIndex = 8
-        Me.TabFusione.Text = "Fusione"
-        '
-        'ChkFusioneFull
-        '
-        Me.ChkFusioneFull.AutoSize = True
-        Me.ChkFusioneFull.Location = New System.Drawing.Point(6, 6)
-        Me.ChkFusioneFull.Name = "ChkFusioneFull"
-        Me.ChkFusioneFull.Size = New System.Drawing.Size(82, 17)
-        Me.ChkFusioneFull.TabIndex = 1
-        Me.ChkFusioneFull.Text = "Fusione Full"
-        Me.ChkFusioneFull.UseVisualStyleBackColor = True
-        '
         'BtnProcessa
         '
         Me.BtnProcessa.Enabled = False
@@ -1136,6 +1176,32 @@ Partial Class FLogin
         Me.ExitToolStripMenuItem.Size = New System.Drawing.Size(154, 22)
         Me.ExitToolStripMenuItem.Text = "E&xit"
         '
+        'FusioneToolStripMenuItem
+        '
+        Me.FusioneToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.EseguiTraTestToolStripMenuItem1, Me.EseguiInDefinitivoToolStripMenuItem, Me.EseguiStep})
+        Me.FusioneToolStripMenuItem.Name = "FusioneToolStripMenuItem"
+        Me.FusioneToolStripMenuItem.Size = New System.Drawing.Size(60, 20)
+        Me.FusioneToolStripMenuItem.Text = "Fusione"
+        '
+        'EseguiTraTestToolStripMenuItem1
+        '
+        Me.EseguiTraTestToolStripMenuItem1.Name = "EseguiTraTestToolStripMenuItem1"
+        Me.EseguiTraTestToolStripMenuItem1.Size = New System.Drawing.Size(175, 22)
+        Me.EseguiTraTestToolStripMenuItem1.Text = "Esegui tra TEST"
+        '
+        'EseguiInDefinitivoToolStripMenuItem
+        '
+        Me.EseguiInDefinitivoToolStripMenuItem.Enabled = False
+        Me.EseguiInDefinitivoToolStripMenuItem.Name = "EseguiInDefinitivoToolStripMenuItem"
+        Me.EseguiInDefinitivoToolStripMenuItem.Size = New System.Drawing.Size(175, 22)
+        Me.EseguiInDefinitivoToolStripMenuItem.Text = "Esegui in Definitivo"
+        '
+        'EseguiStep
+        '
+        Me.EseguiStep.Name = "EseguiStep"
+        Me.EseguiStep.Size = New System.Drawing.Size(175, 22)
+        Me.EseguiStep.Text = "STEP"
+        '
         'CespitiToolStripMenuItem
         '
         Me.CespitiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ImportaToolStripMenuItem, Me.CancellaToolStripMenuItem})
@@ -1236,26 +1302,6 @@ Partial Class FLogin
         Me.RegioneDaProvinciaToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
         Me.RegioneDaProvinciaToolStripMenuItem.Text = "Regione da Provincia"
         '
-        'FusioneToolStripMenuItem
-        '
-        Me.FusioneToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.EseguiTraTestToolStripMenuItem1, Me.EseguiInDefinitivoToolStripMenuItem})
-        Me.FusioneToolStripMenuItem.Name = "FusioneToolStripMenuItem"
-        Me.FusioneToolStripMenuItem.Size = New System.Drawing.Size(60, 20)
-        Me.FusioneToolStripMenuItem.Text = "Fusione"
-        '
-        'EseguiTraTestToolStripMenuItem1
-        '
-        Me.EseguiTraTestToolStripMenuItem1.Name = "EseguiTraTestToolStripMenuItem1"
-        Me.EseguiTraTestToolStripMenuItem1.Size = New System.Drawing.Size(180, 22)
-        Me.EseguiTraTestToolStripMenuItem1.Text = "Esegui tra TEST"
-        '
-        'EseguiInDefinitivoToolStripMenuItem
-        '
-        Me.EseguiInDefinitivoToolStripMenuItem.Enabled = False
-        Me.EseguiInDefinitivoToolStripMenuItem.Name = "EseguiInDefinitivoToolStripMenuItem"
-        Me.EseguiInDefinitivoToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.EseguiInDefinitivoToolStripMenuItem.Text = "Esegui in Definitivo"
-        '
         'HelpToolStripMenuItem
         '
         Me.HelpToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ContentsToolStripMenuItem, Me.IndexToolStripMenuItem, Me.SearchToolStripMenuItem, Me.toolStripSeparator5, Me.AboutToolStripMenuItem})
@@ -1344,45 +1390,6 @@ Partial Class FLogin
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
         '
-        'BtnFusione
-        '
-        Me.BtnFusione.Location = New System.Drawing.Point(237, 6)
-        Me.BtnFusione.Name = "BtnFusione"
-        Me.BtnFusione.Size = New System.Drawing.Size(75, 37)
-        Me.BtnFusione.TabIndex = 2
-        Me.BtnFusione.Text = "Esegui Fusione"
-        Me.BtnFusione.UseVisualStyleBackColor = True
-        '
-        'ChkFusioneItem
-        '
-        Me.ChkFusioneItem.AutoSize = True
-        Me.ChkFusioneItem.Location = New System.Drawing.Point(15, 49)
-        Me.ChkFusioneItem.Name = "ChkFusioneItem"
-        Me.ChkFusioneItem.Size = New System.Drawing.Size(86, 17)
-        Me.ChkFusioneItem.TabIndex = 3
-        Me.ChkFusioneItem.Text = "Fusione Item"
-        Me.ChkFusioneItem.UseVisualStyleBackColor = True
-        '
-        'ChkFusioneCR
-        '
-        Me.ChkFusioneCR.AutoSize = True
-        Me.ChkFusioneCR.Location = New System.Drawing.Point(15, 26)
-        Me.ChkFusioneCR.Name = "ChkFusioneCR"
-        Me.ChkFusioneCR.Size = New System.Drawing.Size(81, 17)
-        Me.ChkFusioneCR.TabIndex = 4
-        Me.ChkFusioneCR.Text = "Fusione CR"
-        Me.ChkFusioneCR.UseVisualStyleBackColor = True
-        '
-        'ChkFusionePartite
-        '
-        Me.ChkFusionePartite.AutoSize = True
-        Me.ChkFusionePartite.Location = New System.Drawing.Point(15, 72)
-        Me.ChkFusionePartite.Name = "ChkFusionePartite"
-        Me.ChkFusionePartite.Size = New System.Drawing.Size(96, 17)
-        Me.ChkFusionePartite.TabIndex = 5
-        Me.ChkFusionePartite.Text = "Fusione Partite"
-        Me.ChkFusionePartite.UseVisualStyleBackColor = True
-        '
         'FLogin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -1401,6 +1408,8 @@ Partial Class FLogin
         Me.PanelAdmin.ResumeLayout(False)
         Me.PanelAdmin.PerformLayout()
         Me.TabControl1.ResumeLayout(False)
+        Me.TabFusione.ResumeLayout(False)
+        Me.TabFusione.PerformLayout()
         Me.TabPageCancella.ResumeLayout(False)
         Me.TabOrdini.ResumeLayout(False)
         Me.TabPageFatture.ResumeLayout(False)
@@ -1415,8 +1424,6 @@ Partial Class FLogin
         Me.TabPagePnota.PerformLayout()
         Me.TabCespiti.ResumeLayout(False)
         Me.TabCespiti.PerformLayout()
-        Me.TabFusione.ResumeLayout(False)
-        Me.TabFusione.PerformLayout()
         Me.PanelUser.ResumeLayout(False)
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.MenuStrip1.ResumeLayout(False)
@@ -1562,6 +1569,7 @@ Partial Class FLogin
     Friend WithEvents EseguiInDefinitivoToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents BtnFusione As Button
     Friend WithEvents ChkFusioneCR As CheckBox
-    Friend WithEvents ChkFusioneItem As CheckBox
+    Friend WithEvents ChkFusioneParcelle As CheckBox
     Friend WithEvents ChkFusionePartite As CheckBox
+    Friend WithEvents EseguiStep As ToolStripMenuItem
 End Class

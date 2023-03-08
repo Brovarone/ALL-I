@@ -2,6 +2,7 @@
 Imports System.Reflection.MethodBase
 Imports System.Text
 Imports ALLSystemTools.SqlTools
+Imports Microsoft.Win32
 
 Module Fusione
 
@@ -134,8 +135,8 @@ Module Fusione
         If FLogin.ChkFusioneCR.Checked Then
             ok = EstraitabelleCR()
         End If
-        If FLogin.ChkFusioneItem.Checked Then
-            ok = EstraitabelleItem()
+        If FLogin.ChkFusioneParcelle.Checked Then
+            ok = EstraitabelleParcelle()
         End If
         If FLogin.ChkFusionePartite.Checked Then
             ok = EstraitabellePartite()
@@ -299,10 +300,11 @@ Module Fusione
             My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# ATTIVA VINCOLI E RELAZIONI " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
         End Try
     End Sub
-    Private Function EstraitabelleItem() As Boolean
+    Private Function EstraitabelleParcelle() As Boolean
         tabelle = New List(Of TabelleDaEstrarre)
         tabelleNoEdit = New List(Of TabelleDaEstrarre)
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Items", .Gruppo = MacroGruppo.Articoli})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Fees", .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .Gruppo = MacroGruppo.Parcelle})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FeesDetails", .JoinClause = " FROM MA_FeesDetails INNER JOIN MA_Fees ON MA_FeesDetails.FeeId = MA_Fees.FeeId", .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .Gruppo = MacroGruppo.Parcelle})
         Return True
 
     End Function
@@ -441,8 +443,8 @@ Module Fusione
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .WhereClause = w, .Gruppo = MacroGruppo.Partite})
 #End Region
 #Region "Parcelle"
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Fees", .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201' ", .Gruppo = MacroGruppo.Parcelle})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FeesDetails", .JoinClause = " FROM MA_FeesDetails INNER JOIN MA_Fees ON MA_FeesDetails.FeeId = MA_Fees.FeeId", .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201' ", .Gruppo = MacroGruppo.Parcelle})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Fees", .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .Gruppo = MacroGruppo.Parcelle})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FeesDetails", .JoinClause = " FROM MA_FeesDetails INNER JOIN MA_Fees ON MA_FeesDetails.FeeId = MA_Fees.FeeId", .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .Gruppo = MacroGruppo.Parcelle})
 #End Region
 #Region "NON SI PUO' -- Movimenti di Magazzino"
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_InventoryEntries", .Gruppo = MacroGruppo.Magazzino})
@@ -552,8 +554,8 @@ Module Fusione
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemTypes"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemSuppliers"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemSuppliersPriceLists"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsFiscalData", .WhereClause = " WHERE FiscalYear = 2023"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsFiscalDataDomCurr", .WhereClause = " WHERE FiscalYear = 2023"})
+        'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsFiscalData", .WhereClause = " WHERE FiscalYear = 2023"})
+        'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsFiscalDataDomCurr", .WhereClause = " WHERE FiscalYear = 2023"})
 #End Region
 #Region "Magazzino : Depositi"
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Storages"})
@@ -724,7 +726,7 @@ Module Fusione
                                 r.Item(f.Nome) = iAttuale + iDaSommare
                             End If
                         Case IdsOp.Nulla '""
-                                r.Item(f.Nome) = f.Id
+                            r.Item(f.Nome) = f.Id
                         Case IdsOp.Prefisso, IdsOp.Suffisso '"ADD", "END"
                             Dim lprefix As Short = f.IdString.Length
                             If r.Item(f.Nome).ToString.Length + lprefix > r.Row.Table.Columns(f.Nome).MaxLength Then
@@ -1177,7 +1179,7 @@ Module ListeID
                 lIDS = IdsOrdiniFornitori(dvids, n)
             Case MacroGruppo.Parcelle
                 EditTestoBarra("Modifiche: Parcelle")
-                lIDS = IdsClienti(dvids, n)
+                lIDS = IdsParcelle(dvids, n)
             Case MacroGruppo.Magazzino
                 EditTestoBarra("Modifiche: Magazzino")
                 lIDS = IdsMovMag(dvids, n)
@@ -1641,7 +1643,7 @@ Module ListeID
             End If
         Else
             Dim foundVen As Integer = dv.Find("SaleDocId")
-            If foundVen - 1 Then
+            If foundVen = -1 Then
                 Debug.Print("Partite SaleDocId: non trovato")
                 My.Application.Log.WriteEntry("Partite SaleDocId: non trovato")
                 If Not IsDebugging Then
@@ -1650,7 +1652,7 @@ Module ListeID
                 End If
             Else
                 Dim foundAcq As Integer = dv.Find("PurchaseDocId")
-                If foundAcq - 1 Then
+                If foundAcq = -1 Then
                     Debug.Print("Partite PurchaseDocId: non trovato")
                     My.Application.Log.WriteEntry("Partite PurchaseDocId: non trovato")
                     If Not IsDebugging Then
@@ -1666,9 +1668,6 @@ Module ListeID
                             lIDS.Add(New IDS With {.Chiave = True, .Id = PymtSchedId, .Nome = "PymtSchedId", .Operatore = IdsOp.Somma})
                             lIDS.Add(New IDS With {.Id = 0, .Nome = "JournalEntryId", .Operatore = IdsOp.Sovrascrivi})
                             lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = IdsOp.Sovrascrivi})
-                            'Campi accessori
-                            lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
-                        'lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                         Case "MA_PyblsRcvblsDetails"
                             lIDS.Add(New IDS With {.Chiave = True, .Id = PymtSchedId, .Nome = "PymtSchedId", .Operatore = IdsOp.Somma})
                             lIDS.Add(New IDS With {.Id = 0, .Nome = "PresentationJEId", .Operatore = IdsOp.Sovrascrivi})
@@ -1707,7 +1706,7 @@ Module ListeID
         Else
             FeeId = CInt(dv(found)("NewKey"))
             Dim foundScad As Integer = dv.Find("PymtSchedId")
-            If foundScad - 1 Then
+            If foundScad = -1 Then
                 Debug.Print("Parcelle PymtSchedId: non trovato")
                 My.Application.Log.WriteEntry("Parcelle PymtSchedId: non trovato")
                 If Not IsDebugging Then
@@ -1724,9 +1723,6 @@ Module ListeID
                         lIDS.Add(New IDS With {.Id = 0, .Nome = "ClosingJournalEntryId", .Operatore = IdsOp.Sovrascrivi})
                         lIDS.Add(New IDS With {.Id = PymtSchedId, .Nome = "PymtSchedId", .Operatore = IdsOp.Somma})
                         lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = IdsOp.Sovrascrivi})
-                        'Campi accessori
-                        lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
-                        'lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                     Case "MA_FeesDetails"
                         lIDS.Add(New IDS With {.Chiave = True, .Id = FeeId, .Nome = "FeeId", .Operatore = IdsOp.Somma})
                 End Select
@@ -1760,7 +1756,7 @@ Module ListeID
             End If
         End If
         Dim fVen As Integer = dv.Find("SaleDocId")
-        If fVen - 1 Then
+        If fVen = -1 Then
             Debug.Print("Crossref SaleDocId: non trovato")
             My.Application.Log.WriteEntry("Crossref SaleDocId: non trovato")
             ok = False
@@ -1770,7 +1766,7 @@ Module ListeID
             End If
         End If
         Dim fOrdCli As Integer = dv.Find("SaleOrdId")
-        If fOrdCli - 1 Then
+        If fOrdCli = -1 Then
             Debug.Print("Crossref SaleOrdId: non trovato")
             My.Application.Log.WriteEntry("Crossref SaleOrdId: non trovato")
             ok = False
@@ -1780,7 +1776,7 @@ Module ListeID
             End If
         End If
         Dim fAcq As Integer = dv.Find("PurchaseDocId")
-        If fAcq - 1 Then
+        If fAcq = -1 Then
             Debug.Print("Crossref PurchaseDocId: non trovato")
             My.Application.Log.WriteEntry("Crossref PurchaseDocId: non trovato")
             ok = False
@@ -1790,7 +1786,7 @@ Module ListeID
             End If
         End If
         Dim fOrdFor As Integer = dv.Find("PurchaseOrdId")
-        If fOrdCli - 1 Then
+        If fOrdCli = -1 Then
             Debug.Print("Crossref PurchaseOrdId: non trovato")
             My.Application.Log.WriteEntry("Crossref PurchaseOrdId: non trovato")
             ok = False
@@ -1800,7 +1796,7 @@ Module ListeID
             End If
         End If
         Dim fParcella As Integer = dv.Find("FeeId")
-        If fParcella - 1 Then
+        If fParcella = -1 Then
             Debug.Print("Crossref FeeId: non trovato")
             My.Application.Log.WriteEntry("Crossref FeeId: non trovato")
             ok = False

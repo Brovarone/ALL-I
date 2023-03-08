@@ -139,20 +139,12 @@ Possibilità
 3: aggiorno i contatori id al nuovo valore incrementato. Non dovrei avere doppioni. 
 4: contatori non fiscali ?
 
-Documenti Vendita
-variazioni Esigibilità iva
-Partite
-Prima Nota
-parcelle
-movimenti Analitici
-Documenti di Acquisto
-Dichiarazioni d'intento
-Liquidazioni ivai Inviate
-Comunicazioni dati doc. iva
-
-Mandati??
-
-
+Export da mago:
+Magazzino
+	MA_InventoryDefaults
+	MA_InventoryReasons
+	MA_InventoryParameters
+	MA_FixAssetsReasons
 ------------
 json
 If you must convert the JSON to a C# type first then create a C# type that matches the JSON. 
