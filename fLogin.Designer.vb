@@ -155,6 +155,10 @@ Partial Class FLogin
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
+        Me.BtnFusione = New System.Windows.Forms.Button()
+        Me.ChkFusioneItem = New System.Windows.Forms.CheckBox()
+        Me.ChkFusioneCR = New System.Windows.Forms.CheckBox()
+        Me.ChkFusionePartite = New System.Windows.Forms.CheckBox()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabPageCancella.SuspendLayout()
@@ -347,6 +351,7 @@ Partial Class FLogin
         '
         'TabControl1
         '
+        Me.TabControl1.Controls.Add(Me.TabFusione)
         Me.TabControl1.Controls.Add(Me.TabPageCancella)
         Me.TabControl1.Controls.Add(Me.TabOrdini)
         Me.TabControl1.Controls.Add(Me.TabPageFatture)
@@ -355,7 +360,6 @@ Partial Class FLogin
         Me.TabControl1.Controls.Add(Me.TabPagePartite)
         Me.TabControl1.Controls.Add(Me.TabPagePnota)
         Me.TabControl1.Controls.Add(Me.TabCespiti)
-        Me.TabControl1.Controls.Add(Me.TabFusione)
         Me.TabControl1.Enabled = False
         Me.TabControl1.Location = New System.Drawing.Point(10, 113)
         Me.TabControl1.Name = "TabControl1"
@@ -742,6 +746,10 @@ Partial Class FLogin
         'TabFusione
         '
         Me.TabFusione.BackColor = System.Drawing.SystemColors.Control
+        Me.TabFusione.Controls.Add(Me.ChkFusionePartite)
+        Me.TabFusione.Controls.Add(Me.ChkFusioneCR)
+        Me.TabFusione.Controls.Add(Me.ChkFusioneItem)
+        Me.TabFusione.Controls.Add(Me.BtnFusione)
         Me.TabFusione.Controls.Add(Me.ChkFusioneFull)
         Me.TabFusione.Location = New System.Drawing.Point(4, 22)
         Me.TabFusione.Name = "TabFusione"
@@ -932,7 +940,7 @@ Partial Class FLogin
         '
         'MenuStrip1
         '
-        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolsToolStripMenuItem, Me.FileToolStripMenuItem, Me.CespitiToolStripMenuItem, Me.SettingsToolStripMenuItem, Me.ComandiToolStripMenuItem, Me.FusioneToolStripMenuItem, Me.HelpToolStripMenuItem})
+        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolsToolStripMenuItem, Me.FileToolStripMenuItem, Me.FusioneToolStripMenuItem, Me.CespitiToolStripMenuItem, Me.SettingsToolStripMenuItem, Me.ComandiToolStripMenuItem, Me.HelpToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip1.Name = "MenuStrip1"
         Me.MenuStrip1.Size = New System.Drawing.Size(456, 24)
@@ -1336,6 +1344,45 @@ Partial Class FLogin
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
         '
+        'BtnFusione
+        '
+        Me.BtnFusione.Location = New System.Drawing.Point(237, 6)
+        Me.BtnFusione.Name = "BtnFusione"
+        Me.BtnFusione.Size = New System.Drawing.Size(75, 37)
+        Me.BtnFusione.TabIndex = 2
+        Me.BtnFusione.Text = "Esegui Fusione"
+        Me.BtnFusione.UseVisualStyleBackColor = True
+        '
+        'ChkFusioneItem
+        '
+        Me.ChkFusioneItem.AutoSize = True
+        Me.ChkFusioneItem.Location = New System.Drawing.Point(15, 49)
+        Me.ChkFusioneItem.Name = "ChkFusioneItem"
+        Me.ChkFusioneItem.Size = New System.Drawing.Size(86, 17)
+        Me.ChkFusioneItem.TabIndex = 3
+        Me.ChkFusioneItem.Text = "Fusione Item"
+        Me.ChkFusioneItem.UseVisualStyleBackColor = True
+        '
+        'ChkFusioneCR
+        '
+        Me.ChkFusioneCR.AutoSize = True
+        Me.ChkFusioneCR.Location = New System.Drawing.Point(15, 26)
+        Me.ChkFusioneCR.Name = "ChkFusioneCR"
+        Me.ChkFusioneCR.Size = New System.Drawing.Size(81, 17)
+        Me.ChkFusioneCR.TabIndex = 4
+        Me.ChkFusioneCR.Text = "Fusione CR"
+        Me.ChkFusioneCR.UseVisualStyleBackColor = True
+        '
+        'ChkFusionePartite
+        '
+        Me.ChkFusionePartite.AutoSize = True
+        Me.ChkFusionePartite.Location = New System.Drawing.Point(15, 72)
+        Me.ChkFusionePartite.Name = "ChkFusionePartite"
+        Me.ChkFusionePartite.Size = New System.Drawing.Size(96, 17)
+        Me.ChkFusionePartite.TabIndex = 5
+        Me.ChkFusionePartite.Text = "Fusione Partite"
+        Me.ChkFusionePartite.UseVisualStyleBackColor = True
+        '
         'FLogin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -1513,4 +1560,8 @@ Partial Class FLogin
     Friend WithEvents UNOSuTESTUNOToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents SPASuTESTSPAToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents EseguiInDefinitivoToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents BtnFusione As Button
+    Friend WithEvents ChkFusioneCR As CheckBox
+    Friend WithEvents ChkFusioneItem As CheckBox
+    Friend WithEvents ChkFusionePartite As CheckBox
 End Class

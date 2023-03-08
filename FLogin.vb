@@ -889,7 +889,7 @@ Public Class FLogin
             ProcessaGruppo(cespiti, "Cespiti")
         End If
 
-        If ChkFusioneFull.Checked Then
+        If ChkFusioneFull.Checked OrElse ChkFusioneCR.Checked OrElse ChkFusioneItem.Checked OrElse ChkFusionePartite.Checked Then
             Dim bFound As Boolean
             Dim fusione As String() = {"IDS_MIGRAZIONE"}
             Dim fusioneFound As Boolean() = {False}
@@ -1910,4 +1910,29 @@ Public Class FLogin
         SUBProcessa()
     End Sub
 
+    Private Sub BtnFusione_Click(sender As Object, e As EventArgs) Handles BtnFusione.Click
+        Dim b As DialogResult = MessageBox.Show("Salvataggio" & vbCrLf & "Eseguire Commit?", My.Application.Info.Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+        If b = DialogResult.No Then
+            'Se rispondo no abilito isDebugging che esegue il rollback
+            ToolStripMenuItemDebugging.PerformClick()
+        End If
+        'La fusione avverrà tra TMPUNO e TMPSPA con seguente restore da TMPSPA a SPA
+        SUBConnettiUNO(TxtTmpDB_UNO.Text)
+        SUBConnettiSPA(TxtTmpDB_SPA.Text)
+
+        'aggiungo controllo progressbar
+        Me.Controls.Add(prgFusion)
+        prgFusion.Visible = False
+        prgFusion.Style = ProgressBarStyle.Blocks
+        prgFusion.Value = 0.0
+        prgFusion.Minimum = 0.0
+        prgFusion.Maximum = 100.0
+        prgFusion.Style = ProgressBarStyle.Continuous
+        prgFusion.ForeColor = Color.FromArgb(255, 102, 0, 204)
+        prgFusion.Height = 15
+        prgFusion.Top = prgCopy.Top - prgFusion.Height
+        prgFusion.Width = prgCopy.Width
+        Me.Refresh()
+        SUBProcessa()
+    End Sub
 End Class
