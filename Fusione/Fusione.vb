@@ -366,14 +366,14 @@ Module Fusione
 #End Region
 #Region "Acquisti"
         'Adeguo gli ID su tutta la tabella ma mi copio solo il tipo documento desiderato
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDoc", .WhereClause = " WHERE DocumentType =  9830400", .Gruppo = MacroGruppo.Acquisto, .GeneraListaId = True, .PrimaryKey = "PurchaseDocId"})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocDetail", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocDetail INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocDetail.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocNotes", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocNotes INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocNotes.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocPymtSched", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocPymtSched INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocPymtSched.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDoc", .Gruppo = MacroGruppo.Acquisto})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocDetail", .Gruppo = MacroGruppo.Acquisto})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocNotes", .Gruppo = MacroGruppo.Acquisto})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocPymtSched", .Gruppo = MacroGruppo.Acquisto})
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocReferences", .Gruppo = MacroGruppo.acquisto, .JoinClause = " FROM MA_PurchaseDocReferences INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocReferences.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocShipping", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocShipping INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocShipping.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocSummary", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocSummary INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocSummary.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocTaxSummary", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocTaxSummary INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocTaxSummary.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocShipping", .Gruppo = MacroGruppo.Acquisto})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocSummary", .Gruppo = MacroGruppo.Acquisto})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocTaxSummary", .Gruppo = MacroGruppo.Acquisto})
 #End Region
 #Region "Ordini Clienti"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrd", .Gruppo = MacroGruppo.OrdiniClienti})
@@ -1031,11 +1031,9 @@ Module Fusione
                             Dim parameter As String = "@P" & paramIndex.ToString
                             Dim value As String = ""
                             Select Case f.Operatore.ToUpper
-                                'TODO: MODIFICARE LOGICA INSERENDO CASE PER GESTIRE VALORI A 0 IN QUAL CASO NON DEVO SOMMARE
                                 Case IdsOp.Somma ' "+"
-                                    value = field & " + " & f.Id.ToString
+                                    value = "(CASE WHEN " & field & " = 0 THEN 0 ELSE " & field & " + " & f.Id.ToString & " END)"
                                     cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
-                            'cmdqry.Parameters.AddWithValue(parameter, value)
                                 Case IdsOp.Nulla ' ""
                                     'value = f.Id.ToString
                                     cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
@@ -1048,9 +1046,6 @@ Module Fusione
                                         'END" = Suffisso
                                         value = value & "CONCAT(" & field & " ,'" & f.IdString & "') END)"
                                     End If
-                            'cmdqry.Parameters.Add(parameter, SqlDbType.VarChar, 100).Value = value
-                            'cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.VarChar, .Size = 100, .Direction = ParameterDirection.Input, .Value = value})
-
                                 Case IdsOp.Salva '"SAVE"
                                     value = "(CASE WHEN " & field & " <>'' AND " & field & " <> '" & f.IdString & "'  THEN '' ELSE " & field & " END)"
                                     cmdqry.Parameters.Add(parameter, SqlDbType.VarChar, f.MaxSize).Value = value
@@ -1325,21 +1320,16 @@ Module ListeID
                 Case "MA_PurchaseDocDetail"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseDocId, .Nome = "PurchaseDocId", .Operatore = IdsOp.Somma})
                     lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
-                    'todo: aspettare conferma su Ordini Fornitore. per ora non eseguo somma ma solo uguale
-                    If 1 = 1 Then
-                        lIDS.Add(New IDS With {.Id = 0, .Nome = "PurchaseOrdId", .Operatore = IdsOp.Sovrascrivi})
-                    Else
-                        Dim fOrdine As Integer = dv.Find("PurchaseOrdId")
-                        If fOrdine = -1 Then
-                            Debug.Print("Acquisti: PurchaseOrdId: non trovato")
-                            My.Application.Log.WriteEntry("Acquisti: PurchaseOrdId: non trovato")
-                            If Not IsDebugging Then
-                                MessageBox.Show("Impossibile continuare, Acquisti: PurchaseOrdId: non trovato nel file IDS")
-                                End
-                            End If
-                        Else
-                            lIDS.Add(New IDS With {.Id = CInt(dv(fOrdine)("NewKey")), .Nome = "PurchaseOrdId", .Operatore = IdsOp.Somma})
+                    Dim fOrdine As Integer = dv.Find("PurchaseOrdId")
+                    If fOrdine = -1 Then
+                        Debug.Print("Acquisti: PurchaseOrdId: non trovato")
+                        My.Application.Log.WriteEntry("Acquisti: PurchaseOrdId: non trovato")
+                        If Not IsDebugging Then
+                            MessageBox.Show("Impossibile continuare, Acquisti: PurchaseOrdId: non trovato nel file IDS")
+                            End
                         End If
+                    Else
+                        lIDS.Add(New IDS With {.Id = CInt(dv(fOrdine)("NewKey")), .Nome = "PurchaseOrdId", .Operatore = IdsOp.Somma})
                     End If
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "InspectionOrdId", .Operatore = IdsOp.Sovrascrivi})
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "InspectionBillId", .Operatore = IdsOp.Sovrascrivi})
