@@ -1873,6 +1873,7 @@ Public Class FLogin
         End If
     End Sub
     Private Sub EseguiTraTestToolStripMenuItem1_Click(sender As Object, e As EventArgs) Handles EseguiTraTestToolStripMenuItem1.Click
+        DBisTMP = True
         SUBFusione()
     End Sub
 
