@@ -128,8 +128,18 @@ Module Fusione
         Dim someTrouble As Boolean
 
         'Popolo lista con le tabelle e cosa fare
-        'ok = EstraiTabelle()
-        ok = EstraitabelleCR()
+        If FLogin.ChkFusioneFull.Checked Then
+            ok = EstraiTabelle()
+        End If
+        If FLogin.ChkFusioneCR.Checked Then
+            ok = EstraitabelleCR()
+        End If
+        If FLogin.ChkFusioneItem.Checked Then
+            ok = EstraitabelleItem()
+        End If
+        If FLogin.ChkFusionePartite.Checked Then
+            ok = EstraitabellePartite()
+        End If
         If Not ok Then someTrouble = True
 
         'Carico IDs da file xls partenza
@@ -337,6 +347,7 @@ Module Fusione
         FLogin.lstStatoConnessione.Items.Add("Creazione elenco lavori")
         tabelle = New List(Of TabelleDaEstrarre)
         tabelleNoEdit = New List(Of TabelleDaEstrarre)
+        Dim w As String
 #Region "Elenco Tabelle con modifiche"
 #Region "Fatture"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDoc", .Gruppo = MacroGruppo.Vendita})
@@ -353,7 +364,7 @@ Module Fusione
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_EI_ITDocAdditionalData", .Gruppo = MacroGruppo.Vendita})
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_EI_ITAsyncComm", .Gruppo = MacroGruppo.Vendita})
 #End Region
-#Region "Acquisti ( solo bolle di carico)"
+#Region "Acquisti"
         'Adeguo gli ID su tutta la tabella ma mi copio solo il tipo documento desiderato
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDoc", .WhereClause = " WHERE DocumentType =  9830400", .Gruppo = MacroGruppo.Acquisto, .GeneraListaId = True, .PrimaryKey = "PurchaseDocId"})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocDetail", .Gruppo = MacroGruppo.Acquisto, .JoinClause = " FROM MA_PurchaseDocDetail INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocDetail.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
@@ -386,14 +397,17 @@ Module Fusione
 
 #End Region
 #Region "Ordini Fornitori"
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrd", .Gruppo = MacroGruppo.OrdiniFornitori})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdDetails", .Gruppo = MacroGruppo.OrdiniFornitori})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdNotes", .Gruppo = MacroGruppo.OrdiniFornitori})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdPymtSched", .Gruppo = MacroGruppo.OrdiniFornitori})
-        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdReferences", .Gruppo = MacroGruppo.OrdiniFornitori})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdShipping", .Gruppo = MacroGruppo.OrdiniFornitori})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdSummary", .Gruppo = MacroGruppo.OrdiniFornitori})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdTaxSummary", .Gruppo = MacroGruppo.OrdiniFornitori})
+        w = " WHERE OrderDate >= '20220101'"
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrd", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
+        w = " WHERE PurchaseOrdId IN (SELECT DISTINCT PurchaseOrdId
+                FROM MA_PurchaseOrd WHERE OrderDate >= '20220101' ) "
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdDetails", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdNotes", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdPymtSched", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
+        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdReferences", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdShipping", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdSummary", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdTaxSummary", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
 #End Region
 #Region "Cespiti"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssets", .WhereClause = " WHERE DisposalType <> 7143424", .Gruppo = MacroGruppo.Cespiti})
@@ -419,9 +433,9 @@ Module Fusione
 #End Region
 #Region "Partite"
         'Considero OpeningDate e Settled ( Aperte)
-        Dim w As String = " WHERE PymtSchedId IN (SELECT DISTINCT t.PymtSchedId 
+        w = " WHERE PymtSchedId IN (SELECT DISTINCT t.PymtSchedId 
                                                     FROM MA_PyblsRcvbls t left JOIN MA_PyblsRcvblsDetails d ON t.PymtSchedId = d.PymtSchedId
-                                                    WHERE  t.Settled = '0' OR d.OpeningDate>='20230331' ) "
+                                                    WHERE  t.Settled = '0' OR d.OpeningDate >= '20230331' ) "
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .WhereClause = w, .Gruppo = MacroGruppo.Partite})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .WhereClause = w, .Gruppo = MacroGruppo.Partite})
 #End Region
