@@ -451,6 +451,71 @@ Module FusioneWithDataTable
         Return dt
     End Function
 
+    ''' <summary>
+    ''' Eseguo la preparazione alla BULK INSERT dell'intero dataset nel database di destinazione
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function ScriviDati(dt As DataTable, ByVal Commit As Boolean) As Boolean
+        'dsDestination 
+        'ConnectionSpa
+
+        Dim loggingTxt As String = "Si"
+        Dim okBulk As Boolean
+        Dim someTrouble As Boolean
+        Dim bulkMessage As New StringBuilder()
+        Dim errori As New StringBuilder()
+
+        'Parametri
+        'https://github.com/borisdj/EFCore.BulkExtensions
+
+        Dim iStep As Integer
+        Try
+
+            Using cmdqry = New SqlCommand("DBCC TRACEON(610)", ConnDestination)
+                cmdqry.ExecuteNonQuery()
+                Using bulkTrans = ConnDestination.BeginTransaction
+                    okBulk = ScriviBulk(dt.TableName, dt, bulkTrans, ConnDestination, DataRowState.Unchanged, loggingTxt, True)
+                    If Not okBulk Then someTrouble = True
+                    bulkMessage.AppendLine(loggingTxt)
+                    If someTrouble Then
+                        FLogin.lstStatoConnessione.Items.Add("Riscontrati errori: annullamento operazione...")
+                        ScriviLog("Riscontrati errori: annullamento operazione...")
+                        bulkTrans.Rollback()
+                    Else
+                        If Commit Then bulkTrans.Commit()
+                        Debug.Print("Commit !")
+                        'FLogin.lstStatoConnessione.Items.Add("Scrittura")
+                        FLogin.lstStatoConnessione.TopIndex = FLogin.lstStatoConnessione.Items.Count - 1
+                    End If
+
+                End Using
+                cmdqry.CommandText = "DBCC TRACEOFF(610)"
+                cmdqry.ExecuteNonQuery()
+            End Using
+        Catch ex As Exception
+            someTrouble = True
+            Debug.Print(ex.Message)
+            FLogin.lstStatoConnessione.Items.Add("Annullamento operazione: Riscontrati errori allo step " & iStep)
+            bulkMessage.AppendLine("[Salvataggio] - STEP: " & iStep & " - Sono stati riscontrati degli errori. (Vedere sezione Errori)")
+            errori.AppendLine("[Salvataggio] Messaggio:" & ex.Message)
+            errori.AppendLine("[Salvataggio] Stack:" & ex.StackTrace)
+
+            If Not IsDebugging Then
+                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                mb.ShowDialog()
+            End If
+        End Try
+
+        'Scrivo i Log
+        If bulkMessage.Length > 0 Then ScriviLog("+ Scrittura: " & bulkMessage.ToString)
+        If errori.Length > 0 Then
+            ScriviLog(" --- Errori ---" & vbCrLf & errori.ToString)
+            FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati errori : Controllare file di Log")
+            Debug.Print(errori.ToString)
+        End If
+
+        Return Not someTrouble
+    End Function
     Private Sub AggiungiIds(dt As DataTable, nome As String, listeIDs As List(Of ListaId), primarykey As String)
         Dim l As ListaId = listeIDs.Find(Function(x) x.Nome.Contains(nome))
         For Each dr As DataRow In dt.Rows

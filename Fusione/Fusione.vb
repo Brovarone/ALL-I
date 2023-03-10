@@ -315,12 +315,13 @@ Module Fusione
         Dim w As String = " WHERE PymtSchedId IN (SELECT DISTINCT t.PymtSchedId 
                                                     FROM MA_PyblsRcvbls t left JOIN MA_PyblsRcvblsDetails d ON t.PymtSchedId = d.PymtSchedId
                                                     WHERE  t.Settled = '0' OR d.OpeningDate>='20230331' ) "
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .WhereClause = w, .Gruppo = MacroGruppo.Partite})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .WhereClause = w, .Gruppo = MacroGruppo.Partite})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .WhereClause = w, .Gruppo = MacroGruppo.Partite})
         Return True
 
     End Function
     Private Function EstraitabelleCR() As Boolean
+        'todo spostare sotto dopo aver provato
         tabelle = New List(Of TabelleDaEstrarre)
         tabelleNoEdit = New List(Of TabelleDaEstrarre)
         Dim cr As New AccoppiamentiCrossReference
@@ -383,7 +384,7 @@ Module Fusione
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdDetails", .Gruppo = MacroGruppo.OrdiniClienti})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdNotes", .Gruppo = MacroGruppo.OrdiniClienti})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdPymtSched", .Gruppo = MacroGruppo.OrdiniClienti})
-        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdReferences", .Gruppo = MacroGruppo.OrdiniClienti})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdReferences", .Gruppo = MacroGruppo.OrdiniClienti})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdShipping", .Gruppo = MacroGruppo.OrdiniClienti})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdSummary", .Gruppo = MacroGruppo.OrdiniClienti})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdTaxSummary", .Gruppo = MacroGruppo.OrdiniClienti})
@@ -439,8 +440,8 @@ Module Fusione
         w = " WHERE PymtSchedId IN (SELECT DISTINCT t.PymtSchedId 
                                                     FROM MA_PyblsRcvbls t left JOIN MA_PyblsRcvblsDetails d ON t.PymtSchedId = d.PymtSchedId
                                                     WHERE  t.Settled = '0' OR d.OpeningDate >= '20230331' ) "
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .WhereClause = w, .Gruppo = MacroGruppo.Partite})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .WhereClause = w, .Gruppo = MacroGruppo.Partite})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .WhereClause = w, .Gruppo = MacroGruppo.Partite})
 #End Region
 #Region "Parcelle"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Fees", .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .Gruppo = MacroGruppo.Parcelle})
@@ -514,6 +515,7 @@ Module Fusione
 
 #End Region
 #Region "Fornitori"
+        'todo: aspettare risposta Silvia
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .AdditionalWhere = " AND CustSupp NOT IN ('ABC')"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppSupplierOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .AdditionalWhere = " AND Supplier NOT IN ('ABC')"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppBranches", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .AdditionalWhere = " AND CustSupp NOT IN ('ABC')"})
@@ -523,7 +525,7 @@ Module Fusione
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppPeople", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .AdditionalWhere = " AND CustSupp NOT IN ('ABC')"})
 #End Region
 #Region "Banche"
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Banks", .WhereClause = " WHERE IsACompanyBank = 0"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Banks", .WhereClause = " WHERE IsACompanyBank = 0", .AdditionalWhere = " AND Bank NOT IN ('0344032880')"})
 #End Region
 #Region "Analitica (CdC + Commesse)"
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Jobs"})
@@ -558,11 +560,11 @@ Module Fusione
         'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsFiscalDataDomCurr", .WhereClause = " WHERE FiscalYear = 2023"})
 #End Region
 #Region "Magazzino : Depositi"
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Storages"})
+        'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Storages"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_StorageGroups"})
 #End Region
 #Region "Agenti"
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SalesPeople", .WhereClause = " WHERE Salesperson NOT IN ( 'GIORDANO' , 'SECURGES' , 'ZUNINO')"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SalesPeople", .WhereClause = " WHERE Salesperson NOT IN ( 'GIORDANO' , 'SECURGES' , 'ZUNINO', 'MORANDO')"})
 #End Region
 #End Region
         Return True
@@ -807,71 +809,7 @@ Module Fusione
 
         Return Not someTrouble
     End Function
-    ''' <summary>
-    ''' Eseguo la preparazione alla BULK INSERT dell'intero dataset nel database di destinazione
-    ''' </summary>
-    ''' <returns></returns>
-    Friend Function ScriviDati(dt As DataTable, ByVal Commit As Boolean) As Boolean
-        'dsDestination 
-        'ConnectionSpa
 
-        Dim loggingTxt As String = "Si"
-        Dim okBulk As Boolean
-        Dim someTrouble As Boolean
-        Dim bulkMessage As New StringBuilder()
-        Dim errori As New StringBuilder()
-
-        'Parametri
-        'https://github.com/borisdj/EFCore.BulkExtensions
-
-        Dim iStep As Integer
-        Try
-
-            Using cmdqry = New SqlCommand("DBCC TRACEON(610)", ConnDestination)
-                cmdqry.ExecuteNonQuery()
-                Using bulkTrans = ConnDestination.BeginTransaction
-                    okBulk = ScriviBulk(dt.TableName, dt, bulkTrans, ConnDestination, DataRowState.Unchanged, loggingTxt, True)
-                    If Not okBulk Then someTrouble = True
-                    bulkMessage.AppendLine(loggingTxt)
-                    If someTrouble Then
-                        FLogin.lstStatoConnessione.Items.Add("Riscontrati errori: annullamento operazione...")
-                        ScriviLog("Riscontrati errori: annullamento operazione...")
-                        bulkTrans.Rollback()
-                    Else
-                        If Commit Then bulkTrans.Commit()
-                        Debug.Print("Commit !")
-                        'FLogin.lstStatoConnessione.Items.Add("Scrittura")
-                        FLogin.lstStatoConnessione.TopIndex = FLogin.lstStatoConnessione.Items.Count - 1
-                    End If
-
-                End Using
-                cmdqry.CommandText = "DBCC TRACEOFF(610)"
-                cmdqry.ExecuteNonQuery()
-            End Using
-        Catch ex As Exception
-            someTrouble = True
-            Debug.Print(ex.Message)
-            FLogin.lstStatoConnessione.Items.Add("Annullamento operazione: Riscontrati errori allo step " & iStep)
-            bulkMessage.AppendLine("[Salvataggio] - STEP: " & iStep & " - Sono stati riscontrati degli errori. (Vedere sezione Errori)")
-            errori.AppendLine("[Salvataggio] Messaggio:" & ex.Message)
-            errori.AppendLine("[Salvataggio] Stack:" & ex.StackTrace)
-
-            If Not IsDebugging Then
-                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
-                mb.ShowDialog()
-            End If
-        End Try
-
-        'Scrivo i Log
-        If bulkMessage.Length > 0 Then ScriviLog("+ Scrittura: " & bulkMessage.ToString)
-        If errori.Length > 0 Then
-            ScriviLog(" --- Errori ---" & vbCrLf & errori.ToString)
-            FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati errori : Controllare file di Log")
-            Debug.Print(errori.ToString)
-        End If
-
-        Return Not someTrouble
-    End Function
     Private Function ModificaSqlUpdate(t As TabelleDaEstrarre, ByVal lids As List(Of IDS), ByRef rows As Integer) As Boolean
         Dim qryToExecute As String = "UPDATE " & t.Nome & " SET "
         Dim result As Boolean = False
@@ -1231,6 +1169,7 @@ Module ListeID
     Private Function IdsOrdiniClienti(ByVal dv As DataView, ByVal tablename As String) As List(Of IDS)
         Dim lIDS As New List(Of IDS)
         Dim SaleOrdId As Integer
+        Dim SaleDocId As Integer
         Dim found As Integer = dv.Find("SaleOrdId")
         If found = -1 Then
             Debug.Print("Ordini SaleOrdId: non trovato")
@@ -1240,38 +1179,52 @@ Module ListeID
                 End
             End If
         Else
-            SaleOrdId = CInt(dv(found)("NewKey"))
-            Select Case tablename
-                Case "MA_SaleOrdComponents", "MA_SaleOrdNotes", "MA_SaleOrdPymtSched", "MA_SaleOrdShipping", "MA_SaleOrdSummary", "MA_SaleOrdTaxSummary"
-                    '"MA_SaleOrdReferences"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = IdsOp.Somma})
-                Case "MA_SaleOrd"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = IdsOp.Somma})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+            Dim fVen As Integer = dv.Find("SaleDocId")
+            If fVen = -1 Then
+                Debug.Print("Crossref SaleDocId: non trovato")
+                ScriviLog("Crossref SaleDocId: non trovato")
+                If Not IsDebugging Then
+                    MessageBox.Show("Impossibile continuare, Crossref SaleDocId: non trovato nel file IDS")
+                    End
+                End If
+            Else
+                SaleOrdId = CInt(dv(found)("NewKey"))
+                SaleDocId = CInt(dv(fVen)("NewKey"))
+                Select Case tablename
+                    Case "MA_SaleOrdComponents", "MA_SaleOrdNotes", "MA_SaleOrdPymtSched", "MA_SaleOrdShipping", "MA_SaleOrdSummary", "MA_SaleOrdTaxSummary"
+                        lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = IdsOp.Somma})
+                    Case "MA_SaleOrd"
+                        lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = IdsOp.Somma})
+                        lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
                     'lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
-                Case "MA_SaleOrdDetails"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = IdsOp.Somma})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ProductionPlanId", .Operatore = IdsOp.Sovrascrivi})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ProductionJobId", .Operatore = IdsOp.Sovrascrivi})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocId", .Operatore = IdsOp.Sovrascrivi})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceQuotationId", .Operatore = IdsOp.Sovrascrivi})
-                    lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = IdsOp.Sovrascrivi})
-                Case "ALLOrdCliDescrizioni", "ALLOrdCliContratto", "ALLOrdCliTipologiaServizi", "ALLOrdCliAttivita"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = IdsOp.Somma})
-                Case "ALLOrdFiglio"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = IdsOp.Somma})
-                    lIDS.Add(New IDS With {.Id = SaleOrdId, .Nome = "IdOrdFiglio", .Operatore = IdsOp.Somma})
-                Case "ALLOrdPadre"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = IdsOp.Somma})
-                    lIDS.Add(New IDS With {.Id = SaleOrdId, .Nome = "IdOrdPadre", .Operatore = IdsOp.Somma})
-                Case "ALLOrdCliAcc"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = IdsOp.Somma})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "Cdc", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
-                Case "ALLCespiti"
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = IdsOp.Somma})
-                    lIDS.Add(New IDS With {.IdString = PrefissoCespiti, .Nome = "Cespite", .Operatore = IdsOp.Prefisso, .MaxSize = 10})
-            End Select
+                    Case "MA_SaleOrdDetails"
+                        lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = IdsOp.Somma})
+                        lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                        lIDS.Add(New IDS With {.Id = 0, .Nome = "ProductionPlanId", .Operatore = IdsOp.Sovrascrivi})
+                        lIDS.Add(New IDS With {.Id = 0, .Nome = "ProductionJobId", .Operatore = IdsOp.Sovrascrivi})
+                        lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocId", .Operatore = IdsOp.Sovrascrivi})
+                        lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceQuotationId", .Operatore = IdsOp.Sovrascrivi})
+                        lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = IdsOp.Sovrascrivi})
+                    Case "ALLOrdCliDescrizioni", "ALLOrdCliContratto", "ALLOrdCliTipologiaServizi", "ALLOrdCliAttivita"
+                        lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = IdsOp.Somma})
+                    Case "ALLOrdFiglio"
+                        lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = IdsOp.Somma})
+                        lIDS.Add(New IDS With {.Id = SaleOrdId, .Nome = "IdOrdFiglio", .Operatore = IdsOp.Somma})
+                    Case "ALLOrdPadre"
+                        lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = IdsOp.Somma})
+                        lIDS.Add(New IDS With {.Id = SaleOrdId, .Nome = "IdOrdPadre", .Operatore = IdsOp.Somma})
+                    Case "ALLOrdCliAcc"
+                        lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = IdsOp.Somma})
+                        lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "Cdc", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                    Case "ALLCespiti"
+                        lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = IdsOp.Somma})
+                        lIDS.Add(New IDS With {.IdString = PrefissoCespiti, .Nome = "Cespite", .Operatore = IdsOp.Prefisso, .MaxSize = 10})
+                    Case "MA_SaleOrdReferences"
+                        lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = IdsOp.Somma})
+                        lIDS.Add(New IDS With {.Id = SaleDocId, .Nome = "DocumentId", .Operatore = IdsOp.Somma})
+
+                End Select
+            End If
         End If
 
         Return lIDS
@@ -1557,8 +1510,8 @@ Module ListeID
     Private Function IdsParcelle(ByVal dv As DataView, ByVal tablename As String) As List(Of IDS)
 
         Dim lIDS As New List(Of IDS)
-        Dim PymtSchedId As Integer
         Dim FeeId As Integer
+        Dim PymtSchedId As Integer
         Dim found As Integer = dv.Find("FeeId")
         If found = -1 Then
             Debug.Print("Parcelle FeeId: non trovato")
@@ -1568,7 +1521,6 @@ Module ListeID
                 End
             End If
         Else
-            FeeId = CInt(dv(found)("NewKey"))
             Dim foundScad As Integer = dv.Find("PymtSchedId")
             If foundScad = -1 Then
                 Debug.Print("Parcelle PymtSchedId: non trovato")
@@ -1578,6 +1530,7 @@ Module ListeID
                     End
                 End If
             Else
+                FeeId = CInt(dv(found)("NewKey"))
                 PymtSchedId = CInt(dv(foundScad)("NewKey"))
                 Select Case tablename
                     Case "MA_Fees"
@@ -1681,7 +1634,7 @@ Module ListeID
             Dim cr As New AccoppiamentiCrossReference
             Select Case tablename.Coppia_CR.id
                 Case cr.OrdCli_NdC.id, cr.OrdCli_FatImmm.id
-                    lIDS.Add(New IDS With {.Chiave = True, .Id = PymtSchedId, .Nome = "OriginDocType", .Operatore = IdsOp.Somma})
+                    lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "OriginDocType", .Operatore = IdsOp.Somma})
                     lIDS.Add(New IDS With {.Id = SaleDocId, .Nome = "DerivedDocID", .Operatore = IdsOp.Somma})
                 Case cr.OrdFor_BdC.id
                     lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseOrdId, .Nome = "OriginDocType", .Operatore = IdsOp.Somma})

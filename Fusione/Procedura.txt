@@ -1,0 +1,35 @@
+﻿-------------------------------
+---     MIGRAZIONE SPA      ---
+-------------------------------
+Ufficiale febbraio 2023 con data 1/4/2023
+
+§: Si usera' il DB della UNO che ha lo storico di fatture e altro.
+Cambiato e si userà quello della SPA !
+ESEGUENDO UNA QUERY DI UPDATE PRIMA DELLA COPIA I DATI DELLA UNO SARANNO "ROVINATI"
+Possibilità
+	1- copia da TMPUno a SPA
+	2- Copia e poi Restore da backup a UNO
+
+0- Devo passare un foglio excel con l'elenco degli ids che mi serve aggiungere. IDS_Migrazione.xlsx
+1-ipotesi:  Per ogni tabella interessata ( VENDITE, FATTURE ELETTRONICHE (anche passive), CONTABILITA', ANALITICA ,PARTITE ( distinte..),  RIF. INCROCIATI,...) per ogni colonna ID aumento il valore di un tot a seconda del tipo ID.
+	In questo modo posso elaborare le tabelle in una volta  senza rincorrere gli id /documenti collegati, basta avere il valore da incrementare.
+	Elenco tabelle vedi : Fusione\EstraiTabelle
+	---------
+	Carico tabelle
+	Carico IDs da file di partenza
+	Carico IDs DB destinazione SPA
+	Disattivo vincoli e relazioni ( per evitare blocchi ed errori)
+1-bis: per ogni tabella con modifiche
+	Genero lista modifiche --> Vedi: Fusione\Ids<Gruppo>
+	lancio query di update	
+2: eseguo una bulk-insert sul database di destinazione ( da UNO a SPA)
+3: aggiorno i contatori id al nuovo valore incrementato. Non dovrei avere doppioni. 
+4: contatori non fiscali ?
+
+Export da mago:
+Magazzino
+	MA_InventoryDefaults
+	MA_InventoryReasons
+	MA_InventoryParameters
+	MA_FixAssetsReasons
+	MA_Storages
