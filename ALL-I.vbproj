@@ -19,6 +19,9 @@
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
     <TargetFrameworkProfile />
+    <SatelliteResourceLanguages>it</SatelliteResourceLanguages>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
     <PublishUrl>Installer/</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
@@ -38,7 +41,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>2</ApplicationRevision>
+    <ApplicationRevision>3</ApplicationRevision>
     <ApplicationVersion>3.1.1.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -220,6 +223,15 @@
     </Reference>
     <Reference Include="PortableJsonSettingsProvider, Version=0.2.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\PortableJsonSettingsProvider.0.2.1\lib\net45\PortableJsonSettingsProvider.dll</HintPath>
+    </Reference>
+    <Reference Include="Serilog, Version=2.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
+      <HintPath>packages\Serilog.2.12.0\lib\net47\Serilog.dll</HintPath>
+    </Reference>
+    <Reference Include="Serilog.Sinks.Console, Version=4.1.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
+      <HintPath>packages\Serilog.Sinks.Console.4.1.0\lib\net45\Serilog.Sinks.Console.dll</HintPath>
+    </Reference>
+    <Reference Include="Serilog.Sinks.File, Version=5.0.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
+      <HintPath>packages\Serilog.Sinks.File.5.0.0\lib\net45\Serilog.Sinks.File.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable, Version=1.2.5.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">

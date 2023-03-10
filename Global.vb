@@ -890,11 +890,7 @@ Module MagoNet
             logTxt = "Nessuna riga da inserire su: " & TableName
             esito = True
         End If
-        If String.IsNullOrWhiteSpace(MyReturnString) Then
-            My.Application.Log.DefaultFileLogWriter.WriteLine(logTxt)
-        Else
-            MyReturnString = logTxt
-        End If
+        MyReturnString = logTxt
         Return esito
     End Function
 

@@ -162,7 +162,7 @@ Module FusioneWithDataRow
                 Dim withFiltro As Boolean = row.Table.TableName <> "MA_PurchaseDoc"
                 Try
                     'Filtro e EditDataRow in un colpo solo
-                    'TODO : accantonato
+                    'accantonato
                     'newDr = EditDataRow(If(withFiltro, FilterRows(row, listeIDs.Find(Function(x) x.Nome.Contains("MA_PurchaseDoc")), "PurchaseDocId"), row), lids)
                     result = True
                 Catch ex As Exception

@@ -10,11 +10,6 @@ Imports ALLSystemTools.SqlTools
 
 Imports Microsoft.EntityFrameworkCore
 
-'parametri publish locale che funziona
-'folder:C:\inetpub\wwwroot\ALL-I\
-'install folder:http://localhost/ALL-I/
-'update folder : ?
-
 'Parametri Publish su GitHub
 'Publishing folder: Installer/
 'Installation Folder: https://raw.githubusercontent.com/Brovarone/ALL-I/master/Installer/
@@ -38,7 +33,9 @@ Imports Microsoft.EntityFrameworkCore
 'EF Database-First
 'scaffold-dbcontext "Server=ACERBO\SQLEXPRESS; Database=DEMON;User Id=sa;Password=euroufficio" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Context MagoContext -Project EFMago  -StartupProject ALL-I -Force
 'Step 2: Migration
-
+'
+'Gestore Log: Serilog
+'
 Public Class FLogin
     'Ma_Saledoc  / Doc
     Public AdpDoc As SqlDataAdapter

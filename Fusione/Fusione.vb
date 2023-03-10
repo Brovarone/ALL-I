@@ -88,7 +88,7 @@ Module Fusione
     ''' </summary>
     ''' <param name="id"></param>
     ''' <returns></returns>
-    Private Function NomeMacroGruppo(ByVal id As Integer) As String
+    Friend Function NomeMacroGruppo(ByVal id As Integer) As String
         Select Case id
             Case 0
                 Return "Nessuno"
@@ -409,7 +409,7 @@ Module Fusione
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdReferences", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdShipping", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdSummary", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdTaxSummary", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdTaxSummay", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
 #End Region
 #Region "Cespiti"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssets", .WhereClause = " WHERE DisposalType <> 7143424", .Gruppo = MacroGruppo.Cespiti})
@@ -568,36 +568,6 @@ Module Fusione
         Return True
     End Function
 
-    ''' <summary>
-    ''' Eseguo le modifiche ai dati
-    ''' </summary>
-    ''' <returns></returns>
-    Friend Function ModificaDati(ByVal g As MacroGruppo, ByVal dt As DataTable, ByVal lids As List(Of IDS), ByRef result As Boolean) As DataTable
-        Dim newDt As New DataTable
-        Select Case g
-            Case MacroGruppo.Vendita, MacroGruppo.Analitica, MacroGruppo.OrdiniClienti, MacroGruppo.Cespiti, MacroGruppo.Agenti, MacroGruppo.Clienti, MacroGruppo.Articoli
-                Try
-                    newDt = Edit(dt, lids)
-                    result = True
-                Catch ex As Exception
-                    ScriviLog("#Errore# in ModificaDati " & NomeMacroGruppo(g) & ": " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-                    result = False
-                End Try
-            Case MacroGruppo.Acquisto
-                'Logica diversa perche' ho un filtro
-                Dim withFiltro As Boolean = dt.TableName <> "MA_PurchaseDoc"
-                Try
-                    'Filtro e edito in un colpo solo
-                    newDt = Edit(If(withFiltro, FilterRows(dt, listeIDs.Find(Function(x) x.Nome.Contains("MA_PurchaseDoc")), "PurchaseDocId"), dt), lids)
-                    result = True
-                Catch ex As Exception
-                    ScriviLog("#Errore# in ModificaDati Acquisti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-                    result = False
-                End Try
-        End Select
-        Return newDt
-    End Function
-
     Friend Function ScriviIds(ByVal dv As DataView) As Boolean
         Try
             'Vendite
@@ -667,109 +637,6 @@ Module Fusione
             ScriviLog("#Errore# in AggiornaIDs: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
         End Try
     End Sub
-    ''' <summary>
-    ''' Restituisce una datatable filtrata in base a una datatable filter secondo la primaryKey
-    ''' </summary>
-    ''' <param name="dt"></param>
-    ''' <param name="filter"></param>
-    ''' <param name="primaryKey"></param>
-    ''' <returns></returns>
-    Private Function FilterRows(ByVal dt As DataTable, ByVal filter As ListaId, ByVal primaryKey As String) As DataTable
-        Dim newDt As DataTable = dt.Clone
-        Try
-            For Each r As DataRow In dt.Rows
-                If filter.Ids.Contains(r.Item(primaryKey)) Then newDt.ImportRow(r)
-            Next
-        Catch ex As Exception
-            Debug.Print(ex.Message)
-            FLogin.lstStatoConnessione.Items.Add("Riscontrati errori durante il FiltroRows " & dt.TableName)
-            ScriviLog("#Errore# FiltroRows " & dt.TableName & " " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-            If Not IsDebugging Then
-                Dim mb As New MessageBoxWithDetails(ex.Message & " " & dt.TableName, GetCurrentMethod.Name, ex.StackTrace)
-                mb.ShowDialog()
-            End If
-        End Try
-        Return newDt
-    End Function
-    Private Function Edit(ByVal dt As DataTable, id As List(Of IDS)) As DataTable
-        Dim stopwatch As New System.Diagnostics.Stopwatch
-        stopwatch.Start()
-        Dim dv As DataView = dt.DefaultView
-        Dim keyIDS As IDS = id.Find(Function(p) p.Chiave = True)
-        If keyIDS IsNot Nothing Then dv.Sort = keyIDS.Nome & " desc"
-        Dim iRow As Integer
-        Try
-            For Each r As DataRowView In dv
-                iRow += 1
-                For Each f As IDS In id
-                    Select Case f.Operatore
-                        Case IdsOp.Somma '"+"
-                            Dim iAttuale As Integer = CInt(r.Item(f.Nome))
-                            If iAttuale > 0 Then r.Item(f.Nome) = iAttuale + f.Id
-                        Case IdsOp.SommaCondizionata '"+"
-                            Dim iAttuale As Integer = CInt(r.Item(f.Nome))
-                            Dim iDaSommare As Integer
-                            If iAttuale > 0 Then
-                                If f.Clausola_IsString Then
-                                    If r.Item(f.Clausola_Nome).ToString.Equals(f.Clausola_ValoreStr) Then
-                                        iDaSommare = f.IdSecondario
-                                    Else
-                                        iDaSommare = f.Id
-                                    End If
-                                Else
-                                    If r.Item(f.Clausola_Nome).Equals(f.Clausola_ValoreInt) Then
-                                        iDaSommare = f.IdSecondario
-                                    Else
-                                        iDaSommare = f.Id
-                                    End If
-                                End If
-                                r.Item(f.Nome) = iAttuale + iDaSommare
-                            End If
-                        Case IdsOp.Nulla '""
-                            r.Item(f.Nome) = f.Id
-                        Case IdsOp.Prefisso, IdsOp.Suffisso '"ADD", "END"
-                            Dim lprefix As Short = f.IdString.Length
-                            If r.Item(f.Nome).ToString.Length + lprefix > r.Row.Table.Columns(f.Nome).MaxLength Then
-                                Dim msg As String = "Riscontrati errori durante l'EditAddPrefix " & dt.TableName
-                                FLogin.lstStatoConnessione.Items.Add(msg)
-                                ScriviLog("#Errore# in EditAddPrefix: " & r.Item(dt.PrimaryKey.First.ColumnName) & " - " & dt.TableName & "." & f.Nome & " - Valore troppo grosso " & r.Item(f.Nome) & f.IdString)
-                                If Not IsDebugging Then
-                                    Dim mb As New MessageBoxWithDetails(msg & "." & f.Nome, GetCurrentMethod.Name, "Valore troppo grosso " & r.Item(f.Nome) & " " & f.IdString)
-                                    mb.ShowDialog()
-                                    End
-                                End If
-                            Else
-                                If Not String.IsNullOrWhiteSpace(r.Item(f.Nome).ToString) Then
-                                    If f.Operatore = IdsOp.Prefisso Then
-                                        r.Item(f.Nome) = String.Concat(f.IdString, r.Item(f.Nome))
-                                    Else
-                                        'END" = Suffisso
-                                        r.Item(f.Nome) = String.Concat(r.Item(f.Nome), f.IdString)
-                                    End If
-                                End If
-                            End If
-                        Case IdsOp.Salva ' "SAVE"
-                            If Not String.IsNullOrWhiteSpace(r.Item(f.Nome).ToString) AndAlso r.Item(f.Nome) <> f.IdString Then
-                                r.Item(f.Nome) = String.Empty
-                            End If
-                        Case IdsOp.Sovrascrivi '"OVERWRITE"
-                            r.Item(f.Nome) = f.Id
-                    End Select
-                Next
-            Next
-        Catch ex As Exception
-            Debug.Print(ex.Message)
-            FLogin.lstStatoConnessione.Items.Add("Riscontrata exception durante l'EditId " & dt.TableName)
-            ScriviLog("#Errore# in Edit: " & dt.TableName & " - " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-            If Not IsDebugging Then
-                Dim mb As New MessageBoxWithDetails(ex.Message & " " & dt.TableName, GetCurrentMethod.Name, ex.StackTrace)
-                mb.ShowDialog()
-            End If
-        End Try
-        Debug.Print("Edit(ok): " & dt.TableName & " " & stopwatch.Elapsed.ToString)
-        ScriviLog("Edit(ok): " & dt.TableName & " " & stopwatch.Elapsed.ToString)
-        Return dv.ToTable
-    End Function
 
     Friend Class IDS
         Public Property Chiave As Boolean
@@ -1428,7 +1295,7 @@ Module ListeID
         Else
             PurchaseOrdId = CInt(dv(found)("NewKey"))
             Select Case tablename
-                Case "MA_PurchaseOrdNotes", "MA_PurchaseOrdPymtSched", "MA_PurchaseOrdShipping", "MA_PurchaseOrdSummary", "MA_PurchaseOrdTaxSummary"
+                Case "MA_PurchaseOrdNotes", "MA_PurchaseOrdPymtSched", "MA_PurchaseOrdShipping", "MA_PurchaseOrdSummary", "MA_PurchaseOrdTaxSummay"
                     '"MA_PurchaseOrdReferences"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseOrdId, .Nome = "PurchaseOrdId", .Operatore = IdsOp.Somma})
                 Case "MA_PurchaseOrd"
