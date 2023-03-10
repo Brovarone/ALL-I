@@ -1938,6 +1938,7 @@ Public Class FLogin
     End Sub
 
     Private Sub EseguiStep_Click(sender As Object, e As EventArgs) Handles EseguiStep.Click
+        DBisTMP = True
         MostraNascondi(True)
         lstStatoConnessione.Location = New Point(12, 270)
         lstStatoConnessione.Size = New Size(429, 69)

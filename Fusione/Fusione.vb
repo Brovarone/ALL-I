@@ -173,7 +173,7 @@ Module Fusione
             FLogin.prgCopy.Maximum = tabelle.Count + tabelleNoEdit.Count
         Catch ex As Exception
             Debug.Print(ex.Message)
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# EsguiFusioneSql : DISATTIVO VINCOLI ORIGINE " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            ScriviLog("#Errore# EsguiFusioneSql : DISATTIVO VINCOLI ORIGINE " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
             If Not IsDebugging Then
                 Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
@@ -199,17 +199,17 @@ Module Fusione
                 'Metodo Sql Update
                 Dim rows As Integer
                 ok = ModificaSqlUpdate(t, lIDS, rows)
-                My.Application.Log.DefaultFileLogWriter.WriteLine("ModificaSql: " & t.Nome & " Esito:" & ok.ToString)
+                ScriviLog("ModificaSql: " & t.Nome & " Esito:" & ok.ToString)
                 Application.DoEvents()
                 If Not ok Then someTrouble = True
                 EditTestoBarra("Scrittura dati (destinazione): " & t.Nome)
                 ok = ScriviDatiSql(t, Not IsDebugging)
                 AvanzaBarra()
             Next
-            My.Application.Log.WriteEntry("Processo tabelle in : " & stopwatch2.Elapsed.ToString)
+            ScriviLog("Processo tabelle in : " & stopwatch2.Elapsed.ToString)
         Catch ex As Exception
             Debug.Print(ex.Message)
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# EseguiFusioneSql : MODIFICO E SCRIVO TABELLE " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            ScriviLog("#Errore# EseguiFusioneSql : MODIFICO E SCRIVO TABELLE " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
             If Not IsDebugging Then
                 Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
@@ -226,10 +226,10 @@ Module Fusione
                 ok = ScriviDatiSql(t, Not IsDebugging)
                 AvanzaBarra()
             Next
-            My.Application.Log.WriteEntry("Processo tabelle No edit in : " & stopwatch2.Elapsed.ToString)
+            ScriviLog("Processo tabelle No edit in : " & stopwatch2.Elapsed.ToString)
         Catch ex As Exception
             Debug.Print(ex.Message)
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# EseguiFusioneSql : SCRIVO TABELLE NO EDIT " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            ScriviLog("#Errore# EseguiFusioneSql : SCRIVO TABELLE NO EDIT " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
             If Not IsDebugging Then
                 Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
@@ -244,10 +244,10 @@ Module Fusione
                 ok = ScriviIds(dvIDS)
                 If Not ok Then someTrouble = True
             End If
-            My.Application.Log.WriteEntry("Scrivo Ids : " & stopwatch2.Elapsed.ToString)
+            ScriviLog("Scrivo Ids : " & stopwatch2.Elapsed.ToString)
         Catch ex As Exception
             Debug.Print(ex.Message)
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# EseguiFusioneSql : SCRIVI IDS " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            ScriviLog("#Errore# EseguiFusioneSql : SCRIVI IDS " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
             If Not IsDebugging Then
                 Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
@@ -262,9 +262,9 @@ Module Fusione
         stopwatch.Stop()
         Debug.Print(stopwatch.Elapsed.ToString)
         FLogin.lstStatoConnessione.Items.Add("Processo eseguito in : " & stopwatch.Elapsed.ToString)
-        My.Application.Log.WriteEntry("Processo eseguito in : " & stopwatch.Elapsed.ToString)
+        ScriviLog("Processo eseguito in : " & stopwatch.Elapsed.ToString)
 
-        My.Application.Log.WriteEntry("Fine processo")
+        ScriviLog("Fine processo")
         Return someTrouble
     End Function
 
@@ -281,7 +281,7 @@ Module Fusione
         Catch ex As Exception
             Debug.Print(ex.Message)
             FLogin.lstStatoConnessione.Items.Add("ERRORE SU 'Disattivo vincoli e Relazioni'")
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# DISATTIVO VINCOLI E RELAZIONI " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            ScriviLog("#Errore# DISATTIVO VINCOLI E RELAZIONI " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
         End Try
     End Sub
     Private Sub AttivaVincolieRelazioni()
@@ -297,7 +297,7 @@ Module Fusione
         Catch ex As Exception
             Debug.Print(ex.Message)
             FLogin.lstStatoConnessione.Items.Add("ERRORE SU 'Attiva vincoli e Relazioni'")
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# ATTIVA VINCOLI E RELAZIONI " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            ScriviLog("#Errore# ATTIVA VINCOLI E RELAZIONI " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
         End Try
     End Sub
     Private Function EstraitabelleParcelle() As Boolean
@@ -580,7 +580,7 @@ Module Fusione
                     newDt = Edit(dt, lids)
                     result = True
                 Catch ex As Exception
-                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati " & NomeMacroGruppo(g) & ": " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                    ScriviLog("#Errore# in ModificaDati " & NomeMacroGruppo(g) & ": " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
                     result = False
                 End Try
             Case MacroGruppo.Acquisto
@@ -591,7 +591,7 @@ Module Fusione
                     newDt = Edit(If(withFiltro, FilterRows(dt, listeIDs.Find(Function(x) x.Nome.Contains("MA_PurchaseDoc")), "PurchaseDocId"), dt), lids)
                     result = True
                 Catch ex As Exception
-                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaDati Acquisti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                    ScriviLog("#Errore# in ModificaDati Acquisti: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
                     result = False
                 End Try
         End Select
@@ -633,7 +633,7 @@ Module Fusione
 
             Return True
         Catch ex As Exception
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ScriviIds: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            ScriviLog("#Errore# in ScriviIds: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
             Return False
         End Try
     End Function
@@ -659,12 +659,12 @@ Module Fusione
             End Using
             Dim r As String = ReturnVarName(IdType, GetType(MagoNet.IdType))
             If String.IsNullOrWhiteSpace(MyReturnString) Then
-                My.Application.Log.WriteEntry("Ultimo ID scritto: " & value.ToString & " su tipo: " & r)
+                ScriviLog("Ultimo ID scritto: " & value.ToString & " su tipo: " & r)
             Else
                 MyReturnString = "Ultimo ID scritto: " & value.ToString & " su tipo: " & r
             End If
         Catch ex As Exception
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in AggiornaIDs: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            ScriviLog("#Errore# in AggiornaIDs: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
         End Try
     End Sub
     ''' <summary>
@@ -683,7 +683,7 @@ Module Fusione
         Catch ex As Exception
             Debug.Print(ex.Message)
             FLogin.lstStatoConnessione.Items.Add("Riscontrati errori durante il FiltroRows " & dt.TableName)
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# FiltroRows " & dt.TableName & " " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            ScriviLog("#Errore# FiltroRows " & dt.TableName & " " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
             If Not IsDebugging Then
                 Dim mb As New MessageBoxWithDetails(ex.Message & " " & dt.TableName, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
@@ -732,7 +732,7 @@ Module Fusione
                             If r.Item(f.Nome).ToString.Length + lprefix > r.Row.Table.Columns(f.Nome).MaxLength Then
                                 Dim msg As String = "Riscontrati errori durante l'EditAddPrefix " & dt.TableName
                                 FLogin.lstStatoConnessione.Items.Add(msg)
-                                My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in EditAddPrefix: " & r.Item(dt.PrimaryKey.First.ColumnName) & " - " & dt.TableName & "." & f.Nome & " - Valore troppo grosso " & r.Item(f.Nome) & f.IdString)
+                                ScriviLog("#Errore# in EditAddPrefix: " & r.Item(dt.PrimaryKey.First.ColumnName) & " - " & dt.TableName & "." & f.Nome & " - Valore troppo grosso " & r.Item(f.Nome) & f.IdString)
                                 If Not IsDebugging Then
                                     Dim mb As New MessageBoxWithDetails(msg & "." & f.Nome, GetCurrentMethod.Name, "Valore troppo grosso " & r.Item(f.Nome) & " " & f.IdString)
                                     mb.ShowDialog()
@@ -760,14 +760,14 @@ Module Fusione
         Catch ex As Exception
             Debug.Print(ex.Message)
             FLogin.lstStatoConnessione.Items.Add("Riscontrata exception durante l'EditId " & dt.TableName)
-            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in Edit: " & dt.TableName & " - " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            ScriviLog("#Errore# in Edit: " & dt.TableName & " - " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
             If Not IsDebugging Then
                 Dim mb As New MessageBoxWithDetails(ex.Message & " " & dt.TableName, GetCurrentMethod.Name, ex.StackTrace)
                 mb.ShowDialog()
             End If
         End Try
         Debug.Print("Edit(ok): " & dt.TableName & " " & stopwatch.Elapsed.ToString)
-        My.Application.Log.DefaultFileLogWriter.WriteLine("Edit(ok): " & dt.TableName & " " & stopwatch.Elapsed.ToString)
+        ScriviLog("Edit(ok): " & dt.TableName & " " & stopwatch.Elapsed.ToString)
         Return dv.ToTable
     End Function
 
@@ -797,7 +797,7 @@ Module Fusione
     End Class
 
     ''' <summary>
-    ''' Eseguo la preparazione alla BULK INSERT SQL nel database di destinazione usando una SQLDatareader 
+    ''' Esegue preparazione e BULK INSERT SQL nel database di destinazione usando un SQLDatareader 
     ''' </summary>
     ''' <returns></returns>
     Private Function ScriviDatiSql(t As TabelleDaEstrarre, ByVal commit As Boolean) As Boolean
@@ -807,8 +807,6 @@ Module Fusione
         Dim loggingTxt As String = "Si"
         Dim okBulk As Boolean
         Dim someTrouble As Boolean
-        Dim bulkMessage As New StringBuilder()
-        Dim errori As New StringBuilder()
         Dim SQLquery As String
         Dim qryCount As String
 
@@ -838,7 +836,7 @@ Module Fusione
                     'Righe origine
                     Using originRowCount = New SqlCommand(qryCount, origConn)
                         originCount = System.Convert.ToInt32(originRowCount.ExecuteScalar())
-                        bulkMessage.Append(t.Nome & " Orig:(" & originCount.ToString & ") ")
+                        ScriviLog(t.Nome & " Orig:(" & originCount.ToString & ") ")
                     End Using
                 End If
             End Using
@@ -850,7 +848,7 @@ Module Fusione
                     Using destCommRowCount = New SqlCommand(qryCount, destConn)
                         countStart = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())
                         'Debug.Print("Starting row count = {0}", countStart)
-                        bulkMessage.Append("Dest In:(" & countStart.ToString & ") ")
+                        ScriviLog("Dest In:(" & countStart.ToString & ") ")
                     End Using
                 End If
             End Using
@@ -881,17 +879,19 @@ Module Fusione
                                     'spostato fuori reader.Close()
                                 End Try
                                 reader.Close()
-                                bulkMessage.AppendLine(loggingTxt)
+                                ScriviLog(loggingTxt)
                                 'Controllo lo stato
                                 If Not okBulk Then someTrouble = True
                                 If someTrouble Then
                                     FLogin.lstStatoConnessione.Items.Add("Riscontrati errori: annullamento operazione...")
-                                    My.Application.Log.DefaultFileLogWriter.WriteLine("Riscontrati errori: annullamento operazione...")
+                                    ScriviLog("Riscontrati errori: annullamento operazione...")
                                     bulkTrans.Rollback()
                                 Else
-                                    If commit Then bulkTrans.Commit()
-                                    Debug.Print("Commit !")
-                                    'FLogin.lstStatoConnessione.Items.Add("Scrittura")
+                                    If commit Then
+                                        bulkTrans.Commit()
+                                        Debug.Print("Commit !")
+                                        ScriviLog("Commit !")
+                                    End If
                                     FLogin.lstStatoConnessione.TopIndex = FLogin.lstStatoConnessione.Items.Count - 1
                                 End If
                             End Using
@@ -900,19 +900,19 @@ Module Fusione
                 End If
             End Using
 
-            ' Perform a final count on the destination table
-            ' to see how many rows were added.
+            ' Effettuo un conteggio finale sulla tabelle di destinazione
+            ' per vedere quante righ sono state aggunte.
             Using destConn As New SqlConnection With {.ConnectionString = GetConnectionStringSPA()}
                 destConn.Open()
                 If destConn.State = ConnectionState.Open Then
                     Using destCommRowCount = New SqlCommand(qryCount, destConn)
-                        'mMetto ZERO perche' il Commit/RollBack precedente potrebbe metterci molto
+                        'Metto ZERO perche' il Commit/RollBack precedente potrebbe metterci molto
                         destCommRowCount.CommandTimeout = 0
                         Dim countEnd As Long = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())
-                        Debug.Print("Ending row count = {0}", countEnd)
-                        Debug.Print("{0} rows were added.", countEnd - countStart)
-                        bulkMessage.Append("Agg:(" & (countEnd - countStart).ToString & ")")
-                        If (countEnd - countStart) <> originCount Then bulkMessage.Append(" - Aggiunta righe diverse.")
+                        Debug.Print("Righe aggiunte finali = {0}", countEnd)
+                        Debug.Print("{0} righe aggiunte.", countEnd - countStart)
+                        ScriviLog("Agg:(" & (countEnd - countStart).ToString & ")")
+                        If (countEnd - countStart) <> originCount Then ScriviLog(" - Aggiunta righe diverse.")
                     End Using
                 End If
             End Using
@@ -922,9 +922,9 @@ Module Fusione
         Catch ex As Exception
             someTrouble = True
             Debug.Print(ex.Message)
-            bulkMessage.AppendLine("[Salvataggio] - ERRORE")
-            errori.AppendLine("[Errore Salvataggio] Messaggio:" & ex.Message)
-            errori.AppendLine("[Errore Salvataggio] Stack:" & ex.StackTrace)
+            ScriviLog("[Salvataggio] - ERRORE")
+            ScriviLog("[Errore Salvataggio] Messaggio:" & ex.Message)
+            ScriviLog("[Errore Salvataggio] Stack:" & ex.StackTrace)
 
             If Not IsDebugging Then
                 Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
@@ -933,13 +933,10 @@ Module Fusione
         End Try
 
         'Scrivo i Log
-        If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine("+ Scrittura: " & bulkMessage.ToString)
-        If errori.Length > 0 Then
-            My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ScriviDatiSQL---" & vbCrLf & errori.ToString)
+        If someTrouble Then
             FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati errori : Controllare file di Log")
-            Debug.Print(errori.ToString)
         End If
-        My.Application.Log.DefaultFileLogWriter.WriteLine(String.Empty)
+        ScriviLog(String.Empty)
 
         Return Not someTrouble
     End Function
@@ -971,7 +968,7 @@ Module Fusione
                     bulkMessage.AppendLine(loggingTxt)
                     If someTrouble Then
                         FLogin.lstStatoConnessione.Items.Add("Riscontrati errori: annullamento operazione...")
-                        My.Application.Log.DefaultFileLogWriter.WriteLine("Riscontrati errori: annullamento operazione...")
+                        ScriviLog("Riscontrati errori: annullamento operazione...")
                         bulkTrans.Rollback()
                     Else
                         If Commit Then bulkTrans.Commit()
@@ -999,9 +996,9 @@ Module Fusione
         End Try
 
         'Scrivo i Log
-        If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine("+ Scrittura: " & bulkMessage.ToString)
+        If bulkMessage.Length > 0 Then ScriviLog("+ Scrittura: " & bulkMessage.ToString)
         If errori.Length > 0 Then
-            My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & vbCrLf & errori.ToString)
+            ScriviLog(" --- Errori ---" & vbCrLf & errori.ToString)
             FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati errori : Controllare file di Log")
             Debug.Print(errori.ToString)
         End If
@@ -1082,12 +1079,12 @@ Module Fusione
                             Select Case exSql.Number
                                 Case 8152
                                     'Dato troppo lungo
-                                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaSqlUpdate.ExecuteNonQuery (Dato troppo lungo): " & exSql.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & exSql.StackTrace.ToString)
+                                    ScriviLog("#Errore# in ModificaSqlUpdate.ExecuteNonQuery (Dato troppo lungo): " & exSql.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & exSql.StackTrace.ToString)
                                 Case Else
-                                    My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaSqlUpdate.ExecuteNonQuery (SqlException): " & exSql.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & exSql.StackTrace.ToString)
+                                    ScriviLog("#Errore# in ModificaSqlUpdate.ExecuteNonQuery (SqlException): " & exSql.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & exSql.StackTrace.ToString)
                             End Select
                         Catch ex As Exception
-                            My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaSqlUpdate.ExecuteNonQuery (Exception Generica): " & ex.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & ex.StackTrace.ToString)
+                            ScriviLog("#Errore# in ModificaSqlUpdate.ExecuteNonQuery (Exception Generica): " & ex.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & ex.StackTrace.ToString)
 
                         End Try
                         Application.DoEvents()
@@ -1105,7 +1102,7 @@ Module Fusione
 
             Catch ex As Exception
                 Debug.Print(ex.Message)
-                My.Application.Log.DefaultFileLogWriter.WriteLine("#Errore# in ModificaSqlUpdate: " & ex.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & ex.StackTrace.ToString)
+                ScriviLog("#Errore# in ModificaSqlUpdate: " & ex.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & ex.StackTrace.ToString)
                 If Not IsDebugging Then
                     Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                     mb.ShowDialog()
@@ -1203,7 +1200,7 @@ Module ListeID
         Dim found As Integer = dv.Find("SaleDocId")
         If found = -1 Then
             Debug.Print("Vendite SaleDocId: non trovato")
-            My.Application.Log.WriteEntry("Fatture SaleDocId: non trovato")
+            ScriviLog("Fatture SaleDocId: non trovato")
             If Not IsDebugging Then
                 MessageBox.Show("Impossibile continuare,Vendite SaleDocId: non trovato nel file IDS")
                 End
@@ -1216,7 +1213,7 @@ Module ListeID
                     Dim fPartita As Integer = dv.Find("PymtSchedId")
                     If fPartita = -1 Then
                         Debug.Print("Fatture: PymtSchedId: non trovato")
-                        My.Application.Log.WriteEntry("Fatture: PymtSchedId: non trovato")
+                        ScriviLog("Fatture: PymtSchedId: non trovato")
                         If Not IsDebugging Then
                             MessageBox.Show("Impossibile continuare, Fatture: PymtSchedId: non trovato nel file IDS")
                             End
@@ -1252,7 +1249,7 @@ Module ListeID
                     Dim fOrdine As Integer = dv.Find("SaleOrdId")
                     If fOrdine = -1 Then
                         Debug.Print("Fatture: SaleOrdId: non trovato")
-                        My.Application.Log.WriteEntry("Fatture: SaleOrdId: non trovato")
+                        ScriviLog("Fatture: SaleOrdId: non trovato")
                         If Not IsDebugging Then
                             MessageBox.Show("Impossibile continuare, Fatture: SaleOrdId: non trovato nel file IDS")
                             End
@@ -1285,7 +1282,7 @@ Module ListeID
         Dim found As Integer = dv.Find("PurchaseDocId")
         If found = -1 Then
             Debug.Print("Acquisti PurchaseDocId: non trovato")
-            My.Application.Log.WriteEntry("Acquisti PurchaseDocId: non trovato")
+            ScriviLog("Acquisti PurchaseDocId: non trovato")
             If Not IsDebugging Then
                 MessageBox.Show("Impossibile continuare, Acquisti PurchaseDocId: non trovato nel file IDS")
                 End
@@ -1298,7 +1295,7 @@ Module ListeID
                     Dim fPartita As Integer = dv.Find("PymtSchedId")
                     If fPartita = -1 Then
                         Debug.Print("Acquisti: PymtSchedId: non trovato")
-                        My.Application.Log.WriteEntry("Acquisti: PymtSchedId: non trovato")
+                        ScriviLog("Acquisti: PymtSchedId: non trovato")
                         If Not IsDebugging Then
                             MessageBox.Show("Impossibile continuare, Acquisti: PymtSchedId: non trovato nel file IDS")
                             End
@@ -1336,7 +1333,7 @@ Module ListeID
                     Dim fOrdine As Integer = dv.Find("PurchaseOrdId")
                     If fOrdine = -1 Then
                         Debug.Print("Acquisti: PurchaseOrdId: non trovato")
-                        My.Application.Log.WriteEntry("Acquisti: PurchaseOrdId: non trovato")
+                        ScriviLog("Acquisti: PurchaseOrdId: non trovato")
                         If Not IsDebugging Then
                             MessageBox.Show("Impossibile continuare, Acquisti: PurchaseOrdId: non trovato nel file IDS")
                             End
@@ -1370,7 +1367,7 @@ Module ListeID
         Dim found As Integer = dv.Find("SaleOrdId")
         If found = -1 Then
             Debug.Print("Ordini SaleOrdId: non trovato")
-            My.Application.Log.WriteEntry("Ordini SaleOrdId: non trovato")
+            ScriviLog("Ordini SaleOrdId: non trovato")
             If Not IsDebugging Then
                 MessageBox.Show("Impossibile continuare, Ordini SaleOrdId: non trovato nel file IDS")
                 End
@@ -1423,7 +1420,7 @@ Module ListeID
         Dim found As Integer = dv.Find("PurchaseOrdId")
         If found = -1 Then
             Debug.Print("Ordini PurchaseOrdId: non trovato")
-            My.Application.Log.WriteEntry("Ordini PurchaseOrdId: non trovato")
+            ScriviLog("Ordini PurchaseOrdId: non trovato")
             If Not IsDebugging Then
                 MessageBox.Show("Impossibile continuare, Ordini PurchaseOrdId: non trovato nel file IDS")
                 End
@@ -1483,7 +1480,7 @@ Module ListeID
         Dim found As Integer = dv.Find("EntryId")
         If found = -1 Then
             Debug.Print("Magazzino EntryId: non trovato")
-            My.Application.Log.WriteEntry("Magazzino EntryId: non trovato")
+            ScriviLog("Magazzino EntryId: non trovato")
             If Not IsDebugging Then
                 MessageBox.Show("Impossibile continuare,Magazzino EntryId: non trovato nel file IDS")
                 End
@@ -1493,7 +1490,7 @@ Module ListeID
             Dim foundVen As Integer = dv.Find("SaleDocId")
             If foundVen = -1 Then
                 Debug.Print("Magazzino SaleDocId: non trovato")
-                My.Application.Log.WriteEntry("Magazzino SaleDocId: non trovato")
+                ScriviLog("Magazzino SaleDocId: non trovato")
                 If Not IsDebugging Then
                     MessageBox.Show("Impossibile continuare,Magazzino SaleDocId: non trovato nel file IDS")
                     End
@@ -1558,7 +1555,7 @@ Module ListeID
                 Dim found As Integer = dv.Find("DeclId")
                 If found = -1 Then
                     Debug.Print("Clienti DeclId: non trovato")
-                    My.Application.Log.WriteEntry("Clienti DeclId: non trovato")
+                    ScriviLog("Clienti DeclId: non trovato")
                     If Not IsDebugging Then
                         MessageBox.Show("Impossibile continuare, Clienti DeclId: non trovato nel file IDS")
                         End
@@ -1636,7 +1633,7 @@ Module ListeID
         Dim found As Integer = dv.Find("PymtSchedId")
         If found = -1 Then
             Debug.Print("Partite PymtSchedId: non trovato")
-            My.Application.Log.WriteEntry("Partite PymtSchedId: non trovato")
+            ScriviLog("Partite PymtSchedId: non trovato")
             If Not IsDebugging Then
                 MessageBox.Show("Impossibile continuare, Partite PymtSchedId: non trovato nel file IDS")
                 End
@@ -1645,7 +1642,7 @@ Module ListeID
             Dim foundVen As Integer = dv.Find("SaleDocId")
             If foundVen = -1 Then
                 Debug.Print("Partite SaleDocId: non trovato")
-                My.Application.Log.WriteEntry("Partite SaleDocId: non trovato")
+                ScriviLog("Partite SaleDocId: non trovato")
                 If Not IsDebugging Then
                     MessageBox.Show("Impossibile continuare,Partite SaleDocId: non trovato nel file IDS")
                     End
@@ -1654,7 +1651,7 @@ Module ListeID
                 Dim foundAcq As Integer = dv.Find("PurchaseDocId")
                 If foundAcq = -1 Then
                     Debug.Print("Partite PurchaseDocId: non trovato")
-                    My.Application.Log.WriteEntry("Partite PurchaseDocId: non trovato")
+                    ScriviLog("Partite PurchaseDocId: non trovato")
                     If Not IsDebugging Then
                         MessageBox.Show("Impossibile continuare,Partite PurchaseDocId: non trovato nel file IDS")
                         End
@@ -1698,7 +1695,7 @@ Module ListeID
         Dim found As Integer = dv.Find("FeeId")
         If found = -1 Then
             Debug.Print("Parcelle FeeId: non trovato")
-            My.Application.Log.WriteEntry("Parcelle FeeId: non trovato")
+            ScriviLog("Parcelle FeeId: non trovato")
             If Not IsDebugging Then
                 MessageBox.Show("Impossibile continuare, Parcelle FeeId: non trovato nel file IDS")
                 End
@@ -1708,7 +1705,7 @@ Module ListeID
             Dim foundScad As Integer = dv.Find("PymtSchedId")
             If foundScad = -1 Then
                 Debug.Print("Parcelle PymtSchedId: non trovato")
-                My.Application.Log.WriteEntry("Parcelle PymtSchedId: non trovato")
+                ScriviLog("Parcelle PymtSchedId: non trovato")
                 If Not IsDebugging Then
                     MessageBox.Show("Impossibile continuare,Parcelle PymtSchedId: non trovato nel file IDS")
                     End
@@ -1748,7 +1745,7 @@ Module ListeID
         Dim f As Integer = dv.Find("PymtSchedId")
         If f = -1 Then
             Debug.Print("Crossref PymtSchedId: non trovato")
-            My.Application.Log.WriteEntry("Crossref PymtSchedId: non trovato")
+            ScriviLog("Crossref PymtSchedId: non trovato")
             ok = False
             If Not IsDebugging Then
                 MessageBox.Show("Impossibile continuare, Crossref PymtSchedId: non trovato nel file IDS")
@@ -1758,7 +1755,7 @@ Module ListeID
         Dim fVen As Integer = dv.Find("SaleDocId")
         If fVen = -1 Then
             Debug.Print("Crossref SaleDocId: non trovato")
-            My.Application.Log.WriteEntry("Crossref SaleDocId: non trovato")
+            ScriviLog("Crossref SaleDocId: non trovato")
             ok = False
             If Not IsDebugging Then
                 MessageBox.Show("Impossibile continuare, Crossref SaleDocId: non trovato nel file IDS")
@@ -1768,7 +1765,7 @@ Module ListeID
         Dim fOrdCli As Integer = dv.Find("SaleOrdId")
         If fOrdCli = -1 Then
             Debug.Print("Crossref SaleOrdId: non trovato")
-            My.Application.Log.WriteEntry("Crossref SaleOrdId: non trovato")
+            ScriviLog("Crossref SaleOrdId: non trovato")
             ok = False
             If Not IsDebugging Then
                 MessageBox.Show("Impossibile continuare, Crossref SaleOrdId: non trovato nel file IDS")
@@ -1778,7 +1775,7 @@ Module ListeID
         Dim fAcq As Integer = dv.Find("PurchaseDocId")
         If fAcq = -1 Then
             Debug.Print("Crossref PurchaseDocId: non trovato")
-            My.Application.Log.WriteEntry("Crossref PurchaseDocId: non trovato")
+            ScriviLog("Crossref PurchaseDocId: non trovato")
             ok = False
             If Not IsDebugging Then
                 MessageBox.Show("Impossibile continuare, Crossref PurchaseDocId: non trovato nel file IDS")
@@ -1788,7 +1785,7 @@ Module ListeID
         Dim fOrdFor As Integer = dv.Find("PurchaseOrdId")
         If fOrdCli = -1 Then
             Debug.Print("Crossref PurchaseOrdId: non trovato")
-            My.Application.Log.WriteEntry("Crossref PurchaseOrdId: non trovato")
+            ScriviLog("Crossref PurchaseOrdId: non trovato")
             ok = False
             If Not IsDebugging Then
                 MessageBox.Show("Impossibile continuare, Ordini PurchaseOrdId: non trovato nel file IDS")
@@ -1798,7 +1795,7 @@ Module ListeID
         Dim fParcella As Integer = dv.Find("FeeId")
         If fParcella = -1 Then
             Debug.Print("Crossref FeeId: non trovato")
-            My.Application.Log.WriteEntry("Crossref FeeId: non trovato")
+            ScriviLog("Crossref FeeId: non trovato")
             ok = False
             If Not IsDebugging Then
                 MessageBox.Show("Impossibile continuare, Crossref FeeId: non trovato nel file IDS")
