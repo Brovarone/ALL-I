@@ -1,13 +1,13 @@
 #Requires -Version 2.0
 <#
 .SYNOPSIS
-   This script finds the current ClickOnce version in a project file (.csproj or .vbproj) or a publish profile file (.pubxml), and updates the MinimumRequiredVersion to be this same version.
+	This script finds the current ClickOnce version in a project file (.csproj or .vbproj) or a publish profile file (.pubxml), and updates the MinimumRequiredVersion to be this same version.
 
 .DESCRIPTION
-   This script finds the current ClickOnce version in a project file (.csproj or .vbproj) or a publish profile file (.pubxml), and updates the MinimumRequiredVersion to be this same version.
-   Setting the MinimumRequiredVersion property forces the ClickOnce application to update automatically without prompting the user.
+	This script finds the current ClickOnce version in a project file (.csproj or .vbproj) or a publish profile file (.pubxml), and updates the MinimumRequiredVersion to be this same version.
+	Setting the MinimumRequiredVersion property forces the ClickOnce application to update automatically without prompting the user.
 
-   You can also dot source this script in order to call the UpdateProjectsMinimumRequiredClickOnceVersion function directly.
+	You can also dot source this script in order to call the UpdateProjectsMinimumRequiredClickOnceVersion function directly.
 
 .PARAMETER ProjectFilePaths
 	Array of paths of the .csproj, .vbproj or .pubxml files to process.
@@ -51,7 +51,7 @@
 
 .NOTES
 	Author: Daniel Schroeder
-	Version: 1.6.0
+	Version: 1.7.0
 #>
 
 Param
@@ -111,9 +111,9 @@ Begin
 
 				$errorMessage += ' See the project homepage for more details: https://github.com/deadlydog/AutoUpdateProjectsMinimumRequiredClickOnceVersion'
 
-                # Write the error message and exit with an error code so that the Visual Studio build fails and the user notices that something is wrong.
-                Write-Error $errorMessage
-                exit [int]$exitCode
+				# Write the error message and exit with an error code so that the Visual Studio build fails and the user notices that something is wrong.
+				Write-Error $errorMessage
+				exit [int]$exitCode
 			}
 
 			# Read the file contents in.
@@ -301,7 +301,7 @@ Begin
 	}
 
 	function Get-CommonVisualStudioDirectoryPath
- 	{
+	{
 		[string] $programFilesDirectory = $null
 		try
 		{
@@ -358,9 +358,10 @@ Process
 		# Get the directory that this script is in.
 		$scriptDirectory = Split-Path $MyInvocation.MyCommand.Path -Parent
 
-		# Create array of project file paths.
-        $ProjectFilePaths = @()
-		Get-Item "$scriptDirectory\*" -Include "*.csproj","*.vbproj","*.pubxml" | foreach { $ProjectFilePaths += $_.FullName }
+		# Get all of the project files in the same directory as this script.
+		$ProjectFilePaths = @()
+		Get-Item "$scriptDirectory\*" -Include "*.csproj","*.vbproj","*.pubxml" |
+			ForEach-Object { $ProjectFilePaths += $_.FullName }
 	}
 
 	# If there are no files to process, display a message.
@@ -369,6 +370,16 @@ Process
 		throw "No project files were found to be processed."
 	}
 
-	# Process each of the project files in the comma-separated list.
-	$ProjectFilePaths | UpdateProjectsMinimumRequiredClickOnceVersion
+	# .NET Core stores the settings in a publish profile instead of directly in the project file, so we need to grab those too.
+	[string[]] $filePathsToProcess = $ProjectFilePaths
+
+	# Get any publish profiles for each of the projects.
+	$ProjectFilePaths | ForEach-Object {
+		[string] $projectDirectory = Split-Path $_ -Parent
+		Get-Item "$projectDirectory\Properties\PublishProfiles\*" -Include "*.pubxml" |
+			ForEach-Object { $filePathsToProcess += $_.FullName }
+	}
+
+	# Process each of the project and publish profile files.
+	$filePathsToProcess | UpdateProjectsMinimumRequiredClickOnceVersion
 }
