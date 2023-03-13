@@ -21,10 +21,22 @@ Module Fusione
         Public Property AdditionalWhere As String
         Public Property WhereClause As String
         Public Property JoinClause As String
+        ''' <summary>
+        ''' Nome Tabella
+        ''' </summary>
+        ''' <returns></returns>
         Public Property Nome As String
+        Public Property FriendName As String
         Public Property Paging As Boolean
         Public Property Gruppo As MacroGruppo
-        Public Property GeneraListaId As Boolean
+        Public Property GeneraListaPKIds As Boolean
+        Public Property ListaPKIds As List(Of Integer)
+        ''' <summary>
+        ''' Elenco di nomi tabella cui passare la lista ids estratta
+        ''' </summary>
+        ''' <returns></returns>
+        Public Property TabelleDipendenti As List(Of String)
+        Public Property HaListaPKIds As Boolean
         Public Property PrimaryKey As String
         Public Property Coppia_CR As CR
         Public Sub New()
@@ -34,9 +46,15 @@ Module Fusione
             Nome = ""
             Paging = False
             Gruppo = MacroGruppo.Nessuno
-            GeneraListaId = False
+            GeneraListaPKIds = False
+            HaListaPKIds = False
             PrimaryKey = ""
         End Sub
+        Public Function Ritorna_Clausola_IN() As String
+            Dim s As String = " WHERE " & PrimaryKey & " IN ("
+            s &= String.Join(",", ListaPKIds.ToArray)
+            Return s & ")"
+        End Function
     End Class
     Friend Class AccoppiamentiCrossReference
         Public Property OrdCli_NdC As New CR With {.Origine = 27066372, .Derivato = 27066389, .id = 1}
@@ -181,7 +199,6 @@ Module Fusione
             Return False
         End Try
 
-
         'Tabelle con Edit
         Try
             stopwatch2.Restart()
@@ -189,20 +206,27 @@ Module Fusione
             listeIDs = New List(Of ListaId)
 
             For Each t In tabelle
-                FLogin.lstStatoConnessione.Items.Add(t.Nome)
+                Dim n As String = If(String.IsNullOrWhiteSpace(t.FriendName), t.Nome, t.Nome & " - " & t.FriendName)
+                FLogin.lstStatoConnessione.Items.Add(n)
                 'Estraggo la ListaIDS
                 Dim lIDS As New List(Of IDS)
-                EditTestoBarra("Estrai IDS: " & t.Nome)
+                EditTestoBarra("Estrai IDS: " & n)
                 lIDS = EstraiListaIds(t, dvIDS)
 
-                EditTestoBarra("Modifica dati (origine): " & t.Nome)
+                EditTestoBarra("Modifica dati (origine): " & n)
+                If t.GeneraListaPKIds Then
+                    Dim PKList As List(Of Integer) = EstraiListaPK(t)
+                    For Each table In t.TabelleDipendenti
+                        tabelle.Find(Function(x) x.Nome = table).ListaPKIds = PKList
+                    Next
+                End If
                 'Metodo Sql Update
                 Dim rows As Integer
                 ok = ModificaSqlUpdate(t, lIDS, rows)
-                ScriviLog("ModificaSql: " & t.Nome & " Esito:" & ok.ToString)
+                ScriviLog("ModificaSql: " & n & " Esito:" & ok.ToString)
                 Application.DoEvents()
                 If Not ok Then someTrouble = True
-                EditTestoBarra("Scrittura dati (destinazione): " & t.Nome)
+                EditTestoBarra("Scrittura dati (destinazione): " & n)
                 ok = ScriviDatiSql(t, Not IsDebugging)
                 AvanzaBarra()
             Next
@@ -268,6 +292,184 @@ Module Fusione
         Return someTrouble
     End Function
 
+    Private Function EstraiListaPK(t As TabelleDaEstrarre) As List(Of Integer)
+        Dim qryToExecute As String = "SELECT DISTINCT " & t.PrimaryKey & " FROM " & t.Nome
+        Dim result As New List(Of Integer)
+        Using origSelConn As New SqlConnection With {.ConnectionString = GetConnectionStringUNO()}
+            Try
+                origSelConn.Open()
+                If origSelConn.State = ConnectionState.Open Then
+                    Using cmdqry = New SqlCommand(qryToExecute, origSelConn)
+                        cmdqry.CommandTimeout = 0
+                        cmdqry.CommandType = CommandType.Text
+                        '    cmdqry.ExecuteNonQuery()
+
+                        '    'Solo per SQL 2017 in su
+                        '    'cmdqry.CommandText = "DBCC TRACEON(460,1)" ' per cambiare errore ID 8152 with 2628
+                        '    'cmdqry.ExecuteNonQuery()
+
+                        '    cmdqry.CommandText = "ALTER TABLE " & t.Nome & " NOCHECK CONSTRAINT ALL"
+                        '    cmdqry.ExecuteNonQuery()
+                        qryToExecute &= t.JoinClause & t.WhereClause & t.AdditionalWhere
+                        cmdqry.CommandText = qryToExecute
+                        Debug.Print(qryToExecute)
+
+                        Try
+                            Using sdr As SqlDataReader = cmdqry.ExecuteReader()
+                                While sdr.Read()
+                                    result.Add(sdr.GetInt32(0))
+                                End While
+                            End Using
+
+                        Catch exSql As SqlException
+                            Debug.Print("Errore SQL:" & exSql.Number.ToString)
+                            Select Case exSql.Number
+                                Case 8152
+                                    'Dato troppo lungo
+                                    ScriviLog("#Errore# in EstraiListaPK.ExecuteNonQuery (Dato troppo lungo): " & exSql.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & exSql.StackTrace.ToString)
+                                Case Else
+                                    ScriviLog("#Errore# in EstraiListaPK.ExecuteNonQuery (SqlException): " & exSql.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & exSql.StackTrace.ToString)
+                            End Select
+                        Catch ex As Exception
+                            ScriviLog("#Errore# in EstraiListaPK.ExecuteNonQuery (Exception Generica): " & ex.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & ex.StackTrace.ToString)
+
+                        End Try
+                    End Using
+                    Application.DoEvents()
+
+                    'cmdqry.CommandText = "ALTER TABLE " & t.Nome & " WITH CHECK CHECK CONSTRAINT ALL"
+                    'cmdqry.ExecuteNonQuery()
+
+                    ''cmdqry.CommandText = "DBCC TRACEOFF(460, 1)"
+                    ''cmdqry.ExecuteNonQuery()
+                    'cmdqry.CommandText = "DBCC TRACEOFF(610)"
+                    'cmdqry.ExecuteNonQuery()
+                End If
+            Catch ex As Exception
+                Debug.Print(ex.Message)
+                ScriviLog("#Errore# in EstraiListaPK: " & ex.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & ex.StackTrace.ToString)
+                If Not IsDebugging Then
+                    Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                    mb.ShowDialog()
+                End If
+            End Try
+        End Using
+        Return result
+    End Function
+
+    Private Function ModificaSqlUpdate(t As TabelleDaEstrarre, ByVal lids As List(Of IDS), ByRef rows As Integer) As Boolean
+        Dim qryToExecute As String = "UPDATE " & t.Nome & " SET "
+        Dim result As Boolean = False
+        Using origUpdConn As New SqlConnection With {.ConnectionString = GetConnectionStringUNO()}
+            Try
+                origUpdConn.Open()
+                If origUpdConn.State = ConnectionState.Open Then
+
+                    Using cmdqry = New SqlCommand(qryToExecute, origUpdConn)
+                        cmdqry.CommandTimeout = 0
+                        '    cmdqry.ExecuteNonQuery()
+
+                        '    'Solo per SQL 2017 in su
+                        '    'cmdqry.CommandText = "DBCC TRACEON(460,1)" ' per cambiare errore ID 8152 with 2628
+                        '    'cmdqry.ExecuteNonQuery()
+
+                        '    cmdqry.CommandText = "ALTER TABLE " & t.Nome & " NOCHECK CONSTRAINT ALL"
+                        '    cmdqry.ExecuteNonQuery()
+
+                        Dim sb As New StringBuilder
+                        Dim paramIndex As Integer = 0
+                        For Each f As IDS In lids
+                            paramIndex += 1
+                            Dim field As String = t.Nome & "." & f.Nome
+                            Dim parameter As String = "@P" & paramIndex.ToString
+                            Dim value As String = ""
+                            Select Case f.Operatore.ToUpper
+                                Case IdsOp.Somma ' "+"
+                                    value = "(CASE WHEN " & field & " = 0 THEN 0 ELSE " & field & " + " & f.Id.ToString & " END)"
+                                    cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
+                                Case IdsOp.Nulla ' ""
+                                    'value = f.Id.ToString
+                                    cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
+
+                                Case IdsOp.Prefisso, IdsOp.Suffisso '"ADD", "END"
+                                    value = "(CASE WHEN " & field & " ='' THEN '' ELSE "
+                                    If f.Operatore = IdsOp.Prefisso Then
+                                        value = value & "CONCAT('" & f.IdString & "', " & field & ") END)"
+                                    Else
+                                        'END" = Suffisso
+                                        value = value & "CONCAT(" & field & " ,'" & f.IdString & "') END)"
+                                    End If
+                                Case IdsOp.Salva '"SAVE"
+                                    value = "(CASE WHEN " & field & " <>'' AND " & field & " <> '" & f.IdString & "'  THEN '' ELSE " & field & " END)"
+                                    cmdqry.Parameters.Add(parameter, SqlDbType.VarChar, f.MaxSize).Value = value
+                                Case IdsOp.Sovrascrivi '"OVERWRITE"
+                                    ' value = f.Id.ToString
+                                    cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
+
+                            End Select
+
+                            Select Case f.Operatore
+                                Case IdsOp.Somma ' "+"
+                                    sb.AppendLine(field & " = " & field & " + " & parameter & ", ")
+                                Case IdsOp.Prefisso, IdsOp.Suffisso '"ADD", "END"
+                                    sb.AppendLine(field & " = " & value & ", ")
+                                Case Else
+                                    sb.AppendLine(field & " = " & parameter & ", ")
+                            End Select
+
+                        Next
+                        qryToExecute &= Strings.Left(sb.ToString, sb.Length - 4)
+                        If t.HaListaPKIds Then
+                            qryToExecute &= t.Ritorna_Clausola_IN
+
+                        Else
+                            qryToExecute &= t.JoinClause & t.WhereClause & t.AdditionalWhere
+                        End If
+
+
+                        cmdqry.CommandText = qryToExecute
+                        Debug.Print(qryToExecute)
+                        Try
+                            rows = cmdqry.ExecuteNonQuery()
+                            result = True
+                        Catch exSql As SqlException
+                            Debug.Print("Errore SQL:" & exSql.Number.ToString)
+                            Select Case exSql.Number
+                                Case 8152
+                                    'Dato troppo lungo
+                                    ScriviLog("#Errore# in ModificaSqlUpdate.ExecuteNonQuery (Dato troppo lungo): " & exSql.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & exSql.StackTrace.ToString)
+                                Case Else
+                                    ScriviLog("#Errore# in ModificaSqlUpdate.ExecuteNonQuery (SqlException): " & exSql.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & exSql.StackTrace.ToString)
+                            End Select
+                        Catch ex As Exception
+                            ScriviLog("#Errore# in ModificaSqlUpdate.ExecuteNonQuery (Exception Generica): " & ex.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & ex.StackTrace.ToString)
+
+                        End Try
+                        Application.DoEvents()
+                        cmdqry.Parameters.Clear()
+
+                        'cmdqry.CommandText = "ALTER TABLE " & t.Nome & " WITH CHECK CHECK CONSTRAINT ALL"
+                        'cmdqry.ExecuteNonQuery()
+
+                        ''cmdqry.CommandText = "DBCC TRACEOFF(460, 1)"
+                        ''cmdqry.ExecuteNonQuery()
+                        'cmdqry.CommandText = "DBCC TRACEOFF(610)"
+                        'cmdqry.ExecuteNonQuery()
+                    End Using
+                End If
+
+            Catch ex As Exception
+                Debug.Print(ex.Message)
+                ScriviLog("#Errore# in ModificaSqlUpdate: " & ex.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & ex.StackTrace.ToString)
+                If Not IsDebugging Then
+                    Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                    mb.ShowDialog()
+                End If
+            End Try
+        End Using
+        Return result
+    End Function
+
     Private Sub DisattivaVincolieRelazioni()
         Try
             FLogin.lstStatoConnessione.Items.Add("TRACEON Origine...")
@@ -287,6 +489,8 @@ Module Fusione
     Private Sub AttivaVincolieRelazioni()
         Try
             FLogin.lstStatoConnessione.Items.Add("Riattivo vincoli per Origine...")
+            'In questo caso le riattiva ma non le controlla
+            'RunNonQuery("EXEC sp_msforeachtable 'ALTER TABLE ? WITH NOCHECK CHECK CONSTRAINT ALL'", GetConnectionStringUNO)
             RunNonQuery("EXEC sp_msforeachtable 'ALTER TABLE ? WITH CHECK CHECK CONSTRAINT ALL'", GetConnectionStringUNO)
             'RunNonQuery("DBCC TRACEOFF(460, 1)", GetConnectionStringUNO)
             FLogin.lstStatoConnessione.Items.Add("TRACEOFF Origine...")
@@ -303,8 +507,8 @@ Module Fusione
     Private Function EstraitabelleParcelle() As Boolean
         tabelle = New List(Of TabelleDaEstrarre)
         tabelleNoEdit = New List(Of TabelleDaEstrarre)
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Fees", .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .Gruppo = MacroGruppo.Parcelle})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FeesDetails", .JoinClause = " FROM MA_FeesDetails INNER JOIN MA_Fees ON MA_FeesDetails.FeeId = MA_Fees.FeeId", .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .Gruppo = MacroGruppo.Parcelle})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Fees", .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .PrimaryKey = "FeeId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_FeesDetails"}, .Gruppo = MacroGruppo.Parcelle})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FeesDetails", .HaListaPKIds = True, .PrimaryKey = "FeeId", .Gruppo = MacroGruppo.Parcelle})
         Return True
 
     End Function
@@ -312,11 +516,9 @@ Module Fusione
         tabelle = New List(Of TabelleDaEstrarre)
         tabelleNoEdit = New List(Of TabelleDaEstrarre)
         'Considero OpeningDate e Settled ( Aperte)
-        Dim w As String = " WHERE PymtSchedId IN (SELECT DISTINCT t.PymtSchedId 
-                                                    FROM MA_PyblsRcvbls t left JOIN MA_PyblsRcvblsDetails d ON t.PymtSchedId = d.PymtSchedId
-                                                    WHERE  t.Settled = '0' OR d.OpeningDate>='20230331' ) "
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .WhereClause = w, .Gruppo = MacroGruppo.Partite})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .WhereClause = w, .Gruppo = MacroGruppo.Partite})
+        Dim wp As String = " WHERE PymtSchedId IN (SELECT DISTINCT t.PymtSchedId FROM MA_PyblsRcvbls t left JOIN MA_PyblsRcvblsDetails d ON t.PymtSchedId = d.PymtSchedId WHERE  t.Settled = '0' OR d.OpeningDate>='20230331' ) "
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .WhereClause = wp, .PrimaryKey = "PymtSchedId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_PyblsRcvblsDetails"}, .Gruppo = MacroGruppo.Partite})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .HaListaPKIds = True, .PrimaryKey = "PymtSchedId", .Gruppo = MacroGruppo.Partite})
         Return True
 
     End Function
@@ -325,20 +527,20 @@ Module Fusione
         tabelle = New List(Of TabelleDaEstrarre)
         tabelleNoEdit = New List(Of TabelleDaEstrarre)
         Dim cr As New AccoppiamentiCrossReference
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.OrdCli_NdC.WhereClause, .Coppia_CR = cr.OrdCli_NdC, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.OrdCli_FatImmm.WhereClause, .Coppia_CR = cr.OrdCli_FatImmm, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.OrdFor_BdC.WhereClause, .Coppia_CR = cr.OrdFor_BdC, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.DDT_FatImm.WhereClause, .Coppia_CR = cr.DDT_FatImm, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.FatImm_ParCli.WhereClause, .Coppia_CR = cr.FatImm_ParCli, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.FatImm_NdC.WhereClause, .Coppia_CR = cr.FatImm_NdC, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.FatImm_FatImm.WhereClause, .Coppia_CR = cr.FatImm_FatImm, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.NdC_OrdCli.WhereClause, .Coppia_CR = cr.NdC_OrdCli, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.BdC_ResFor.WhereClause, .Coppia_CR = cr.BdC_ResFor, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.BdC_FatImm.WhereClause, .Coppia_CR = cr.BdC_FatImm, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.BdC_NdCRic.WhereClause, .Coppia_CR = cr.BdC_NdCRic, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.ParFor_NdCRic.WhereClause, .Coppia_CR = cr.ParFor_NdCRic, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.ParCli_NdC.WhereClause, .Coppia_CR = cr.ParCli_NdC, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.Parc_ParFor.WhereClause, .Coppia_CR = cr.Parc_ParFor, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.OrdCli_NdC.WhereClause, .Coppia_CR = cr.OrdCli_NdC, .FriendName = "OrdCli_NdC", .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.OrdCli_FatImmm.WhereClause, .Coppia_CR = cr.OrdCli_FatImmm, .FriendName = "OrdCli_FatImmm", .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.OrdFor_BdC.WhereClause, .Coppia_CR = cr.OrdFor_BdC, .FriendName = "OrdFor_BdC", .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.DDT_FatImm.WhereClause, .Coppia_CR = cr.DDT_FatImm, .FriendName = "DDT_FatImm", .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.FatImm_ParCli.WhereClause, .Coppia_CR = cr.FatImm_ParCli, .FriendName = "FatImm_ParCli", .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.FatImm_NdC.WhereClause, .Coppia_CR = cr.FatImm_NdC, .FriendName = "FatImm_NdC", .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.FatImm_FatImm.WhereClause, .Coppia_CR = cr.FatImm_FatImm, .FriendName = "FatImm_FatImm", .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.NdC_OrdCli.WhereClause, .Coppia_CR = cr.NdC_OrdCli, .FriendName = "NdC_OrdCli", .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.BdC_ResFor.WhereClause, .Coppia_CR = cr.BdC_ResFor, .FriendName = "BdC_ResFor", .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.BdC_FatImm.WhereClause, .Coppia_CR = cr.BdC_FatImm, .FriendName = "BdC_FatImm", .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.BdC_NdCRic.WhereClause, .Coppia_CR = cr.BdC_NdCRic, .FriendName = "BdC_NdCRic", .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.ParFor_NdCRic.WhereClause, .Coppia_CR = cr.ParFor_NdCRic, .FriendName = "ParFor_NdCRic", .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.ParCli_NdC.WhereClause, .Coppia_CR = cr.ParCli_NdC, .FriendName = "ParCli_NdC", .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.Parc_ParFor.WhereClause, .Coppia_CR = cr.Parc_ParFor, .FriendName = "Parc_ParFor", .Gruppo = MacroGruppo.CrossRef})
         Return True
     End Function
     ''' <summary>
@@ -437,20 +639,35 @@ Module Fusione
 #End Region
 #Region "Partite"
         'Considero OpeningDate e Settled ( Aperte)
-        w = " WHERE PymtSchedId IN (SELECT DISTINCT t.PymtSchedId 
-                                                    FROM MA_PyblsRcvbls t left JOIN MA_PyblsRcvblsDetails d ON t.PymtSchedId = d.PymtSchedId
-                                                    WHERE  t.Settled = '0' OR d.OpeningDate >= '20230331' ) "
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .WhereClause = w, .Gruppo = MacroGruppo.Partite})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .WhereClause = w, .Gruppo = MacroGruppo.Partite})
+        Dim wp As String = " WHERE PymtSchedId IN (SELECT DISTINCT t.PymtSchedId FROM MA_PyblsRcvbls t left JOIN MA_PyblsRcvblsDetails d ON t.PymtSchedId = d.PymtSchedId WHERE  t.Settled = '0' OR d.OpeningDate>='20230331' ) "
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .WhereClause = wp, .PrimaryKey = "PymtSchedId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_PyblsRcvblsDetails"}, .Gruppo = MacroGruppo.Partite})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .HaListaPKIds = True, .PrimaryKey = "PymtSchedId", .Gruppo = MacroGruppo.Partite})
 #End Region
 #Region "Parcelle"
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Fees", .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .Gruppo = MacroGruppo.Parcelle})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FeesDetails", .JoinClause = " FROM MA_FeesDetails INNER JOIN MA_Fees ON MA_FeesDetails.FeeId = MA_Fees.FeeId", .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .Gruppo = MacroGruppo.Parcelle})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Fees", .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .PrimaryKey = "FeeId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_FeesDetails"}, .Gruppo = MacroGruppo.Parcelle})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FeesDetails", .HaListaPKIds = True, .PrimaryKey = "FeeId", .Gruppo = MacroGruppo.Parcelle})
 #End Region
 #Region "NON SI PUO' -- Movimenti di Magazzino"
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_InventoryEntries", .Gruppo = MacroGruppo.Magazzino})
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_InventoryEntriesDetail", .Gruppo = MacroGruppo.Magazzino})
         ''tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_InventoryEntriesMA_InventoryEntriesReference", .Gruppo = MacroGruppo.Magazzino})
+#End Region
+#Region "Cross Reference"
+        Dim cr As New AccoppiamentiCrossReference
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.OrdCli_NdC.WhereClause, .Coppia_CR = cr.OrdCli_NdC, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.OrdCli_FatImmm.WhereClause, .Coppia_CR = cr.OrdCli_FatImmm, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.OrdFor_BdC.WhereClause, .Coppia_CR = cr.OrdFor_BdC, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.DDT_FatImm.WhereClause, .Coppia_CR = cr.DDT_FatImm, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.FatImm_ParCli.WhereClause, .Coppia_CR = cr.FatImm_ParCli, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.FatImm_NdC.WhereClause, .Coppia_CR = cr.FatImm_NdC, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.FatImm_FatImm.WhereClause, .Coppia_CR = cr.FatImm_FatImm, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.NdC_OrdCli.WhereClause, .Coppia_CR = cr.NdC_OrdCli, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.BdC_ResFor.WhereClause, .Coppia_CR = cr.BdC_ResFor, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.BdC_FatImm.WhereClause, .Coppia_CR = cr.BdC_FatImm, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.BdC_NdCRic.WhereClause, .Coppia_CR = cr.BdC_NdCRic, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.ParFor_NdCRic.WhereClause, .Coppia_CR = cr.ParFor_NdCRic, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.ParCli_NdC.WhereClause, .Coppia_CR = cr.ParCli_NdC, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.Parc_ParFor.WhereClause, .Coppia_CR = cr.Parc_ParFor, .Gruppo = MacroGruppo.CrossRef})
 #End Region
 
 #Region "Note"
@@ -574,9 +791,9 @@ Module Fusione
         Try
             'Vendite
             Dim found As Integer = dv.Find("SaleDocId")
-            Dim saleDocId As Integer = CInt(dv(found)("NewKey"))
+            Dim SaleDocId As Integer = CInt(dv(found)("NewKey"))
             Dim lastId As Integer = dtNewIds(dvNewIds.Find(IdType.DocVend)).Item("LastId")
-            AggiornaIDs(IdType.DocVend, lastId + saleDocId)
+            AggiornaIDs(IdType.DocVend, lastId + SaleDocId)
             'Acquisti
             found = dv.Find("PurchaseDocId")
             Dim PurchaseDocId As Integer = CInt(dv(found)("NewKey"))
@@ -592,11 +809,11 @@ Module Fusione
             Dim PurchaseOrdId = CInt(dv(found)("NewKey"))
             lastId = dtNewIds(dvNewIds.Find(IdType.OrdFor)).Item("LastId")
             AggiornaIDs(IdType.OrdFor, lastId + PurchaseOrdId)
-            'Dichiarazione di intento
-            found = dv.Find("DeclId")
-            Dim DeclId As Integer = CInt(dv(found)("NewKey"))
-            lastId = dtNewIds(dvNewIds.Find(IdType.DicIntento)).Item("LastId")
-            AggiornaIDs(IdType.DicIntento, lastId + DeclId)
+            'Dichiarazione di intento 
+            'found = dv.Find("DeclId")
+            'Dim DeclId As Integer = CInt(dv(found)("NewKey"))
+            'lastId = dtNewIds(dvNewIds.Find(IdType.DicIntento)).Item("LastId")
+            'AggiornaIDs(IdType.DicIntento, lastId + DeclId)
             'Partite
             found = dv.Find("PymtSchedId")
             Dim PymtId As Integer = CInt(dv(found)("NewKey"))
@@ -609,6 +826,12 @@ Module Fusione
             Return False
         End Try
     End Function
+    ''' <summary>
+    ''' Aggiorna la tabella degli IdNumbers con i valori "adeguati"
+    ''' </summary>
+    ''' <param name="IdType"></param>
+    ''' <param name="value"></param>
+    ''' <param name="MyReturnString"></param>
     Private Sub AggiornaIDs(ByVal IdType As Integer, ByVal value As Integer, Optional ByRef MyReturnString As String = "")
         Try
             Using destConn As New SqlConnection With {.ConnectionString = GetConnectionStringSPA()}
@@ -686,8 +909,14 @@ Module Fusione
         Try
             ' Definisco le query per le righe attuali nella tabella
             If String.IsNullOrWhiteSpace(t.JoinClause) Then
-                SQLquery = "Select * FROM " & t.Nome & t.WhereClause & t.AdditionalWhere
-                qryCount = "Select COUNT(1) FROM " & t.Nome & t.WhereClause & t.AdditionalWhere
+                If t.HaListaPKIds Then
+                    SQLquery = "Select * FROM " & t.Nome & t.Ritorna_Clausola_IN
+                    qryCount = "Select COUNT(1) FROM " & t.Nome & t.Ritorna_Clausola_IN
+
+                Else
+                    SQLquery = "Select * FROM " & t.Nome & t.WhereClause & t.AdditionalWhere
+                    qryCount = "Select COUNT(1) FROM " & t.Nome & t.WhereClause & t.AdditionalWhere
+                End If
             Else
                 SQLquery = "Select " & t.Nome & ".* " & t.JoinClause & t.WhereClause & t.AdditionalWhere
                 qryCount = "Select COUNT(1) " & t.Nome & t.JoinClause & t.WhereClause & t.AdditionalWhere
@@ -810,113 +1039,6 @@ Module Fusione
         Return Not someTrouble
     End Function
 
-    Private Function ModificaSqlUpdate(t As TabelleDaEstrarre, ByVal lids As List(Of IDS), ByRef rows As Integer) As Boolean
-        Dim qryToExecute As String = "UPDATE " & t.Nome & " SET "
-        Dim result As Boolean = False
-        Using origUpdConn As New SqlConnection With {.ConnectionString = GetConnectionStringUNO()}
-            Try
-                origUpdConn.Open()
-                If origUpdConn.State = ConnectionState.Open Then
-                    Using cmdqry = New SqlCommand(qryToExecute, origUpdConn)
-                        cmdqry.CommandTimeout = 0
-                        '    cmdqry.ExecuteNonQuery()
-
-                        '    'Solo per SQL 2017 in su
-                        '    'cmdqry.CommandText = "DBCC TRACEON(460,1)" ' per cambiare errore ID 8152 with 2628
-                        '    'cmdqry.ExecuteNonQuery()
-
-                        '    cmdqry.CommandText = "ALTER TABLE " & t.Nome & " NOCHECK CONSTRAINT ALL"
-                        '    cmdqry.ExecuteNonQuery()
-
-                        Dim sb As New StringBuilder
-                        Dim paramIndex As Integer = 0
-                        For Each f As IDS In lids
-                            paramIndex += 1
-                            Dim field As String = t.Nome & "." & f.Nome
-                            Dim parameter As String = "@P" & paramIndex.ToString
-                            Dim value As String = ""
-                            Select Case f.Operatore.ToUpper
-                                Case IdsOp.Somma ' "+"
-                                    value = "(CASE WHEN " & field & " = 0 THEN 0 ELSE " & field & " + " & f.Id.ToString & " END)"
-                                    cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
-                                Case IdsOp.Nulla ' ""
-                                    'value = f.Id.ToString
-                                    cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
-
-                                Case IdsOp.Prefisso, IdsOp.Suffisso '"ADD", "END"
-                                    value = "(CASE WHEN " & field & " ='' THEN '' ELSE "
-                                    If f.Operatore = IdsOp.Prefisso Then
-                                        value = value & "CONCAT('" & f.IdString & "', " & field & ") END)"
-                                    Else
-                                        'END" = Suffisso
-                                        value = value & "CONCAT(" & field & " ,'" & f.IdString & "') END)"
-                                    End If
-                                Case IdsOp.Salva '"SAVE"
-                                    value = "(CASE WHEN " & field & " <>'' AND " & field & " <> '" & f.IdString & "'  THEN '' ELSE " & field & " END)"
-                                    cmdqry.Parameters.Add(parameter, SqlDbType.VarChar, f.MaxSize).Value = value
-                                Case IdsOp.Sovrascrivi '"OVERWRITE"
-                                    ' value = f.Id.ToString
-                                    cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
-
-                            End Select
-
-                            Select Case f.Operatore
-                                Case IdsOp.Somma ' "+"
-                                    sb.AppendLine(field & " = " & field & " + " & parameter & ", ")
-                                Case IdsOp.Prefisso, IdsOp.Suffisso '"ADD", "END"
-                                    sb.AppendLine(field & " = " & value & ", ")
-                                Case Else
-                                    sb.AppendLine(field & " = " & parameter & ", ")
-                            End Select
-
-                        Next
-                        qryToExecute &= Strings.Left(sb.ToString, sb.Length - 4)
-                        'Aggiungo JOIN e WHERE (NO SU GRUPPO ACQUISTI) 
-                        qryToExecute &= If(t.Gruppo = MacroGruppo.Acquisto, String.Empty, t.JoinClause & t.WhereClause & t.AdditionalWhere)
-
-                        cmdqry.CommandText = qryToExecute
-                        Debug.Print(qryToExecute)
-                        Try
-                            rows = cmdqry.ExecuteNonQuery()
-                            result = True
-                        Catch exSql As SqlException
-                            Debug.Print("Errore SQL:" & exSql.Number.ToString)
-                            Select Case exSql.Number
-                                Case 8152
-                                    'Dato troppo lungo
-                                    ScriviLog("#Errore# in ModificaSqlUpdate.ExecuteNonQuery (Dato troppo lungo): " & exSql.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & exSql.StackTrace.ToString)
-                                Case Else
-                                    ScriviLog("#Errore# in ModificaSqlUpdate.ExecuteNonQuery (SqlException): " & exSql.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & exSql.StackTrace.ToString)
-                            End Select
-                        Catch ex As Exception
-                            ScriviLog("#Errore# in ModificaSqlUpdate.ExecuteNonQuery (Exception Generica): " & ex.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & ex.StackTrace.ToString)
-
-                        End Try
-                        Application.DoEvents()
-                        cmdqry.Parameters.Clear()
-
-                        'cmdqry.CommandText = "ALTER TABLE " & t.Nome & " WITH CHECK CHECK CONSTRAINT ALL"
-                        'cmdqry.ExecuteNonQuery()
-
-                        ''cmdqry.CommandText = "DBCC TRACEOFF(460, 1)"
-                        ''cmdqry.ExecuteNonQuery()
-                        'cmdqry.CommandText = "DBCC TRACEOFF(610)"
-                        'cmdqry.ExecuteNonQuery()
-                    End Using
-                End If
-
-            Catch ex As Exception
-                Debug.Print(ex.Message)
-                ScriviLog("#Errore# in ModificaSqlUpdate: " & ex.Message.ToString & Environment.NewLine & qryToExecute & Environment.NewLine & ex.StackTrace.ToString)
-                If Not IsDebugging Then
-                    Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
-                    mb.ShowDialog()
-                End If
-            End Try
-        End Using
-        Return result
-    End Function
-
 End Module
 
 ''' <summary>
@@ -971,7 +1093,7 @@ Module ListeID
                 EditTestoBarra("Modifiche: Partite")
                 lIDS = IdsPartite(dvids, n)
             Case MacroGruppo.CrossRef
-                EditTestoBarra("Modifiche: Cross Reference")
+                EditTestoBarra("Modifiche: Cross Reference " & table.Coppia_CR.ToString)
                 lIDS = IdsCrossRef(dvids, table)
             Case MacroGruppo.Fornitori
                 EditTestoBarra("Modifiche: Fornitori")

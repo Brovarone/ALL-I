@@ -112,7 +112,7 @@ Module FusioneWithDataRow
             If rowsReturned <> pageSize Then t.Paging = False
             'Cerco lista di appoggio con nome tabella 
             Dim indexLista As Integer
-            If t.GeneraListaId Then
+            If t.GeneraListaPKIds Then
                 indexLista = listeIDs.FindIndex(Function(x) x.Nome.Contains(t.Nome))
             End If
             Dim dr As SqlDataReader = cmd.ExecuteReader
@@ -131,7 +131,7 @@ Module FusioneWithDataRow
                     'dtNew.LoadDataRow(ColArray, True)
                     dtNew.Rows.Add(nr)
                     'Aggiungo gli id
-                    If t.GeneraListaId Then listeIDs(indexLista).Ids.Add(dr.Item(t.PrimaryKey))
+                    If t.GeneraListaPKIds Then listeIDs(indexLista).Ids.Add(dr.Item(t.PrimaryKey))
 
                 End While
 

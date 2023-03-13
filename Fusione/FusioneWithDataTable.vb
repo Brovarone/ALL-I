@@ -329,7 +329,7 @@ Module FusioneWithDataTable
                     End If
                 End Using
                 'Aqggiungo la lista ID alla collection
-                If t.GeneraListaId Then listeIDs.Add(New ListaId With {.Nome = t.Nome})
+                If t.GeneraListaPKIds Then listeIDs.Add(New ListaId With {.Nome = t.Nome})
                 FLogin.lstStatoConnessione.Items.Add(msg)
                 My.Application.Log.WriteEntry(msg)
             End If
@@ -350,7 +350,7 @@ Module FusioneWithDataTable
             Debug.Print("Riempimento tabella : " & stopwatch2.Elapsed.ToString)
             My.Application.Log.WriteEntry("Riempimento tabella : " & stopwatch2.Elapsed.ToString)
             'Aggiungo gli id
-            If t.GeneraListaId Then AggiungiIds(dt, t.Nome, listeIDs, t.PrimaryKey)
+            If t.GeneraListaPKIds Then AggiungiIds(dt, t.Nome, listeIDs, t.PrimaryKey)
             stopwatch2.Restart()
             If withConstraint Then
                 Using cmd As New SqlCommand("sys.sp_recompile", Connection)
