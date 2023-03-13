@@ -3,6 +3,7 @@ Imports System.Text
 Imports System.Data.SqlClient
 Imports System.IO
 Imports System.Configuration.SettingsBase
+Imports System.Configuration.ApplicationSettingsBase
 Imports System.Xml
 Imports Bluegrams.Application
 Imports EFMago.Models
@@ -210,6 +211,7 @@ Public Class FLogin
     Private Sub LoadSettings()
         Dim n As String = "settings.json"
         Dim s As String = My.Application.Info.DirectoryPath + "\" + n
+
         'Controllo esistenza del file 
         If System.IO.File.Exists(s) Then
             'Carico dal file Json
@@ -230,6 +232,12 @@ Public Class FLogin
             TxtTmpDB_SPA.Text = My.Settings.mDBTEMPSPA
             FolderPath = txtPath.Text
         Else
+            'controllo necessità di aggiornamento 
+            If My.MySettings.[Default].mUpgradeRequired Then
+                My.MySettings.[Default].Upgrade()
+                My.MySettings.[Default].mUpgradeRequired = False
+                My.MySettings.[Default].Save()
+            End If
             'Carico dal file config
             TxtDB_UNO.Text = My.Settings.mDATABASE
             TxtDB_SPA.Text = My.Settings.mDATABASE_SPA
