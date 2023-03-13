@@ -117,7 +117,7 @@ Partial Class FLogin
         Me.SPASuTESTSPAToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.RiparaMaschereMagoToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripSeparator7 = New System.Windows.Forms.ToolStripSeparator()
-        Me.UserSettingToolStripMenu = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ExeLocationToolStripMenu = New System.Windows.Forms.ToolStripMenuItem()
         Me.AppLogToolStripMenu = New System.Windows.Forms.ToolStripMenuItem()
         Me.FileToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.NewToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -160,6 +160,7 @@ Partial Class FLogin
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
+        Me.UserSettingFolderToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabFusione.SuspendLayout()
@@ -989,7 +990,7 @@ Partial Class FLogin
         '
         'ToolsToolStripMenuItem
         '
-        Me.ToolsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.AdministratorToolStripMenuItem, Me.DisconnettiAdminToolStripMenuItem, Me.ComandiToolStripMenuItem1, Me.ToolStripSeparator6, Me.BackupDatabaseToolStripMenuItem, Me.CopiaDatabase, Me.RiparaMaschereMagoToolStripMenuItem, Me.ToolStripSeparator7, Me.UserSettingToolStripMenu, Me.AppLogToolStripMenu})
+        Me.ToolsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.AdministratorToolStripMenuItem, Me.DisconnettiAdminToolStripMenuItem, Me.ComandiToolStripMenuItem1, Me.ToolStripSeparator6, Me.BackupDatabaseToolStripMenuItem, Me.CopiaDatabase, Me.RiparaMaschereMagoToolStripMenuItem, Me.ToolStripSeparator7, Me.ExeLocationToolStripMenu, Me.AppLogToolStripMenu, Me.UserSettingFolderToolStripMenuItem})
         Me.ToolsToolStripMenuItem.Name = "ToolsToolStripMenuItem"
         Me.ToolsToolStripMenuItem.Size = New System.Drawing.Size(46, 20)
         Me.ToolsToolStripMenuItem.Text = "&Tools"
@@ -1085,11 +1086,11 @@ Partial Class FLogin
         Me.ToolStripSeparator7.Name = "ToolStripSeparator7"
         Me.ToolStripSeparator7.Size = New System.Drawing.Size(192, 6)
         '
-        'UserSettingToolStripMenu
+        'ExeLocationToolStripMenu
         '
-        Me.UserSettingToolStripMenu.Name = "UserSettingToolStripMenu"
-        Me.UserSettingToolStripMenu.Size = New System.Drawing.Size(195, 22)
-        Me.UserSettingToolStripMenu.Text = "User.Setting Folder"
+        Me.ExeLocationToolStripMenu.Name = "ExeLocationToolStripMenu"
+        Me.ExeLocationToolStripMenu.Size = New System.Drawing.Size(195, 22)
+        Me.ExeLocationToolStripMenu.Text = "Exe Location"
         '
         'AppLogToolStripMenu
         '
@@ -1390,6 +1391,12 @@ Partial Class FLogin
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
         '
+        'UserSettingFolderToolStripMenuItem
+        '
+        Me.UserSettingFolderToolStripMenuItem.Name = "UserSettingFolderToolStripMenuItem"
+        Me.UserSettingFolderToolStripMenuItem.Size = New System.Drawing.Size(195, 22)
+        Me.UserSettingFolderToolStripMenuItem.Text = "User.Setting Folder"
+        '
         'FLogin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -1517,7 +1524,7 @@ Partial Class FLogin
     Friend WithEvents BtnFatture As Button
     Friend WithEvents BtnLastLog As Button
     Friend WithEvents ToolStripSeparator6 As ToolStripSeparator
-    Friend WithEvents UserSettingToolStripMenu As ToolStripMenuItem
+    Friend WithEvents ExeLocationToolStripMenu As ToolStripMenuItem
     Friend WithEvents AppLogToolStripMenu As ToolStripMenuItem
     Friend WithEvents ToolStripSeparator7 As ToolStripSeparator
     Friend WithEvents BtnAnalitica As Button
@@ -1572,4 +1579,5 @@ Partial Class FLogin
     Friend WithEvents ChkFusioneParcelle As CheckBox
     Friend WithEvents ChkFusionePartite As CheckBox
     Friend WithEvents EseguiStep As ToolStripMenuItem
+    Friend WithEvents UserSettingFolderToolStripMenuItem As ToolStripMenuItem
 End Class

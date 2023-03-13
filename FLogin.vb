@@ -210,14 +210,15 @@ Public Class FLogin
     End Sub
     Private Sub LoadSettings()
         Dim n As String = "settings.json"
-        Dim s As String = My.Application.Info.DirectoryPath + "\" + n
+        'Dim s As String = My.Application.Info.DirectoryPath + "\" + n
+        Dim s As String = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\Brovarone Cristiano" + "\" + n
 
         'Controllo esistenza del file 
         If System.IO.File.Exists(s) Then
             'Carico dal file Json
             'Parametri Config dal nuovo gestore
             PortableJsonSettingsProvider.SettingsFileName = n
-            PortableJsonSettingsProvider.SettingsDirectory = My.Application.Info.DirectoryPath  '"Some\custom\location"
+            PortableJsonSettingsProvider.SettingsDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\Brovarone Cristiano"   '"Some\custom\location"
             PortableJsonSettingsProvider.ApplyProvider(My.MySettings.[Default])
 
             'Carico dal file config
@@ -232,12 +233,6 @@ Public Class FLogin
             TxtTmpDB_SPA.Text = My.Settings.mDBTEMPSPA
             FolderPath = txtPath.Text
         Else
-            'controllo necessità di aggiornamento 
-            If My.MySettings.[Default].mUpgradeRequired Then
-                My.MySettings.[Default].Upgrade()
-                My.MySettings.[Default].mUpgradeRequired = False
-                My.MySettings.[Default].Save()
-            End If
             'Carico dal file config
             TxtDB_UNO.Text = My.Settings.mDATABASE
             TxtDB_SPA.Text = My.Settings.mDATABASE_SPA
@@ -251,7 +246,7 @@ Public Class FLogin
             FolderPath = txtPath.Text
             'Imposto nuovo gestore
             PortableJsonSettingsProvider.SettingsFileName = n
-            PortableJsonSettingsProvider.SettingsDirectory = My.Application.Info.DirectoryPath  '"Some\custom\location"
+            PortableJsonSettingsProvider.SettingsDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\Brovarone Cristiano"   '"Some\custom\location"
             PortableJsonSettingsProvider.ApplyProvider(My.MySettings.[Default])
             'Salvo sul nuovo file
             My.Settings.mDATABASE = TxtDB_UNO.Text
@@ -1322,12 +1317,16 @@ Public Class FLogin
         AboutBox1.ShowDialog()
     End Sub
 
-    Private Sub UserSettingToolStripMenu_Click(sender As Object, e As EventArgs) Handles UserSettingToolStripMenu.Click
+    Private Sub ExeLocationToolStripMenu_Click(sender As Object, e As EventArgs) Handles ExeLocationToolStripMenu.Click
         Dim s = My.Settings.Context
         Dim k = s.Values(1)
         Process.Start(Path.GetDirectoryName(k.assembly.location.ToString))
     End Sub
 
+    Private Sub UserSettingFolderToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles UserSettingFolderToolStripMenuItem.Click
+        Process.Start(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\Brovarone Cristiano" + "\")
+
+    End Sub
     Private Sub AppLogToolStripMenu_Click(sender As Object, e As EventArgs) Handles AppLogToolStripMenu.Click
         Process.Start(My.Application.Log.DefaultFileLogWriter.CustomLocation)
     End Sub
@@ -1949,6 +1948,5 @@ Public Class FLogin
         lstStatoConnessione.Size = New Size(429, 69)
         TabControl1.Enabled = True
     End Sub
-
 
 End Class
