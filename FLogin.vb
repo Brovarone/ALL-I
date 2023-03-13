@@ -233,6 +233,7 @@ Public Class FLogin
             TxtTmpDB_SPA.Text = My.Settings.mDBTEMPSPA
             FolderPath = txtPath.Text
         Else
+            Directory.CreateDirectory(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\Brovarone Cristiano" + "\")
             'Carico dal file config
             TxtDB_UNO.Text = My.Settings.mDATABASE
             TxtDB_SPA.Text = My.Settings.mDATABASE_SPA
@@ -259,6 +260,7 @@ Public Class FLogin
             My.Settings.mDBTEMPUNO = TxtTmpDB_UNO.Text
             My.Settings.mDBTEMPSPA = TxtTmpDB_SPA.Text
             txtPath.Text = FolderPath
+            My.MySettings.Default.Save()
         End If
 
         'Aggiungo la possibilità di eseguire il mio textChanged ( SULL'EVENTO LEAVE)
