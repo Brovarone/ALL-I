@@ -18,8 +18,9 @@ Module Fusione
     Private listeIDs As List(Of ListaId)
 
     Class TabelleDaEstrarre
-        Public Property AdditionalWhere As String
+        Public Property ModificaTutti As Boolean
         Public Property WhereClause As String
+        Public Property AdditionalWhere As String
         Public Property JoinClause As String
         ''' <summary>
         ''' Nome Tabella
@@ -40,10 +41,12 @@ Module Fusione
         Public Property PrimaryKey As String
         Public Property Coppia_CR As CR
         Public Sub New()
+            ModificaTutti = False
             AdditionalWhere = ""
             WhereClause = ""
             JoinClause = ""
             Nome = ""
+            FriendName = ""
             Paging = False
             Gruppo = MacroGruppo.Nessuno
             GeneraListaPKIds = False
@@ -419,9 +422,8 @@ Module Fusione
 
                         Next
                         qryToExecute &= Strings.Left(sb.ToString, sb.Length - 4)
-                        If t.HaListaPKIds Then
-                            qryToExecute &= t.Ritorna_Clausola_IN
-
+                        If t.ModificaTutti Then
+                            'non ho bisogno di filtri
                         Else
                             qryToExecute &= t.JoinClause & t.WhereClause & t.AdditionalWhere
                         End If
@@ -507,8 +509,8 @@ Module Fusione
     Private Function EstraitabelleParcelle() As Boolean
         tabelle = New List(Of TabelleDaEstrarre)
         tabelleNoEdit = New List(Of TabelleDaEstrarre)
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Fees", .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .PrimaryKey = "FeeId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_FeesDetails"}, .Gruppo = MacroGruppo.Parcelle})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FeesDetails", .HaListaPKIds = True, .PrimaryKey = "FeeId", .Gruppo = MacroGruppo.Parcelle})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Fees", .ModificaTutti = True, .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .PrimaryKey = "FeeId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_FeesDetails"}, .Gruppo = MacroGruppo.Parcelle})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FeesDetails", .ModificaTutti = True, .HaListaPKIds = True, .PrimaryKey = "FeeId", .Gruppo = MacroGruppo.Parcelle})
         Return True
 
     End Function
@@ -517,8 +519,8 @@ Module Fusione
         tabelleNoEdit = New List(Of TabelleDaEstrarre)
         'Considero OpeningDate e Settled ( Aperte)
         Dim wp As String = " WHERE PymtSchedId IN (SELECT DISTINCT t.PymtSchedId FROM MA_PyblsRcvbls t left JOIN MA_PyblsRcvblsDetails d ON t.PymtSchedId = d.PymtSchedId WHERE  t.Settled = '0' OR d.OpeningDate>='20230331' ) "
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .WhereClause = wp, .PrimaryKey = "PymtSchedId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_PyblsRcvblsDetails"}, .Gruppo = MacroGruppo.Partite})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .HaListaPKIds = True, .PrimaryKey = "PymtSchedId", .Gruppo = MacroGruppo.Partite})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .ModificaTutti = True, .WhereClause = wp, .PrimaryKey = "PymtSchedId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_PyblsRcvblsDetails"}, .Gruppo = MacroGruppo.Partite})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .ModificaTutti = True, .HaListaPKIds = True, .PrimaryKey = "PymtSchedId", .Gruppo = MacroGruppo.Partite})
         Return True
 
     End Function
@@ -603,19 +605,19 @@ Module Fusione
 #End Region
 #Region "Ordini Fornitori"
         w = " WHERE OrderDate >= '20220101'"
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrd", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrd", .ModificaTutti = True, .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
         w = " WHERE PurchaseOrdId IN (SELECT DISTINCT PurchaseOrdId
                 FROM MA_PurchaseOrd WHERE OrderDate >= '20220101' ) "
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdDetails", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdNotes", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdPymtSched", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
-        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdReferences", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdShipping", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdSummary", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdTaxSummay", .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdDetails", .ModificaTutti = True, .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdNotes", .ModificaTutti = True, .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdPymtSched", .ModificaTutti = True, .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
+        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdReferences",.ModificaTutti = True,  .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdShipping", .ModificaTutti = True, .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdSummary", .ModificaTutti = True, .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdTaxSummay", .ModificaTutti = True, .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
 #End Region
 #Region "Cespiti"
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssets", .WhereClause = " WHERE DisposalType <> 7143424", .Gruppo = MacroGruppo.Cespiti})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssets", .ModificaTutti = True, .WhereClause = " WHERE DisposalType <> 7143424", .Gruppo = MacroGruppo.Cespiti})
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsBalance", .Gruppo = MacroGruppo.cespiti})
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsCoeff", .Gruppo = MacroGruppo.cespiti})
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsFinancial", .Gruppo = MacroGruppo.cespiti})
@@ -640,12 +642,12 @@ Module Fusione
 #Region "Partite"
         'Considero OpeningDate e Settled ( Aperte)
         Dim wp As String = " WHERE PymtSchedId IN (SELECT DISTINCT t.PymtSchedId FROM MA_PyblsRcvbls t left JOIN MA_PyblsRcvblsDetails d ON t.PymtSchedId = d.PymtSchedId WHERE  t.Settled = '0' OR d.OpeningDate>='20230331' ) "
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .WhereClause = wp, .PrimaryKey = "PymtSchedId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_PyblsRcvblsDetails"}, .Gruppo = MacroGruppo.Partite})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .HaListaPKIds = True, .PrimaryKey = "PymtSchedId", .Gruppo = MacroGruppo.Partite})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .ModificaTutti = True, .WhereClause = wp, .PrimaryKey = "PymtSchedId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_PyblsRcvblsDetails"}, .Gruppo = MacroGruppo.Partite})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .ModificaTutti = True, .HaListaPKIds = True, .PrimaryKey = "PymtSchedId", .Gruppo = MacroGruppo.Partite})
 #End Region
 #Region "Parcelle"
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Fees", .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .PrimaryKey = "FeeId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_FeesDetails"}, .Gruppo = MacroGruppo.Parcelle})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FeesDetails", .HaListaPKIds = True, .PrimaryKey = "FeeId", .Gruppo = MacroGruppo.Parcelle})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Fees", .ModificaTutti = True, .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .PrimaryKey = "FeeId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_FeesDetails"}, .Gruppo = MacroGruppo.Parcelle})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FeesDetails", .ModificaTutti = True, .HaListaPKIds = True, .PrimaryKey = "FeeId", .Gruppo = MacroGruppo.Parcelle})
 #End Region
 #Region "NON SI PUO' -- Movimenti di Magazzino"
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_InventoryEntries", .Gruppo = MacroGruppo.Magazzino})
@@ -839,16 +841,18 @@ Module Fusione
                 If destConn.State = ConnectionState.Open Then
                     Using cmd = New SqlCommand("UPDATE MA_IDNumbers SET LastId =" & value.ToString & " WHERE CodeType=@CodeType",
                              ConnDestination)
-                        cmd.Transaction = Trans
-                        cmd.Parameters.AddWithValue("@CodeType", IdType)
-                        Dim irows As Integer = cmd.ExecuteNonQuery()
-                        If irows <= 0 Then
-                            cmd.CommandText = "INSERT INTO MA_IDNumbers (CodeType, LastId, TBCreatedID, TBModifiedID) VALUES (@CodeType, @Value, @TBCreatedID ,@TBModifiedID )"
-                            cmd.Parameters.AddWithValue("@Value", value)
-                            cmd.Parameters.AddWithValue("@TBCreatedID", My.Settings.mLOGINID)
-                            cmd.Parameters.AddWithValue("@TBModifiedID", My.Settings.mLOGINID)
-                            irows = cmd.ExecuteNonQuery()
-                        End If
+                        Using idsTrans = destConn.BeginTransaction
+                            cmd.Transaction = idsTrans
+                            cmd.Parameters.AddWithValue("@CodeType", IdType)
+                            Dim irows As Integer = cmd.ExecuteNonQuery()
+                            If irows <= 0 Then
+                                cmd.CommandText = "INSERT INTO MA_IDNumbers (CodeType, LastId, TBCreatedID, TBModifiedID) VALUES (@CodeType, @Value, @TBCreatedID ,@TBModifiedID )"
+                                cmd.Parameters.AddWithValue("@Value", value)
+                                cmd.Parameters.AddWithValue("@TBCreatedID", My.Settings.mLOGINID)
+                                cmd.Parameters.AddWithValue("@TBModifiedID", My.Settings.mLOGINID)
+                                irows = cmd.ExecuteNonQuery()
+                            End If
+                        End Using
                     End Using
                 End If
             End Using
@@ -934,7 +938,6 @@ Module Fusione
                     'Righe origine
                     Using originRowCount = New SqlCommand(qryCount, origConn)
                         originCount = System.Convert.ToInt32(originRowCount.ExecuteScalar())
-                        ScriviLog(t.Nome & " Orig:(" & originCount.ToString & ") ")
                     End Using
                 End If
             End Using
@@ -946,10 +949,10 @@ Module Fusione
                     Using destCommRowCount = New SqlCommand(qryCount, destConn)
                         countStart = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())
                         'Debug.Print("Starting row count = {0}", countStart)
-                        ScriviLog("Dest In:(" & countStart.ToString & ") ")
                     End Using
                 End If
             End Using
+            ScriviLog(t.Nome & " Orig:(" & originCount.ToString & ") --> Dest Iniz:(" & countStart.ToString & ") ")
 
             Using origConn As New SqlConnection With {.ConnectionString = GetConnectionStringUNO()}
                 origConn.Open()
@@ -988,7 +991,6 @@ Module Fusione
                                     If commit Then
                                         bulkTrans.Commit()
                                         Debug.Print("Commit !")
-                                        ScriviLog("Commit !")
                                     End If
                                     FLogin.lstStatoConnessione.TopIndex = FLogin.lstStatoConnessione.Items.Count - 1
                                 End If
@@ -1010,7 +1012,7 @@ Module Fusione
                         Debug.Print("Righe aggiunte finali = {0}", countEnd)
                         Debug.Print("{0} righe aggiunte.", countEnd - countStart)
                         ScriviLog("Agg:(" & (countEnd - countStart).ToString & ")")
-                        If (countEnd - countStart) <> originCount Then ScriviLog(" - Aggiunta righe diverse.")
+                        If (countEnd - countStart) <> originCount Then ScriviLog("Warning - Aggiunta righe diverse.")
                     End Using
                 End If
             End Using
