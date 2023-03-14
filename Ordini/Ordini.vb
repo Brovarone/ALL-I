@@ -35,7 +35,7 @@ Module Ordini
         Variabile = 1094254692
     End Enum
 
-    Dim sLoginId As String = My.Settings.mLOGINID
+    ReadOnly sLoginId As String = My.Settings.mLOGINID
 
     Public Function GeneraRigheOrdine() As Boolean
 #Region "Variabili Selezione"
@@ -1363,7 +1363,7 @@ Module Ordini
     End Function
     Private Function IsBetweenAnnullamento_Attivita(ByVal range As CurOrdRow, ByRef message As String) As Boolean
         Dim result As Boolean = False
-        Dim canoniResidui As Double = 0
+        Dim canoniResidui As Double
         If range.DataCessazioneDaAttivita >= range.CanoniDataIn AndAlso range.DataCessazioneDaAttivita <= range.CanoniDataFin Then
             result = True
             canoniResidui = CalcolaMesi(range.CanoniDataIn, range.DataCessazioneDaAttivita, False)

@@ -44,7 +44,7 @@ Partial Class FLogin
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabFusione = New System.Windows.Forms.TabPage()
         Me.ChkFusionePartite = New System.Windows.Forms.CheckBox()
-        Me.ChkFusioneCR = New System.Windows.Forms.CheckBox()
+        Me.ChkFusioneClifor = New System.Windows.Forms.CheckBox()
         Me.ChkFusioneParcelle = New System.Windows.Forms.CheckBox()
         Me.BtnFusione = New System.Windows.Forms.Button()
         Me.ChkFusioneFull = New System.Windows.Forms.CheckBox()
@@ -119,6 +119,7 @@ Partial Class FLogin
         Me.ToolStripSeparator7 = New System.Windows.Forms.ToolStripSeparator()
         Me.ExeLocationToolStripMenu = New System.Windows.Forms.ToolStripMenuItem()
         Me.AppLogToolStripMenu = New System.Windows.Forms.ToolStripMenuItem()
+        Me.UserSettingFolderToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.FileToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.NewToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.OpenToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -160,7 +161,6 @@ Partial Class FLogin
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
-        Me.UserSettingFolderToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabFusione.SuspendLayout()
@@ -373,7 +373,7 @@ Partial Class FLogin
         '
         Me.TabFusione.BackColor = System.Drawing.SystemColors.Control
         Me.TabFusione.Controls.Add(Me.ChkFusionePartite)
-        Me.TabFusione.Controls.Add(Me.ChkFusioneCR)
+        Me.TabFusione.Controls.Add(Me.ChkFusioneClifor)
         Me.TabFusione.Controls.Add(Me.ChkFusioneParcelle)
         Me.TabFusione.Controls.Add(Me.BtnFusione)
         Me.TabFusione.Controls.Add(Me.ChkFusioneFull)
@@ -394,15 +394,15 @@ Partial Class FLogin
         Me.ChkFusionePartite.Text = "Fusione Partite"
         Me.ChkFusionePartite.UseVisualStyleBackColor = True
         '
-        'ChkFusioneCR
+        'ChkFusioneClifor
         '
-        Me.ChkFusioneCR.AutoSize = True
-        Me.ChkFusioneCR.Location = New System.Drawing.Point(15, 26)
-        Me.ChkFusioneCR.Name = "ChkFusioneCR"
-        Me.ChkFusioneCR.Size = New System.Drawing.Size(81, 17)
-        Me.ChkFusioneCR.TabIndex = 4
-        Me.ChkFusioneCR.Text = "Fusione CR"
-        Me.ChkFusioneCR.UseVisualStyleBackColor = True
+        Me.ChkFusioneClifor.AutoSize = True
+        Me.ChkFusioneClifor.Location = New System.Drawing.Point(15, 26)
+        Me.ChkFusioneClifor.Name = "ChkFusioneClifor"
+        Me.ChkFusioneClifor.Size = New System.Drawing.Size(96, 17)
+        Me.ChkFusioneClifor.TabIndex = 4
+        Me.ChkFusioneClifor.Text = "Fusione CliFor*"
+        Me.ChkFusioneClifor.UseVisualStyleBackColor = True
         '
         'ChkFusioneParcelle
         '
@@ -1098,6 +1098,12 @@ Partial Class FLogin
         Me.AppLogToolStripMenu.Size = New System.Drawing.Size(195, 22)
         Me.AppLogToolStripMenu.Text = "App Log Folder"
         '
+        'UserSettingFolderToolStripMenuItem
+        '
+        Me.UserSettingFolderToolStripMenuItem.Name = "UserSettingFolderToolStripMenuItem"
+        Me.UserSettingFolderToolStripMenuItem.Size = New System.Drawing.Size(195, 22)
+        Me.UserSettingFolderToolStripMenuItem.Text = "User.Setting Folder"
+        '
         'FileToolStripMenuItem
         '
         Me.FileToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.NewToolStripMenuItem, Me.OpenToolStripMenuItem, Me.toolStripSeparator, Me.SaveToolStripMenuItem, Me.SaveAsToolStripMenuItem, Me.toolStripSeparator1, Me.PrintToolStripMenuItem, Me.PrintPreviewToolStripMenuItem, Me.toolStripSeparator2, Me.ExitToolStripMenuItem})
@@ -1391,12 +1397,6 @@ Partial Class FLogin
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
         '
-        'UserSettingFolderToolStripMenuItem
-        '
-        Me.UserSettingFolderToolStripMenuItem.Name = "UserSettingFolderToolStripMenuItem"
-        Me.UserSettingFolderToolStripMenuItem.Size = New System.Drawing.Size(195, 22)
-        Me.UserSettingFolderToolStripMenuItem.Text = "User.Setting Folder"
-        '
         'FLogin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -1575,7 +1575,7 @@ Partial Class FLogin
     Friend WithEvents SPASuTESTSPAToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents EseguiInDefinitivoToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents BtnFusione As Button
-    Friend WithEvents ChkFusioneCR As CheckBox
+    Friend WithEvents ChkFusioneClifor As CheckBox
     Friend WithEvents ChkFusioneParcelle As CheckBox
     Friend WithEvents ChkFusionePartite As CheckBox
     Friend WithEvents EseguiStep As ToolStripMenuItem

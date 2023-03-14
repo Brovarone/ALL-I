@@ -90,7 +90,7 @@ Namespace SqlTools
                     Console.WriteLine("Error: {0}", ex.Message)
                 End Try
             End Using
-            ' Return nrRighe
+            Return nrRighe
         End Function
         Public Function RunNonQuery(ByVal commandText As String, ByVal connectionString As String) As Integer
             Dim rowsAffected As Integer

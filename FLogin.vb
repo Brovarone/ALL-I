@@ -891,7 +891,7 @@ Public Class FLogin
             ProcessaGruppo(cespiti, "Cespiti")
         End If
 
-        If ChkFusioneFull.Checked OrElse ChkFusioneCR.Checked OrElse ChkFusioneParcelle.Checked OrElse ChkFusionePartite.Checked Then
+        If ChkFusioneFull.Checked OrElse ChkFusioneClifor.Checked OrElse ChkFusioneParcelle.Checked OrElse ChkFusionePartite.Checked Then
             Dim bFound As Boolean
             Dim fusione As String() = {"IDS_MIGRAZIONE"}
             Dim fusioneFound As Boolean() = {False}
@@ -1642,7 +1642,7 @@ Public Class FLogin
 
     End Sub
 
-    Public Sub OrdinaLog1(log As MyLogs)
+    Public Shared Sub OrdinaLog1(log As MyLogs)
         log.Corpo.Sort()
 
         For Each r As MyLogRegistry In log.Corpo
@@ -1657,7 +1657,7 @@ Public Class FLogin
         Next
 
     End Sub
-    Public Sub WriteToXML1(ByVal inLogMessage As String, padre As String)
+    Public Shared Sub WriteToXML1(ByVal inLogMessage As String, padre As String)
         '_readWriteLock.EnterWriteLock()
 
         Try

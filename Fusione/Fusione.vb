@@ -30,14 +30,19 @@ Module Fusione
         Public Property FriendName As String
         Public Property Paging As Boolean
         Public Property Gruppo As MacroGruppo
+        Public Property HaListaPKIds As Boolean
         Public Property GeneraListaPKIds As Boolean
         Public Property ListaPKIds As List(Of Integer)
+        Public Property HaListaEsclusi As Boolean
+        Public Property ListaEsclusi As List(Of String)
+        Public Property NotInPK As String
+        Public Property NotInPKClause As String
+
         ''' <summary>
         ''' Elenco di nomi tabella cui passare la lista ids estratta
         ''' </summary>
         ''' <returns></returns>
         Public Property TabelleDipendenti As List(Of String)
-        Public Property HaListaPKIds As Boolean
         Public Property PrimaryKey As String
         Public Property Coppia_CR As CR
         Public Sub New()
@@ -58,6 +63,49 @@ Module Fusione
             s &= String.Join(",", ListaPKIds.ToArray)
             Return s & ")"
         End Function
+        Private Function Crea_Clausola_AndNotIn(key As List(Of String)) As String
+            Dim s As String
+            If String.IsNullOrWhiteSpace(WhereClause) Then
+                s = " WHERE " & NotInPK & " NOT IN ("
+            Else
+                s = " AND " & NotInPK & " NOT IN ("
+            End If
+            s &= "'" & String.Join("','", key.ToArray) & "'"
+            Return s & ")"
+        End Function
+        Public Sub EstraiListaEsclusi(dv As DataView)
+            Dim result As New List(Of String)
+            Try
+                Dim f As String = ""
+                Select Case Gruppo
+                    Case MacroGruppo.Clienti
+                        f = "Cliente"
+                    Case MacroGruppo.Fornitori
+                        f = "Fornitore"
+                    Case MacroGruppo.Agenti
+                        f = "Agente"
+                    Case MacroGruppo.BancheCli
+                        f = "BancaCliente"
+                End Select
+                dv.RowFilter = "Tipo ='" & f & "'"
+
+                For Each drv As DataRowView In dv
+                    result.Add(drv("Valore").ToString)
+                    Application.DoEvents()
+                Next
+            Catch ex As Exception
+                Debug.Print(ex.Message)
+                ScriviLog("#Errore# in EstraiListaEsclusi: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+                If Not IsDebugging Then
+                    Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                    mb.ShowDialog()
+                End If
+            End Try
+            dv.Sort = [String].Empty
+            dv.RowFilter = [String].Empty
+            NotInPKClause = Crea_Clausola_AndNotIn(result)
+            ListaEsclusi = result
+        End Sub
     End Class
     Friend Class AccoppiamentiCrossReference
         Public Property OrdCli_NdC As New CR With {.Origine = 27066372, .Derivato = 27066389, .id = 1}
@@ -103,6 +151,7 @@ Module Fusione
         OrdiniFornitori = 12
         Parcelle = 13
         Magazzino = 14
+        BancheCli = 15
     End Enum
     ''' <summary>
     ''' Restituisce il nome del MacroGruppo
@@ -141,6 +190,8 @@ Module Fusione
                 Return "Parcelle"
             Case 14
                 Return "Magazzino"
+            Case 15
+                Return "Banche Clienti"
             Case Else
                 Return ""
         End Select
@@ -153,8 +204,8 @@ Module Fusione
         If FLogin.ChkFusioneFull.Checked Then
             ok = EstraiTabelle()
         End If
-        If FLogin.ChkFusioneCR.Checked Then
-            ok = EstraitabelleCR()
+        If FLogin.ChkFusioneClifor.Checked Then
+            ok = EstraitabelleCliFor()
         End If
         If FLogin.ChkFusioneParcelle.Checked Then
             ok = EstraitabelleParcelle()
@@ -167,6 +218,9 @@ Module Fusione
         'Carico IDs da file xls partenza
         dtIDS = dts.Tables("IDS")
         dvIDS = New DataView(dtIDS, "", "Key", DataViewRowState.CurrentRows)
+        'Esclusi
+        Dim dtEsclusi As DataTable = dts.Tables("ESCLUSI")
+        Dim dvEsclusi As New DataView(dtEsclusi, "", "Tipo", DataViewRowState.CurrentRows)
         'Carico IDS da database di destinazione
         Using destConn As New SqlConnection(GetConnectionStringSPA)
             destConn.Open()
@@ -217,11 +271,16 @@ Module Fusione
                 lIDS = EstraiListaIds(t, dvIDS)
 
                 EditTestoBarra("Modifica dati (origine): " & n)
+                'Genero lista PK
                 If t.GeneraListaPKIds Then
                     Dim PKList As List(Of Integer) = EstraiListaPK(t)
                     For Each table In t.TabelleDipendenti
                         tabelle.Find(Function(x) x.Nome = table).ListaPKIds = PKList
                     Next
+                End If
+                'Genero lista esclusi
+                If t.HaListaEsclusi Then
+                    t.EstraiListaEsclusi(dvEsclusi)
                 End If
                 'Metodo Sql Update
                 Dim rows As Integer
@@ -249,6 +308,10 @@ Module Fusione
             stopwatch2.Restart()
             FLogin.lstStatoConnessione.Items.Add("Processo tabelle senza modifiche in corso...")
             For Each t In tabelleNoEdit
+                'Genero lista esclusi
+                If t.HaListaEsclusi Then
+                    t.EstraiListaEsclusi(dvEsclusi)
+                End If
                 EditTestoBarra("Scrittura dati (destinazione): " & t.Nome)
                 ok = ScriviDatiSql(t, Not IsDebugging)
                 AvanzaBarra()
@@ -422,6 +485,9 @@ Module Fusione
 
                         Next
                         qryToExecute &= Strings.Left(sb.ToString, sb.Length - 4)
+
+                        'Esclusi - Query NOT IN (xxx)
+
                         If t.ModificaTutti Then
                             'non ho bisogno di filtri
                         Else
@@ -524,25 +590,16 @@ Module Fusione
         Return True
 
     End Function
-    Private Function EstraitabelleCR() As Boolean
+    Private Function EstraitabelleCliFor() As Boolean
         'todo spostare sotto dopo aver provato
         tabelle = New List(Of TabelleDaEstrarre)
         tabelleNoEdit = New List(Of TabelleDaEstrarre)
-        Dim cr As New AccoppiamentiCrossReference
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.OrdCli_NdC.WhereClause, .Coppia_CR = cr.OrdCli_NdC, .FriendName = "OrdCli_NdC", .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.OrdCli_FatImmm.WhereClause, .Coppia_CR = cr.OrdCli_FatImmm, .FriendName = "OrdCli_FatImmm", .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.OrdFor_BdC.WhereClause, .Coppia_CR = cr.OrdFor_BdC, .FriendName = "OrdFor_BdC", .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.DDT_FatImm.WhereClause, .Coppia_CR = cr.DDT_FatImm, .FriendName = "DDT_FatImm", .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.FatImm_ParCli.WhereClause, .Coppia_CR = cr.FatImm_ParCli, .FriendName = "FatImm_ParCli", .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.FatImm_NdC.WhereClause, .Coppia_CR = cr.FatImm_NdC, .FriendName = "FatImm_NdC", .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.FatImm_FatImm.WhereClause, .Coppia_CR = cr.FatImm_FatImm, .FriendName = "FatImm_FatImm", .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.NdC_OrdCli.WhereClause, .Coppia_CR = cr.NdC_OrdCli, .FriendName = "NdC_OrdCli", .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.BdC_ResFor.WhereClause, .Coppia_CR = cr.BdC_ResFor, .FriendName = "BdC_ResFor", .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.BdC_FatImm.WhereClause, .Coppia_CR = cr.BdC_FatImm, .FriendName = "BdC_FatImm", .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.BdC_NdCRic.WhereClause, .Coppia_CR = cr.BdC_NdCRic, .FriendName = "BdC_NdCRic", .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.ParFor_NdCRic.WhereClause, .Coppia_CR = cr.ParFor_NdCRic, .FriendName = "ParFor_NdCRic", .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.ParCli_NdC.WhereClause, .Coppia_CR = cr.ParCli_NdC, .FriendName = "ParCli_NdC", .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.Parc_ParFor.WhereClause, .Coppia_CR = cr.Parc_ParFor, .FriendName = "Parc_ParFor", .Gruppo = MacroGruppo.CrossRef})
+
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .HaListaEsclusi = True, .NotInPK = "CustSupp", .Gruppo = MacroGruppo.Clienti})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppCustomerOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .HaListaEsclusi = True, .NotInPK = "Customer", .Gruppo = MacroGruppo.Clienti})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .HaListaEsclusi = True, .NotInPK = "CustSupp", .Gruppo = MacroGruppo.Fornitori})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppSupplierOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .HaListaEsclusi = True, .NotInPK = "Supplier", .Gruppo = MacroGruppo.Fornitori})
+
         Return True
     End Function
     ''' <summary>
@@ -577,7 +634,7 @@ Module Fusione
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocDetail", .Gruppo = MacroGruppo.Acquisto})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocNotes", .Gruppo = MacroGruppo.Acquisto})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocPymtSched", .Gruppo = MacroGruppo.Acquisto})
-        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocReferences", .Gruppo = MacroGruppo.acquisto, .JoinClause = " FROM MA_PurchaseDocReferences INNER JOIN MA_PurchaseDoc ON MA_PurchaseDocReferences.PurchaseDocId = MA_PurchaseDoc.PurchaseDocId", .WhereClause = " WHERE MA_PurchaseDoc.DocumentType =  9830400"})
+        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocReferences", .Gruppo = MacroGruppo.Acquisto})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocShipping", .Gruppo = MacroGruppo.Acquisto})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocSummary", .Gruppo = MacroGruppo.Acquisto})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocTaxSummary", .Gruppo = MacroGruppo.Acquisto})
@@ -656,20 +713,20 @@ Module Fusione
 #End Region
 #Region "Cross Reference"
         Dim cr As New AccoppiamentiCrossReference
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.OrdCli_NdC.WhereClause, .Coppia_CR = cr.OrdCli_NdC, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.OrdCli_FatImmm.WhereClause, .Coppia_CR = cr.OrdCli_FatImmm, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.OrdFor_BdC.WhereClause, .Coppia_CR = cr.OrdFor_BdC, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.DDT_FatImm.WhereClause, .Coppia_CR = cr.DDT_FatImm, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.FatImm_ParCli.WhereClause, .Coppia_CR = cr.FatImm_ParCli, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.FatImm_NdC.WhereClause, .Coppia_CR = cr.FatImm_NdC, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.FatImm_FatImm.WhereClause, .Coppia_CR = cr.FatImm_FatImm, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.NdC_OrdCli.WhereClause, .Coppia_CR = cr.NdC_OrdCli, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.BdC_ResFor.WhereClause, .Coppia_CR = cr.BdC_ResFor, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.BdC_FatImm.WhereClause, .Coppia_CR = cr.BdC_FatImm, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.BdC_NdCRic.WhereClause, .Coppia_CR = cr.BdC_NdCRic, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.ParFor_NdCRic.WhereClause, .Coppia_CR = cr.ParFor_NdCRic, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.ParCli_NdC.WhereClause, .Coppia_CR = cr.ParCli_NdC, .Gruppo = MacroGruppo.CrossRef})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .AdditionalWhere = cr.Parc_ParFor.WhereClause, .Coppia_CR = cr.Parc_ParFor, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.OrdCli_NdC.WhereClause, .Coppia_CR = cr.OrdCli_NdC, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.OrdCli_FatImmm.WhereClause, .Coppia_CR = cr.OrdCli_FatImmm, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.OrdFor_BdC.WhereClause, .Coppia_CR = cr.OrdFor_BdC, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.DDT_FatImm.WhereClause, .Coppia_CR = cr.DDT_FatImm, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.FatImm_ParCli.WhereClause, .Coppia_CR = cr.FatImm_ParCli, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.FatImm_NdC.WhereClause, .Coppia_CR = cr.FatImm_NdC, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.FatImm_FatImm.WhereClause, .Coppia_CR = cr.FatImm_FatImm, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.NdC_OrdCli.WhereClause, .Coppia_CR = cr.NdC_OrdCli, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.BdC_ResFor.WhereClause, .Coppia_CR = cr.BdC_ResFor, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.BdC_FatImm.WhereClause, .Coppia_CR = cr.BdC_FatImm, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.BdC_NdCRic.WhereClause, .Coppia_CR = cr.BdC_NdCRic, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.ParFor_NdCRic.WhereClause, .Coppia_CR = cr.ParFor_NdCRic, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.ParCli_NdC.WhereClause, .Coppia_CR = cr.ParCli_NdC, .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.Parc_ParFor.WhereClause, .Coppia_CR = cr.Parc_ParFor, .Gruppo = MacroGruppo.CrossRef})
 #End Region
 
 #Region "Note"
@@ -724,27 +781,27 @@ Module Fusione
         ''''NESSUNA MODIFICA'''
         '''''''''''''''''''''''
 #Region "Clienti"
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM')"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppCustomerOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND Customer NOT IN ('ALLSYSTEM')"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppBranches", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM')"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNaturalPerson", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM')"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNotes", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM')"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppOutstandings", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM')"}) ' Insoluti
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppPeople", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .AdditionalWhere = " AND CustSupp NOT IN ('ALLSYSTEM')"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .HaListaEsclusi = True, .NotInPK = "CustSupp", .Gruppo = MacroGruppo.Clienti})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppCustomerOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .HaListaEsclusi = True, .NotInPK = "Customer", .Gruppo = MacroGruppo.Clienti})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppBranches", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .HaListaEsclusi = True, .NotInPK = "CustSupp", .Gruppo = MacroGruppo.Clienti})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNaturalPerson", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .HaListaEsclusi = True, .NotInPK = "CustSupp", .Gruppo = MacroGruppo.Clienti})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNotes", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .HaListaEsclusi = True, .NotInPK = "CustSupp", .Gruppo = MacroGruppo.Clienti})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppOutstandings", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .HaListaEsclusi = True, .NotInPK = "CustSupp", .Gruppo = MacroGruppo.Clienti}) ' Insoluti
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppPeople", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .HaListaEsclusi = True, .NotInPK = "CustSupp", .Gruppo = MacroGruppo.Clienti})
 
 #End Region
 #Region "Fornitori"
         'todo: aspettare risposta Silvia
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .AdditionalWhere = " AND CustSupp NOT IN ('ABC')"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppSupplierOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .AdditionalWhere = " AND Supplier NOT IN ('ABC')"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppBranches", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .AdditionalWhere = " AND CustSupp NOT IN ('ABC')"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNaturalPerson", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .AdditionalWhere = " AND CustSupp NOT IN ('ABC')"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNotes", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .AdditionalWhere = " AND CustSupp NOT IN ('ABC')"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppOutstandings", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .AdditionalWhere = " AND CustSupp NOT IN ('ABC')"}) ' Insoluti
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppPeople", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .AdditionalWhere = " AND CustSupp NOT IN ('ABC')"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .HaListaEsclusi = True, .NotInPK = "CustSupp", .Gruppo = MacroGruppo.Fornitori})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppSupplierOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .HaListaEsclusi = True, .NotInPK = "Supplier", .Gruppo = MacroGruppo.Fornitori})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppBranches", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .HaListaEsclusi = True, .NotInPK = "CustSupp", .Gruppo = MacroGruppo.Fornitori})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNaturalPerson", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .HaListaEsclusi = True, .NotInPK = "CustSupp", .Gruppo = MacroGruppo.Fornitori})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppNotes", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .HaListaEsclusi = True, .NotInPK = "CustSupp", .Gruppo = MacroGruppo.Fornitori})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppOutstandings", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .HaListaEsclusi = True, .NotInPK = "CustSupp", .Gruppo = MacroGruppo.Fornitori}) ' Insoluti
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppPeople", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .HaListaEsclusi = True, .NotInPK = "CustSupp", .Gruppo = MacroGruppo.Fornitori})
 #End Region
 #Region "Banche"
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Banks", .WhereClause = " WHERE IsACompanyBank = 0", .AdditionalWhere = " AND Bank NOT IN ('0344032880')"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Banks", .WhereClause = " WHERE IsACompanyBank = 0", .HaListaEsclusi = True, .NotInPK = "Bank", .Gruppo = MacroGruppo.BancheCli})
 #End Region
 #Region "Analitica (CdC + Commesse)"
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Jobs"})
@@ -783,7 +840,7 @@ Module Fusione
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_StorageGroups"})
 #End Region
 #Region "Agenti"
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SalesPeople", .WhereClause = " WHERE Salesperson NOT IN ( 'GIORDANO' , 'SECURGES' , 'ZUNINO', 'MORANDO')"})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SalesPeople", .HaListaEsclusi = True, .NotInPK = "Salesperson"})
 #End Region
 #End Region
         Return True
@@ -916,7 +973,9 @@ Module Fusione
                 If t.HaListaPKIds Then
                     SQLquery = "Select * FROM " & t.Nome & t.Ritorna_Clausola_IN
                     qryCount = "Select COUNT(1) FROM " & t.Nome & t.Ritorna_Clausola_IN
-
+                ElseIf t.HaListaEsclusi Then
+                    SQLquery = "Select * FROM " & t.Nome & t.NotInPKClause
+                    qryCount = "Select COUNT(1) FROM " & t.Nome & t.NotInPKClause
                 Else
                     SQLquery = "Select * FROM " & t.Nome & t.WhereClause & t.AdditionalWhere
                     qryCount = "Select COUNT(1) FROM " & t.Nome & t.WhereClause & t.AdditionalWhere
@@ -1099,7 +1158,7 @@ Module ListeID
                 lIDS = IdsCrossRef(dvids, table)
             Case MacroGruppo.Fornitori
                 EditTestoBarra("Modifiche: Fornitori")
-                lIDS = IdsFornitori(dvids, n)
+                lIDS = IdsFornitori(n)
             Case MacroGruppo.OrdiniFornitori
                 EditTestoBarra("Modifiche: Ordini Fornitori")
                 lIDS = IdsOrdiniFornitori(dvids, n)
@@ -1520,7 +1579,7 @@ Module ListeID
     ''' Fornitori
     ''' </summary>
     ''' <returns></returns>
-    Private Function IdsFornitori(ByVal dv As DataView, ByVal tablename As String) As List(Of IDS)
+    Private Function IdsFornitori(ByVal tablename As String) As List(Of IDS)
         Dim lIDS As New List(Of IDS)
         Select Case tablename
             Case "MA_CustSuppSupplierOptions"
