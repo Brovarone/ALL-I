@@ -17,96 +17,6 @@ Module Fusione
     Private tabelleNoEdit As List(Of TabelleDaEstrarre)
     Private listeIDs As List(Of ListaId)
 
-    Class TabelleDaEstrarre
-        Public Property ModificaTutti As Boolean
-        Public Property WhereClause As String
-        Public Property AdditionalWhere As String
-        Public Property JoinClause As String
-        ''' <summary>
-        ''' Nome Tabella
-        ''' </summary>
-        ''' <returns></returns>
-        Public Property Nome As String
-        Public Property FriendName As String
-        Public Property Paging As Boolean
-        Public Property Gruppo As MacroGruppo
-        Public Property HaListaPKIds As Boolean
-        Public Property GeneraListaPKIds As Boolean
-        Public Property ListaPKIds As List(Of Integer)
-        Public Property HaListaEsclusi As Boolean
-        Public Property ListaEsclusi As List(Of String)
-        Public Property NotInPK As String
-        Public Property NotInPKClause As String
-
-        ''' <summary>
-        ''' Elenco di nomi tabella cui passare la lista ids estratta
-        ''' </summary>
-        ''' <returns></returns>
-        Public Property TabelleDipendenti As List(Of String)
-        Public Property PrimaryKey As String
-        Public Property Coppia_CR As CR
-        Public Sub New()
-            ModificaTutti = False
-            AdditionalWhere = ""
-            WhereClause = ""
-            JoinClause = ""
-            Nome = ""
-            FriendName = ""
-            Paging = False
-            Gruppo = MacroGruppo.Nessuno
-            GeneraListaPKIds = False
-            HaListaPKIds = False
-            PrimaryKey = ""
-        End Sub
-        Public Function Ritorna_Clausola_IN() As String
-            Dim s As String = " WHERE " & PrimaryKey & " IN ("
-            s &= String.Join(",", ListaPKIds.ToArray)
-            Return s & ")"
-        End Function
-        Private Function Crea_Clausola_AndNotIn(key As List(Of String)) As String
-            Dim s As String
-            If String.IsNullOrWhiteSpace(WhereClause) Then
-                s = " WHERE " & NotInPK & " NOT IN ("
-            Else
-                s = " AND " & NotInPK & " NOT IN ("
-            End If
-            s &= "'" & String.Join("','", key.ToArray) & "'"
-            Return s & ")"
-        End Function
-        Public Sub EstraiListaEsclusi(dv As DataView)
-            Dim result As New List(Of String)
-            Try
-                Dim f As String = ""
-                Select Case Gruppo
-                    Case MacroGruppo.Clienti
-                        f = "Cliente"
-                    Case MacroGruppo.Fornitori
-                        f = "Fornitore"
-                    Case MacroGruppo.Agenti
-                        f = "Agente"
-                    Case MacroGruppo.BancheCli
-                        f = "BancaCliente"
-                End Select
-                dv.RowFilter = "Tipo ='" & f & "'"
-
-                For Each drv As DataRowView In dv
-                    result.Add(drv("Valore").ToString)
-                    Application.DoEvents()
-                Next
-            Catch ex As Exception
-                Debug.Print(ex.Message)
-                ScriviLog("#Errore# in EstraiListaEsclusi: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
-                If Not IsDebugging Then
-                    Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
-                    mb.ShowDialog()
-                End If
-            End Try
-            dv.Sort = [String].Empty
-            dv.RowFilter = [String].Empty
-            NotInPKClause = Crea_Clausola_AndNotIn(result)
-            ListaEsclusi = result
-        End Sub
-    End Class
     Friend Class AccoppiamentiCrossReference
         Public Property OrdCli_NdC As New CR With {.Origine = 27066372, .Derivato = 27066389, .id = 1}
         Public Property OrdCli_FatImmm As New CR With {.Origine = 27066372, .Derivato = 27066387, .id = 2}
@@ -135,7 +45,7 @@ Module Fusione
         End Sub
     End Class
 
-    Friend Enum MacroGruppo As Integer
+    Public Enum MacroGruppo As Integer
         Nessuno = 0
         Vendita = 1
         Acquisto = 2
@@ -575,7 +485,7 @@ Module Fusione
     Private Function EstraitabelleParcelle() As Boolean
         tabelle = New List(Of TabelleDaEstrarre)
         tabelleNoEdit = New List(Of TabelleDaEstrarre)
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Fees", .ModificaTutti = True, .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .PrimaryKey = "FeeId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_FeesDetails"}, .Gruppo = MacroGruppo.Parcelle})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Fees", .ModificaTutti = True, .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .PrimaryKey = "FeeId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_Fees", "MA_FeesDetails"}, .Gruppo = MacroGruppo.Parcelle})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FeesDetails", .ModificaTutti = True, .HaListaPKIds = True, .PrimaryKey = "FeeId", .Gruppo = MacroGruppo.Parcelle})
         Return True
 
@@ -703,7 +613,7 @@ Module Fusione
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .ModificaTutti = True, .HaListaPKIds = True, .PrimaryKey = "PymtSchedId", .Gruppo = MacroGruppo.Partite})
 #End Region
 #Region "Parcelle"
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Fees", .ModificaTutti = True, .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .PrimaryKey = "FeeId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_FeesDetails"}, .Gruppo = MacroGruppo.Parcelle})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Fees", .ModificaTutti = True, .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20221201') ", .PrimaryKey = "FeeId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_Fees", "MA_FeesDetails"}, .Gruppo = MacroGruppo.Parcelle})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FeesDetails", .ModificaTutti = True, .HaListaPKIds = True, .PrimaryKey = "FeeId", .Gruppo = MacroGruppo.Parcelle})
 #End Region
 #Region "NON SI PUO' -- Movimenti di Magazzino"
@@ -890,8 +800,7 @@ Module Fusione
     ''' </summary>
     ''' <param name="IdType"></param>
     ''' <param name="value"></param>
-    ''' <param name="MyReturnString"></param>
-    Private Sub AggiornaIDs(ByVal IdType As Integer, ByVal value As Integer, Optional ByRef MyReturnString As String = "")
+    Private Sub AggiornaIDs(ByVal IdType As Integer, ByVal value As Integer)
         Try
             Using destConn As New SqlConnection With {.ConnectionString = GetConnectionStringSPA()}
                 destConn.Open()
@@ -909,16 +818,13 @@ Module Fusione
                                 cmd.Parameters.AddWithValue("@TBModifiedID", My.Settings.mLOGINID)
                                 irows = cmd.ExecuteNonQuery()
                             End If
+                            idsTrans.Commit()
                         End Using
                     End Using
                 End If
             End Using
             Dim r As String = ReturnVarName(IdType, GetType(MagoNet.IdType))
-            If String.IsNullOrWhiteSpace(MyReturnString) Then
-                ScriviLog("Ultimo ID scritto: " & value.ToString & " su tipo: " & r)
-            Else
-                MyReturnString = "Ultimo ID scritto: " & value.ToString & " su tipo: " & r
-            End If
+            ScriviLog("Ultimo ID scritto: " & value.ToString & " su tipo: " & r)
         Catch ex As Exception
             ScriviLog("#Errore# in AggiornaIDs: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
         End Try
@@ -939,14 +845,6 @@ Module Fusione
 
         Public Property Cr As CR
 
-    End Class
-    Friend Class CR
-        Public id As Integer
-        Public Property Origine As Integer
-        Public Property Derivato As Integer
-        Public Function WhereClause() As String
-            Return " WHERE OriginDocType =  " & Origine & " AND DerivedDocType = " & Derivato & " "
-        End Function
     End Class
 
     ''' <summary>
