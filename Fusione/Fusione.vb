@@ -396,8 +396,6 @@ Module Fusione
                         Next
                         qryToExecute &= Strings.Left(sb.ToString, sb.Length - 4)
 
-                        'Esclusi - Query NOT IN (xxx)
-
                         If t.ModificaTutti Then
                             'non ho bisogno di filtri
                         Else
@@ -495,7 +493,7 @@ Module Fusione
         tabelleNoEdit = New List(Of TabelleDaEstrarre)
         'Considero OpeningDate e Settled ( Aperte)
         Dim wp As String = " WHERE PymtSchedId IN (SELECT DISTINCT t.PymtSchedId FROM MA_PyblsRcvbls t left JOIN MA_PyblsRcvblsDetails d ON t.PymtSchedId = d.PymtSchedId WHERE  t.Settled = '0' OR d.OpeningDate>='20230331' ) "
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .ModificaTutti = True, .WhereClause = wp, .PrimaryKey = "PymtSchedId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_PyblsRcvblsDetails"}, .Gruppo = MacroGruppo.Partite})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .ModificaTutti = True, .WhereClause = wp, .PrimaryKey = "PymtSchedId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_PyblsRcvbls", "MA_PyblsRcvblsDetails"}, .Gruppo = MacroGruppo.Partite})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .ModificaTutti = True, .HaListaPKIds = True, .PrimaryKey = "PymtSchedId", .Gruppo = MacroGruppo.Partite})
         Return True
 
@@ -609,7 +607,7 @@ Module Fusione
 #Region "Partite"
         'Considero OpeningDate e Settled ( Aperte)
         Dim wp As String = " WHERE PymtSchedId IN (SELECT DISTINCT t.PymtSchedId FROM MA_PyblsRcvbls t left JOIN MA_PyblsRcvblsDetails d ON t.PymtSchedId = d.PymtSchedId WHERE  t.Settled = '0' OR d.OpeningDate>='20230331' ) "
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .ModificaTutti = True, .WhereClause = wp, .PrimaryKey = "PymtSchedId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_PyblsRcvblsDetails"}, .Gruppo = MacroGruppo.Partite})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .ModificaTutti = True, .WhereClause = wp, .PrimaryKey = "PymtSchedId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_PyblsRcvbls", "MA_PyblsRcvblsDetails"}, .Gruppo = MacroGruppo.Partite})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .ModificaTutti = True, .HaListaPKIds = True, .PrimaryKey = "PymtSchedId", .Gruppo = MacroGruppo.Partite})
 #End Region
 #Region "Parcelle"
@@ -758,37 +756,39 @@ Module Fusione
 
     Friend Function ScriviIds(ByVal dv As DataView) As Boolean
         Try
-            'Vendite
-            Dim found As Integer = dv.Find("SaleDocId")
-            Dim SaleDocId As Integer = CInt(dv(found)("NewKey"))
-            Dim lastId As Integer = dtNewIds(dvNewIds.Find(IdType.DocVend)).Item("LastId")
-            AggiornaIDs(IdType.DocVend, lastId + SaleDocId)
-            'Acquisti
-            found = dv.Find("PurchaseDocId")
-            Dim PurchaseDocId As Integer = CInt(dv(found)("NewKey"))
-            lastId = dtNewIds(dvNewIds.Find(IdType.DocAcq)).Item("LastId")
-            AggiornaIDs(IdType.DocAcq, lastId + PurchaseDocId)
-            'Ordini Clienti
-            found = dv.Find("SaleOrdId")
-            Dim SaleOrdId = CInt(dv(found)("NewKey"))
-            lastId = dtNewIds(dvNewIds.Find(IdType.OrdCli)).Item("LastId")
-            AggiornaIDs(IdType.OrdCli, lastId + SaleOrdId)
-            'Ordini Fornitori
-            found = dv.Find("PurchaseOrdId")
-            Dim PurchaseOrdId = CInt(dv(found)("NewKey"))
-            lastId = dtNewIds(dvNewIds.Find(IdType.OrdFor)).Item("LastId")
-            AggiornaIDs(IdType.OrdFor, lastId + PurchaseOrdId)
-            'Dichiarazione di intento 
-            'found = dv.Find("DeclId")
-            'Dim DeclId As Integer = CInt(dv(found)("NewKey"))
-            'lastId = dtNewIds(dvNewIds.Find(IdType.DicIntento)).Item("LastId")
-            'AggiornaIDs(IdType.DicIntento, lastId + DeclId)
-            'Partite
-            found = dv.Find("PymtSchedId")
-            Dim PymtId As Integer = CInt(dv(found)("NewKey"))
-            lastId = dtNewIds(dvNewIds.Find(IdType.Partite)).Item("LastId")
-            AggiornaIDs(IdType.Partite, lastId + PymtId)
-
+            Using destConn As New SqlConnection With {.ConnectionString = GetConnectionStringSPA()}
+                destConn.Open()
+                'Vendite
+                Dim found As Integer = dv.Find("SaleDocId")
+                Dim SaleDocId As Integer = CInt(dv(found)("NewKey"))
+                Dim lastId As Integer = dtNewIds(dvNewIds.Find(IdType.DocVend)).Item("LastId")
+                AggiornaIDs(IdType.DocVend, lastId + SaleDocId, destConn)
+                'Acquisti
+                found = dv.Find("PurchaseDocId")
+                Dim PurchaseDocId As Integer = CInt(dv(found)("NewKey"))
+                lastId = dtNewIds(dvNewIds.Find(IdType.DocAcq)).Item("LastId")
+                AggiornaIDs(IdType.DocAcq, lastId + PurchaseDocId, destConn)
+                'Ordini Clienti
+                found = dv.Find("SaleOrdId")
+                Dim SaleOrdId = CInt(dv(found)("NewKey"))
+                lastId = dtNewIds(dvNewIds.Find(IdType.OrdCli)).Item("LastId")
+                AggiornaIDs(IdType.OrdCli, lastId + SaleOrdId, destConn)
+                'Ordini Fornitori
+                found = dv.Find("PurchaseOrdId")
+                Dim PurchaseOrdId = CInt(dv(found)("NewKey"))
+                lastId = dtNewIds(dvNewIds.Find(IdType.OrdFor)).Item("LastId")
+                AggiornaIDs(IdType.OrdFor, lastId + PurchaseOrdId, destConn)
+                'Dichiarazione di intento 
+                'found = dv.Find("DeclId")
+                'Dim DeclId As Integer = CInt(dv(found)("NewKey"))
+                'lastId = dtNewIds(dvNewIds.Find(IdType.DicIntento)).Item("LastId")
+                'AggiornaIDs(IdType.DicIntento, lastId + DeclId)
+                'Partite
+                found = dv.Find("PymtSchedId")
+                Dim PymtId As Integer = CInt(dv(found)("NewKey"))
+                lastId = dtNewIds(dvNewIds.Find(IdType.Partite)).Item("LastId")
+                AggiornaIDs(IdType.Partite, lastId + PymtId, destConn)
+            End Using
             Return True
         Catch ex As Exception
             ScriviLog("#Errore# in ScriviIds: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
@@ -800,33 +800,27 @@ Module Fusione
     ''' </summary>
     ''' <param name="IdType"></param>
     ''' <param name="value"></param>
-    Private Sub AggiornaIDs(ByVal IdType As Integer, ByVal value As Integer)
+    Private Sub AggiornaIDs(ByVal IdType As Integer, ByVal value As Integer, con As SqlConnection)
+        Dim r As String = ReturnVarName(IdType, GetType(MagoNet.IdType))
         Try
-            Using destConn As New SqlConnection With {.ConnectionString = GetConnectionStringSPA()}
-                destConn.Open()
-                If destConn.State = ConnectionState.Open Then
-                    Using cmd = New SqlCommand("UPDATE MA_IDNumbers SET LastId =" & value.ToString & " WHERE CodeType=@CodeType",
-                             ConnDestination)
-                        Using idsTrans = destConn.BeginTransaction
-                            cmd.Transaction = idsTrans
-                            cmd.Parameters.AddWithValue("@CodeType", IdType)
-                            Dim irows As Integer = cmd.ExecuteNonQuery()
-                            If irows <= 0 Then
-                                cmd.CommandText = "INSERT INTO MA_IDNumbers (CodeType, LastId, TBCreatedID, TBModifiedID) VALUES (@CodeType, @Value, @TBCreatedID ,@TBModifiedID )"
-                                cmd.Parameters.AddWithValue("@Value", value)
-                                cmd.Parameters.AddWithValue("@TBCreatedID", My.Settings.mLOGINID)
-                                cmd.Parameters.AddWithValue("@TBModifiedID", My.Settings.mLOGINID)
-                                irows = cmd.ExecuteNonQuery()
-                            End If
-                            idsTrans.Commit()
-                        End Using
-                    End Using
-                End If
-            End Using
-            Dim r As String = ReturnVarName(IdType, GetType(MagoNet.IdType))
+            If con.State = ConnectionState.Open Then
+                Using cmd = New SqlCommand("UPDATE MA_IDNumbers SET LastId =" & value.ToString & " WHERE CodeType=@CodeType",
+                         ConnDestination)
+                    cmd.Parameters.AddWithValue("@CodeType", IdType)
+                    Dim irows As Integer = cmd.ExecuteNonQuery()
+                    If irows <= 0 Then
+                        cmd.CommandText = "INSERT INTO MA_IDNumbers (CodeType, LastId, TBCreatedID, TBModifiedID) VALUES (@CodeType, @Value, @TBCreatedID ,@TBModifiedID )"
+                        cmd.Parameters.AddWithValue("@Value", value)
+                        cmd.Parameters.AddWithValue("@TBCreatedID", My.Settings.mLOGINID)
+                        cmd.Parameters.AddWithValue("@TBModifiedID", My.Settings.mLOGINID)
+                        irows = cmd.ExecuteNonQuery()
+                    End If
+                End Using
+            End If
+
             ScriviLog("Ultimo ID scritto: " & value.ToString & " su tipo: " & r)
         Catch ex As Exception
-            ScriviLog("#Errore# in AggiornaIDs: " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            ScriviLog("#Errore# in AggiornaID(IdType=" & r & "): " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
         End Try
     End Sub
 
