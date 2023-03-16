@@ -491,23 +491,11 @@ Module Fusione
     Private Function EstraitabellePartite() As Boolean
         tabelle = New List(Of TabelleDaEstrarre)
         tabelleNoEdit = New List(Of TabelleDaEstrarre)
-        'Considero OpeningDate e Settled ( Aperte)
-        Dim wp As String = " WHERE PymtSchedId IN (SELECT DISTINCT t.PymtSchedId FROM MA_PyblsRcvbls t left JOIN MA_PyblsRcvblsDetails d ON t.PymtSchedId = d.PymtSchedId WHERE  t.Settled = '0' OR d.OpeningDate>='20230331' ) "
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .ModificaTutti = True, .WhereClause = wp, .PrimaryKey = "PymtSchedId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_PyblsRcvbls", "MA_PyblsRcvblsDetails"}, .Gruppo = MacroGruppo.Partite})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .ModificaTutti = True, .HaListaPKIds = True, .PrimaryKey = "PymtSchedId", .Gruppo = MacroGruppo.Partite})
         Return True
-
     End Function
     Private Function EstraitabelleCliFor() As Boolean
-        'todo spostare sotto dopo aver provato
         tabelle = New List(Of TabelleDaEstrarre)
         tabelleNoEdit = New List(Of TabelleDaEstrarre)
-
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .HaListaEsclusi = True, .NotInPK = "CustSupp", .Gruppo = MacroGruppo.Clienti})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppCustomerOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Cliente, .HaListaEsclusi = True, .NotInPK = "Customer", .Gruppo = MacroGruppo.Clienti})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .HaListaEsclusi = True, .NotInPK = "CustSupp", .Gruppo = MacroGruppo.Fornitori})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppSupplierOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .HaListaEsclusi = True, .NotInPK = "Supplier", .Gruppo = MacroGruppo.Fornitori})
-
         Return True
     End Function
     ''' <summary>
@@ -756,6 +744,7 @@ Module Fusione
 
     Friend Function ScriviIds(ByVal dv As DataView) As Boolean
         Try
+            SqlConnection.ClearAllPools()
             Using destConn As New SqlConnection With {.ConnectionString = GetConnectionStringSPA()}
                 destConn.Open()
                 'Vendite
@@ -806,6 +795,7 @@ Module Fusione
             If con.State = ConnectionState.Open Then
                 Using cmd = New SqlCommand("UPDATE MA_IDNumbers SET LastId =" & value.ToString & " WHERE CodeType=@CodeType",
                          ConnDestination)
+                    cmd.CommandTimeout = 0
                     cmd.Parameters.AddWithValue("@CodeType", IdType)
                     Dim irows As Integer = cmd.ExecuteNonQuery()
                     If irows <= 0 Then
@@ -897,7 +887,7 @@ Module Fusione
             Using destConn As New SqlConnection With {.ConnectionString = GetConnectionStringSPA()}
                 destConn.Open()
                 If destConn.State = ConnectionState.Open Then
-                    Using destCommRowCount = New SqlCommand(qryCount, destConn)
+                    Using destCommRowCount = New SqlCommand("Select COUNT(1) FROM " & t.Nome, destConn)
                         countStart = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())
                         'Debug.Print("Starting row count = {0}", countStart)
                     End Using
@@ -956,7 +946,7 @@ Module Fusione
             Using destConn As New SqlConnection With {.ConnectionString = GetConnectionStringSPA()}
                 destConn.Open()
                 If destConn.State = ConnectionState.Open Then
-                    Using destCommRowCount = New SqlCommand(qryCount, destConn)
+                    Using destCommRowCount = New SqlCommand("Select COUNT(1) FROM " & t.Nome, destConn)
                         'Metto ZERO perche' il Commit/RollBack precedente potrebbe metterci molto
                         destCommRowCount.CommandTimeout = 0
                         Dim countEnd As Long = System.Convert.ToInt32(destCommRowCount.ExecuteScalar())

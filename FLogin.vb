@@ -1891,14 +1891,16 @@ Public Class FLogin
         End If
     End Sub
     Private Sub SUBFusione()
-        Dim b As DialogResult = MessageBox.Show("Salvataggio" & vbCrLf & "Eseguire Commit?", My.Application.Info.Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+        Dim azUno As String = If(DBisTMP, TxtTmpDB_UNO.Text, TxtDB_UNO.Text)
+        Dim azSpa As String = If(DBisTMP, TxtTmpDB_SPA.Text, TxtDB_SPA.Text)
+        Dim b As DialogResult = MessageBox.Show("Server " & txtSERVER.Text & Environment.NewLine & "Salvataggio " & azUno & " su " & azSpa & Environment.NewLine & "Eseguire Commit?", My.Application.Info.Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question)
         If b = DialogResult.No Then
             'Se rispondo no abilito isDebugging che esegue il rollback
             ToolStripMenuItemDebugging.PerformClick()
         End If
 
-        SUBConnettiUNO(If(DBisTMP, TxtTmpDB_UNO.Text, TxtDB_UNO.Text))
-        SUBConnettiSPA(If(DBisTMP, TxtTmpDB_SPA.Text, TxtDB_SPA.Text))
+        SUBConnettiUNO(azUno)
+        SUBConnettiSPA(azSpa)
         ChkFusioneFull.Checked = True
 
         'aggiungo controllo progressbar
