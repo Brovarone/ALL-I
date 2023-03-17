@@ -570,7 +570,7 @@ Module Fusione
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseOrdTaxSummay", .ModificaTutti = True, .WhereClause = w, .Gruppo = MacroGruppo.OrdiniFornitori})
 #End Region
 #Region "Cespiti"
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssets", .ModificaTutti = True, .WhereClause = " WHERE DisposalType <> 7143424", .Gruppo = MacroGruppo.Cespiti})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssets", .ModificaTutti = True, .WhereClause = " WHERE DisposalType = 7143424", .Gruppo = MacroGruppo.Cespiti})
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsBalance", .Gruppo = MacroGruppo.cespiti})
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsCoeff", .Gruppo = MacroGruppo.cespiti})
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsFinancial", .Gruppo = MacroGruppo.cespiti})
@@ -580,6 +580,7 @@ Module Fusione
 #End Region
 #Region "Analitica ( Centri di Costo + Commesse)"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CostCenters", .Gruppo = MacroGruppo.Analitica})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Jobs", .Gruppo = MacroGruppo.Analitica})
 
 #End Region
 #Region "Agenti"
@@ -700,7 +701,6 @@ Module Fusione
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Banks", .WhereClause = " WHERE IsACompanyBank = 0", .HaListaEsclusi = True, .NotInPK = "Bank", .Gruppo = MacroGruppo.BancheCli})
 #End Region
 #Region "Analitica (CdC + Commesse)"
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Jobs"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_JobGroups"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_JobsLang"})
         'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_JobsBalances"})
@@ -789,7 +789,7 @@ Module Fusione
     ''' </summary>
     ''' <param name="IdType"></param>
     ''' <param name="value"></param>
-    Private Sub AggiornaIDs(ByVal IdType As Integer, ByVal value As Integer, con As SqlConnection)
+    Private Sub AggiornaIDs(ByVal IdType As Integer, ByVal value As Integer, ByRef con As SqlConnection)
         Dim r As String = ReturnVarName(IdType, GetType(MagoNet.IdType))
         Try
             If con.State = ConnectionState.Open Then
@@ -797,6 +797,7 @@ Module Fusione
                          ConnDestination)
                     cmd.CommandTimeout = 0
                     cmd.Parameters.AddWithValue("@CodeType", IdType)
+                    ScriviLog(cmd.CommandText)
                     Dim irows As Integer = cmd.ExecuteNonQuery()
                     If irows <= 0 Then
                         cmd.CommandText = "INSERT INTO MA_IDNumbers (CodeType, LastId, TBCreatedID, TBModifiedID) VALUES (@CodeType, @Value, @TBCreatedID ,@TBModifiedID )"
@@ -1016,7 +1017,7 @@ Module ListeID
                 lIDS = IdsAcquisti(dvids, n)
             Case MacroGruppo.Analitica
                 EditTestoBarra("Modifiche: Analitica")
-                lIDS = IdsCentriDiCosto(n)
+                lIDS = IdsAnalitica(n)
             Case MacroGruppo.OrdiniClienti
                 EditTestoBarra("Modifiche: Ordini Clienti")
                 lIDS = IdsOrdiniClienti(dvids, n)
@@ -1471,9 +1472,10 @@ Module ListeID
     End Function
     ''' <summary>
     ''' Viene aggiunto il prefisso 1 ai Centri di Costo
+    ''' Viene aggiunto il prefisso A ai Cesptiti indicati in "Contract"
     ''' </summary>
     ''' <returns></returns>
-    Private Function IdsCentriDiCosto(ByVal tablename As String) As List(Of IDS)
+    Private Function IdsAnalitica(ByVal tablename As String) As List(Of IDS)
         'Presente su 21 tabelle !!!!!
         'MA_ChartOfAccountsCostAccTpl   'Esclusa
         'MA_CostAccEntriesDetail        'Esclusa
@@ -1500,6 +1502,8 @@ Module ListeID
         Select Case tablename
             Case "MA_CostCenters"
                 lIDS.Add(New IDS With {.Chiave = True, .IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+            Case "MA_Jobs"
+                lIDS.Add(New IDS With {.IdString = PrefissoCespiti, .Nome = "Contract", .Operatore = IdsOp.Prefisso, .MaxSize = 10})
         End Select
 
         Return lIDS
