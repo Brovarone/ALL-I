@@ -44,8 +44,8 @@ Partial Class FLogin
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabFusione = New System.Windows.Forms.TabPage()
         Me.ChkFusionePartite = New System.Windows.Forms.CheckBox()
-        Me.ChkFusioneClifor = New System.Windows.Forms.CheckBox()
-        Me.ChkFusioneParcelle = New System.Windows.Forms.CheckBox()
+        Me.ChkFusioneAcquisti = New System.Windows.Forms.CheckBox()
+        Me.ChkFusioneVendite = New System.Windows.Forms.CheckBox()
         Me.BtnFusione = New System.Windows.Forms.Button()
         Me.ChkFusioneFull = New System.Windows.Forms.CheckBox()
         Me.TabPageCancella = New System.Windows.Forms.TabPage()
@@ -373,8 +373,8 @@ Partial Class FLogin
         '
         Me.TabFusione.BackColor = System.Drawing.SystemColors.Control
         Me.TabFusione.Controls.Add(Me.ChkFusionePartite)
-        Me.TabFusione.Controls.Add(Me.ChkFusioneClifor)
-        Me.TabFusione.Controls.Add(Me.ChkFusioneParcelle)
+        Me.TabFusione.Controls.Add(Me.ChkFusioneAcquisti)
+        Me.TabFusione.Controls.Add(Me.ChkFusioneVendite)
         Me.TabFusione.Controls.Add(Me.BtnFusione)
         Me.TabFusione.Controls.Add(Me.ChkFusioneFull)
         Me.TabFusione.Location = New System.Drawing.Point(4, 22)
@@ -394,25 +394,25 @@ Partial Class FLogin
         Me.ChkFusionePartite.Text = "Fusione Partite"
         Me.ChkFusionePartite.UseVisualStyleBackColor = True
         '
-        'ChkFusioneClifor
+        'ChkFusioneAcquisti
         '
-        Me.ChkFusioneClifor.AutoSize = True
-        Me.ChkFusioneClifor.Location = New System.Drawing.Point(15, 26)
-        Me.ChkFusioneClifor.Name = "ChkFusioneClifor"
-        Me.ChkFusioneClifor.Size = New System.Drawing.Size(96, 17)
-        Me.ChkFusioneClifor.TabIndex = 4
-        Me.ChkFusioneClifor.Text = "Fusione CliFor*"
-        Me.ChkFusioneClifor.UseVisualStyleBackColor = True
+        Me.ChkFusioneAcquisti.AutoSize = True
+        Me.ChkFusioneAcquisti.Location = New System.Drawing.Point(15, 26)
+        Me.ChkFusioneAcquisti.Name = "ChkFusioneAcquisti"
+        Me.ChkFusioneAcquisti.Size = New System.Drawing.Size(110, 17)
+        Me.ChkFusioneAcquisti.TabIndex = 4
+        Me.ChkFusioneAcquisti.Text = "Acquisti da Nrdoc"
+        Me.ChkFusioneAcquisti.UseVisualStyleBackColor = True
         '
-        'ChkFusioneParcelle
+        'ChkFusioneVendite
         '
-        Me.ChkFusioneParcelle.AutoSize = True
-        Me.ChkFusioneParcelle.Location = New System.Drawing.Point(15, 49)
-        Me.ChkFusioneParcelle.Name = "ChkFusioneParcelle"
-        Me.ChkFusioneParcelle.Size = New System.Drawing.Size(104, 17)
-        Me.ChkFusioneParcelle.TabIndex = 3
-        Me.ChkFusioneParcelle.Text = "Fusione Parcelle"
-        Me.ChkFusioneParcelle.UseVisualStyleBackColor = True
+        Me.ChkFusioneVendite.AutoSize = True
+        Me.ChkFusioneVendite.Location = New System.Drawing.Point(15, 49)
+        Me.ChkFusioneVendite.Name = "ChkFusioneVendite"
+        Me.ChkFusioneVendite.Size = New System.Drawing.Size(108, 17)
+        Me.ChkFusioneVendite.TabIndex = 3
+        Me.ChkFusioneVendite.Text = "Fatture da NrDoc"
+        Me.ChkFusioneVendite.UseVisualStyleBackColor = True
         '
         'BtnFusione
         '
@@ -1575,8 +1575,8 @@ Partial Class FLogin
     Friend WithEvents SPASuTESTSPAToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents EseguiInDefinitivoToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents BtnFusione As Button
-    Friend WithEvents ChkFusioneClifor As CheckBox
-    Friend WithEvents ChkFusioneParcelle As CheckBox
+    Friend WithEvents ChkFusioneAcquisti As CheckBox
+    Friend WithEvents ChkFusioneVendite As CheckBox
     Friend WithEvents ChkFusionePartite As CheckBox
     Friend WithEvents EseguiStep As ToolStripMenuItem
     Friend WithEvents UserSettingFolderToolStripMenuItem As ToolStripMenuItem

@@ -891,7 +891,7 @@ Public Class FLogin
             ProcessaGruppo(cespiti, "Cespiti")
         End If
 
-        If ChkFusioneFull.Checked OrElse ChkFusioneClifor.Checked OrElse ChkFusioneParcelle.Checked OrElse ChkFusionePartite.Checked Then
+        If ChkFusioneFull.Checked OrElse ChkFusioneAcquisti.Checked OrElse ChkFusioneVendite.Checked OrElse ChkFusionePartite.Checked Then
             Dim bFound As Boolean
             Dim fusione As String() = {"IDS_MIGRAZIONE"}
             Dim fusioneFound As Boolean() = {False}
@@ -1953,4 +1953,11 @@ Public Class FLogin
         TabControl1.Enabled = True
     End Sub
 
+    Private Sub ChkFusioneVendite_CheckedChanged(sender As Object, e As EventArgs) Handles ChkFusioneVendite.CheckedChanged
+        ChkFusionePartite.Checked = ChkFusioneVendite.Checked
+    End Sub
+
+    Private Sub hkFusioneAcquisti_CheckedChanged(sender As Object, e As EventArgs) Handles ChkFusioneAcquisti.CheckedChanged
+        ChkFusionePartite.Checked = ChkFusioneAcquisti.Checked
+    End Sub
 End Class

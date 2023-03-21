@@ -41,7 +41,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>14</ApplicationRevision>
+    <ApplicationRevision>15</ApplicationRevision>
     <ApplicationVersion>3.1.1.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -85,7 +85,7 @@
     <ApplicationIcon>Image\dark_fatturazione_y.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>E2448655965FB551B14CF790903484F42BD75804</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>0C25BC5725A20AA78B78F40C944A801F432835E5</ManifestCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestKeyFile>ALL-I_TemporaryKey.pfx</ManifestKeyFile>
@@ -94,7 +94,7 @@
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
     <TargetZone>LocalIntranet</TargetZone>
@@ -371,6 +371,12 @@
     <Compile Include="ApplicationEvents.vb" />
     <Compile Include="Cespiti.vb" />
     <Compile Include="Fusione\CR.vb" />
+    <Compile Include="Fusione\FDocumentNumberDialog.Designer.vb">
+      <DependentUpon>FDocumentNumberDialog.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Fusione\FDocumentNumberDialog.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Fusione\Fusione.vb" />
     <Compile Include="Fusione\FusioneWithDataRow.vb" />
     <Compile Include="Fusione\FusioneWithDataTable.vb" />
@@ -442,6 +448,9 @@
     <Compile Include="Unused.vb" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Fusione\FDocumentNumberDialog.resx">
+      <DependentUpon>FDocumentNumberDialog.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MessageBoxWithDetails.resx">
       <DependentUpon>MessageBoxWithDetails.vb</DependentUpon>
     </EmbeddedResource>

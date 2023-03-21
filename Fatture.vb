@@ -304,7 +304,9 @@ Module Fatture
                                                                                         End If
                                                                                     End If
                                                                                 End If
-                                                                                drCli("Account") = "1CLI" & Int16.Parse((TrovaFiliale(.Item("AA").ToString, False))).ToString("000")
+                                                                                'Deprecata
+                                                                                'drCli("Account") = "1CLI" & Int16.Parse((TrovaFiliale(.Item("AA").ToString, False))).ToString("000")
+                                                                                drCli("Account") = "1CLI001"
                                                                                 drCli("Presentation") = 1376260
                                                                                 drCli("MailSendingType") = 12451840 'Tipo invio mail ( A: 12451841, non inviare: 12451840)
                                                                                 ''''''''''''''''''''''

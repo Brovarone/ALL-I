@@ -13,6 +13,7 @@ Public Class TabelleDaEstrarre
     Public Property Paging As Boolean
     Friend Property Gruppo As MacroGruppo
     Public Property HaListaPKIds As Boolean
+    Public Property IncludiSempreWhere As Boolean
     Public Property GeneraListaPKIds As Boolean
     Public Property ListaPKIds As List(Of Integer)
     Public Property HaListaEsclusi As Boolean
@@ -26,6 +27,9 @@ Public Class TabelleDaEstrarre
     ''' <returns></returns>
     Public Property TabelleDipendenti As List(Of String)
     Public Property PrimaryKey As String
+    Public Property MultiPk As Boolean
+    Public Property PrimaryKeys As List(Of String)
+
     Public Property Coppia_CR As CR
     Public Sub New()
         ModificaTutti = False
@@ -38,19 +42,38 @@ Public Class TabelleDaEstrarre
         Gruppo = MacroGruppo.Nessuno
         GeneraListaPKIds = False
         HaListaPKIds = False
+        IncludiSempreWhere = False
+        MultiPk = False
         PrimaryKey = ""
     End Sub
     Public Function Ritorna_Clausola_IN() As String
-        Dim s As String = " WHERE " & PrimaryKey & " IN ("
-        s &= String.Join(",", ListaPKIds.ToArray)
-        Return s & ")"
+        If ListaPKIds.Any Then
+            Dim s As String
+            If IncludiSempreWhere Then
+                s = WhereClause & AdditionalWhere & " AND "
+            Else
+                s = " WHERE "
+            End If
+            If MultiPk Then
+                For Each pk In PrimaryKeys
+                    s &= pk & " IN (" & String.Join(",", ListaPKIds.ToArray) & ") AND "
+                Next
+                'rimuovo AND
+                s = Left(s, s.Length - 4)
+            Else
+                s &= PrimaryKey & " IN (" & String.Join(",", ListaPKIds.ToArray) & ") "
+            End If
+            Return s
+        Else
+            Return String.Empty
+        End If
     End Function
     Private Function Crea_Clausola_AndNotIn(key As List(Of String)) As String
         Dim s As String
         If String.IsNullOrWhiteSpace(WhereClause) Then
-            s = " WHERE " & NotInPK & " NOT IN ("
+            s = " WHERE " & NotInPK & " Not IN ("
         Else
-            s = " AND " & NotInPK & " NOT IN ("
+            s = " And " & NotInPK & " Not IN ("
         End If
         s &= "'" & String.Join("','", key.ToArray) & "'"
         Return s & ")"

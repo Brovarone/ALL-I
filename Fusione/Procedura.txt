@@ -26,10 +26,17 @@ Possibilità
 3: aggiorno i contatori id al nuovo valore incrementato. Non dovrei avere doppioni. 
 4: contatori non fiscali ?
 
-Export da mago:
+Prevedere 
+	Import partite successivamente e con filtro
+	Import Doc Vendita e Acquisto con filtro da nr doc/prot
+
+
+Export/copia da mago:
 Magazzino
 	MA_InventoryDefaults
 	MA_InventoryReasons
 	MA_InventoryParameters
 	MA_FixAssetsReasons
 	MA_Storages
+Cespiti
+	Causali movimento

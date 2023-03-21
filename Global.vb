@@ -380,6 +380,10 @@ Module MagoNet
         Fattura = 3407874
         FatturaAccompagnatoria = 3407875
         NotaCredito = 3407876
+        'Tipo Documento Acquisto, 150
+        AcqFattura = 9830401
+        AcqBollaDiCarico = 9830400
+        AcqNotaCredito = 9830402
     End Enum
     Friend Enum CrossReference As Integer
         'Riferimenti Incrociati , 413
