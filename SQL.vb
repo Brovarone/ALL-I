@@ -15,13 +15,13 @@ Namespace SqlTools
             ' to execute asynchronously.
             Return "Data Source=" & FLogin.txtSERVER.Text & "; Database=" & DB & ";User Id=" & FLogin.txtID.Text & ";Password=" & FLogin.txtPSW.Text & ";" & " Asynchronous Processing=True;"
         End Function
-        Public Function GetConnectionStringSPA() As String
+        Public Function GetConnectionStringSPA(Optional trusted As Boolean = False) As String
             Dim DB As String = If(DBisTMP, FLogin.TxtTmpDB_SPA.Text, FLogin.TxtDB_SPA.Text)
-            Return "Data Source=" & FLogin.txtSERVER.Text & "; Database=" & DB & ";User Id=" & FLogin.txtID.Text & ";Password=" & FLogin.txtPSW.Text & ";" & " Pooling=True;"
+            Return "Data Source=" & FLogin.txtSERVER.Text & "; Database=" & DB & ";User Id=" & FLogin.txtID.Text & ";Password=" & FLogin.txtPSW.Text & ";" & " Pooling=True;" & If(trusted = True, ";TrustServerCertificate=True", "")
         End Function
-        Public Function GetConnectionStringUNO() As String
+        Public Function GetConnectionStringUNO(Optional trusted As Boolean = False) As String
             Dim DB As String = If(DBisTMP, FLogin.TxtTmpDB_UNO.Text, FLogin.TxtDB_UNO.Text)
-            Return "Data Source=" & FLogin.txtSERVER.Text & "; Database=" & DB & ";User Id=" & FLogin.txtID.Text & ";Password=" & FLogin.txtPSW.Text & ";" & " Pooling=True;"
+            Return "Data Source=" & FLogin.txtSERVER.Text & "; Database=" & DB & ";User Id=" & FLogin.txtID.Text & ";Password=" & FLogin.txtPSW.Text & ";" & " Pooling=True;" & If(trusted = True, ";TrustServerCertificate=True", "")
         End Function
         Public Sub RunNonQueryAsynchronously(ByVal commandText As String, ByVal connectionString As String)
 
@@ -97,6 +97,7 @@ Namespace SqlTools
             Using connection As New SqlConnection(connectionString)
                 Try
                     Dim command As New SqlCommand(commandText, connection)
+                    command.CommandTimeout = 2
                     connection.Open()
                     If connection.State = ConnectionState.Open Then
                         rowsAffected = command.ExecuteNonQuery()
@@ -109,6 +110,7 @@ Namespace SqlTools
                 Catch ex As Exception
                     ' You might want to pass these errors
                     ' back out to the caller.
+                    ScriviLog("Error: {0}", ex.Message)
                     Console.WriteLine("Error: {0}", ex.Message)
                 End Try
             End Using

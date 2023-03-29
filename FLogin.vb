@@ -891,7 +891,7 @@ Public Class FLogin
             ProcessaGruppo(cespiti, "Cespiti")
         End If
 
-        If ChkFusioneFull.Checked OrElse ChkFusioneAcquisti.Checked OrElse ChkFusioneVendite.Checked OrElse ChkFusionePartite.Checked Then
+        If ChkFusioneFull.Checked OrElse ChkFusioneAcquisti.Checked OrElse ChkFusioneVendite.Checked OrElse ChkFusionePartite.Checked OrElse chkBilancioApertura.Checked OrElse chkSaldoCespiti.Checked Then
             Dim bFound As Boolean
             Dim fusione As String() = {"IDS_MIGRAZIONE"}
             Dim fusioneFound As Boolean() = {False}
@@ -1101,10 +1101,12 @@ Public Class FLogin
                         lstStatoConnessione.Items.Add("Apertura file con IDS per Migrazione")
                         dsXLS = LoadXLS(spath, True, True)
                         Dim bok As Boolean
-                        'Lenta, deprecata
-                        'bok = EseguiFusione(dsXLS)
                         My.Application.Log.WriteEntry("Esegui Commit : " & (Not IsDebugging).ToString)
-                        bok = EseguiFusioneSQL(dsXLS)
+                        If chkSaldoCespiti.Checked Then
+                            bok = EseguiScrittureSQL(dsXLS)
+                        Else
+                            bok = EseguiFusioneSQL(dsXLS)
+                        End If
                         esito = bok
 
                     Case Else

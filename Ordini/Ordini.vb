@@ -151,6 +151,7 @@ Module Ordini
                                         .ThenInclude(Of Allattivita)(Function(at) at.Allattivita) _
                             .Include(Function(att) att.AllordCliAttivita) _
                                 .ThenInclude(Of Allattivita)(Function(at) at.Allattivita)) ' _
+            'q = q.Where(Function(i) i.MaSaleOrdDetails..)
             'AGGIUNGO  FILTRI
             'Vengono esclusi a priori gli ordini con data cessazione > di Data Competenza
             'Il filtro where che prende quelli senza data cessazione o con data successiva ( preimpostata da loro)

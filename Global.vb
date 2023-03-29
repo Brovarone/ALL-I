@@ -1115,6 +1115,14 @@ Public Module LogTools
         End If
         Application.DoEvents()
     End Sub
+    Public Sub ScriviLog_Debug(ByVal message As String, Optional flush As Boolean = True)
+        My.Application.Log.DefaultFileLogWriter.WriteLine(message)
+        If flush Then
+            My.Application.Log.DefaultFileLogWriter.Flush()
+        End If
+        Debug.Print(message)
+        Application.DoEvents()
+    End Sub
     Public Sub OrdinaLog(log As MyLogs)
         log.Corpo.Sort()
 

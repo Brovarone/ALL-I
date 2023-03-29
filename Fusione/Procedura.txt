@@ -29,14 +29,16 @@ Possibilità
 Prevedere 
 	Import partite successivamente e con filtro
 	Import Doc Vendita e Acquisto con filtro da nr doc/prot
+	Import Scritture di Apertura (PRIMA IMPOSTARE FLAG DETTAGLIA CLIFOR)
 
 
 Export/copia da mago:
 Magazzino
-	MA_InventoryDefaults
-	MA_InventoryReasons
-	MA_InventoryParameters
-	MA_FixAssetsReasons
-	MA_Storages
+	# MA_InventoryDefaults
+	# MA_InventoryReasons
+	# MA_InventoryParameters
+	# MA_Storages
+	# MA_StorageGroups
+	# MA_ItemParameters
 Cespiti
-	Causali movimento
+	MA_FixAssetsReasons

@@ -576,7 +576,7 @@ Module Cespiti
             Warning = New StringBuilder
         End Sub
     End Class
-    Private NotInheritable Class MyCausale
+    Friend NotInheritable Class MyCausale
         Public Property Codice As String
         Public Property Ammortamento As Boolean
         Public Property Anticipato As Boolean
@@ -597,7 +597,7 @@ Module Cespiti
         End Sub
     End Class
 
-    Private NotInheritable Class CauCes
+    Friend NotInheritable Class CauCes
         'Max Lunghezza 8 Chr
         'Acquisto e ripresa non possono coesistere
         Public Shared AcqF As New MyCausale With {.Codice = "ACQFISC", .Acquisto = True}

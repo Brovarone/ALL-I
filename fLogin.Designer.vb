@@ -43,6 +43,8 @@ Partial Class FLogin
         Me.DtDataInizio = New System.Windows.Forms.DateTimePicker()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabFusione = New System.Windows.Forms.TabPage()
+        Me.chkSaldoCespiti = New System.Windows.Forms.CheckBox()
+        Me.chkBilancioApertura = New System.Windows.Forms.CheckBox()
         Me.ChkFusionePartite = New System.Windows.Forms.CheckBox()
         Me.ChkFusioneAcquisti = New System.Windows.Forms.CheckBox()
         Me.ChkFusioneVendite = New System.Windows.Forms.CheckBox()
@@ -372,6 +374,8 @@ Partial Class FLogin
         'TabFusione
         '
         Me.TabFusione.BackColor = System.Drawing.SystemColors.Control
+        Me.TabFusione.Controls.Add(Me.chkSaldoCespiti)
+        Me.TabFusione.Controls.Add(Me.chkBilancioApertura)
         Me.TabFusione.Controls.Add(Me.ChkFusionePartite)
         Me.TabFusione.Controls.Add(Me.ChkFusioneAcquisti)
         Me.TabFusione.Controls.Add(Me.ChkFusioneVendite)
@@ -383,6 +387,28 @@ Partial Class FLogin
         Me.TabFusione.Size = New System.Drawing.Size(322, 101)
         Me.TabFusione.TabIndex = 8
         Me.TabFusione.Text = "Fusione"
+        '
+        'chkSaldoCespiti
+        '
+        Me.chkSaldoCespiti.AutoSize = True
+        Me.chkSaldoCespiti.BackColor = System.Drawing.Color.Gold
+        Me.chkSaldoCespiti.Location = New System.Drawing.Point(162, 72)
+        Me.chkSaldoCespiti.Name = "chkSaldoCespiti"
+        Me.chkSaldoCespiti.Size = New System.Drawing.Size(87, 17)
+        Me.chkSaldoCespiti.TabIndex = 7
+        Me.chkSaldoCespiti.Text = "Saldo Cespiti"
+        Me.chkSaldoCespiti.UseVisualStyleBackColor = False
+        '
+        'chkBilancioApertura
+        '
+        Me.chkBilancioApertura.AutoSize = True
+        Me.chkBilancioApertura.BackColor = System.Drawing.Color.Gold
+        Me.chkBilancioApertura.Location = New System.Drawing.Point(163, 49)
+        Me.chkBilancioApertura.Name = "chkBilancioApertura"
+        Me.chkBilancioApertura.Size = New System.Drawing.Size(106, 17)
+        Me.chkBilancioApertura.TabIndex = 6
+        Me.chkBilancioApertura.Text = "Bilancio Apertura"
+        Me.chkBilancioApertura.UseVisualStyleBackColor = False
         '
         'ChkFusionePartite
         '
@@ -1580,4 +1606,6 @@ Partial Class FLogin
     Friend WithEvents ChkFusionePartite As CheckBox
     Friend WithEvents EseguiStep As ToolStripMenuItem
     Friend WithEvents UserSettingFolderToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents chkBilancioApertura As CheckBox
+    Friend WithEvents chkSaldoCespiti As CheckBox
 End Class
