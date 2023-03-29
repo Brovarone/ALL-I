@@ -3,6 +3,7 @@
 Public Class DocumentDialogBox
     Public Property Numero As String
     Public Property lbl As String
+    Public Property lblSottotit As String
     Private Sub OK_Button_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles OK_Button.Click
         If NumberMeetsCriteria(TxTNumero.Text) Then
             Me.Numero = Int16.Parse(TxTNumero.Text).ToString("000000")
@@ -27,6 +28,9 @@ Public Class DocumentDialogBox
     End Function
 
     Private Sub DocumentDialogBox_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        If Not String.IsNullOrWhiteSpace(lbl) Then lblNumero.Text = lbl
+        If Not String.IsNullOrWhiteSpace(lbl) Then
+            lblNumero.Text = lbl
+            lblSottotitolo.Text = lblSottotit
+        End If
     End Sub
 End Class

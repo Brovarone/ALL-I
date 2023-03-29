@@ -97,7 +97,7 @@ Namespace SqlTools
             Using connection As New SqlConnection(connectionString)
                 Try
                     Dim command As New SqlCommand(commandText, connection)
-                    command.CommandTimeout = 2
+                    command.CommandTimeout = 0
                     connection.Open()
                     If connection.State = ConnectionState.Open Then
                         rowsAffected = command.ExecuteNonQuery()

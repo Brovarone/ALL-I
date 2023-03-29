@@ -543,7 +543,7 @@ Module Fusione
     ''' </summary>
     ''' <returns></returns>
     Private Function EstraiTabelleFatture() As Boolean
-        Dim ddb As New DocumentDialogBox With {.Text = .Text & " - Vendita"}
+        Dim ddb As New DocumentDialogBox With {.Text = .Text & " - Vendita", .lbl = "Inserire il numero di partenza", .lblSottotit = "Data Fattura >= 01/01/2023"}
         If ddb.ShowDialog() = Windows.Forms.DialogResult.OK Then
 
             Dim n As String = ddb.Numero
@@ -594,7 +594,7 @@ Module Fusione
         Return True
     End Function
     Private Function EstraiTabelleAcquisti() As Boolean
-        Dim ddb As New DocumentDialogBox With {.Text = .Text & " - Acquisti", .lbl = "Inserire il protocollo di partenza"}
+        Dim ddb As New DocumentDialogBox With {.Text = .Text & " - Acquisti", .lbl = "Inserire il protocollo di partenza", .lblSottotit = "Data Protocollo >= 01/01/2023"}
         If ddb.ShowDialog() = Windows.Forms.DialogResult.OK Then
 
             Dim n As String = ddb.Numero
@@ -869,7 +869,7 @@ Module Fusione
         'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsFiscalData", .WhereClause = " WHERE FiscalYear = 2023"})
         'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsFiscalDataDomCurr", .WhereClause = " WHERE FiscalYear = 2023"})
 #End Region
-#Region "Magazzino : Depositi"
+#Region "Da Mago -Magazzino : Depositi"
         'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Storages"})
         'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_StorageGroups"})
 #End Region

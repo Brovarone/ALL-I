@@ -16,6 +16,7 @@ Imports System.Threading
 Imports System.Text.RegularExpressions
 
 Imports EFMago.Models
+Imports ALLSystemTools.SqlTools
 
 ' Per file Excel
 ' https://github.com/ExcelDataReader/ExcelDataReader
@@ -870,6 +871,9 @@ Module MagoNet
                         Next
                     End If
                     'Scrivo sul database
+                    'Using validator As New ValidatingDataReader(dr, Conn, bulkCopy, tr)
+                    'bulkCopy.WriteToServer(validator)
+                    'End Using
                     bulkCopy.WriteToServer(dr)
 
                     Debug.Print("OK - " & stopwatch.Elapsed.ToString)

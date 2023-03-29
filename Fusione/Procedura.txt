@@ -7,8 +7,8 @@ Ufficiale febbraio 2023 con data 1/4/2023
 Cambiato e si userà quello della SPA !
 ESEGUENDO UNA QUERY DI UPDATE PRIMA DELLA COPIA I DATI DELLA UNO SARANNO "ROVINATI"
 Possibilità
-	1- copia da TMPUno a SPA
-	2- Copia e poi Restore da backup a UNO
+	SI 1- copia da TMPUno a SPA
+	NO 2- Copia e poi Restore da backup a UNO
 
 0- Devo passare un foglio excel con l'elenco degli ids che mi serve aggiungere. IDS_Migrazione.xlsx
 1-ipotesi:  Per ogni tabella interessata ( VENDITE, FATTURE ELETTRONICHE (anche passive), CONTABILITA', ANALITICA ,PARTITE ( distinte..),  RIF. INCROCIATI,...) per ogni colonna ID aumento il valore di un tot a seconda del tipo ID.
@@ -29,7 +29,7 @@ Possibilità
 Prevedere 
 	Import partite successivamente e con filtro
 	Import Doc Vendita e Acquisto con filtro da nr doc/prot
-	Import Scritture di Apertura (PRIMA IMPOSTARE FLAG DETTAGLIA CLIFOR)
+	OK Import Scritture di Apertura (PRIMA IMPOSTARE FLAG DETTAGLIA CLIFOR)
 
 
 Export/copia da mago:

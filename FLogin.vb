@@ -1962,4 +1962,20 @@ Public Class FLogin
     Private Sub hkFusioneAcquisti_CheckedChanged(sender As Object, e As EventArgs) Handles ChkFusioneAcquisti.CheckedChanged
         ChkFusionePartite.Checked = ChkFusioneAcquisti.Checked
     End Sub
+
+    Private Sub ChkFusioneFull_CheckedChanged(sender As Object, e As EventArgs) Handles ChkFusioneFull.CheckedChanged
+        Dim b As Boolean = Not ChkFusioneFull.Checked
+        If Not b Then
+            chkBilancioApertura.Checked = b
+            chkSaldoCespiti.Checked = b
+            ChkFusioneAcquisti.Checked = b
+            ChkFusioneVendite.Checked = b
+            ChkFusionePartite.Checked = b
+        End If
+        chkBilancioApertura.Enabled = b
+        chkSaldoCespiti.Enabled = b
+        ChkFusioneAcquisti.Enabled = b
+        ChkFusioneVendite.Enabled = b
+        ChkFusionePartite.Enabled = b
+    End Sub
 End Class

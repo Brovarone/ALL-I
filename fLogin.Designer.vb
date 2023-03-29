@@ -402,7 +402,7 @@ Partial Class FLogin
         'chkBilancioApertura
         '
         Me.chkBilancioApertura.AutoSize = True
-        Me.chkBilancioApertura.BackColor = System.Drawing.Color.Gold
+        Me.chkBilancioApertura.BackColor = System.Drawing.Color.Plum
         Me.chkBilancioApertura.Location = New System.Drawing.Point(163, 49)
         Me.chkBilancioApertura.Name = "chkBilancioApertura"
         Me.chkBilancioApertura.Size = New System.Drawing.Size(106, 17)
@@ -425,9 +425,9 @@ Partial Class FLogin
         Me.ChkFusioneAcquisti.AutoSize = True
         Me.ChkFusioneAcquisti.Location = New System.Drawing.Point(15, 26)
         Me.ChkFusioneAcquisti.Name = "ChkFusioneAcquisti"
-        Me.ChkFusioneAcquisti.Size = New System.Drawing.Size(110, 17)
+        Me.ChkFusioneAcquisti.Size = New System.Drawing.Size(114, 17)
         Me.ChkFusioneAcquisti.TabIndex = 4
-        Me.ChkFusioneAcquisti.Text = "Acquisti da Nrdoc"
+        Me.ChkFusioneAcquisti.Text = "Acquisti da Nr Prot"
         Me.ChkFusioneAcquisti.UseVisualStyleBackColor = True
         '
         'ChkFusioneVendite
