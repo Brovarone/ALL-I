@@ -9,14 +9,14 @@ Module MovCespiti
     Private MovCesUnoCntx As MovCespiteContext
     Private MovCesSpaCntx As MovCespiteContext
 
-    Public Function EseguiScrittureSQL(dts As DataSet) As Boolean
+    Public Function RipresaSaldiCespiti(dts As DataSet) As Boolean
         Dim ok As Boolean
         ok = ScriviMovimentoCespite(Not IsDebugging)
         ScriviLog("Fine processo")
         Return ok
     End Function
 
-    Public Function ScriviMovimentoCespite(commit As Boolean) As Boolean
+    Private Function ScriviMovimentoCespite(commit As Boolean) As Boolean
         Dim sLoginId As String = My.Settings.mLOGINID
         Dim sdata As String = New DateTime(2023, 4, 1).ToString
         Dim fiscalYear As Integer = 2024
@@ -344,6 +344,7 @@ Module MovCespiti
             MovCesSpaCntx.Dispose()
 
         End If
+        Return someTrouble
     End Function
     ''' <summary>
     ''' Si collega a entrambi i database con context CESPITI

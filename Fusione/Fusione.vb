@@ -113,13 +113,19 @@ Module Fusione
     Public Function EseguiFusioneSQL(dts As DataSet) As Boolean
         Dim ok As Boolean
         Dim someTrouble As Boolean
+        Dim updIds As Boolean
 
         'Popolo lista con le tabelle e cosa fare
         tabelle = New List(Of TabelleDaEstrarre)
         tabelleNoEdit = New List(Of TabelleDaEstrarre)
+        updIds = True
 
-        If FLogin.ChkFusioneFull.Checked Then
-            ok = EstraiTabelle()
+        If FLogin.ChkFusioneAnagrafiche.Checked Then
+            ok = EstraiTabelleAnagrafiche()
+            updIds = False
+        End If
+        If FLogin.ChkFusioneDocumenti.Checked Then
+            ok = EstraiTabelleDocumenti()
         End If
         If FLogin.ChkFusioneAcquisti.Checked Then
             secondImport = True
@@ -260,11 +266,11 @@ Module Fusione
             'Ids
             Try
                 stopwatch2.Restart()
-                If Not IsDebugging Then
+                If updIds Then
                     ok = ScriviIds(dvIDS)
                     If Not ok Then someTrouble = True
+                    ScriviLog("Scrivo Ids : " & stopwatch2.Elapsed.ToString)
                 End If
-                ScriviLog("Scrivo Ids : " & stopwatch2.Elapsed.ToString)
             Catch ex As Exception
                 Debug.Print(ex.Message)
                 ScriviLog("#Errore# EseguiFusioneSql : SCRIVI IDS " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
@@ -537,47 +543,58 @@ Module Fusione
             ScriviLog("#Errore# ATTIVA VINCOLI E RELAZIONI " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
         End Try
     End Sub
+    Private Function EstraiTabelleBolle() As Boolean
+        'todo
+    End Function
     ''' <summary>
     ''' Lanciata come seconda impostrazione. 
     ''' Su nuova copia DB quindi devo rimodificare comunque tutti gli IDS per
     ''' </summary>
     ''' <returns></returns>
     Private Function EstraiTabelleFatture() As Boolean
-        Dim ddb As New DocumentDialogBox With {.Text = .Text & " - Vendita", .lbl = "Inserire il numero di partenza", .lblSottotit = "Data Fattura >= 01/01/2023"}
+        Dim result As Boolean
+        Dim ddb As New DocumentDialogBox With {.Text = .Text & " - Vendita Fatt_NdC", .lbl = "Inserire il numero di partenza", .lblSottotit = "Data Fattura >= 01/01/2023"}
         If ddb.ShowDialog() = Windows.Forms.DialogResult.OK Then
+            Dim ddbDDT As New DocumentDialogBox With {.Text = .Text & " - Vendita DDT", .lbl = "Inserire il numero di partenza", .lblSottotit = "Data Bolla >= 01/01/2023"}
+            If ddbDDT.ShowDialog() = Windows.Forms.DialogResult.OK Then
 
-            Dim n As String = ddb.Numero
-            Dim wf As String = " WHERE DocumentType IN (" & DocumentType.Fattura & ", " & DocumentType.FatturaAccompagnatoria & ", " & DocumentType.NotaCredito & ") And DocNo >= '" & n & "' AND DocumentDate >='20230101' "
-            tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDoc", .WhereClause = wf, .PrimaryKey = "SaleDocId", .ModificaTutti = True, .GeneraListaPKIds = True, .Gruppo = MacroGruppo.Vendita,
-                                                    .TabelleDipendenti = New List(Of String) From {"MA_SaleDoc", "MA_SaleDocComponents", "MA_SaleDocDetail", "MA_SaleDocManufReasons", "MA_SaleDocNotes", "MA_SaleDocPymtSched", "MA_SaleDocShipping", "MA_SaleDocSummary", "MA_SaleDocTaxSummary",
-                                                                                                    "MA_CrossReferences_OrdCli_NdC", "MA_CrossReferences_OrdCli_FatImmm", "MA_CrossReferences_DDT_FatImm", "MA_CrossReferences_FatImm_NdC", "MA_CrossReferences_FatImm_FatImm", "MA_CrossReferences_NdC_OrdCli", "MA_CrossReferences_BdC_FatImm"}})
-            tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocComponents", .HaListaPKIds = True, .ModificaTutti = True, .PrimaryKey = "SaleDocId", .Gruppo = MacroGruppo.Vendita})
-            tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocDetail", .HaListaPKIds = True, .ModificaTutti = True, .PrimaryKey = "SaleDocId", .Gruppo = MacroGruppo.Vendita})
-            tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocManufReasons", .HaListaPKIds = True, .ModificaTutti = True, .PrimaryKey = "SaleDocId", .Gruppo = MacroGruppo.Vendita})
-            tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocNotes", .HaListaPKIds = True, .ModificaTutti = True, .PrimaryKey = "SaleDocId", .Gruppo = MacroGruppo.Vendita})
-            tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocPymtSched", .HaListaPKIds = True, .ModificaTutti = True, .PrimaryKey = "SaleDocId", .Gruppo = MacroGruppo.Vendita})
-            tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocShipping", .HaListaPKIds = True, .ModificaTutti = True, .PrimaryKey = "SaleDocId", .Gruppo = MacroGruppo.Vendita})
-            tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocSummary", .HaListaPKIds = True, .ModificaTutti = True, .PrimaryKey = "SaleDocId", .Gruppo = MacroGruppo.Vendita})
-            tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocTaxSummary", .HaListaPKIds = True, .ModificaTutti = True, .PrimaryKey = "SaleDocId", .Gruppo = MacroGruppo.Vendita})
+                EstraiTabelleBolle()
+                Dim n As String = ddb.Numero
+                Dim nDDT As String = ddbDDT.Numero
+                Dim wf As String = " WHERE (DocumentType IN (" & DocumentType.Fattura & ", " & DocumentType.FatturaAccompagnatoria & ", " & DocumentType.NotaCredito & ", " & DocumentType.AutoFattura & ", " & DocumentType.AutoNotaCredito & ") And DocNo >= '" & n & "' AND DocumentDate >='20230101') "
+                Dim wDDT As String = " AND (DocumentType IN (" & DocumentType.DDT & ") And DocNo >= '" & nDDT & "' AND DocumentDate >='20230101') "
+                tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDoc", .WhereClause = wf, .AdditionalWhere = wDDT, .PrimaryKey = "SaleDocId", .ModificaTutti = True, .GeneraListaPKIds = True, .Gruppo = MacroGruppo.Vendita,
+                                                        .TabelleDipendenti = New List(Of String) From {"MA_SaleDoc", "MA_SaleDocComponents", "MA_SaleDocDetail", "MA_SaleDocManufReasons", "MA_SaleDocNotes", "MA_SaleDocPymtSched", "MA_SaleDocShipping", "MA_SaleDocSummary", "MA_SaleDocTaxSummary",
+                                                                                                        "MA_CrossReferences_OrdCli_NdC", "MA_CrossReferences_OrdCli_FatImmm", "MA_CrossReferences_DDT_FatImm", "MA_CrossReferences_FatImm_NdC", "MA_CrossReferences_FatImm_FatImm", "MA_CrossReferences_NdC_OrdCli", "MA_CrossReferences_BdC_FatImm"}})
+                tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocComponents", .HaListaPKIds = True, .ModificaTutti = True, .PrimaryKey = "SaleDocId", .Gruppo = MacroGruppo.Vendita})
+                tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocDetail", .HaListaPKIds = True, .ModificaTutti = True, .PrimaryKey = "SaleDocId", .Gruppo = MacroGruppo.Vendita})
+                tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocManufReasons", .HaListaPKIds = True, .ModificaTutti = True, .PrimaryKey = "SaleDocId", .Gruppo = MacroGruppo.Vendita})
+                tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocNotes", .HaListaPKIds = True, .ModificaTutti = True, .PrimaryKey = "SaleDocId", .Gruppo = MacroGruppo.Vendita})
+                tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocPymtSched", .HaListaPKIds = True, .ModificaTutti = True, .PrimaryKey = "SaleDocId", .Gruppo = MacroGruppo.Vendita})
+                tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocShipping", .HaListaPKIds = True, .ModificaTutti = True, .PrimaryKey = "SaleDocId", .Gruppo = MacroGruppo.Vendita})
+                tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocSummary", .HaListaPKIds = True, .ModificaTutti = True, .PrimaryKey = "SaleDocId", .Gruppo = MacroGruppo.Vendita})
+                tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleDocTaxSummary", .HaListaPKIds = True, .ModificaTutti = True, .PrimaryKey = "SaleDocId", .Gruppo = MacroGruppo.Vendita})
 
-            Dim cr As New AccoppiamentiCrossReference
-            tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.OrdCli_NdC.WhereClause, .Coppia_CR = cr.OrdCli_NdC, .FriendName = "OrdCli_NdC", .HaListaPKIds = True, .IncludiSempreWhere = True, .PrimaryKey = "DerivedDocID", .Gruppo = MacroGruppo.CrossRef})
-            tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.OrdCli_FatImmm.WhereClause, .Coppia_CR = cr.OrdCli_FatImmm, .FriendName = "OrdCli_FatImmm", .HaListaPKIds = True, .IncludiSempreWhere = True, .PrimaryKey = "DerivedDocID", .Gruppo = MacroGruppo.CrossRef})
-            tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.DDT_FatImm.WhereClause, .Coppia_CR = cr.DDT_FatImm, .FriendName = "DDT_FatImm", .HaListaPKIds = True, .IncludiSempreWhere = True, .MultiPk = True, .PrimaryKeys = New List(Of String) From {"OriginDocID", "DerivedDocID"}, .Gruppo = MacroGruppo.CrossRef})
-            tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.FatImm_NdC.WhereClause, .Coppia_CR = cr.FatImm_NdC, .FriendName = "FatImm_NdC", .HaListaPKIds = True, .IncludiSempreWhere = True, .MultiPk = True, .PrimaryKeys = New List(Of String) From {"OriginDocID", "DerivedDocID"}, .Gruppo = MacroGruppo.CrossRef})
-            tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.FatImm_FatImm.WhereClause, .Coppia_CR = cr.FatImm_FatImm, .FriendName = "FatImm_FatImm", .HaListaPKIds = True, .IncludiSempreWhere = True, .MultiPk = True, .PrimaryKeys = New List(Of String) From {"OriginDocID", "DerivedDocID"}, .Gruppo = MacroGruppo.CrossRef})
-            tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.NdC_OrdCli.WhereClause, .Coppia_CR = cr.NdC_OrdCli, .FriendName = "NdC_OrdCli", .HaListaPKIds = True, .IncludiSempreWhere = True, .PrimaryKey = "OriginDocID", .Gruppo = MacroGruppo.CrossRef})
-            'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences_BdC_ResFor", .WhereClause = cr.BdC_ResFor.WhereClause, .Coppia_CR = cr.BdC_ResFor, .FriendName = "BdC_ResFor", .Gruppo = MacroGruppo.CrossRef})
-            tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.BdC_FatImm.WhereClause, .Coppia_CR = cr.BdC_FatImm, .FriendName = "BdC_FatImm", .HaListaPKIds = True, .IncludiSempreWhere = True, .PrimaryKey = "DerivedDocID", .Gruppo = MacroGruppo.CrossRef})
+                Dim cr As New AccoppiamentiCrossReference
+                tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.OrdCli_NdC.WhereClause, .Coppia_CR = cr.OrdCli_NdC, .FriendName = "OrdCli_NdC", .HaListaPKIds = True, .IncludiSempreWhere = True, .PrimaryKey = "DerivedDocID", .Gruppo = MacroGruppo.CrossRef})
+                tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.OrdCli_FatImmm.WhereClause, .Coppia_CR = cr.OrdCli_FatImmm, .FriendName = "OrdCli_FatImmm", .HaListaPKIds = True, .IncludiSempreWhere = True, .PrimaryKey = "DerivedDocID", .Gruppo = MacroGruppo.CrossRef})
+                tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.DDT_FatImm.WhereClause, .Coppia_CR = cr.DDT_FatImm, .FriendName = "DDT_FatImm", .HaListaPKIds = True, .IncludiSempreWhere = True, .MultiPk = True, .PrimaryKeys = New List(Of String) From {"OriginDocID", "DerivedDocID"}, .Gruppo = MacroGruppo.CrossRef})
+                tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.FatImm_NdC.WhereClause, .Coppia_CR = cr.FatImm_NdC, .FriendName = "FatImm_NdC", .HaListaPKIds = True, .IncludiSempreWhere = True, .MultiPk = True, .PrimaryKeys = New List(Of String) From {"OriginDocID", "DerivedDocID"}, .Gruppo = MacroGruppo.CrossRef})
+                tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.FatImm_FatImm.WhereClause, .Coppia_CR = cr.FatImm_FatImm, .FriendName = "FatImm_FatImm", .HaListaPKIds = True, .IncludiSempreWhere = True, .MultiPk = True, .PrimaryKeys = New List(Of String) From {"OriginDocID", "DerivedDocID"}, .Gruppo = MacroGruppo.CrossRef})
+                tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.NdC_OrdCli.WhereClause, .Coppia_CR = cr.NdC_OrdCli, .FriendName = "NdC_OrdCli", .HaListaPKIds = True, .IncludiSempreWhere = True, .PrimaryKey = "OriginDocID", .Gruppo = MacroGruppo.CrossRef})
+                'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences_BdC_ResFor", .WhereClause = cr.BdC_ResFor.WhereClause, .Coppia_CR = cr.BdC_ResFor, .FriendName = "BdC_ResFor", .Gruppo = MacroGruppo.CrossRef})
+                tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.BdC_FatImm.WhereClause, .Coppia_CR = cr.BdC_FatImm, .FriendName = "BdC_FatImm", .HaListaPKIds = True, .IncludiSempreWhere = True, .PrimaryKey = "DerivedDocID", .Gruppo = MacroGruppo.CrossRef})
 
-            Return True
-        Else Return False
+                result = True
+            Else result = False
+            End If
         End If
+        Return result
     End Function
 
     Private Function EstraiTabellePartite() As Boolean
 
-        Dim wp As String = " WHERE PymtSchedId IN (SELECT DISTINCT t.PymtSchedId FROM MA_PyblsRcvbls t left JOIN MA_PyblsRcvblsDetails d ON t.PymtSchedId = d.PymtSchedId WHERE  t.Settled = '0' OR d.OpeningDate >='20230331' ) "
+        Dim wp As String = " WHERE PymtSchedId In (Select DISTINCT t.PymtSchedId FROM MA_PyblsRcvbls t left JOIN MA_PyblsRcvblsDetails d On t.PymtSchedId = d.PymtSchedId WHERE  t.Settled = '0' OR d.OpeningDate >='20230331' ) "
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls",
                     .ModificaTutti = True, .WhereClause = wp, .PrimaryKey = "PymtSchedId", .GeneraListaPKIds = True,
                     .TabelleDipendenti = New List(Of String) From {"MA_PyblsRcvbls", "MA_PyblsRcvblsDetails", "MA_CrossReferences_FatImm_ParCli", "MA_CrossReferences_ParFor_NdCRic", "MA_CrossReferences_ParCli_NdC", "MA_CrossReferences_Parc_ParFor"},
@@ -637,10 +654,10 @@ Module Fusione
         Return True
     End Function
     ''' <summary>
-    ''' Estraggo le tabelle
+    ''' Estraggo le tabelle Documenti
     ''' </summary>
     ''' <returns></returns>
-    Friend Function EstraiTabelle() As Boolean
+    Friend Function EstraiTabelleDocumenti() As Boolean
         EditTestoBarra("Creazione elenco lavori")
         FLogin.lstStatoConnessione.Items.Add("Creazione elenco lavori")
         Dim w As String
@@ -714,35 +731,9 @@ Module Fusione
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixedAssetsPeriod", .Gruppo = MacroGruppo.cespiti})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FixAssetLocations", .Gruppo = MacroGruppo.Cespiti})
 #End Region
-#Region "Analitica ( Centri di Costo + Commesse)"
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CostCenters", .Gruppo = MacroGruppo.Analitica})
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Jobs", .Gruppo = MacroGruppo.Analitica})
-
-#End Region
-#Region "Agenti"
-        'Non serve piu' Non viene esso suffisso
-        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Areas", .Gruppo = MacroGruppo.Agenti})
-#End Region
-#Region "NON VALIDE -- Clienti : Dichiarazioni di Intento"
-        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_DeclarationOfIntent", .Gruppo = MacroGruppo.Clienti})
-#End Region
-#Region "Clienti : Mandati"
-        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SDDMandate", .Gruppo = MacroGruppo.Clienti})
-#End Region
-#Region "SPOSTATO A PASSAGGIO DEDICATO - Partite"
-        'Considero OpeningDate e Settled ( Aperte)
-        'Dim wp As String = " WHERE PymtSchedId IN (SELECT DISTINCT t.PymtSchedId FROM MA_PyblsRcvbls t left JOIN MA_PyblsRcvblsDetails d ON t.PymtSchedId = d.PymtSchedId WHERE  t.Settled = '0' OR d.OpeningDate>='20230331' ) "
-        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls", .ModificaTutti = True, .WhereClause = wp, .PrimaryKey = "PymtSchedId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_PyblsRcvbls", "MA_PyblsRcvblsDetails"}, .Gruppo = MacroGruppo.Partite})
-        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .ModificaTutti = True, .HaListaPKIds = True, .PrimaryKey = "PymtSchedId", .Gruppo = MacroGruppo.Partite})
-#End Region
 #Region "Parcelle"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Fees", .ModificaTutti = True, .WhereClause = " WHERE ( MA_Fees.PaymentDate = '17991231' Or MA_Fees.PaymentDate >= '20230101') ", .PrimaryKey = "FeeId", .GeneraListaPKIds = True, .TabelleDipendenti = New List(Of String) From {"MA_Fees", "MA_FeesDetails"}, .Gruppo = MacroGruppo.Parcelle})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FeesDetails", .ModificaTutti = True, .HaListaPKIds = True, .PrimaryKey = "FeeId", .Gruppo = MacroGruppo.Parcelle})
-#End Region
-#Region "NON SI PUO' -- Movimenti di Magazzino"
-        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_InventoryEntries", .Gruppo = MacroGruppo.Magazzino})
-        'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_InventoryEntriesDetail", .Gruppo = MacroGruppo.Magazzino})
-        ''tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_InventoryEntriesMA_InventoryEntriesReference", .Gruppo = MacroGruppo.Magazzino})
 #End Region
 #Region "Cross Reference"
         Dim cr As New AccoppiamentiCrossReference
@@ -762,6 +753,25 @@ Module Fusione
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.ParFor_NdCRic.WhereClause, .Coppia_CR = cr.ParFor_NdCRic, .FriendName = "ParFor_NdCRic", .Gruppo = MacroGruppo.CrossRef})
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.ParCli_NdC.WhereClause, .Coppia_CR = cr.ParCli_NdC, .FriendName = "ParCli_NdC", .Gruppo = MacroGruppo.CrossRef})
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.Parc_ParFor.WhereClause, .Coppia_CR = cr.Parc_ParFor, .FriendName = "Parc_ParFor", .Gruppo = MacroGruppo.CrossRef})
+#End Region
+
+#End Region
+        Return True
+    End Function
+    ''' <summary>
+    ''' Estraggo le tabelle Anagrafiche
+    ''' </summary>
+    ''' <returns></returns>
+    Friend Function EstraiTabelleAnagrafiche() As Boolean
+        EditTestoBarra("Creazione elenco lavori")
+        FLogin.lstStatoConnessione.Items.Add("Creazione elenco lavori")
+#Region "Elenco Tabelle con modifiche"
+#Region "Analitica ( Centri di Costo + Commesse)"
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CostCenters", .Gruppo = MacroGruppo.Analitica})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_Jobs", .Gruppo = MacroGruppo.Analitica})
+#End Region
+#Region "Clienti : Mandati"
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SDDMandate", .Gruppo = MacroGruppo.Clienti})
 #End Region
 
 #Region "Note"
@@ -853,7 +863,7 @@ Module Fusione
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "ALLAttivita"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "ALLDescrizioni"})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "ALLTipoRigaServizio"})
-        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "ALLNoteFoxPro"})
+        'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "ALLNoteFoxPro"})
 #End Region
 #Region "Articoli"
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Items"})
@@ -869,17 +879,13 @@ Module Fusione
         'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsFiscalData", .WhereClause = " WHERE FiscalYear = 2023"})
         'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_ItemsFiscalDataDomCurr", .WhereClause = " WHERE FiscalYear = 2023"})
 #End Region
-#Region "Da Mago -Magazzino : Depositi"
-        'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Storages"})
-        'tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_StorageGroups"})
-#End Region
 #Region "Agenti"
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_SalesPeople", .HaListaEsclusi = True, .NotInPK = "Salesperson", .Gruppo = MacroGruppo.Agenti})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_Areas", .Gruppo = MacroGruppo.Agenti})
 #End Region
 #End Region
         Return True
     End Function
-
     Friend Function ScriviIds(ByVal dv As DataView) As Boolean
         Try
             SqlConnection.ClearAllPools()

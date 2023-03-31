@@ -225,7 +225,7 @@ Public Class CurOrdRow
                 postUltimoGiorno = New Date(postUltimoGiorno.Year, postUltimoGiorno.Month, DateTime.DaysInMonth(postUltimoGiorno.Year, postUltimoGiorno.Month))
                 DataProssimaFattura = postUltimoGiorno
             End If
-            'TODO chiedere conferma a loro per ora imposto stassa data
+            'Sui continuativi avendo solo un valore imposto data fattura/ dataInizio
             If IsContinuativo Then CanoniDataFin = CanoniDataIn
 
         ElseIf isUnaTantum Then

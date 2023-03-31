@@ -41,7 +41,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>16</ApplicationRevision>
+    <ApplicationRevision>17</ApplicationRevision>
     <ApplicationVersion>3.1.1.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -398,6 +398,7 @@
     <Compile Include="Fusione\IDS.vb" />
     <Compile Include="Fusione\IdsOp.vb" />
     <Compile Include="Fusione\ListeID.vb" />
+    <Compile Include="Fusione\MovMagazzino.vb" />
     <Compile Include="Fusione\MovCespiti.vb" />
     <Compile Include="Fusione\TabelleDaEstrarre.vb" />
     <Compile Include="Fusione\ValidatingDataReader.vb" />

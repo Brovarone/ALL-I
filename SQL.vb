@@ -296,6 +296,21 @@ Namespace MySqlServerBackup
                             AddHandler conn.InfoMessage, New SqlInfoMessageEventHandler(AddressOf OnInfoMessage)
                             cmdRes.ExecuteNonQuery()
                             RemoveHandler conn.InfoMessage, AddressOf OnInfoMessage
+
+                            'Lo fa già se li trova corretti su SQL
+                            ''Cambio Nome logico Data
+                            'sqlres = String.Format("ALTER DATABASE {0} MODIFY FILE (NAME=N'{1}', NEWNAME=N'Allsystem1Test_Data.MDF')", dbTestName, originFileName)
+                            'cmdRes.CommandText = sqlres
+                            'AddHandler conn.InfoMessage, New SqlInfoMessageEventHandler(AddressOf OnInfoMessage)
+                            'cmdRes.ExecuteNonQuery()
+                            'RemoveHandler conn.InfoMessage, AddressOf OnInfoMessage
+
+                            ''Cambio nome logico Log
+                            'sqlres = String.Format("ALTER DATABASE {0} SET MULTI_USER", dbTestName)
+                            'cmdRes.CommandText = sqlres
+                            'AddHandler conn.InfoMessage, New SqlInfoMessageEventHandler(AddressOf OnInfoMessage)
+                            'cmdRes.ExecuteNonQuery()
+                            'RemoveHandler conn.InfoMessage, AddressOf OnInfoMessage
                         End Using
                     End If
                 End Using

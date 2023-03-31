@@ -24,7 +24,7 @@ Module FusioneWithDataTable
         Dim someTrouble As Boolean
 
         'Popolo lista con le tabelle e cosa fare
-        ok = EstraiTabelle()
+        ' ok = EstraiTabelle()
         If Not ok Then someTrouble = True
 
         'Carico IDs da file xls partenza

@@ -891,7 +891,7 @@ Public Class FLogin
             ProcessaGruppo(cespiti, "Cespiti")
         End If
 
-        If ChkFusioneFull.Checked OrElse ChkFusioneAcquisti.Checked OrElse ChkFusioneVendite.Checked OrElse ChkFusionePartite.Checked OrElse chkBilancioApertura.Checked OrElse chkSaldoCespiti.Checked Then
+        If ChkFusioneAnagrafiche.Checked OrElse ChkFusioneAcquisti.Checked OrElse ChkFusioneVendite.Checked OrElse ChkFusionePartite.Checked OrElse chkBilancioApertura.Checked OrElse chkSaldoCespiti.Checked Then
             Dim bFound As Boolean
             Dim fusione As String() = {"IDS_MIGRAZIONE"}
             Dim fusioneFound As Boolean() = {False}
@@ -1103,7 +1103,9 @@ Public Class FLogin
                         Dim bok As Boolean
                         My.Application.Log.WriteEntry("Esegui Commit : " & (Not IsDebugging).ToString)
                         If chkSaldoCespiti.Checked Then
-                            bok = EseguiScrittureSQL(dsXLS)
+                            bok = RipresaSaldiCespiti(dsXLS)
+                        ElseIf ChkSaldoArticoli.Checked Then
+                            bok = RipresaSaldiArticoli(dsXLS)
                         Else
                             bok = EseguiFusioneSQL(dsXLS)
                         End If
@@ -1764,14 +1766,8 @@ Public Class FLogin
         If CheckDB(TxtDB_UNO.Text, TxtTmpDB_UNO.Text) Then MostraPannelloUtente("UNO")
         If DBisTMP Then
             TxtTmpDB_UNO.BackColor = Color.FromArgb(255, 152, 251, 152)
-            ' Accendo il tasto per la fusione (temporaneamento solo su TEST / TEST
-            EseguiInDefinitivoToolStripMenuItem.Enabled = False
-            EseguiTraTestToolStripMenuItem1.Enabled = True
         Else
             TxtDB_UNO.BackColor = Color.FromArgb(255, 152, 251, 152)
-            'Da abilitare
-            EseguiInDefinitivoToolStripMenuItem.Enabled = True
-            EseguiTraTestToolStripMenuItem1.Enabled = False
         End If
         isDbUNO = True
 
@@ -1807,7 +1803,6 @@ Public Class FLogin
 
         PanelUser.Visible = True
         PanelDB.Visible = False
-        'TODO levare dopo averlo fatto
         lstStatoConnessione.Items.Add(If(DBisTMP, "Azienda test: ", "Azienda: ") & azienda & " - Database : " & DBInUse)
     End Sub
     Private Sub DisabilitaTxt(ByVal ny As Boolean)
@@ -1880,18 +1875,7 @@ Public Class FLogin
 
         End If
     End Sub
-    Private Sub EseguiTraTestToolStripMenuItem1_Click(sender As Object, e As EventArgs) Handles EseguiTraTestToolStripMenuItem1.Click
-        DBisTMP = True
-        SUBFusione()
-    End Sub
 
-    Private Sub EseguiInDefinitivoToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles EseguiInDefinitivoToolStripMenuItem.Click
-        If isAdmin Then
-            SUBFusione()
-        Else
-            MessageBox.Show("Operazione disponibile solo all'amministratore!", My.Application.Info.Title, MessageBoxButtons.OK, MessageBoxIcon.Warning)
-        End If
-    End Sub
     Private Sub SUBFusione()
         Dim azUno As String = If(DBisTMP, TxtTmpDB_UNO.Text, TxtDB_UNO.Text)
         Dim azSpa As String = If(DBisTMP, TxtTmpDB_SPA.Text, TxtDB_SPA.Text)
@@ -1903,7 +1887,7 @@ Public Class FLogin
 
         SUBConnettiUNO(azUno)
         SUBConnettiSPA(azSpa)
-        ChkFusioneFull.Checked = True
+        ChkFusioneAnagrafiche.Checked = True
 
         'aggiungo controllo progressbar
         Me.Controls.Add(prgFusion)
@@ -1927,6 +1911,7 @@ Public Class FLogin
             'Se rispondo no abilito isDebugging che esegue il rollback
             ToolStripMenuItemDebugging.PerformClick()
         End If
+        DBisTMP = True
         'La fusione avverrà tra TMPUNO e TMPSPA con seguente restore da TMPSPA a SPA
         SUBConnettiUNO(TxtTmpDB_UNO.Text)
         SUBConnettiSPA(TxtTmpDB_SPA.Text)
@@ -1959,19 +1944,39 @@ Public Class FLogin
         ChkFusionePartite.Checked = ChkFusioneVendite.Checked
     End Sub
 
-    Private Sub hkFusioneAcquisti_CheckedChanged(sender As Object, e As EventArgs) Handles ChkFusioneAcquisti.CheckedChanged
+    Private Sub ChkFusioneAcquisti_CheckedChanged(sender As Object, e As EventArgs) Handles ChkFusioneAcquisti.CheckedChanged
         ChkFusionePartite.Checked = ChkFusioneAcquisti.Checked
     End Sub
 
-    Private Sub ChkFusioneFull_CheckedChanged(sender As Object, e As EventArgs) Handles ChkFusioneFull.CheckedChanged
-        Dim b As Boolean = Not ChkFusioneFull.Checked
+    Private Sub ChkFusioneAnagrafiche_CheckedChanged(sender As Object, e As EventArgs) Handles ChkFusioneAnagrafiche.CheckedChanged
+        Dim b As Boolean = Not ChkFusioneAnagrafiche.Checked
         If Not b Then
+            ChkFusioneDocumenti.Checked = b
             chkBilancioApertura.Checked = b
             chkSaldoCespiti.Checked = b
             ChkFusioneAcquisti.Checked = b
             ChkFusioneVendite.Checked = b
             ChkFusionePartite.Checked = b
         End If
+        ChkFusioneDocumenti.Enabled = b
+        chkBilancioApertura.Enabled = b
+        chkSaldoCespiti.Enabled = b
+        ChkFusioneAcquisti.Enabled = b
+        ChkFusioneVendite.Enabled = b
+        ChkFusionePartite.Enabled = b
+    End Sub
+
+    Private Sub ChkFusioneDocumenti_CheckedChanged(sender As Object, e As EventArgs) Handles ChkFusioneDocumenti.CheckedChanged
+        Dim b As Boolean = Not ChkFusioneDocumenti.Checked
+        If Not b Then
+            ChkFusioneAnagrafiche.Checked = b
+            chkBilancioApertura.Checked = b
+            chkSaldoCespiti.Checked = b
+            ChkFusioneAcquisti.Checked = b
+            ChkFusioneVendite.Checked = b
+            ChkFusionePartite.Checked = b
+        End If
+        ChkFusioneAnagrafiche.Enabled = b
         chkBilancioApertura.Enabled = b
         chkSaldoCespiti.Enabled = b
         ChkFusioneAcquisti.Enabled = b

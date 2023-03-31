@@ -2,7 +2,6 @@
     Const PrefissoCespiti As String = "A"
     Const Prefisso As String = "1"
     Const Suffisso As String = "1"
-    Const ContropartitaAcquisto As String = "3ACQ"
     Private ReadOnly sDataInizioAmmortamento As String = New DateTime(2023, 4, 1).ToString
     Private Const iFiscalYear = 2024
     Const ContoFusione As String = "1IMI029"

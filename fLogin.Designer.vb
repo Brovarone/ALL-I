@@ -43,13 +43,14 @@ Partial Class FLogin
         Me.DtDataInizio = New System.Windows.Forms.DateTimePicker()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabFusione = New System.Windows.Forms.TabPage()
+        Me.ChkFusioneDocumenti = New System.Windows.Forms.CheckBox()
         Me.chkSaldoCespiti = New System.Windows.Forms.CheckBox()
         Me.chkBilancioApertura = New System.Windows.Forms.CheckBox()
         Me.ChkFusionePartite = New System.Windows.Forms.CheckBox()
         Me.ChkFusioneAcquisti = New System.Windows.Forms.CheckBox()
         Me.ChkFusioneVendite = New System.Windows.Forms.CheckBox()
         Me.BtnFusione = New System.Windows.Forms.Button()
-        Me.ChkFusioneFull = New System.Windows.Forms.CheckBox()
+        Me.ChkFusioneAnagrafiche = New System.Windows.Forms.CheckBox()
         Me.TabPageCancella = New System.Windows.Forms.TabPage()
         Me.BtnCancellaAnaliticaDaFatt = New System.Windows.Forms.Button()
         Me.BtnCancellaPNota = New System.Windows.Forms.Button()
@@ -134,8 +135,6 @@ Partial Class FLogin
         Me.toolStripSeparator2 = New System.Windows.Forms.ToolStripSeparator()
         Me.ExitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.FusioneToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.EseguiTraTestToolStripMenuItem1 = New System.Windows.Forms.ToolStripMenuItem()
-        Me.EseguiInDefinitivoToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.EseguiStep = New System.Windows.Forms.ToolStripMenuItem()
         Me.CespitiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ImportaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -163,6 +162,7 @@ Partial Class FLogin
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
+        Me.ChkSaldoArticoli = New System.Windows.Forms.CheckBox()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabFusione.SuspendLayout()
@@ -374,13 +374,15 @@ Partial Class FLogin
         'TabFusione
         '
         Me.TabFusione.BackColor = System.Drawing.SystemColors.Control
+        Me.TabFusione.Controls.Add(Me.ChkSaldoArticoli)
+        Me.TabFusione.Controls.Add(Me.ChkFusioneDocumenti)
         Me.TabFusione.Controls.Add(Me.chkSaldoCespiti)
         Me.TabFusione.Controls.Add(Me.chkBilancioApertura)
         Me.TabFusione.Controls.Add(Me.ChkFusionePartite)
         Me.TabFusione.Controls.Add(Me.ChkFusioneAcquisti)
         Me.TabFusione.Controls.Add(Me.ChkFusioneVendite)
         Me.TabFusione.Controls.Add(Me.BtnFusione)
-        Me.TabFusione.Controls.Add(Me.ChkFusioneFull)
+        Me.TabFusione.Controls.Add(Me.ChkFusioneAnagrafiche)
         Me.TabFusione.Location = New System.Drawing.Point(4, 22)
         Me.TabFusione.Name = "TabFusione"
         Me.TabFusione.Padding = New System.Windows.Forms.Padding(3)
@@ -388,11 +390,21 @@ Partial Class FLogin
         Me.TabFusione.TabIndex = 8
         Me.TabFusione.Text = "Fusione"
         '
+        'ChkFusioneDocumenti
+        '
+        Me.ChkFusioneDocumenti.AutoSize = True
+        Me.ChkFusioneDocumenti.Location = New System.Drawing.Point(113, 6)
+        Me.ChkFusioneDocumenti.Name = "ChkFusioneDocumenti"
+        Me.ChkFusioneDocumenti.Size = New System.Drawing.Size(116, 17)
+        Me.ChkFusioneDocumenti.TabIndex = 8
+        Me.ChkFusioneDocumenti.Text = "2-Fusione Doc etc."
+        Me.ChkFusioneDocumenti.UseVisualStyleBackColor = True
+        '
         'chkSaldoCespiti
         '
         Me.chkSaldoCespiti.AutoSize = True
         Me.chkSaldoCespiti.BackColor = System.Drawing.Color.Gold
-        Me.chkSaldoCespiti.Location = New System.Drawing.Point(162, 72)
+        Me.chkSaldoCespiti.Location = New System.Drawing.Point(162, 55)
         Me.chkSaldoCespiti.Name = "chkSaldoCespiti"
         Me.chkSaldoCespiti.Size = New System.Drawing.Size(87, 17)
         Me.chkSaldoCespiti.TabIndex = 7
@@ -403,7 +415,7 @@ Partial Class FLogin
         '
         Me.chkBilancioApertura.AutoSize = True
         Me.chkBilancioApertura.BackColor = System.Drawing.Color.Plum
-        Me.chkBilancioApertura.Location = New System.Drawing.Point(163, 49)
+        Me.chkBilancioApertura.Location = New System.Drawing.Point(162, 32)
         Me.chkBilancioApertura.Name = "chkBilancioApertura"
         Me.chkBilancioApertura.Size = New System.Drawing.Size(106, 17)
         Me.chkBilancioApertura.TabIndex = 6
@@ -413,7 +425,7 @@ Partial Class FLogin
         'ChkFusionePartite
         '
         Me.ChkFusionePartite.AutoSize = True
-        Me.ChkFusionePartite.Location = New System.Drawing.Point(15, 72)
+        Me.ChkFusionePartite.Location = New System.Drawing.Point(15, 76)
         Me.ChkFusionePartite.Name = "ChkFusionePartite"
         Me.ChkFusionePartite.Size = New System.Drawing.Size(96, 17)
         Me.ChkFusionePartite.TabIndex = 5
@@ -423,7 +435,7 @@ Partial Class FLogin
         'ChkFusioneAcquisti
         '
         Me.ChkFusioneAcquisti.AutoSize = True
-        Me.ChkFusioneAcquisti.Location = New System.Drawing.Point(15, 26)
+        Me.ChkFusioneAcquisti.Location = New System.Drawing.Point(15, 32)
         Me.ChkFusioneAcquisti.Name = "ChkFusioneAcquisti"
         Me.ChkFusioneAcquisti.Size = New System.Drawing.Size(114, 17)
         Me.ChkFusioneAcquisti.TabIndex = 4
@@ -433,7 +445,7 @@ Partial Class FLogin
         'ChkFusioneVendite
         '
         Me.ChkFusioneVendite.AutoSize = True
-        Me.ChkFusioneVendite.Location = New System.Drawing.Point(15, 49)
+        Me.ChkFusioneVendite.Location = New System.Drawing.Point(15, 54)
         Me.ChkFusioneVendite.Name = "ChkFusioneVendite"
         Me.ChkFusioneVendite.Size = New System.Drawing.Size(108, 17)
         Me.ChkFusioneVendite.TabIndex = 3
@@ -442,22 +454,22 @@ Partial Class FLogin
         '
         'BtnFusione
         '
-        Me.BtnFusione.Location = New System.Drawing.Point(237, 6)
+        Me.BtnFusione.Location = New System.Drawing.Point(266, 64)
         Me.BtnFusione.Name = "BtnFusione"
-        Me.BtnFusione.Size = New System.Drawing.Size(75, 37)
+        Me.BtnFusione.Size = New System.Drawing.Size(56, 37)
         Me.BtnFusione.TabIndex = 2
         Me.BtnFusione.Text = "Esegui Fusione"
         Me.BtnFusione.UseVisualStyleBackColor = True
         '
-        'ChkFusioneFull
+        'ChkFusioneAnagrafiche
         '
-        Me.ChkFusioneFull.AutoSize = True
-        Me.ChkFusioneFull.Location = New System.Drawing.Point(6, 6)
-        Me.ChkFusioneFull.Name = "ChkFusioneFull"
-        Me.ChkFusioneFull.Size = New System.Drawing.Size(82, 17)
-        Me.ChkFusioneFull.TabIndex = 1
-        Me.ChkFusioneFull.Text = "Fusione Full"
-        Me.ChkFusioneFull.UseVisualStyleBackColor = True
+        Me.ChkFusioneAnagrafiche.AutoSize = True
+        Me.ChkFusioneAnagrafiche.Location = New System.Drawing.Point(6, 6)
+        Me.ChkFusioneAnagrafiche.Name = "ChkFusioneAnagrafiche"
+        Me.ChkFusioneAnagrafiche.Size = New System.Drawing.Size(103, 17)
+        Me.ChkFusioneAnagrafiche.TabIndex = 1
+        Me.ChkFusioneAnagrafiche.Text = "1-Fusione Anag."
+        Me.ChkFusioneAnagrafiche.UseVisualStyleBackColor = True
         '
         'TabPageCancella
         '
@@ -1211,28 +1223,15 @@ Partial Class FLogin
         '
         'FusioneToolStripMenuItem
         '
-        Me.FusioneToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.EseguiTraTestToolStripMenuItem1, Me.EseguiInDefinitivoToolStripMenuItem, Me.EseguiStep})
+        Me.FusioneToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.EseguiStep})
         Me.FusioneToolStripMenuItem.Name = "FusioneToolStripMenuItem"
         Me.FusioneToolStripMenuItem.Size = New System.Drawing.Size(60, 20)
         Me.FusioneToolStripMenuItem.Text = "Fusione"
         '
-        'EseguiTraTestToolStripMenuItem1
-        '
-        Me.EseguiTraTestToolStripMenuItem1.Name = "EseguiTraTestToolStripMenuItem1"
-        Me.EseguiTraTestToolStripMenuItem1.Size = New System.Drawing.Size(175, 22)
-        Me.EseguiTraTestToolStripMenuItem1.Text = "Esegui tra TEST"
-        '
-        'EseguiInDefinitivoToolStripMenuItem
-        '
-        Me.EseguiInDefinitivoToolStripMenuItem.Enabled = False
-        Me.EseguiInDefinitivoToolStripMenuItem.Name = "EseguiInDefinitivoToolStripMenuItem"
-        Me.EseguiInDefinitivoToolStripMenuItem.Size = New System.Drawing.Size(175, 22)
-        Me.EseguiInDefinitivoToolStripMenuItem.Text = "Esegui in Definitivo"
-        '
         'EseguiStep
         '
         Me.EseguiStep.Name = "EseguiStep"
-        Me.EseguiStep.Size = New System.Drawing.Size(175, 22)
+        Me.EseguiStep.Size = New System.Drawing.Size(99, 22)
         Me.EseguiStep.Text = "STEP"
         '
         'CespitiToolStripMenuItem
@@ -1423,6 +1422,17 @@ Partial Class FLogin
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
         '
+        'ChkSaldoArticoli
+        '
+        Me.ChkSaldoArticoli.AutoSize = True
+        Me.ChkSaldoArticoli.BackColor = System.Drawing.Color.Salmon
+        Me.ChkSaldoArticoli.Location = New System.Drawing.Point(162, 78)
+        Me.ChkSaldoArticoli.Name = "ChkSaldoArticoli"
+        Me.ChkSaldoArticoli.Size = New System.Drawing.Size(87, 17)
+        Me.ChkSaldoArticoli.TabIndex = 9
+        Me.ChkSaldoArticoli.Text = "Saldo Articoli"
+        Me.ChkSaldoArticoli.UseVisualStyleBackColor = False
+        '
         'FLogin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -1593,13 +1603,11 @@ Partial Class FLogin
     Friend WithEvents TestRiscontiRidottoToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ChkRiscontiRidotto As CheckBox
     Friend WithEvents FusioneToolStripMenuItem As ToolStripMenuItem
-    Friend WithEvents EseguiTraTestToolStripMenuItem1 As ToolStripMenuItem
     Friend WithEvents TabFusione As TabPage
-    Friend WithEvents ChkFusioneFull As CheckBox
+    Friend WithEvents ChkFusioneAnagrafiche As CheckBox
     Friend WithEvents RegioneDaProvinciaToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents UNOSuTESTUNOToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents SPASuTESTSPAToolStripMenuItem As ToolStripMenuItem
-    Friend WithEvents EseguiInDefinitivoToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents BtnFusione As Button
     Friend WithEvents ChkFusioneAcquisti As CheckBox
     Friend WithEvents ChkFusioneVendite As CheckBox
@@ -1608,4 +1616,6 @@ Partial Class FLogin
     Friend WithEvents UserSettingFolderToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents chkBilancioApertura As CheckBox
     Friend WithEvents chkSaldoCespiti As CheckBox
+    Friend WithEvents ChkFusioneDocumenti As CheckBox
+    Friend WithEvents ChkSaldoArticoli As CheckBox
 End Class

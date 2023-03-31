@@ -543,11 +543,14 @@ Module Ordini
                                     r.Description = cOrdRow.Description
                                     'Segno come Fatturata
                                     c.Fatturato = "1"
+                                ElseIf cOrdRow.IsContinuativo Then
+                                    r.Description = cOrdRow.Description
                                 Else
                                     r.Description = If(String.IsNullOrWhiteSpace(cOrdRow.Description), periodo, cOrdRow.Description & " " & periodo)
                                 End If
                                 r.UoM = cOrdRow.UoM
                                 r.PacksUoM = cOrdRow.UoM
+#Region "Blocco Quantità"
                                 'TODO: controllare con qta riga per gestire Spese incasso con qta singola !
                                 If cOrdRow.IsAConsumo Then
                                     If cOrdRow.QtaCorrente + cOrdRow.QtaFranchigia = cOrdRow.QtaOrdine Then
@@ -567,6 +570,8 @@ Module Ordini
                                     'Tutti gli altri casi
                                     r.Qty = cOrdRow.QtaCorrente
                                 End If
+                                cOrdRow.QtaCorrente = r.Qty
+#End Region
                                 r.UnitValue = cOrdRow.ValUnit
                                 r.NetPrice = cOrdRow.ValUnit
                                 r.TaxableAmount = Math.Round(cOrdRow.QtaCorrente * cOrdRow.ValUnit, decValUnit)

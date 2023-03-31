@@ -29,10 +29,26 @@ Possibilità
 Prevedere 
 	Import partite successivamente e con filtro
 	Import Doc Vendita e Acquisto con filtro da nr doc/prot
+	Controllare su resi fornitori e documenti poco usati cosa portare
 	OK Import Scritture di Apertura (PRIMA IMPOSTARE FLAG DETTAGLIA CLIFOR)
 
+Primo import anagrafiche
+	Prevedere per Venerdi' 31/03
+	Edit
+		Analitica (Commesse e Cdc)
+		mandati??
+	NoEdit
+		Clienti
+		Fornitori
+		Banche
+		Analitica
+		Cespiti classi e categ
+		ordini all
+			Note Fox ??
+		Articoli solo codice
+		Agenti
 
-Export/copia da mago:
+Export/copia da mago: (# fatti)
 Magazzino
 	# MA_InventoryDefaults
 	# MA_InventoryReasons

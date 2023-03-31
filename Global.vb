@@ -378,9 +378,19 @@ Module MagoNet
     End Enum
     Friend Enum DocumentType As Integer
         'Tipo documento , 52
+        'PickingList = 3407872
+        DDT = 3407873
         Fattura = 3407874
         FatturaAccompagnatoria = 3407875
         NotaCredito = 3407876
+        ResoAFornitore = 3407881
+        'FatturaProForma = 3407888
+        'NotaDebito = 3407889
+        'DDT_Tra_Depositi = 3407890
+        AutoFattura = 3407898
+        AutoNotaCredito = 3407899
+
+
         'Tipo Documento Acquisto, 150
         AcqFattura = 9830401
         AcqBollaDiCarico = 9830400
