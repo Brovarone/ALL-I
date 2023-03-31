@@ -124,6 +124,10 @@ Module Fusione
             ok = EstraiTabelleAnagrafiche()
             updIds = False
         End If
+        If FLogin.chkCorreggi.Checked Then
+            ok = EstraiTabelleCorrezioni()
+            updIds = False
+        End If
         If FLogin.ChkFusioneDocumenti.Checked Then
             ok = EstraiTabelleDocumenti()
         End If
@@ -436,8 +440,9 @@ Module Fusione
                                     If f.Id = 0 AndAlso Not String.IsNullOrWhiteSpace(f.IdString) Then
                                         If f.UseCase Then
                                             value = "(CASE WHEN " & field & " = '" & f.FirtsCase & "' THEN " & parameter & " ELSE " & field & " END)"
-                                            cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.VarChar, .Size = f.MaxSize, .Direction = ParameterDirection.Input, .Value = f.IdString})
                                         End If
+                                        cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.VarChar, .Direction = ParameterDirection.Input, .Value = f.IdString})
+                                        If f.MaxSize <> 0 Then cmdqry.Parameters(parameter).Size = f.MaxSize
                                     Else
                                         cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
 
@@ -757,6 +762,14 @@ Module Fusione
 
 #End Region
         Return True
+    End Function
+
+    Friend Function EstraiTabelleCorrezioni() As Boolean
+        EditTestoBarra("Creazione elenco lavori")
+        FLogin.lstStatoConnessione.Items.Add("Creazione elenco lavori")
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .HaListaEsclusi = True, .NotInPK = "CustSupp", .Gruppo = MacroGruppo.Fornitori})
+        tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppSupplierOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .HaListaEsclusi = True, .NotInPK = "Supplier", .Gruppo = MacroGruppo.Fornitori})
+
     End Function
     ''' <summary>
     ''' Estraggo le tabelle Anagrafiche

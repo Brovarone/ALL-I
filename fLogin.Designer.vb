@@ -43,6 +43,7 @@ Partial Class FLogin
         Me.DtDataInizio = New System.Windows.Forms.DateTimePicker()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabFusione = New System.Windows.Forms.TabPage()
+        Me.ChkSaldoArticoli = New System.Windows.Forms.CheckBox()
         Me.ChkFusioneDocumenti = New System.Windows.Forms.CheckBox()
         Me.chkSaldoCespiti = New System.Windows.Forms.CheckBox()
         Me.chkBilancioApertura = New System.Windows.Forms.CheckBox()
@@ -162,7 +163,7 @@ Partial Class FLogin
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
-        Me.ChkSaldoArticoli = New System.Windows.Forms.CheckBox()
+        Me.chkCorreggi = New System.Windows.Forms.CheckBox()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabFusione.SuspendLayout()
@@ -374,6 +375,7 @@ Partial Class FLogin
         'TabFusione
         '
         Me.TabFusione.BackColor = System.Drawing.SystemColors.Control
+        Me.TabFusione.Controls.Add(Me.chkCorreggi)
         Me.TabFusione.Controls.Add(Me.ChkSaldoArticoli)
         Me.TabFusione.Controls.Add(Me.ChkFusioneDocumenti)
         Me.TabFusione.Controls.Add(Me.chkSaldoCespiti)
@@ -389,6 +391,17 @@ Partial Class FLogin
         Me.TabFusione.Size = New System.Drawing.Size(322, 101)
         Me.TabFusione.TabIndex = 8
         Me.TabFusione.Text = "Fusione"
+        '
+        'ChkSaldoArticoli
+        '
+        Me.ChkSaldoArticoli.AutoSize = True
+        Me.ChkSaldoArticoli.BackColor = System.Drawing.Color.Salmon
+        Me.ChkSaldoArticoli.Location = New System.Drawing.Point(162, 78)
+        Me.ChkSaldoArticoli.Name = "ChkSaldoArticoli"
+        Me.ChkSaldoArticoli.Size = New System.Drawing.Size(87, 17)
+        Me.ChkSaldoArticoli.TabIndex = 9
+        Me.ChkSaldoArticoli.Text = "Saldo Articoli"
+        Me.ChkSaldoArticoli.UseVisualStyleBackColor = False
         '
         'ChkFusioneDocumenti
         '
@@ -1422,16 +1435,15 @@ Partial Class FLogin
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
         '
-        'ChkSaldoArticoli
+        'chkCorreggi
         '
-        Me.ChkSaldoArticoli.AutoSize = True
-        Me.ChkSaldoArticoli.BackColor = System.Drawing.Color.Salmon
-        Me.ChkSaldoArticoli.Location = New System.Drawing.Point(162, 78)
-        Me.ChkSaldoArticoli.Name = "ChkSaldoArticoli"
-        Me.ChkSaldoArticoli.Size = New System.Drawing.Size(87, 17)
-        Me.ChkSaldoArticoli.TabIndex = 9
-        Me.ChkSaldoArticoli.Text = "Saldo Articoli"
-        Me.ChkSaldoArticoli.UseVisualStyleBackColor = False
+        Me.chkCorreggi.AutoSize = True
+        Me.chkCorreggi.Location = New System.Drawing.Point(202, 9)
+        Me.chkCorreggi.Name = "chkCorreggi"
+        Me.chkCorreggi.Size = New System.Drawing.Size(73, 17)
+        Me.chkCorreggi.TabIndex = 10
+        Me.chkCorreggi.Text = "1-correggi"
+        Me.chkCorreggi.UseVisualStyleBackColor = True
         '
         'FLogin
         '
@@ -1618,4 +1630,5 @@ Partial Class FLogin
     Friend WithEvents chkSaldoCespiti As CheckBox
     Friend WithEvents ChkFusioneDocumenti As CheckBox
     Friend WithEvents ChkSaldoArticoli As CheckBox
+    Friend WithEvents chkCorreggi As CheckBox
 End Class
