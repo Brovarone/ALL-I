@@ -769,7 +769,7 @@ Module Fusione
         FLogin.lstStatoConnessione.Items.Add("Creazione elenco lavori")
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSupp", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .HaListaEsclusi = True, .NotInPK = "CustSupp", .Gruppo = MacroGruppo.Fornitori})
         tabelleNoEdit.Add(New TabelleDaEstrarre With {.Nome = "MA_CustSuppSupplierOptions", .WhereClause = " WHERE CustSuppType=" & CustSuppType.Fornitore, .HaListaEsclusi = True, .NotInPK = "Supplier", .Gruppo = MacroGruppo.Fornitori})
-
+        Return True
     End Function
     ''' <summary>
     ''' Estraggo le tabelle Anagrafiche
