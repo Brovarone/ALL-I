@@ -891,7 +891,7 @@ Public Class FLogin
             ProcessaGruppo(cespiti, "Cespiti")
         End If
 
-        If ChkFusioneAnagrafiche.Checked OrElse ChkFusioneAcquisti.Checked OrElse ChkFusioneVendite.Checked OrElse ChkFusionePartite.Checked OrElse chkBilancioApertura.Checked OrElse chkSaldoCespiti.Checked OrElse chkCorreggi.Checked Then
+        If ChkFusioneAnagrafiche.Checked OrElse ChkFusioneAcquisti.Checked OrElse ChkFusioneVendite.Checked OrElse ChkFusionePartite.Checked OrElse chkBilancioApertura.Checked OrElse chkSaldoCespiti.Checked OrElse chkCorreggi.Checked OrElse ChkFusioneDocumenti.Checked Then
             Dim bFound As Boolean
             Dim fusione As String() = {"IDS_MIGRAZIONE"}
             Dim fusioneFound As Boolean() = {False}
