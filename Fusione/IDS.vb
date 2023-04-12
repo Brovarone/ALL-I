@@ -3,6 +3,7 @@
     Public Property Nome As String
     Public Property Id As Integer
     Public Property IdString As String
+    Public Property Is_data As Boolean
     Public Property UseCase As Boolean
     Public Property FirtsCase As String
     Public Property Secondcase As String

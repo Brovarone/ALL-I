@@ -1975,6 +1975,7 @@ Public Class FLogin
             ChkFusioneAcquisti.Checked = b
             ChkFusioneVendite.Checked = b
             ChkFusionePartite.Checked = b
+            ChkSaldoArticoli.Checked = b
         End If
         ChkFusioneAnagrafiche.Enabled = b
         chkBilancioApertura.Enabled = b
@@ -1982,5 +1983,6 @@ Public Class FLogin
         ChkFusioneAcquisti.Enabled = b
         ChkFusioneVendite.Enabled = b
         ChkFusionePartite.Enabled = b
+        ChkSaldoArticoli.Enabled = b
     End Sub
 End Class

@@ -114,6 +114,7 @@ Module Fusione
         Dim ok As Boolean
         Dim someTrouble As Boolean
         Dim updIds As Boolean
+        Dim Id_da_Aggiornare As New StringBuilder
 
         'Popolo lista con le tabelle e cosa fare
         tabelle = New List(Of TabelleDaEstrarre)
@@ -132,22 +133,21 @@ Module Fusione
             ok = EstraiTabelleDocumenti()
         End If
         If FLogin.ChkFusioneAcquisti.Checked Then
-            secondImport = True
+            Id_da_Aggiornare.AppendLine("Acquisti: PurchaseDocId e PymtSchedId")
             ok = EstraiTabelleAcquisti()
         End If
         If FLogin.ChkFusioneVendite.Checked Then
-            secondImport = True
+            Id_da_Aggiornare.AppendLine("Vendite: SaleDocId ,SaleOrdId e PymtSchedId")
             ok = EstraiTabelleFatture()
         End If
         If FLogin.ChkFusionePartite.Checked Then
-            secondImport = True
+            Id_da_Aggiornare.AppendLine("Partite: SaleDocId ,PurchaseDocId e PymtSchedId")
             ok = EstraiTabellePartite()
         End If
         If FLogin.chkBilancioApertura.Checked Then
-            secondImport = True
+            Id_da_Aggiornare.AppendLine("Apertura: JournalEntryId")
             ok = EstraiTabelleApertura()
         End If
-
 
         If ok Then
             'Carico IDs da file xls partenza
@@ -174,8 +174,8 @@ Module Fusione
             Dim stopwatch2 As New System.Diagnostics.Stopwatch
             stopwatch2.Start()
 
+            'Disattivo le relazioni
             Try
-                'Disattivo le relazioni
                 DisattivaVincolieRelazioni()
                 FLogin.lstStatoConnessione.Items.Add("Processo tabelle in corso...")
                 FLogin.prgCopy.Value = 0
@@ -441,7 +441,7 @@ Module Fusione
                                         If f.UseCase Then
                                             value = "(CASE WHEN " & field & " = '" & f.FirtsCase & "' THEN " & parameter & " ELSE " & field & " END)"
                                         End If
-                                        cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.VarChar, .Direction = ParameterDirection.Input, .Value = f.IdString})
+                                        cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = If(f.Is_data = True, SqlDbType.Date, SqlDbType.VarChar), .Direction = ParameterDirection.Input, .Value = f.IdString})
                                         If f.MaxSize <> 0 Then cmdqry.Parameters(parameter).Size = f.MaxSize
                                     Else
                                         cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
@@ -693,6 +693,22 @@ Module Fusione
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocSummary", .Gruppo = MacroGruppo.Acquisto})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PurchaseDocTaxSummary", .Gruppo = MacroGruppo.Acquisto})
 #End Region
+#Region "Partite"
+        Dim wp As String = " WHERE PymtSchedId In (Select DISTINCT t.PymtSchedId FROM MA_PyblsRcvbls t left JOIN MA_PyblsRcvblsDetails d On t.PymtSchedId = d.PymtSchedId WHERE  t.Settled = '0' OR d.OpeningDate >='20230331' ) "
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvbls",
+                    .ModificaTutti = True, .WhereClause = wp, .PrimaryKey = "PymtSchedId", .GeneraListaPKIds = True,
+                    .TabelleDipendenti = New List(Of String) From {"MA_PyblsRcvbls", "MA_PyblsRcvblsDetails", "MA_CrossReferences_FatImm_ParCli", "MA_CrossReferences_ParFor_NdCRic", "MA_CrossReferences_ParCli_NdC", "MA_CrossReferences_Parc_ParFor"},
+                    .Gruppo = MacroGruppo.Partite})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_PyblsRcvblsDetails", .ModificaTutti = True, .HaListaPKIds = True, .PrimaryKey = "PymtSchedId", .Gruppo = MacroGruppo.Partite})
+
+        'Cross Reference
+        Dim cr As New AccoppiamentiCrossReference
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.FatImm_ParCli.WhereClause, .Coppia_CR = cr.FatImm_ParCli, .FriendName = "FatImm_ParCli", .HaListaPKIds = True, .IncludiSempreWhere = True, .PrimaryKey = "DerivedDocID", .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.ParFor_NdCRic.WhereClause, .Coppia_CR = cr.ParFor_NdCRic, .FriendName = "ParFor_NdCRic", .HaListaPKIds = True, .IncludiSempreWhere = True, .PrimaryKey = "OriginDocID", .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.ParCli_NdC.WhereClause, .Coppia_CR = cr.ParCli_NdC, .FriendName = "ParCli_NdC", .HaListaPKIds = True, .IncludiSempreWhere = True, .PrimaryKey = "OriginDocID", .Gruppo = MacroGruppo.CrossRef})
+        tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.Parc_ParFor.WhereClause, .Coppia_CR = cr.Parc_ParFor, .FriendName = "Parc_ParFor", .HaListaPKIds = True, .IncludiSempreWhere = True, .PrimaryKey = "DerivedDocID", .Gruppo = MacroGruppo.CrossRef})
+
+#End Region
 #Region "Ordini Clienti"
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrd", .Gruppo = MacroGruppo.OrdiniClienti})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_SaleOrdComponents", .Gruppo = MacroGruppo.OrdiniClienti})
@@ -741,7 +757,7 @@ Module Fusione
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_FeesDetails", .ModificaTutti = True, .HaListaPKIds = True, .PrimaryKey = "FeeId", .Gruppo = MacroGruppo.Parcelle})
 #End Region
 #Region "Cross Reference"
-        Dim cr As New AccoppiamentiCrossReference
+        'Dim cr As New AccoppiamentiCrossReference
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.OrdCli_NdC.WhereClause, .Coppia_CR = cr.OrdCli_NdC, .FriendName = "OrdCli_NdC", .Gruppo = MacroGruppo.CrossRef})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.OrdCli_FatImmm.WhereClause, .Coppia_CR = cr.OrdCli_FatImmm, .FriendName = "OrdCli_FatImmm", .Gruppo = MacroGruppo.CrossRef})
         Dim wCr As String = " AND OriginDocId >= (Select PurchaseOrdId FROM MA_PurchaseOrd WHERE OrderDate >= '20220101') "
@@ -753,7 +769,7 @@ Module Fusione
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.BdC_ResFor.WhereClause, .Coppia_CR = cr.BdC_ResFor, .FriendName = "BdC_ResFor", .Gruppo = MacroGruppo.CrossRef})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.BdC_FatImm.WhereClause, .Coppia_CR = cr.BdC_FatImm, .FriendName = "BdC_FatImm", .Gruppo = MacroGruppo.CrossRef})
         tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.BdC_NdCRic.WhereClause, .Coppia_CR = cr.BdC_NdCRic, .FriendName = "BdC_NdCRic", .Gruppo = MacroGruppo.CrossRef})
-        'Spostate nello step partitario
+        'Spostate nello step partite
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.FatImm_ParCli.WhereClause, .Coppia_CR = cr.FatImm_ParCli, .FriendName = "FatImm_ParCli", .Gruppo = MacroGruppo.CrossRef})
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.ParFor_NdCRic.WhereClause, .Coppia_CR = cr.ParFor_NdCRic, .FriendName = "ParFor_NdCRic", .Gruppo = MacroGruppo.CrossRef})
         'tabelle.Add(New TabelleDaEstrarre With {.Nome = "MA_CrossReferences", .WhereClause = cr.ParCli_NdC.WhereClause, .Coppia_CR = cr.ParCli_NdC, .FriendName = "ParCli_NdC", .Gruppo = MacroGruppo.CrossRef})

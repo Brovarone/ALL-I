@@ -580,7 +580,6 @@ Module Ordini
                                 r.ExpectedDeliveryDate = cOrdRow.DataPrevistaConsegna
                                 r.ConfirmedDeliveryDate = cOrdRow.DataConfermaConsegna
                                 'TODO: chiedere se data fine competenza in caso di Scadenza fissa e' fine periodo o la data scadenza fissa
-                                'TODO: Idem per quantità ( nel caso dei consumo non riporta giusto ma mette sempre il trimestre) usare Qty o generalizzare e usare NrCanoni rivedendo tutto
                                 r.AllNrCanoni = cOrdRow.QtaCorrente 'cOrdRow.NrCanoni '-> visto che potrebbe variare uso cOrdRow.QtaCorrente
                                 r.AllCanoniDataI = cOrdRow.PeriodoDataIn
                                 r.AllCanoniDataF = cOrdRow.PeriodoDataFin

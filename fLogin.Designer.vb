@@ -43,6 +43,7 @@ Partial Class FLogin
         Me.DtDataInizio = New System.Windows.Forms.DateTimePicker()
         Me.TabControl1 = New System.Windows.Forms.TabControl()
         Me.TabFusione = New System.Windows.Forms.TabPage()
+        Me.chkCorreggi = New System.Windows.Forms.CheckBox()
         Me.ChkSaldoArticoli = New System.Windows.Forms.CheckBox()
         Me.ChkFusioneDocumenti = New System.Windows.Forms.CheckBox()
         Me.chkSaldoCespiti = New System.Windows.Forms.CheckBox()
@@ -163,7 +164,6 @@ Partial Class FLogin
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
-        Me.chkCorreggi = New System.Windows.Forms.CheckBox()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabFusione.SuspendLayout()
@@ -392,6 +392,16 @@ Partial Class FLogin
         Me.TabFusione.TabIndex = 8
         Me.TabFusione.Text = "Fusione"
         '
+        'chkCorreggi
+        '
+        Me.chkCorreggi.AutoSize = True
+        Me.chkCorreggi.Location = New System.Drawing.Point(109, 6)
+        Me.chkCorreggi.Name = "chkCorreggi"
+        Me.chkCorreggi.Size = New System.Drawing.Size(73, 17)
+        Me.chkCorreggi.TabIndex = 10
+        Me.chkCorreggi.Text = "1-correggi"
+        Me.chkCorreggi.UseVisualStyleBackColor = True
+        '
         'ChkSaldoArticoli
         '
         Me.ChkSaldoArticoli.AutoSize = True
@@ -406,7 +416,7 @@ Partial Class FLogin
         'ChkFusioneDocumenti
         '
         Me.ChkFusioneDocumenti.AutoSize = True
-        Me.ChkFusioneDocumenti.Location = New System.Drawing.Point(113, 6)
+        Me.ChkFusioneDocumenti.Location = New System.Drawing.Point(200, 6)
         Me.ChkFusioneDocumenti.Name = "ChkFusioneDocumenti"
         Me.ChkFusioneDocumenti.Size = New System.Drawing.Size(116, 17)
         Me.ChkFusioneDocumenti.TabIndex = 8
@@ -1434,16 +1444,6 @@ Partial Class FLogin
         Me.Label8.Size = New System.Drawing.Size(271, 13)
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
-        '
-        'chkCorreggi
-        '
-        Me.chkCorreggi.AutoSize = True
-        Me.chkCorreggi.Location = New System.Drawing.Point(202, 9)
-        Me.chkCorreggi.Name = "chkCorreggi"
-        Me.chkCorreggi.Size = New System.Drawing.Size(73, 17)
-        Me.chkCorreggi.TabIndex = 10
-        Me.chkCorreggi.Text = "1-correggi"
-        Me.chkCorreggi.UseVisualStyleBackColor = True
         '
         'FLogin
         '

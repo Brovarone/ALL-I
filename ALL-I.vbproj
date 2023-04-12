@@ -385,6 +385,8 @@
     </Compile>
     <Compile Include="ApplicationEvents.vb" />
     <Compile Include="Cespiti.vb" />
+    <Compile Include="Contabilita\Analitica.vb" />
+    <Compile Include="Contabilita\Paghe.vb" />
     <Compile Include="Fusione\CR.vb" />
     <Compile Include="Fusione\FDocumentNumberDialog.Designer.vb">
       <DependentUpon>FDocumentNumberDialog.vb</DependentUpon>
@@ -437,7 +439,7 @@
     <Compile Include="Ordini\Ordini.vb" />
     <Compile Include="Settings.vb" />
     <Compile Include="SQL.vb" />
-    <Compile Include="Contabilita.vb" />
+    <Compile Include="Contabilita\Contabilita.vb" />
     <Compile Include="CustomProgress.vb">
       <SubType>Component</SubType>
     </Compile>

@@ -115,17 +115,17 @@
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "WorkerIDIssue", .Operatore = IdsOp.Sovrascrivi})
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "ExtAccAEID", .Operatore = IdsOp.Sovrascrivi})
                     'Aggiungo campo aggiuntivo cost center
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                    lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "CostCenter", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                     'lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                 Case "MA_SaleDocComponents", "MA_SaleDocManufReasons", "MA_SaleDocNotes", "MA_SaleDocShipping", "MA_SaleDocSummary", "MA_SaleDocTaxSummary"
                     '"MA_SaleDocReferences", "MA_EIEventViewer", "MA_EI_ITDocAdditionalData", "MA_EI_ITAsyncComm"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = SaleDocId, .Nome = "SaleDocId", .Operatore = IdsOp.Somma})
                 Case "MA_SaleDocPymtSched"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = SaleDocId, .Nome = "SaleDocId", .Operatore = IdsOp.Somma})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                    lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "CostCenter", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                 Case "MA_SaleDocDetail"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = SaleDocId, .Nome = "SaleDocId", .Operatore = IdsOp.Somma})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                    lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "CostCenter", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                     Dim fOrdine As Integer = dv.Find("SaleOrdId")
                     If fOrdine = -1 Then
                         Debug.Print("Fatture: SaleOrdId: non trovato")
@@ -200,7 +200,7 @@
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "PureJETaxTransferId", .Operatore = IdsOp.Sovrascrivi})
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "ExtAccAEID", .Operatore = IdsOp.Sovrascrivi})
                     'Campi accessori
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                    lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "CostCenter", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                 Case "MA_PurchaseDocNotes", "MA_PurchaseDocShipping", "MA_PurchaseDocSummary", "MA_PurchaseDocTaxSummary"
                     '"MA_PurchaseDocReferences"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseDocId, .Nome = "PurchaseDocId", .Operatore = IdsOp.Somma})
@@ -270,11 +270,11 @@
                         lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = IdsOp.Somma})
                     Case "MA_SaleOrd"
                         lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = IdsOp.Somma})
-                        lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                        lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "CostCenter", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                     'lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                     Case "MA_SaleOrdDetails"
                         lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "SaleOrdId", .Operatore = IdsOp.Somma})
-                        lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                        lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "CostCenter", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                         lIDS.Add(New IDS With {.Id = 0, .Nome = "ProductionPlanId", .Operatore = IdsOp.Sovrascrivi})
                         lIDS.Add(New IDS With {.Id = 0, .Nome = "ProductionJobId", .Operatore = IdsOp.Sovrascrivi})
                         lIDS.Add(New IDS With {.Id = 0, .Nome = "ReferenceDocId", .Operatore = IdsOp.Sovrascrivi})
@@ -328,11 +328,11 @@
                     lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseOrdId, .Nome = "PurchaseOrdId", .Operatore = IdsOp.Somma})
                 Case "MA_PurchaseOrd"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseOrdId, .Nome = "PurchaseOrdId", .Operatore = IdsOp.Somma})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                    lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "CostCenter", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                     'lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                 Case "MA_PurchaseOrdDetails"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseOrdId, .Nome = "PurchaseOrdId", .Operatore = IdsOp.Somma})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                    lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "CostCenter", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "PurchaseReqId", .Operatore = IdsOp.Sovrascrivi})
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "SuppQuotaId", .Operatore = IdsOp.Sovrascrivi})
                     lIDS.Add(New IDS With {.Id = 0, .Nome = "MOId", .Operatore = IdsOp.Sovrascrivi})
@@ -398,11 +398,11 @@
                 Select Case tablename
                     Case "MA_InventoryEntries"
                         lIDS.Add(New IDS With {.Chiave = True, .Id = EntryId, .Nome = "EntryId", .Operatore = IdsOp.Somma})
-                        lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                        lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "CostCenter", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                         lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = IdsOp.Sovrascrivi})
                     Case "MA_InventoryEntriesDetail"
                         lIDS.Add(New IDS With {.Chiave = True, .Id = EntryId, .Nome = "EntryId", .Operatore = IdsOp.Somma})
-                        lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                        lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "CostCenter", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                         lIDS.Add(New IDS With {.Id = 0, .Nome = "CRRefID", .Operatore = IdsOp.Sovrascrivi})
                         lIDS.Add(New IDS With {.Id = 0, .Nome = "OrderId", .Operatore = IdsOp.Sovrascrivi}) ' per pigrizia lo metto a zero non so se e' ordine cliente o fornitore
                         lIDS.Add(New IDS With {.Id = SaleDocId, .Nome = "BolId", .Operatore = IdsOp.Somma}) ' IdBolla
@@ -462,7 +462,7 @@
                     lIDS.Add(New IDS With {.Chiave = True, .Id = DeclId, .Nome = "DeclId", .Operatore = IdsOp.Somma})
                 End If
             Case "MA_SDDMandate"
-                lIDS.Add(New IDS With {.IdString = "20231231", .Nome = "MandateFirstDate", .Operatore = IdsOp.Sovrascrivi})
+                lIDS.Add(New IDS With {.IdString = "20231231", .Is_data = True, .Nome = "MandateFirstDate", .Operatore = IdsOp.Sovrascrivi})
 
             Case "MA_CustSuppCustomerOptions"
                 'lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
@@ -482,7 +482,7 @@
         Return lIDS
     End Function
     ''' <summary>
-    ''' Viene aggiunto il prefisso 1 ai Centri di Costo
+    ''' Viene aggiunto il suffisso 1 ai Centri di Costo
     ''' Viene aggiunto il prefisso A ai Cesptiti indicati in "Contract"
     ''' </summary>
     ''' <returns></returns>
@@ -512,7 +512,7 @@
         Dim lIDS As New List(Of IDS)
         Select Case tablename
             Case "MA_CostCenters"
-                lIDS.Add(New IDS With {.Chiave = True, .IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                lIDS.Add(New IDS With {.Chiave = True, .IdString = Suffisso, .Nome = "CostCenter", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
             Case "MA_Jobs"
                 lIDS.Add(New IDS With {.IdString = PrefissoCespiti, .Nome = "Contract", .Operatore = IdsOp.Prefisso, .MaxSize = 10})
         End Select
@@ -573,7 +573,7 @@
                             'lIDS.Add(New IDS With {.Id = 0, .Nome = "DocumentType", .Operatore = IdsOp.Uguale})  '=3801088 = Documenti Di vendita
                             lIDS.Add(New IDS With {.Id = 0, .Nome = "CollectionJEId", .Operatore = IdsOp.Sovrascrivi})
                             'lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Area", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
-                            lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                            lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "CostCenter", .Operatore = IdsOp.Suffisso, .MaxSize = 8})
                             'RIBA -> Nulla da modificare
                             'Mandato RID -> Nulla da Modificare
                     End Select
