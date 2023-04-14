@@ -16,6 +16,7 @@
     Public Property Clausola_ValoreStr As String
     Public Property IdSecondario As Integer
     Public Property IdSecondarioString As String
+    Public Property PosizioneInsert As Integer
 
 End Class
 
