@@ -650,10 +650,13 @@
                 Case "MA_JournalEntries"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = JournalEntryId, .Nome = "JournalEntryId", .Operatore = IdsOp.Somma})
                     lIDS.Add(New IDS With {.IdString = CausaleBIA, .Nome = "AccTpl", .UseCase = True, .FirtsCase = "BIA", .Operatore = IdsOp.Sovrascrivi, .MaxSize = 8})
+                    lIDS.Add(New IDS With {.IdString = "A", .Nome = "RefNo", .Operatore = IdsOp.Inserisci, .PosizioneInsert = 4, .MaxSize = 8})
+                    lIDS.Add(New IDS With {.Id = TipoPNota.Normale, .Nome = "CodeType", .Operatore = IdsOp.Sovrascrivi})
                 Case "MA_JournalEntriesGLDetail"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = JournalEntryId, .Nome = "JournalEntryId", .Operatore = IdsOp.Somma})
                     lIDS.Add(New IDS With {.IdString = ContoFusione, .Nome = "Account", .UseCase = True, .FirtsCase = ContoBilancioApertura, .MaxSize = 16, .Operatore = IdsOp.Sovrascrivi})
                     lIDS.Add(New IDS With {.IdString = CausaleBIA, .Nome = "AccRsn", .UseCase = True, .FirtsCase = "BIA", .Operatore = IdsOp.Sovrascrivi, .MaxSize = 8})
+                    lIDS.Add(New IDS With {.Id = TipoPNota.Normale, .Nome = "CodeType", .Operatore = IdsOp.Sovrascrivi})
             End Select
         End If
 
