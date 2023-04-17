@@ -41,7 +41,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>22</ApplicationRevision>
+    <ApplicationRevision>23</ApplicationRevision>
     <ApplicationVersion>3.1.1.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -380,7 +380,9 @@
     <Compile Include="AboutBox1.Designer.vb">
       <DependentUpon>AboutBox1.vb</DependentUpon>
     </Compile>
-    <Compile Include="AboutBox1.vb" />
+    <Compile Include="AboutBox1.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="ApplicationEvents.vb" />
     <Compile Include="Cespiti.vb" />
     <Compile Include="Contabilita\Analitica.vb" />
@@ -389,7 +391,9 @@
     <Compile Include="Fusione\FDocumentNumberDialog.Designer.vb">
       <DependentUpon>FDocumentNumberDialog.vb</DependentUpon>
     </Compile>
-    <Compile Include="Fusione\FDocumentNumberDialog.vb" />
+    <Compile Include="Fusione\FDocumentNumberDialog.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Fusione\Fusione.vb" />
     <Compile Include="Fusione\Deprecate\FusioneWithDataRow.vb" />
     <Compile Include="Fusione\Deprecate\FusioneWithDataTable.vb" />
@@ -405,34 +409,46 @@
     <Compile Include="Ordini\FAskFiltriOrdini.designer.vb">
       <DependentUpon>FAskFiltriOrdini.vb</DependentUpon>
     </Compile>
-    <Compile Include="Ordini\FAskFiltriOrdini.vb" />
+    <Compile Include="Ordini\FAskFiltriOrdini.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Logs\LogEntry.vb" />
     <Compile Include="Logs\Logs.vb" />
     <Compile Include="Logs\LogRegistry.vb" />
     <Compile Include="MessageBoxWithDetails.Designer.vb">
       <DependentUpon>MessageBoxWithDetails.vb</DependentUpon>
     </Compile>
-    <Compile Include="MessageBoxWithDetails.vb" />
+    <Compile Include="MessageBoxWithDetails.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Fatture.vb" />
     <Compile Include="FPasswordDialog.Designer.vb">
       <DependentUpon>FPasswordDialog.vb</DependentUpon>
     </Compile>
-    <Compile Include="FPasswordDialog.vb" />
+    <Compile Include="FPasswordDialog.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="FAskFiltriAnalitica.Designer.vb">
       <DependentUpon>FAskFiltriAnalitica.vb</DependentUpon>
     </Compile>
-    <Compile Include="FAskFiltriAnalitica.vb" />
+    <Compile Include="FAskFiltriAnalitica.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="GlobalSuppressions.vb" />
     <Compile Include="Ordini\FattureDaOrdini.vb" />
     <Compile Include="Ordini\Ordini.vb" />
     <Compile Include="Settings.vb" />
     <Compile Include="SQL.vb" />
     <Compile Include="Contabilita\Contabilita.vb" />
-    <Compile Include="CustomProgress.vb" />
+    <Compile Include="CustomProgress.vb">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="FLogin.Designer.vb">
       <DependentUpon>FLogin.vb</DependentUpon>
     </Compile>
-    <Compile Include="FLogin.vb" />
+    <Compile Include="FLogin.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Global.vb" />
     <Compile Include="Anagrafiche.vb" />
     <Compile Include="Partite.vb" />

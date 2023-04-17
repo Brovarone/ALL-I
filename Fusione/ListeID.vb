@@ -206,10 +206,10 @@
                     lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseDocId, .Nome = "PurchaseDocId", .Operatore = IdsOp.Somma})
                 Case "MA_PurchaseDocPymtSched"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseDocId, .Nome = "PurchaseDocId", .Operatore = IdsOp.Somma})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                    lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
                 Case "MA_PurchaseDocDetail"
                     lIDS.Add(New IDS With {.Chiave = True, .Id = PurchaseDocId, .Nome = "PurchaseDocId", .Operatore = IdsOp.Somma})
-                    lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                    lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "CostCenter", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
                     Dim fOrdine As Integer = dv.Find("PurchaseOrdId")
                     If fOrdine = -1 Then
                         Debug.Print("Acquisti: PurchaseOrdId: non trovato")

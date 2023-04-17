@@ -440,6 +440,7 @@ Module MagoNet
     Friend Enum IdType As Integer
         'Specie Archivio 58
         DocVend = 3801088
+        MovMagazzino = 3801093
         Partite = 3801094
         PNota = 3801095
         MovCespite = 3801097
@@ -454,6 +455,13 @@ Module MagoNet
         PNota = 3735558
         MovAna = 3735561
         MovCes = 3735585 '  Nr. Riferimento Movimenti Cespiti
+    End Enum
+    Friend Enum TipoPNota As Integer
+        'Tipo primanota 79
+        Normale = 5177344
+        Assestamento = 5177345
+        Apertura = 5177346
+        Chiusura = 5177347
     End Enum
 
     Friend Enum DeclType As Integer

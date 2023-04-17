@@ -147,6 +147,7 @@ Module Fusione
         If FLogin.chkBilancioApertura.Checked Then
             Id_da_Aggiornare.AppendLine("Apertura: JournalEntryId")
             ok = EstraiTabelleApertura()
+            updIds = False
         End If
 
         If ok Then
@@ -447,7 +448,16 @@ Module Fusione
                                         cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
 
                                     End If
+                                Case IdsOp.Inserisci '"INSERT"
+                                    value = parameter
+                                    If f.Id = 0 AndAlso Not String.IsNullOrWhiteSpace(f.IdString) Then
+                                        value = "LEFT(" & field & "," & f.PosizioneInsert - 1 & ") +'" & f.IdString & "' + RIGHT(" & field & ",LEN(" & field & ") - " & f.PosizioneInsert & ")"
+                                        cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = If(f.Is_data = True, SqlDbType.Date, SqlDbType.VarChar), .Direction = ParameterDirection.Input, .Value = f.IdString})
+                                        If f.MaxSize <> 0 Then cmdqry.Parameters(parameter).Size = f.MaxSize
+                                    Else
+                                        cmdqry.Parameters.Add(New SqlParameter With {.ParameterName = parameter, .SqlDbType = SqlDbType.Int, .Direction = ParameterDirection.Input, .Value = f.Id})
 
+                                    End If
                             End Select
 
                             'Chiudo la query
@@ -550,6 +560,7 @@ Module Fusione
     End Sub
     Private Function EstraiTabelleBolle() As Boolean
         'todo
+        Return True
     End Function
     ''' <summary>
     ''' Lanciata come seconda impostrazione. 
@@ -982,9 +993,9 @@ Module Fusione
                 End Using
             End If
 
-            ScriviLog("Ultimo ID scritto: " & value.ToString & " su tipo: " & r)
+            ScriviLog("Ultimo ID scritto: " & value.ToString & " su tipo: " & r & " " & IdType.ToString)
         Catch ex As Exception
-            ScriviLog("#Errore# in AggiornaID(IdType=" & r & "): " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
+            ScriviLog("#Errore# in AggiornaID(IdType=" & r & " " & IdType.ToString & "): " & ex.Message.ToString & Environment.NewLine & ex.StackTrace.ToString)
         End Try
     End Sub
 

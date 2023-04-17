@@ -184,6 +184,7 @@ Public Module Paghe
                         Using adpPNSaldi As New SqlDataAdapter(qrySaldi, Connection)
                             Dim cbMar = New SqlCommandBuilder(adpPNSaldi)
                             adpPNSaldi.UpdateCommand = cbMar.GetUpdateCommand(True)
+                            adpPNSaldi.InsertCommand = cbMar.GetInsertCommand(True)
                             Dim dtPNSaldi As DataTable = CaricaSchema("MA_ChartOfAccountsBalances", True, True, qrySaldi)
                             adpPNSaldi.Fill(dtPNSaldi)
                             Dim dvPNSaldi As New DataView(dtPNSaldi, "", "Account", DataViewRowState.CurrentRows)

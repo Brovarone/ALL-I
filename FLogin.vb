@@ -891,7 +891,8 @@ Public Class FLogin
             ProcessaGruppo(cespiti, "Cespiti")
         End If
 
-        If ChkFusioneAnagrafiche.Checked OrElse ChkFusioneAcquisti.Checked OrElse ChkFusioneVendite.Checked OrElse ChkFusionePartite.Checked OrElse chkBilancioApertura.Checked OrElse chkSaldoCespiti.Checked OrElse chkCorreggi.Checked OrElse ChkFusioneDocumenti.Checked Then
+        If ChkFusioneAnagrafiche.Checked OrElse ChkFusioneAcquisti.Checked OrElse ChkFusioneVendite.Checked OrElse ChkFusionePartite.Checked _
+                OrElse chkBilancioApertura.Checked OrElse chkSaldoCespiti.Checked OrElse chkCorreggi.Checked OrElse ChkFusioneDocumenti.Checked OrElse ChkSaldoArticoli.Checked Then
             Dim bFound As Boolean
             Dim fusione As String() = {"IDS_MIGRAZIONE"}
             Dim fusioneFound As Boolean() = {False}
@@ -1097,16 +1098,18 @@ Public Class FLogin
                         esito = CespitiXLS(dsXLS, True)
 
                     Case "IDS_MIGRAZIONE"
-                        'IDS migrazione Xlsx  (con riga di Intestazione)
-                        lstStatoConnessione.Items.Add("Apertura file con IDS per Migrazione")
-                        dsXLS = LoadXLS(spath, True, True)
                         Dim bok As Boolean
                         My.Application.Log.WriteEntry("Esegui Commit : " & (Not IsDebugging).ToString)
                         If chkSaldoCespiti.Checked Then
-                            bok = RipresaSaldiCespiti(dsXLS)
+                            lstStatoConnessione.Items.Add("Ripresa Saldi Cespiti")
+                            bok = RipresaSaldiCespiti()
                         ElseIf ChkSaldoArticoli.Checked Then
-                            bok = RipresaSaldiArticoli(dsXLS)
+                            lstStatoConnessione.Items.Add("Ripresa Saldi Articoli")
+                            bok = RipresaSaldiArticoli()
                         Else
+                            'IDS migrazione Xlsx  (con riga di Intestazione)
+                            lstStatoConnessione.Items.Add("Apertura file con IDS per Migrazione")
+                            dsXLS = LoadXLS(spath, True, True)
                             bok = EseguiFusioneSQL(dsXLS)
                         End If
                         esito = bok

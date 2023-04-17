@@ -9,7 +9,7 @@ Module MovCespiti
     Private MovCesUnoCntx As MovCespiteContext
     Private MovCesSpaCntx As MovCespiteContext
 
-    Public Function RipresaSaldiCespiti(dts As DataSet) As Boolean
+    Public Function RipresaSaldiCespiti() As Boolean
         Dim ok As Boolean
         ok = ScriviMovimentoCespite(Not IsDebugging)
         ScriviLog("Fine processo")
