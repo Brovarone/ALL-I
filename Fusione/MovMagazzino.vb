@@ -112,7 +112,8 @@ Module MovMagazzino
                     Dim qtyIniziale As Double = f.InitialBookInv
                     Dim valUnit As Double = Math.Round(valIniziale / qtyIniziale, 5)
                     Dim qty As Double = d.InitialQty
-
+                    If valIniziale = 0 Then ScriviLog_Debug("Valore Iniziale = 0 : " & d.Item & " d:" & d.Storage)
+                    If qtyIniziale = 0 Then ScriviLog_Debug("Qta Iniziale = 0 : " & d.Item & " d:" & d.Storage)
                     Dim det As New MaInventoryEntriesDetail With {
                         .EntryId = entryId,
                         .PostingDate = sdata,
@@ -120,7 +121,7 @@ Module MovMagazzino
                         .UoM = d.ItemNavigation.BaseUoM,
                         .Qty = qty,
                         .UnitValue = valUnit,
-                        .LineAmount = MagoFormatta(Math.Round(valUnit * qty, 5), GetType(Double)).MONey, ' Math.Round(valUnit * qty, 5),
+                        .LineAmount = If(valIniziale <> 0, MagoFormatta(Math.Round(valUnit * qty, 5), GetType(Double)).MONey, 0), ' Math.Round(valUnit * qty, 5),
                         .Line = iNewRowsCount,
                         .SubId = iNewRowsCount,
                         .AccrualDate = sdata,
