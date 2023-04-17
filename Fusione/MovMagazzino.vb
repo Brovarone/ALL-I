@@ -4,6 +4,7 @@ Imports ALLSystemTools.SqlTools
 Imports EFMago.Models
 Imports Microsoft.EntityFrameworkCore
 Imports EFCore.BulkExtensions
+Imports ALLSystemTools.MagoNet
 
 Module MovMagazzino
     'TODO Chiedere se sviluppare simile a saldo cespiti
@@ -19,8 +20,8 @@ Module MovMagazzino
 
     Private Function ScriviMovimentoMagazzino(commit As Boolean) As Boolean
         Dim sLoginId As String = My.Settings.mLOGINID
-        Dim sdata As String = New DateTime(2023, 4, 1).ToString
-        Dim fiscalYear As Integer = 2024
+        Dim sdata As String = New DateTime(2022, 4, 1).ToString
+        Dim fiscalYear As Integer = 2023
         Dim someTrouble As Boolean = False
         Const Causale As String = "FUSIONE"
 
@@ -119,7 +120,7 @@ Module MovMagazzino
                         .UoM = d.ItemNavigation.BaseUoM,
                         .Qty = qty,
                         .UnitValue = valUnit,
-                        .LineAmount = Math.Round(valUnit * qty, 5),
+                        .LineAmount = MagoFormatta(Math.Round(valUnit * qty, 5), GetType(Double)).MONey, ' Math.Round(valUnit * qty, 5),
                         .Line = iNewRowsCount,
                         .SubId = iNewRowsCount,
                         .AccrualDate = sdata,
