@@ -110,7 +110,7 @@ Module MovMagazzino
                     Dim f = fisData.Single(Function(fy) fy.Item.Equals(d.Item))
                     Dim valIniziale As Double = f.InitialBookInvValue
                     Dim qtyIniziale As Double = f.InitialBookInv
-                    Dim valUnit As Double = Math.Round(valIniziale / qtyIniziale, 5)
+                    Dim valUnit As Double = If(qtyIniziale.Equals(0), If(f.LastCost.Equals(0), If(f.SecondLastCost.Equals(0), If(f.StandardCost.Equals(0), 0, f.StandardCost), f.SecondLastCost), f.LastCost), Math.Round(valIniziale / qtyIniziale, 5))
                     Dim qty As Double = d.InitialQty
                     If valIniziale = 0 Then ScriviLog_Debug("Valore Iniziale = 0 : " & d.Item & " d:" & d.Storage)
                     If qtyIniziale = 0 Then ScriviLog_Debug("Qta Iniziale = 0 : " & d.Item & " d:" & d.Storage)
@@ -151,31 +151,32 @@ Module MovMagazzino
                     EditTestoBarra("Salvataggio: Inserimento teste ")
                     If efInventoryEntries.Any Then
                         Dim t = efInventoryEntries.Count
-                        Dim cfgFixAss As New BulkConfig With {
+                        Dim cfgInvEntr As New BulkConfig With {
                                 .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
                                 .BulkCopyTimeout = 0,
                                 .CalculateStats = True,
                                 .BatchSize = If(t < 5000, 0, t / 10),
                                 .NotifyAfter = t / 10
                                 }
-                        MovMagSpaCntx.BulkInsertOrUpdate(efInventoryEntries, cfgFixAss, Function(d) d)
-                        Dim msg As String = "InvetoryEntries Ins:" & cfgFixAss.StatsInfo.StatsNumberInserted.ToString
+                        MovMagSpaCntx.BulkInsertOrUpdate(efInventoryEntries, cfgInvEntr, Function(d) d)
+                        Dim msg As String = "InvetoryEntries Ins:" & cfgInvEntr.StatsInfo.StatsNumberInserted.ToString
                         ScriviLog_Debug(msg)
                     End If
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento righe ")
                     If efInventoryEntriesDetail.Any Then
                         Dim t = efInventoryEntriesDetail.Count
-                        Dim cfgFixAssDet As New BulkConfig With {
+                        Dim cfgInvEntrDet As New BulkConfig With {
                                 .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
                                 .BulkCopyTimeout = 0,
                                 .CalculateStats = True,
                                 .BatchSize = If(t < 5000, 0, t / 10),
                                 .NotifyAfter = t / 10
                                 }
-                        MovMagSpaCntx.BulkInsertOrUpdate(efInventoryEntriesDetail, cfgFixAssDet, Function(d) d)
-                        Dim msg As String = "InvetoryEntriesDetail Ins:" & cfgFixAssDet.StatsInfo.StatsNumberInserted.ToString
+                        MovMagSpaCntx.BulkInsertOrUpdate(efInventoryEntriesDetail, cfgInvEntrDet, Function(d) d)
+                        Dim msg As String = "InvetoryEntriesDetail Ins:" & cfgInvEntrDet.StatsInfo.StatsNumberInserted.ToString
                         ScriviLog_Debug(msg)
+                        FLogin.lstStatoConnessione.Items.Add("Inseriti " & cfgInvEntrDet.StatsInfo.StatsNumberInserted.ToString & " Movimenti di magazzino")
                     End If
                     iStep += 1
                     EditTestoBarra("Salvataggio: Ids Movimenti Magazzino")
