@@ -72,7 +72,11 @@ Module MovMagazzino
                         'Nuova scrittura
                         iNewRowsCount = 1
                         entryId += 1
-                        iNrEntryForStorage = 1
+                        If currentStorage.Equals(d.Storage) Then
+                            iNrEntryForStorage += 1
+                        Else
+                            iNrEntryForStorage = 1
+                        End If
                         efIdNumbers.FirstOrDefault.LastId = entryId
                         currentStorage = d.Storage
                         currentSpecificator = d.Specificator
@@ -121,7 +125,7 @@ Module MovMagazzino
                         .UoM = d.ItemNavigation.BaseUoM,
                         .Qty = qty,
                         .UnitValue = valUnit,
-                        .LineAmount = If(valIniziale <> 0, MagoFormatta(Math.Round(valUnit * qty, 5), GetType(Double)).MONey, 0), ' Math.Round(valUnit * qty, 5),
+                        .LineAmount = If(valIniziale <> 0, Math.Round(valUnit * qty, 5), 0), ' Math.Round(valUnit * qty, 5),
                         .Line = iNewRowsCount,
                         .SubId = iNewRowsCount,
                         .AccrualDate = sdata,
