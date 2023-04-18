@@ -290,7 +290,7 @@
                         lIDS.Add(New IDS With {.Id = SaleOrdId, .Nome = "IdOrdPadre", .Operatore = IdsOp.Somma})
                     Case "ALLOrdCliAcc"
                         lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = IdsOp.Somma})
-                        lIDS.Add(New IDS With {.IdString = Prefisso, .Nome = "Cdc", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
+                        lIDS.Add(New IDS With {.IdString = Suffisso, .Nome = "Cdc", .Operatore = IdsOp.Prefisso, .MaxSize = 8})
                     Case "ALLCespiti"
                         lIDS.Add(New IDS With {.Chiave = True, .Id = SaleOrdId, .Nome = "IdOrdCli", .Operatore = IdsOp.Somma})
                         lIDS.Add(New IDS With {.IdString = PrefissoCespiti, .Nome = "Cespite", .Operatore = IdsOp.Prefisso, .MaxSize = 10})
