@@ -1072,6 +1072,20 @@ Public Module FiltriAnalitici
     End Class
 End Module
 
+Public Module FiltriRisconti
+    Public Class FiltroRisconti
+        Public Sub New()
+            Me.Data = Now
+            Me.ScriviAnalitica = False
+            Me.FormatoRidotto = False
+        End Sub
+
+        Public Property Data As Date
+        Public Property ScriviAnalitica As Boolean
+        Public Property FormatoRidotto As Boolean
+
+    End Class
+End Module
 Public Module Common
     Public Sub LiberaRam()
         GC.Collect()

@@ -17,7 +17,7 @@ Module FattureDaOrdini
         Dim s As New StringBuilder()
         Dim sMsg As String
         Try
-            s.Append("Update MA_SaleDocDetail SET ALL_CanoniDataI = Ord.ALL_CanoniDataI , ALL_CanoniDataF = Ord.ALL_CanoniDataF, ALL_NrCanoni = Ord.ALL_NrCanoni ")
+            s.Append("Update MA_SaleDocDetail SET ALL_CanoniDataI = Ord.ALL_CanoniDataI , ALL_CanoniDataF = Ord.ALL_CanoniDataF, ALL_NrCanoni = Ord.ALL_NrCanoni, TBModified = @DataMod , TBModifiedID = @User ")
             s.Append("From MA_SaleDoc Testa INNER JOIN MA_SaleDocDetail Doc ON Testa.SaleDocId = Doc.SaleDocId INNER Join MA_SaleOrdDetails Ord ON Ord.SaleOrdId = Doc.SaleOrdId And Ord.SubId = Doc.SaleOrdSubId ")
             s.Append("WHERE (Doc.LineType = " & LineType.Merce & " OR Doc.LineType = " & LineType.Servizio & ") ")
             s.Append("AND (Testa.DocumentType=" & DocumentType.Fattura & " Or Testa.DocumentType=" & DocumentType.FatturaAccompagnatoria & " Or Testa.DocumentType=" & DocumentType.NotaCredito & ") ")
@@ -32,6 +32,9 @@ Module FattureDaOrdini
                 cmd.Parameters.AddWithValue("@AllNumbers", allNumbers)
                 cmd.Parameters.AddWithValue("@NrFirst", nrFirst)
                 cmd.Parameters.AddWithValue("@NrLast", nrLast)
+                cmd.Parameters.AddWithValue("@DataMod", Now.ToString("yyyyMMdd"))
+                cmd.Parameters.AddWithValue("@User", My.Settings.mLOGINID)
+
                 Dim irows As Integer = cmd.ExecuteNonQuery()
                 If irows <= 0 Then
                     sMsg = "Nessun documento di vendita da aggiornare"

@@ -138,13 +138,15 @@ Partial Class FLogin
         Me.ExitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.FusioneToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.EseguiStep = New System.Windows.Forms.ToolStripMenuItem()
-        Me.CespitiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ImportaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.CancellaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SettingsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripTracciatoVecchio = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItemDebugging = New System.Windows.Forms.ToolStripMenuItem()
         Me.ComandiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.RiscontiRidottoStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.CespitiStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ImportaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.CancellaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.AdminCmdToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.IDToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.CaricaSchemaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.EseguiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -1042,7 +1044,7 @@ Partial Class FLogin
         '
         'MenuStrip1
         '
-        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolsToolStripMenuItem, Me.FileToolStripMenuItem, Me.FusioneToolStripMenuItem, Me.CespitiToolStripMenuItem, Me.SettingsToolStripMenuItem, Me.ComandiToolStripMenuItem, Me.HelpToolStripMenuItem})
+        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolsToolStripMenuItem, Me.FileToolStripMenuItem, Me.FusioneToolStripMenuItem, Me.SettingsToolStripMenuItem, Me.ComandiToolStripMenuItem, Me.AdminCmdToolStripMenuItem, Me.HelpToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip1.Name = "MenuStrip1"
         Me.MenuStrip1.Size = New System.Drawing.Size(456, 24)
@@ -1257,25 +1259,6 @@ Partial Class FLogin
         Me.EseguiStep.Size = New System.Drawing.Size(99, 22)
         Me.EseguiStep.Text = "STEP"
         '
-        'CespitiToolStripMenuItem
-        '
-        Me.CespitiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ImportaToolStripMenuItem, Me.CancellaToolStripMenuItem})
-        Me.CespitiToolStripMenuItem.Name = "CespitiToolStripMenuItem"
-        Me.CespitiToolStripMenuItem.Size = New System.Drawing.Size(55, 20)
-        Me.CespitiToolStripMenuItem.Text = "Cespiti"
-        '
-        'ImportaToolStripMenuItem
-        '
-        Me.ImportaToolStripMenuItem.Name = "ImportaToolStripMenuItem"
-        Me.ImportaToolStripMenuItem.Size = New System.Drawing.Size(119, 22)
-        Me.ImportaToolStripMenuItem.Text = "Importa"
-        '
-        'CancellaToolStripMenuItem
-        '
-        Me.CancellaToolStripMenuItem.Name = "CancellaToolStripMenuItem"
-        Me.CancellaToolStripMenuItem.Size = New System.Drawing.Size(119, 22)
-        Me.CancellaToolStripMenuItem.Text = "Cancella"
-        '
         'SettingsToolStripMenuItem
         '
         Me.SettingsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripTracciatoVecchio, Me.ToolStripMenuItemDebugging})
@@ -1301,11 +1284,45 @@ Partial Class FLogin
         '
         'ComandiToolStripMenuItem
         '
-        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.IDToolStripMenuItem, Me.CaricaSchemaToolStripMenuItem, Me.EseguiToolStripMenuItem, Me.XLSToolStripMenuItem, Me.CSVToolStripMenuItem, Me.AnaliticaDaFattureToolStripMenuItem, Me.RiorganizzaCartelleToolStripMenuItem, Me.RegioneDaProvinciaToolStripMenuItem})
+        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.RiscontiRidottoStripMenuItem, Me.CespitiStripMenuItem})
         Me.ComandiToolStripMenuItem.Name = "ComandiToolStripMenuItem"
         Me.ComandiToolStripMenuItem.Size = New System.Drawing.Size(68, 20)
         Me.ComandiToolStripMenuItem.Text = "Comandi"
-        Me.ComandiToolStripMenuItem.Visible = False
+        '
+        'RiscontiRidottoStripMenuItem
+        '
+        Me.RiscontiRidottoStripMenuItem.Enabled = False
+        Me.RiscontiRidottoStripMenuItem.Name = "RiscontiRidottoStripMenuItem"
+        Me.RiscontiRidottoStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.RiscontiRidottoStripMenuItem.Text = "Risconti ridotto"
+        '
+        'CespitiStripMenuItem
+        '
+        Me.CespitiStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ImportaToolStripMenuItem, Me.CancellaToolStripMenuItem})
+        Me.CespitiStripMenuItem.Enabled = False
+        Me.CespitiStripMenuItem.Name = "CespitiStripMenuItem"
+        Me.CespitiStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.CespitiStripMenuItem.Text = "Cespiti"
+        '
+        'ImportaToolStripMenuItem
+        '
+        Me.ImportaToolStripMenuItem.Name = "ImportaToolStripMenuItem"
+        Me.ImportaToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.ImportaToolStripMenuItem.Text = "Importa"
+        '
+        'CancellaToolStripMenuItem
+        '
+        Me.CancellaToolStripMenuItem.Name = "CancellaToolStripMenuItem"
+        Me.CancellaToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.CancellaToolStripMenuItem.Text = "Cancella"
+        '
+        'AdminCmdToolStripMenuItem
+        '
+        Me.AdminCmdToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.IDToolStripMenuItem, Me.CaricaSchemaToolStripMenuItem, Me.EseguiToolStripMenuItem, Me.XLSToolStripMenuItem, Me.CSVToolStripMenuItem, Me.AnaliticaDaFattureToolStripMenuItem, Me.RiorganizzaCartelleToolStripMenuItem, Me.RegioneDaProvinciaToolStripMenuItem})
+        Me.AdminCmdToolStripMenuItem.Name = "AdminCmdToolStripMenuItem"
+        Me.AdminCmdToolStripMenuItem.Size = New System.Drawing.Size(74, 20)
+        Me.AdminCmdToolStripMenuItem.Text = "Adm_cmd"
+        Me.AdminCmdToolStripMenuItem.Visible = False
         '
         'IDToolStripMenuItem
         '
@@ -1558,7 +1575,7 @@ Partial Class FLogin
     Friend WithEvents toolStripSeparator5 As ToolStripSeparator
     Friend WithEvents AboutToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents TabPagePaghe As TabPage
-    Friend WithEvents ComandiToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents AdminCmdToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents IDToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ChkPaghe As CheckBox
     Friend WithEvents BackupDatabaseToolStripMenuItem As ToolStripMenuItem
@@ -1589,7 +1606,6 @@ Partial Class FLogin
     Friend WithEvents ChkCespiti As CheckBox
     Friend WithEvents Label1 As Label
     Friend WithEvents TxtTmpDB_UNO As TextBox
-    Friend WithEvents CespitiToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ImportaToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents CancellaToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents Button1 As Button
@@ -1631,4 +1647,7 @@ Partial Class FLogin
     Friend WithEvents ChkFusioneDocumenti As CheckBox
     Friend WithEvents ChkSaldoArticoli As CheckBox
     Friend WithEvents chkCorreggi As CheckBox
+    Friend WithEvents ComandiToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents RiscontiRidottoStripMenuItem As ToolStripMenuItem
+    Friend WithEvents CespitiStripMenuItem As ToolStripMenuItem
 End Class

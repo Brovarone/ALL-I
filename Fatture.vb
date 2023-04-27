@@ -2693,8 +2693,14 @@ End Module
 
 Module MovimentiAnaliticiDaFatture
 
+    ''' <summary>
+    ''' Le commese non vengono gestite
+    ''' </summary>
+    ''' <param name="filtri"></param>
+    ''' <returns></returns>
     Public Function CreaAnaliticaDaFatture(filtri As FiltroAnalitica) As Boolean
         Dim errori As New StringBuilder()
+        Dim avvisi As New StringBuilder()
         Dim annidiversiP As New StringBuilder()
         Dim annidiversiS As New StringBuilder()
 
@@ -2737,7 +2743,7 @@ Module MovimentiAnaliticiDaFatture
                                                             ORDER BY MA_SaleDoc.DocNo, MA_SaleDocDetail.Offset", Connection)
                 da.SelectCommand.Parameters.AddWithValue("@FromDate", sFromDate)
                 da.SelectCommand.Parameters.AddWithValue("@ToDate", sToDate)
-                da.SelectCommand.Parameters.AddWithValue("@AllNumbers", allNumbers)
+                da.SelectCommand.Parameters.AddWithValue("@AllNumbers", If(allNumbers, 1, 0))
                 da.SelectCommand.Parameters.AddWithValue("@NrFirst", nrFirst)
                 da.SelectCommand.Parameters.AddWithValue("@NrLast", nrLast)
                 da.SelectCommand.Parameters.AddWithValue("@GiaRegistrate", If(giaRegistrate, "1", "0"))
@@ -3082,10 +3088,12 @@ Module MovimentiAnaliticiDaFatture
                                                             tempAmount = 0
                                                             Dim iCanoni = If(.Item("ALL_NrCanoni") = 0, 1, Math.Abs(.Item("ALL_NrCanoni")))
                                                             Dim importoMensile As Double = importo / iCanoni
+                                                            'todo : gestire una sorta di log delle incogruenze possibili
+                                                            'avvisi.AppendLine("A01: DataInizio nulla su Doc: " & .Item("DocNo") & " riga : " & .Item("Line"))
                                                             Dim dataDecorrenza As Date = If(.Item("ALL_CanoniDataI").ToString = sDataNulla, .Item("DocumentDate"), .Item("ALL_CanoniDataI"))
                                                             Dim isDare = drAna("DebitCreditSign") = 8192000
                                                             Dim CdC As String = .Item("CostCenter")
-                                                            If String.IsNullOrWhiteSpace(CdC) Then errori.AppendLine("E50: Documento: " & .Item("DocNo") & " riga : " & .Item("Line") & " - Centro di Costo assente!")
+                                                            If String.IsNullOrWhiteSpace(CdC) Then errori.AppendLine("E50: Doc: " & .Item("DocNo") & " riga : " & .Item("Line") & " - Centro di Costo assente!")
                                                             Dim isNotOkAnnualita As Boolean = Annualita <> CShort(Year(dataDecorrenza))
                                                             For n = 0 To iCanoni - 1
                                                                 ''''''''''''''''''''''
@@ -3384,11 +3392,15 @@ Module MovimentiAnaliticiDaFatture
             AggiornaNonFiscalNumber(CodeType.MovAna, Annualita, iRefNo)
         End If
         'Scrivo i LOG
-        If errori.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & Environment.NewLine & errori.ToString)
+        If errori.Length > 0 Then
+            My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & Environment.NewLine & errori.ToString)
+            FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati errori : Controllare file di Log")
+            Debug.Print(errori.ToString)
+        End If
         If errorAnniDiversi.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Riparti di competenze analitiche su anni precedenti NON creati! ---" & Environment.NewLine & errorAnniDiversi.ToString)
         If warningAnniDiversi.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Riparti di competenze analitiche su anni successivi creati! ---" & Environment.NewLine & warningAnniDiversi.ToString)
+        If avvisi.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Avvisi ---" & Environment.NewLine & avvisi.ToString)
         If IsDebugging AndAlso debugging.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Debugging ---" & Environment.NewLine & debugging.ToString)
-
         Return Not someTrouble
 
     End Function

@@ -41,7 +41,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>28</ApplicationRevision>
+    <ApplicationRevision>29</ApplicationRevision>
     <ApplicationVersion>3.1.1.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -386,6 +386,12 @@
     <Compile Include="ApplicationEvents.vb" />
     <Compile Include="Cespiti.vb" />
     <Compile Include="Contabilita\Analitica.vb" />
+    <Compile Include="Contabilita\FAskFiltriRisconti.Designer.vb">
+      <DependentUpon>FAskFiltriRisconti.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Contabilita\FAskFiltriRisconti.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Contabilita\Paghe.vb" />
     <Compile Include="Fusione\CR.vb" />
     <Compile Include="Fusione\FDocumentNumberDialog.Designer.vb">
@@ -428,10 +434,10 @@
     <Compile Include="FPasswordDialog.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FAskFiltriAnalitica.Designer.vb">
+    <Compile Include="Contabilita\FAskFiltriAnalitica.Designer.vb">
       <DependentUpon>FAskFiltriAnalitica.vb</DependentUpon>
     </Compile>
-    <Compile Include="FAskFiltriAnalitica.vb">
+    <Compile Include="Contabilita\FAskFiltriAnalitica.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="GlobalSuppressions.vb" />
@@ -450,8 +456,8 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Global.vb" />
-    <Compile Include="Anagrafiche.vb" />
-    <Compile Include="Partite.vb" />
+    <Compile Include="S400_to_Mago\Anagrafiche.vb" />
+    <Compile Include="S400_to_Mago\Partite.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>
@@ -471,6 +477,9 @@
     <Compile Include="Unused.vb" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Contabilita\FAskFiltriRisconti.resx">
+      <DependentUpon>FAskFiltriRisconti.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Fusione\FDocumentNumberDialog.resx">
       <DependentUpon>FDocumentNumberDialog.vb</DependentUpon>
     </EmbeddedResource>
@@ -480,7 +489,7 @@
     <EmbeddedResource Include="FPasswordDialog.resx">
       <DependentUpon>FPasswordDialog.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FAskFiltriAnalitica.resx">
+    <EmbeddedResource Include="Contabilita\FAskFiltriAnalitica.resx">
       <DependentUpon>FAskFiltriAnalitica.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FLogin.resx">

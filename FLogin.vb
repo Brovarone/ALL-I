@@ -65,7 +65,7 @@ Public Class FLogin
         PanelUser.Visible = Not admin
         PanelDB.Visible = Not admin
         PanelAdmin.Visible = admin
-        ComandiToolStripMenuItem.Visible = admin
+        AdminCmdToolStripMenuItem.Visible = admin
         DisconnettiAdminToolStripMenuItem.Visible = admin
         AdministratorToolStripMenuItem.Enabled = Not admin
         BackupDatabaseToolStripMenuItem.Visible = admin
@@ -84,7 +84,7 @@ Public Class FLogin
             BtnOrdiniISTAT.Enabled = yes
             ToolsToolStripMenuItem.Enabled = yes
             SettingsToolStripMenuItem.Enabled = yes
-            CespitiToolStripMenuItem.Enabled = yes
+            CespitiStripMenuItem.Enabled = yes
             BtnApriLog.Enabled = yes
             FusioneToolStripMenuItem.Enabled = yes
 
@@ -1009,10 +1009,19 @@ Public Class FLogin
                         dsXLS = LoadXLS(spath, True, False)
                         esito = CreaPNotaRisconti(dsXLS.Tables(0), True, False)
                     Case "RISCONTIRIDOTTO"
+                        Dim f As New FiltroRisconti
+                        Using frm As New FAskFiltriRisconti()
+                            Dim result As DialogResult = frm.ShowDialog
+                            If result = DialogResult.OK Then
+                                f = frm.f
+                            ElseIf result = DialogResult.Cancel Then
+                                Exit Select
+                            End If
+                        End Using
                         'RiscontiRidotto Xlsx  (con riga di Intestazione, solo 4 COLONNE)
                         lstStatoConnessione.Items.Add("Risconti (ridotto)")
                         dsXLS = LoadXLS(spath, True, False)
-                        esito = CreaPNotaRisconti(dsXLS.Tables(0), False, True)
+                        esito = CreaPNotaRisconti(dsXLS.Tables(0), f)
 
                     Case "ANFO200F"
                         'Fornitori (con riga di Intestazione)
@@ -1806,6 +1815,8 @@ Public Class FLogin
 
         PanelUser.Visible = True
         PanelDB.Visible = False
+        RiscontiRidottoStripMenuItem.Enabled = True
+        CespitiStripMenuItem.Enabled = True
         lstStatoConnessione.Items.Add(If(DBisTMP, "Azienda test: ", "Azienda: ") & azienda & " - Database : " & DBInUse)
     End Sub
     Private Sub DisabilitaTxt(ByVal ny As Boolean)
@@ -1838,6 +1849,12 @@ Public Class FLogin
         ChkRiscontiRidotto.Checked = True
         SUBConnetti()
         SUBProcessa()
+    End Sub
+    Private Sub RiscontiRidottoStripMenuItem_Click(sender As Object, e As EventArgs) Handles RiscontiRidottoStripMenuItem.Click
+        ChkRiscontiRidotto.Checked = True
+        SUBConnetti()
+        SUBProcessa()
+
     End Sub
     Private Sub RiparaMaschereMagoToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles RiparaMaschereMagoToolStripMenuItem.Click
         Try
@@ -1988,4 +2005,6 @@ Public Class FLogin
         ChkFusionePartite.Enabled = b
         ChkSaldoArticoli.Enabled = b
     End Sub
+
+
 End Class

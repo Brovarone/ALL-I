@@ -7,20 +7,35 @@ Public Module Contabilita
     Private Const CauRiga = "GIROCONT"
     Private Const RiscAtt = "1RIS001"
     'Private Const RiscPass = "2RIS001"
-
+    Public Function CreaPNotaRisconti(ByVal r As DataTable, filtri As FiltroRisconti) As Boolean
+        Return CreaPNotaRisconti(r, filtri.ScriviAnalitica, filtri.FormatoRidotto, filtri.Data)
+    End Function
     ''' <summary>
-    ''' Creo la scrittura dei risconti in contabilità 
+    ''' Creo la scrittura dei risconti in contabilità. Il file si deve chiamare
     ''' </summary>
     ''' <param name="r">Righe</param>
     ''' <returns></returns>
-    Public Function CreaPNotaRisconti(ByVal r As DataTable, ByVal withAnalitica As Boolean, Optional ByVal xlsRidotto As Boolean = False) As Boolean
+    Public Function CreaPNotaRisconti(ByVal r As DataTable, ByVal withAnalitica As Boolean, Optional ByVal xlsRidotto As Boolean = False, Optional ByVal data As Date = Nothing) As Boolean
         'Movimenti Contabili PURI - MA_JournalEntries
         'Righe - MA_JournalEntriesGLDetail
         'I vari conti che leggo vanno matchati con quelli nuovi
 
+        'Colonne xlsRidotto 
+        'Gli importi sono sempre considerati in Dare
+        'A = Conto
+        'B = Descrizione conto ( non usata)
+        'C = Importo
+        'D = Nota riga PNota
+
         Dim okBulk As Boolean
         Dim someTrouble As Boolean
-        Dim DataRiga As Date = MagoFormatta("20220101", GetType(DateTime)).DataTempo
+        'todo: aggiungere form richiesta data
+        Dim DataRiga As Date
+        If data = Nothing Then
+            DataRiga = MagoFormatta("20230101", GetType(DateTime)).DataTempo
+        Else
+            DataRiga = data
+        End If
         FLogin.prgCopy.Value = 1
 
         If r.Rows.Count > 0 Then
@@ -163,7 +178,7 @@ Public Module Contabilita
                                                             drPnD("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                                                             AggiornaSaldoContabile(drPnD("Account"), Year(DataRiga), Month(DataRiga), isDare, drPnD("Amount"), dvPNSaldi)
                                                             dtPND.Rows.Add(drPnD)
-
+                                                            'todo checkanalitico
                                                             If withAnalitica Then
                                                                 'Scrivo analitica
                                                                 Try
@@ -287,7 +302,7 @@ Public Module Contabilita
                                                                 If Not isNewReg Then
                                                                     'Aggiorno la testa con quello che ho calcolato
                                                                     drPn("TotalAmount") = Math.Round(If(totDare > totAvere, totDare, totAvere), 2)
-                                                                    If drPn("TotalAmount") <> quadraturaDaFile Then
+                                                                    If Not xlsRidotto AndAlso drPn("TotalAmount") <> quadraturaDaFile Then
                                                                         Dim avviso As String = ("Sulla registrazione rif." & drPn("RefNo").ToString & " il totale calcolato " & drPn("TotalAmount").ToString & " differisce da quello letto dal flusso " & quadraturaDaFile.ToString)
                                                                         Debug.Print(avviso)
                                                                         My.Application.Log.WriteEntry(avviso)
@@ -373,12 +388,14 @@ Public Module Contabilita
                                                             EditTestoBarra("Salvataggio: Righe  Prima Nota")
                                                             okBulk = ScriviBulk("MA_JournalEntriesGLDetail", dtPND, bulkTrans, Connection)
                                                             If Not okBulk Then someTrouble = True
-                                                            EditTestoBarra("Salvataggio: Movimenti Analitici")
-                                                            okBulk = ScriviBulk("MA_CostAccEntries", dtMovAna, bulkTrans, Connection)
-                                                            If Not okBulk Then someTrouble = True
-                                                            EditTestoBarra("Salvataggio: Righe Movimenti Analitici")
-                                                            okBulk = ScriviBulk("MA_CostAccEntriesDetail", dtMovAnaD, bulkTrans, Connection)
-                                                            If Not okBulk Then someTrouble = True
+                                                            If withAnalitica Then
+                                                                EditTestoBarra("Salvataggio: Movimenti Analitici")
+                                                                okBulk = ScriviBulk("MA_CostAccEntries", dtMovAna, bulkTrans, Connection)
+                                                                If Not okBulk Then someTrouble = True
+                                                                EditTestoBarra("Salvataggio: Righe Movimenti Analitici")
+                                                                okBulk = ScriviBulk("MA_CostAccEntriesDetail", dtMovAnaD, bulkTrans, Connection)
+                                                                If Not okBulk Then someTrouble = True
+                                                            End If
                                                             EditTestoBarra("Salvataggio: Riferimenti incrociati")
                                                             okBulk = ScriviBulk("MA_CrossReferences", dtCR, bulkTrans, Connection)
                                                             If Not okBulk Then someTrouble = True
@@ -395,9 +412,11 @@ Public Module Contabilita
                                                             irows = adpPNSaldi.Update(dtPNSaldi)
                                                             'Result.AppendLine("Aggiornamento Vista Clienti: " & irows.ToString & " record")
                                                             Debug.Print("Aggiornamento Saldi contabili: " & irows.ToString & " record")
-                                                            irows = adpMovAnaSaldi.Update(dtMovAnaSaldi)
-                                                            'Result.AppendLine("Aggiornamento Saldi analitici: " & irows.ToString & " record")
-                                                            Debug.Print("Aggiornamento Saldi analitici: " & irows.ToString & " record")
+                                                            If withAnalitica Then
+                                                                irows = adpMovAnaSaldi.Update(dtMovAnaSaldi)
+                                                                'Result.AppendLine("Aggiornamento Saldi analitici: " & irows.ToString & " record")
+                                                                Debug.Print("Aggiornamento Saldi analitici: " & irows.ToString & " record")
+                                                            End If
 
                                                         End If
                                                         cmdqry.CommandText = "DBCC TRACEOFF(610)"
@@ -410,7 +429,6 @@ Public Module Contabilita
                                 End Using
                             End Using
                         End Using
-                        ' If Not someTrouble Then CreaAnalitica(dtPN, dtPND)
                     End Using
                 End Using
             Catch ex As Exception
@@ -425,9 +443,10 @@ Public Module Contabilita
                 'Scrivi Gli ID ( faccio solo a fine elaborazione)
                 AggiornaID(IdType.PNota, idPn)
                 AggiornaNonFiscalNumber(CodeType.PNota, Year(DataRiga), iRefNo)
-
-                AggiornaID(IdType.MovAna, idMovAna)
-                AggiornaNonFiscalNumber(CodeType.MovAna, Year(DataRiga), iRefNoAna)
+                If withAnalitica Then
+                    AggiornaID(IdType.MovAna, idMovAna)
+                    AggiornaNonFiscalNumber(CodeType.MovAna, Year(DataRiga), iRefNoAna)
+                End If
             End If
         End If
 
