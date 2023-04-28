@@ -4,6 +4,12 @@ Imports System.Reflection.MethodBase
 
 Module FattureDaOrdini
 
+    ''' <summary>
+    ''' Adegua le righe fatture con una query di Update
+    ''' </summary>
+    ''' <param name="filtri"></param>
+    ''' <param name="MyReturnString"></param>
+    ''' <returns></returns>
     Public Function AdeguaFattureDaOrdini(filtri As FiltroAnalitica, Optional ByRef MyReturnString As String = "") As Boolean
         'dati succhiati dal filtro
         Dim fromDate As Date = filtri.DataDA

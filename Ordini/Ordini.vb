@@ -37,6 +37,10 @@ Module Ordini
 
     ReadOnly sLoginId As String = My.Settings.mLOGINID
 
+    ''' <summary>
+    ''' Genero righe su Ordine tramite LINQ e OrdContext
+    ''' </summary>
+    ''' <returns></returns>
     Public Function GeneraRigheOrdine() As Boolean
 #Region "Variabili Selezione"
         'Variabili legate alla maschera di selezione 
@@ -486,9 +490,9 @@ Module Ordini
                                     .UoM = cOrdRow.UoM,
                                     .PacksUoM = cOrdRow.UoM,
                                     .Qty = aDaRif.CanoniRipresi,
-                                    .UnitValue = Math.Round(aDaRif.ValUnit.Value, decValUnit), ' Pesco il valore unitario dall'attività
-                                    .NetPrice = cOrdRow.ValUnit,
-                                    .TaxableAmount = Math.Round(aDaRif.CanoniRipresi * cOrdRow.ValUnit, decValUnit),
+                                    .UnitValue = Math.Round(aDaRif.ValUnit.Value, decTax), ' Pesco il valore unitario dall'attività
+                                    .NetPrice = Math.Round(cOrdRow.ValUnit, decTax),
+                                    .TaxableAmount = Math.Round(aDaRif.CanoniRipresi * cOrdRow.ValUnit, decTax),
                                     .TaxCode = cOrdRow.CodIva,
                                     .TotalAmount = Math.Round((aDaRif.CanoniRipresi * cOrdRow.ValUnit) * ((100 + cOrdRow.PercIva) / 100), decTax),
                                     .ExpectedDeliveryDate = cOrdRow.DataPrevistaConsegna,
@@ -572,9 +576,9 @@ Module Ordini
                                 End If
                                 cOrdRow.QtaCorrente = r.Qty
 #End Region
-                                r.UnitValue = cOrdRow.ValUnit
-                                r.NetPrice = cOrdRow.ValUnit
-                                r.TaxableAmount = Math.Round(cOrdRow.QtaCorrente * cOrdRow.ValUnit, decValUnit)
+                                r.UnitValue = Math.Round(cOrdRow.ValUnit, decTax)
+                                r.NetPrice = Math.Round(cOrdRow.ValUnit, decTax)
+                                r.TaxableAmount = Math.Round(cOrdRow.QtaCorrente * cOrdRow.ValUnit, decTax)
                                 r.TaxCode = cOrdRow.CodIva
                                 r.TotalAmount = Math.Round((cOrdRow.QtaCorrente * cOrdRow.ValUnit) * ((100 + cOrdRow.PercIva) / 100), decTax)
                                 r.ExpectedDeliveryDate = cOrdRow.DataPrevistaConsegna
@@ -1099,7 +1103,7 @@ Module Ordini
                         Dim cOrdRow As New CurOrdRow(c)
 
                         'STEP 2: Determino date ( Consegna, nr canoni etc.)
-                        cOrdRow.ValUnit = Math.Round(c.ValUnitIstat.Value, decValUnit)
+                        cOrdRow.ValUnit = Math.Round(c.ValUnitIstat.Value, decTax)
                         If cOrdRow.ValUnit <= 0 Then errori.AppendLine("Ordine: " & cOrd.OrdNo & " Valore Unitario Att <= 0 // Riga: (" & sEx)
                         Dim isDaRifatturare As Boolean = False
                         Dim attDaAdeguare As New List(Of AllordCliAttivita)

@@ -1,6 +1,6 @@
 ﻿Imports EFMago.Models
 Imports ALLSystemTools.Ordini
-'Necesstita di Ordini.vb
+'Necessita di Ordini.vb
 Public Class CurOrdRow
     Public Property IsOk As Boolean
     Public Property Line As Short
