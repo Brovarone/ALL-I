@@ -29,7 +29,6 @@ Public Module Contabilita
 
         Dim okBulk As Boolean
         Dim someTrouble As Boolean
-        'todo: aggiungere form richiesta data
         Dim DataRiga As Date
         If data = Nothing Then
             DataRiga = MagoFormatta("20230101", GetType(DateTime)).DataTempo
@@ -178,7 +177,6 @@ Public Module Contabilita
                                                             drPnD("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                                                             AggiornaSaldoContabile(drPnD("Account"), Year(DataRiga), Month(DataRiga), isDare, drPnD("Amount"), dvPNSaldi)
                                                             dtPND.Rows.Add(drPnD)
-                                                            'todo checkanalitico
                                                             If withAnalitica Then
                                                                 'Scrivo analitica
                                                                 Try
