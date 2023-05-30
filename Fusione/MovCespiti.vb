@@ -21,6 +21,7 @@ Module MovCespiti
         Dim sdata As String = New DateTime(2023, 4, 1).ToString
         Dim fiscalYear As Integer = 2024
         Dim someTrouble As Boolean = False
+        Dim prefisso As String = "A"
 
         If LINQ_Cespiti() Then
 
@@ -54,8 +55,9 @@ Module MovCespiti
             Dim entryIdFondo As Integer = entryId + 1 ' Ultimo ID
             'devo prevedere un salto scrittura ogni tot righe ( 100??)
             Dim iNewRowsCount As Integer
+            Dim iNrReg As Integer
 
-            'Genero 2 movimenti di ripresa
+            'Genero 4 movimenti di ripresa
             'FISCALE
             If f.Any Then
                 Dim totCespiti As Integer = f.Count
@@ -71,16 +73,18 @@ Module MovCespiti
                 entryId += 1
                 entryIdFondo = entryId + 1
                 efIdNumbers.FirstOrDefault.LastId = entryIdFondo
+                iNrReg = 1
                 For Each c In f
                     AvanzaBarra()
                     Debug.Print("Fis_Cespite: " & c.FixedAsset)
                     'Inizializzazione
-                    If iNewRowsCount = 99 Then
+                    If iNewRowsCount >= 99 Then
                         'Nuova scrittura
                         iNewRowsCount = 1
                         entryId += 2 ' due perche' devo contare anche la scrittura del Fondo "entryfondo
                         entryIdFondo = entryId + 1
                         efIdNumbers.FirstOrDefault.LastId = entryIdFondo
+                        iNrReg += 1
                     End If
                     'Testa
                     If iNewRowsCount = 1 Then
@@ -89,7 +93,7 @@ Module MovCespiti
                             .Farsn = CauCes.RipTotAmF.Codice,
                             .PostingDate = sdata,
                             .DocumentDate = sdata,
-                            .DocNo = c.FixedAsset, ' cespite
+                            .DocNo = iNrReg.ToString,
                             .CustSuppType = 6094850,
                             .EntryId = entryId,
                             .Currency = "EUR",
@@ -105,7 +109,7 @@ Module MovCespiti
                             .Farsn = CauCes.RipFondoF.Codice,
                             .PostingDate = sdata,
                             .DocumentDate = sdata,
-                            .DocNo = c.FixedAsset, ' cespite
+                            .DocNo = iNrReg.ToString,
                             .CustSuppType = 6094850,
                             .EntryId = entryIdFondo,
                             .Currency = "EUR",
@@ -122,7 +126,7 @@ Module MovCespiti
                                  .EntryId = entryId,
                                  .Line = iNewRowsCount,
                                  .CodeType = c.CodeType,
-                                 .FixedAsset = c.FixedAsset,
+                                 .FixedAsset = prefisso & c.FixedAsset,
                                  .PostingDate = sdata,
                                  .Qty = 0, '???
                                  .Perc = 0,
@@ -142,7 +146,7 @@ Module MovCespiti
                                  .EntryId = entryIdFondo,
                                  .Line = iNewRowsCount,
                                  .CodeType = c.CodeType,
-                                 .FixedAsset = c.FixedAsset,
+                                 .FixedAsset = prefisso & c.FixedAsset,
                                  .PostingDate = sdata,
                                  .Qty = 0, '???
                                  .Perc = 0,
@@ -175,6 +179,7 @@ Module MovCespiti
                 entryId += 2 ' due perche' devo contare anche la scrittura del Fondo "entryfondo
                 entryIdFondo = entryId + 1
                 efIdNumbers.FirstOrDefault.LastId = entryIdFondo
+                iNrReg = 1
                 For Each c In b
                     AvanzaBarra()
                     Debug.Print("Bil_Cespite : " & c.FixedAsset)
@@ -185,7 +190,7 @@ Module MovCespiti
                         entryId += 2 ' due perche' devo contare anche la scrittura del Fondo "entryfondo
                         entryIdFondo = entryId + 1
                         efIdNumbers.FirstOrDefault.LastId = entryIdFondo
-
+                        iNrReg += 1
                     End If
                     'Testa
                     If iNewRowsCount = 1 Then
@@ -194,7 +199,7 @@ Module MovCespiti
                             .Farsn = CauCes.RipTotAmB.Codice,
                             .PostingDate = sdata,
                             .DocumentDate = sdata,
-                            .DocNo = c.FixedAsset, ' cespite
+                            .DocNo = iNrReg.ToString,
                             .CustSuppType = 6094850,
                             .EntryId = entryId,
                             .Currency = "EUR",
@@ -210,7 +215,7 @@ Module MovCespiti
                             .Farsn = CauCes.RipFondoB.Codice,
                             .PostingDate = sdata,
                             .DocumentDate = sdata,
-                            .DocNo = c.FixedAsset, ' cespite
+                            .DocNo = iNrReg.ToString,
                             .CustSuppType = 6094850,
                             .EntryId = entryIdFondo,
                             .Currency = "EUR",
@@ -227,7 +232,7 @@ Module MovCespiti
                                  .EntryId = entryId,
                                  .Line = iNewRowsCount,
                                  .CodeType = c.CodeType,
-                                 .FixedAsset = c.FixedAsset,
+                                 .FixedAsset = prefisso & c.FixedAsset,
                                  .PostingDate = sdata,
                                  .Qty = 0, '???
                                  .Perc = 0,
@@ -247,7 +252,7 @@ Module MovCespiti
                                  .EntryId = entryIdFondo,
                                  .Line = iNewRowsCount,
                                  .CodeType = c.CodeType,
-                                 .FixedAsset = c.FixedAsset,
+                                 .FixedAsset = prefisso & c.FixedAsset,
                                  .PostingDate = sdata,
                                  .Qty = 0, '???
                                  .Perc = 0,
@@ -357,14 +362,14 @@ Module MovCespiti
         Dim dbcb As New DbContextOptionsBuilder(Of MovCespiteContext)
         dbcb.UseSqlServer(cs)
         MovCesUnoCntx = New MovCespiteContext(dbcb.Options)
-        Debug.Print("Connessione a Context EF: " & MovCesUnoCntx.Database.CanConnect.ToString & " Su DB:") ' & DB)
+        Debug.Print("Connessione a Context EF: " & MovCesUnoCntx.Database.CanConnect.ToString & " Su DB: Uno") ' & DB)
 
         cs = GetConnectionStringSPA(True)
         'dbcb = New DbContextOptionsBuilder(Of MovCespiteContext)
         dbcb.UseSqlServer(cs)
         ' lstStatoConnessione.Items.Add("Connessione al database: " & DB)
         MovCesSpaCntx = New MovCespiteContext(dbcb.Options)
-        Debug.Print("Connessione a Context EF: " & MovCesSpaCntx.Database.CanConnect.ToString & " Su DB:") ' & DB)
+        Debug.Print("Connessione a Context EF: " & MovCesSpaCntx.Database.CanConnect.ToString & " Su DB: Spa") ' & DB)
 
         If MovCesUnoCntx.Database.CanConnect Then ' connection ok
             MovCesUnoCntx.Database.ExecuteSqlRaw("SET ARITHABORT ON")

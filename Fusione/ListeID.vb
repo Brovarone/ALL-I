@@ -3,7 +3,7 @@
     Const Prefisso As String = "1"
     Const Suffisso As String = "1"
     Private ReadOnly sDataInizioAmmortamento As String = New DateTime(2023, 4, 1).ToString
-    Private Const iFiscalYear = 2024
+    Private Const iFiscalYear = 2024 ' Forse e' necessario inserire 2023
     Const ContoFusione As String = "1IMI029"
     Const ContoBilancioApertura As String = "5STP001"
     Const CausaleBIA As String = "FUSIONE"
