@@ -70,7 +70,9 @@ Public Class FAskFiltriOrdini
             s = "Valorizzato con Anno della 'Data decorrenza' -1." & Environment.NewLine & "Se per l'anno indicato e' già stata eseguita" & Environment.NewLine & "una rivalutazione la riga non verrà processata."
             ToolTip1.SetToolTip(Me.TxtAnnoAdeguamento, s)
             ToolTip1.SetToolTip(Me.LblAnnoAdeguamento, s)
-
+            s = "Campo Centro di Costo di Mago"
+            ToolTip1.SetToolTip(Me.ChkFiliale, s)
+            ToolTip1.SetToolTip(Me.TxtOrdFiliale, s)
         End If
     End Sub
 
