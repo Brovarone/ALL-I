@@ -1,9 +1,30 @@
 ﻿Imports System.Reflection.MethodBase
+Imports ALLSystemTools
 
 Public Module Analitica
-    Public Function AggiornaSaldoAnalitico(ByVal conto As String, centro As String, anno As Short, mese As Short, isDebit As Boolean, valore As Double, vista As DataView) As Boolean
+    ''' <summary>
+    ''' Uguale a quella in Fatture
+    ''' </summary>
+    Public Class MySaldoAnalitico
+        Public Property Conto As String
+        Public Property Centro As String
+        Public Property Anno As Short
+        Public Property Mese As Short
+        Public Property BalanceType As Integer
+
+        Public Sub New()
+            Conto = ""
+            Centro = ""
+            Anno = CShort(Year(Now))
+            Mese = CShort(Month(Now))
+            BalanceType = 3145730 'Standard
+        End Sub
+    End Class
+    Public Function AggiornaSaldoAnalitico(filtri As MySaldoAnalitico, isDebit As Boolean, valore As Double, vista As DataView) As Boolean
         Dim result As Boolean
-        Dim found As Integer = vista.Find({centro, conto})
+        vista.Sort = "CostCenter,Account,BalanceYear,BalanceMonth,BalanceType"
+        ' vista.RowFilter = "BalanceType=3145730"
+        Dim found As Integer = vista.Find({filtri.Centro, filtri.Conto, filtri.Anno, filtri.Mese, 3145730})
         Try
             If found <> -1 Then
                 With vista(found)
@@ -17,12 +38,12 @@ Public Module Analitica
                 End With
             Else
                 Dim r As DataRow = vista.Table.NewRow
-                r.Item("CostCenter") = centro
-                r.Item("Account") = conto
-                r.Item("FiscalYear") = anno
-                r.Item("BalanceYear") = anno
+                r.Item("CostCenter") = filtri.Centro
+                r.Item("Account") = filtri.Conto
+                r.Item("FiscalYear") = filtri.Anno
+                r.Item("BalanceYear") = filtri.Anno
                 r.Item("BalanceType") = 3145730
-                r.Item("BalanceMonth") = mese
+                r.Item("BalanceMonth") = filtri.Mese
                 If isDebit Then
                     r.Item("ActualDebit") = valore
                     r.Item("ActualCredit") = 0
@@ -49,7 +70,7 @@ Public Module Analitica
             Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
             mb.ShowDialog()
         End Try
-
+        vista.RowFilter = ""
         Return result
     End Function
 

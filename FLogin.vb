@@ -866,6 +866,31 @@ Public Class FLogin
             ProcessaGruppo(risc, "Risconti Ridotto")
         End If
 
+        If ChkRiscontiFusione.Checked Then
+            Dim bFound As Boolean
+            Dim risc As String() = {"RISCONTIFUSIONE"}
+            Dim riscFound As Boolean() = {False}
+            Dim FileInFolder As String() = Directory.GetFiles(FolderPath, "*.*", SearchOption.TopDirectoryOnly)
+
+            For i = 0 To UBound(risc)
+                For Each sFile As String In FileInFolder
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
+                    bFound = sNomeFile.Equals(risc(i))
+                    If bFound Then
+                        riscFound(i) = True
+                        risc(i) = sFile
+                        lista.Add(sFile)
+                        Exit For
+                    End If
+                Next
+                If Not riscFound(i) Then
+                    MessageBox.Show("Impossibile continuare l'elaborazione dei risconti file RISCONTIFUSIONE.XLSX")
+                    Exit For
+                End If
+            Next
+            ProcessaGruppo(risc, "Risconti Fusione")
+        End If
+
         If ChkCespiti.Checked Then
             Dim bFound As Boolean
             Dim cespiti As String() = {"CBIL", "CFIS"}
@@ -1008,6 +1033,11 @@ Public Class FLogin
                         lstStatoConnessione.Items.Add("Risconti")
                         dsXLS = LoadXLS(spath, True, False)
                         esito = CreaPNotaRisconti(dsXLS.Tables(0), True, False)
+                    Case "RISCONTIFUSIONE"
+                        'Risconti Xlsx  (con riga di Intestazione)
+                        lstStatoConnessione.Items.Add("Risconti Fusione")
+                        dsXLS = LoadXLS(spath, True, False)
+                        esito = CreaPNotaRiscontiFusione(dsXLS.Tables(0), True)
                     Case "RISCONTIRIDOTTO"
                         Dim f As New FiltroRisconti
                         Using frm As New FAskFiltriRisconti()
@@ -1816,6 +1846,7 @@ Public Class FLogin
         PanelUser.Visible = True
         PanelDB.Visible = False
         RiscontiRidottoStripMenuItem.Enabled = True
+        RiscontiFusioneToolStripMenuItem.Enabled = True
         CespitiStripMenuItem.Enabled = True
         lstStatoConnessione.Items.Add(If(DBisTMP, "Azienda test: ", "Azienda: ") & azienda & " - Database : " & DBInUse)
     End Sub
@@ -1926,6 +1957,8 @@ Public Class FLogin
     End Sub
 
     Private Sub BtnFusione_Click(sender As Object, e As EventArgs) Handles BtnFusione.Click
+        lstStatoConnessione.Items.Add("Attenzione - La fusione avverrà tra i database TMPUNO e TMPSPA")
+        lstStatoConnessione.Items.Add("Attenzione - Sovente e' necessario il file IDS_Migrazione.xls")
         Dim b As DialogResult = MessageBox.Show("Salvataggio" & vbCrLf & "Eseguire Commit?", My.Application.Info.Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question)
         If b = DialogResult.No Then
             'Se rispondo no abilito isDebugging che esegue il rollback
@@ -2006,5 +2039,9 @@ Public Class FLogin
         ChkSaldoArticoli.Enabled = b
     End Sub
 
-
+    Private Sub RiscontiFusioneToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles RiscontiFusioneToolStripMenuItem.Click
+        ChkRiscontiFusione.Checked = True
+        SUBConnetti()
+        SUBProcessa()
+    End Sub
 End Class

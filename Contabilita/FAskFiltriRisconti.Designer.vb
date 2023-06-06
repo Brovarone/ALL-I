@@ -29,6 +29,7 @@ Partial Class FAskFiltriRisconti
         Me.DtaScritture = New System.Windows.Forms.DateTimePicker()
         Me.chkFormatoRidotto = New System.Windows.Forms.CheckBox()
         Me.chkScriviAnalitica = New System.Windows.Forms.CheckBox()
+        Me.ChkFromFusione = New System.Windows.Forms.CheckBox()
         Me.TableLayoutPanel1.SuspendLayout()
         Me.SuspendLayout()
         '
@@ -40,7 +41,7 @@ Partial Class FAskFiltriRisconti
         Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
         Me.TableLayoutPanel1.Controls.Add(Me.OK_Button, 0, 0)
         Me.TableLayoutPanel1.Controls.Add(Me.Cancel_Button, 1, 0)
-        Me.TableLayoutPanel1.Location = New System.Drawing.Point(13, 95)
+        Me.TableLayoutPanel1.Location = New System.Drawing.Point(25, 110)
         Me.TableLayoutPanel1.Name = "TableLayoutPanel1"
         Me.TableLayoutPanel1.RowCount = 1
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
@@ -108,13 +109,24 @@ Partial Class FAskFiltriRisconti
         Me.chkScriviAnalitica.Text = "Scrivi analitica"
         Me.chkScriviAnalitica.UseVisualStyleBackColor = True
         '
-        'DataRiscontiDialogBox
+        'ChkFromFusione
+        '
+        Me.ChkFromFusione.AutoSize = True
+        Me.ChkFromFusione.Location = New System.Drawing.Point(39, 90)
+        Me.ChkFromFusione.Name = "ChkFromFusione"
+        Me.ChkFromFusione.Size = New System.Drawing.Size(79, 17)
+        Me.ChkFromFusione.TabIndex = 17
+        Me.ChkFromFusione.Text = "File fusione"
+        Me.ChkFromFusione.UseVisualStyleBackColor = True
+        '
+        'FAskFiltriRisconti
         '
         Me.AcceptButton = Me.OK_Button
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.CancelButton = Me.Cancel_Button
-        Me.ClientSize = New System.Drawing.Size(172, 136)
+        Me.ClientSize = New System.Drawing.Size(184, 151)
+        Me.Controls.Add(Me.ChkFromFusione)
         Me.Controls.Add(Me.chkScriviAnalitica)
         Me.Controls.Add(Me.chkFormatoRidotto)
         Me.Controls.Add(Me.DtaScritture)
@@ -123,7 +135,7 @@ Partial Class FAskFiltriRisconti
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
         Me.MaximizeBox = False
         Me.MinimizeBox = False
-        Me.Name = "DataRiscontiDialogBox"
+        Me.Name = "FAskFiltriRisconti"
         Me.ShowInTaskbar = False
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
         Me.Text = "Risconti"
@@ -139,4 +151,5 @@ Partial Class FAskFiltriRisconti
     Friend WithEvents DtaScritture As DateTimePicker
     Friend WithEvents chkFormatoRidotto As CheckBox
     Friend WithEvents chkScriviAnalitica As CheckBox
+    Friend WithEvents ChkFromFusione As CheckBox
 End Class

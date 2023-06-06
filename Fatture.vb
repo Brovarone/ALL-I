@@ -3440,7 +3440,7 @@ Module MovimentiAnaliticiDaFatture
 
     Private Function AggiornaSaldoAnaliticoDaFatt(whatRow As MyAnaRow, isDebit As Boolean, valore As Double, qta As Double, vista As DataView) As Boolean
         Dim result As Boolean
-        '"CostCenter,Account,BalanceYear,BalanceMonth"
+        'vista.Sort = "CostCenter,Account,BalanceYear,BalanceMonth"
         Dim found As Integer = vista.Find({whatRow.Centro, whatRow.Conto, whatRow.Anno, whatRow.Mese})
         Try
             If found <> -1 Then

@@ -166,6 +166,8 @@ Partial Class FLogin
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
+        Me.ChkRiscontiFusione = New System.Windows.Forms.CheckBox()
+        Me.RiscontiFusioneToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabFusione.SuspendLayout()
@@ -800,6 +802,7 @@ Partial Class FLogin
         'TabPagePnota
         '
         Me.TabPagePnota.BackColor = System.Drawing.SystemColors.Control
+        Me.TabPagePnota.Controls.Add(Me.ChkRiscontiFusione)
         Me.TabPagePnota.Controls.Add(Me.ChkRiscontiRidotto)
         Me.TabPagePnota.Controls.Add(Me.ChkRisconti)
         Me.TabPagePnota.Controls.Add(Me.ChkPNotaForDaPartitario)
@@ -1270,7 +1273,7 @@ Partial Class FLogin
         '
         Me.ToolStripTracciatoVecchio.CheckOnClick = True
         Me.ToolStripTracciatoVecchio.Name = "ToolStripTracciatoVecchio"
-        Me.ToolStripTracciatoVecchio.Size = New System.Drawing.Size(151, 22)
+        Me.ToolStripTracciatoVecchio.Size = New System.Drawing.Size(180, 22)
         Me.ToolStripTracciatoVecchio.Text = "Vecchio Flusso"
         Me.ToolStripTracciatoVecchio.ToolTipText = "Il flusso NON presenta le nuove colonne  ( dalla IB) dedicate alla contabilità an" &
     "alitica ( NrCanoni e Data decorrenza)"
@@ -1279,12 +1282,12 @@ Partial Class FLogin
         '
         Me.ToolStripMenuItemDebugging.CheckOnClick = True
         Me.ToolStripMenuItemDebugging.Name = "ToolStripMenuItemDebugging"
-        Me.ToolStripMenuItemDebugging.Size = New System.Drawing.Size(151, 22)
+        Me.ToolStripMenuItemDebugging.Size = New System.Drawing.Size(180, 22)
         Me.ToolStripMenuItemDebugging.Text = "Debugging"
         '
         'ComandiToolStripMenuItem
         '
-        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.RiscontiRidottoStripMenuItem, Me.CespitiStripMenuItem})
+        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.RiscontiRidottoStripMenuItem, Me.RiscontiFusioneToolStripMenuItem, Me.CespitiStripMenuItem})
         Me.ComandiToolStripMenuItem.Name = "ComandiToolStripMenuItem"
         Me.ComandiToolStripMenuItem.Size = New System.Drawing.Size(68, 20)
         Me.ComandiToolStripMenuItem.Text = "Comandi"
@@ -1461,6 +1464,24 @@ Partial Class FLogin
         Me.Label8.Size = New System.Drawing.Size(271, 13)
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
+        '
+        'ChkRiscontiFusione
+        '
+        Me.ChkRiscontiFusione.AutoSize = True
+        Me.ChkRiscontiFusione.BackColor = System.Drawing.Color.Plum
+        Me.ChkRiscontiFusione.Location = New System.Drawing.Point(173, 49)
+        Me.ChkRiscontiFusione.Name = "ChkRiscontiFusione"
+        Me.ChkRiscontiFusione.Size = New System.Drawing.Size(104, 17)
+        Me.ChkRiscontiFusione.TabIndex = 27
+        Me.ChkRiscontiFusione.Text = "Risconti Fusione"
+        Me.ChkRiscontiFusione.UseVisualStyleBackColor = False
+        '
+        'RiscontiFusioneToolStripMenuItem
+        '
+        Me.RiscontiFusioneToolStripMenuItem.Enabled = False
+        Me.RiscontiFusioneToolStripMenuItem.Name = "RiscontiFusioneToolStripMenuItem"
+        Me.RiscontiFusioneToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.RiscontiFusioneToolStripMenuItem.Text = "Risconti Fusione"
         '
         'FLogin
         '
@@ -1650,4 +1671,6 @@ Partial Class FLogin
     Friend WithEvents ComandiToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents RiscontiRidottoStripMenuItem As ToolStripMenuItem
     Friend WithEvents CespitiStripMenuItem As ToolStripMenuItem
+    Friend WithEvents ChkRiscontiFusione As CheckBox
+    Friend WithEvents RiscontiFusioneToolStripMenuItem As ToolStripMenuItem
 End Class

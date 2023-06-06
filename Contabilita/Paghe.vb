@@ -187,7 +187,7 @@ Public Module Paghe
                             adpPNSaldi.InsertCommand = cbMar.GetInsertCommand(True)
                             Dim dtPNSaldi As DataTable = CaricaSchema("MA_ChartOfAccountsBalances", True, True, qrySaldi)
                             adpPNSaldi.Fill(dtPNSaldi)
-                            Dim dvPNSaldi As New DataView(dtPNSaldi, "", "Account", DataViewRowState.CurrentRows)
+                            Dim dvPNSaldi As New DataView(dtPNSaldi, "Nature=9306112 AND BalanceType = 3145730", "Account", DataViewRowState.CurrentRows)
                             'per le contropartite 
                             Debug.Print("Popolo tabella contropartite")
                             Using adp As New SqlDataAdapter("Select Account, ACGCode, PostableInCostAcc FROM MA_ChartOfAccounts", Connection)
@@ -428,13 +428,13 @@ Public Module Paghe
             Using dtMovAna As DataTable = CaricaSchema("MA_CostAccEntries", True)
                 Using dtMovAnaD As DataTable = CaricaSchema("MA_CostAccEntriesDetail", True)
                     Using dtCR As DataTable = CaricaSchema("MA_CrossReferences", True)
-                        Dim qrySaldi As String = "SELECT * FROM MA_CostCentersBalances WHERE BalanceYear = " & Year(DataRiga) & " AND BalanceMonth = " & Month(DataRiga)
+                        Dim qrySaldi As String = "SELECT * FROM MA_CostCentersBalances"
                         Using adpMovAnaSaldi As New SqlDataAdapter(qrySaldi, Connection)
                             Dim cbMar = New SqlCommandBuilder(adpMovAnaSaldi)
                             adpMovAnaSaldi.UpdateCommand = cbMar.GetUpdateCommand(True)
                             Dim dtMovAnaSaldi As New DataTable("MA_CostCentersBalances")
                             adpMovAnaSaldi.Fill(dtMovAnaSaldi)
-                            Dim dvMovAnaSaldi As New DataView(dtMovAnaSaldi, "", "CostCenter,Account", DataViewRowState.CurrentRows)
+                            Dim dvMovAnaSaldi As New DataView(dtMovAnaSaldi, "", "", DataViewRowState.CurrentRows)
 
                             Using adp As New SqlDataAdapter("Select Account, PostableInCostAcc FROM MA_ChartOfAccounts", Connection)
                                 Dim dtCntrp As New DataTable("Contropartita")
@@ -515,7 +515,13 @@ Public Module Paghe
                                                 drAnaD("TBCreatedID") = My.Settings.mLOGINID 'ID utente
                                                 drAnaD("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                                                 dtMovAnaD.Rows.Add(drAnaD)
-                                                AggiornaSaldoAnalitico(drAnaD("Account"), CdC, Year(DataRiga), Month(DataRiga), isDare, drAnaD("Amount"), dvMovAnaSaldi)
+                                                Dim wAnaBal As New MySaldoAnalitico With {
+                                                    .Conto = drAnaD("Account").ToString,
+                                                    .Centro = drAnaD("CostCenter").ToString,
+                                                    .Anno = Year(DataRiga),
+                                                    .Mese = Month(DataRiga)
+                                                    }
+                                                AggiornaSaldoAnalitico(wAnaBal, isDare, drAnaD("Amount"), dvMovAnaSaldi)
                                             End If
                                         End With
                                     Next
