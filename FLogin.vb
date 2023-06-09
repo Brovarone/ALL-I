@@ -364,15 +364,6 @@ Public Class FLogin
         End If
     End Sub
 
-    Private Sub CaricaSchemaToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles CaricaSchemaToolStripMenuItem.Click
-        Dim dt As DataTable
-        '  dt = CaricaSchema("MA_Saledoc")
-        '  dt = CaricaSchema("MA_SaledocDetail")
-        '  dt = CaricaSchema("MA_PyblsRcvbls")
-        dt = CaricaSchema("MA_PyblsRcvblsDetails")
-        dt.Dispose()
-    End Sub
-
     Private Sub BtnCancellaClienti_Click(sender As Object, e As EventArgs) Handles BtnCancellaClienti.Click
         Me.Cursor = Cursors.WaitCursor
         Dim result As New StringBuilder("Clienti:" & vbCrLf)

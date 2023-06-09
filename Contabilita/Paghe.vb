@@ -2,7 +2,7 @@
 Imports System.IO
 Imports System.Data.SqlClient
 Imports System.Reflection.MethodBase
-
+Imports ALLSystemTools.SqlTools.Bulk
 Public Module Paghe
     Private dtTeste As DataTable
     Private dtRighe As DataTable

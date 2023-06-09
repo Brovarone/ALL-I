@@ -90,6 +90,7 @@ Partial Class FLogin
         Me.TabCespiti = New System.Windows.Forms.TabPage()
         Me.ChkCespiti = New System.Windows.Forms.CheckBox()
         Me.TabContrattiFox = New System.Windows.Forms.TabPage()
+        Me.txtTemp_FoxFolder = New System.Windows.Forms.TextBox()
         Me.ChkContrattiFox = New System.Windows.Forms.CheckBox()
         Me.BtnProcessa = New System.Windows.Forms.Button()
         Me.lblDataInizio = New System.Windows.Forms.Label()
@@ -153,7 +154,6 @@ Partial Class FLogin
         Me.ToolStripMenuItemDebugging = New System.Windows.Forms.ToolStripMenuItem()
         Me.AdminCmdToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.IDToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.CaricaSchemaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.EseguiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.XLSToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.CSVToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -171,7 +171,6 @@ Partial Class FLogin
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
-        Me.txtTemp_FoxFolder = New System.Windows.Forms.TextBox()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabFusione.SuspendLayout()
@@ -904,6 +903,14 @@ Partial Class FLogin
         Me.TabContrattiFox.TabIndex = 9
         Me.TabContrattiFox.Text = "Contratti"
         '
+        'txtTemp_FoxFolder
+        '
+        Me.txtTemp_FoxFolder.Location = New System.Drawing.Point(6, 29)
+        Me.txtTemp_FoxFolder.Name = "txtTemp_FoxFolder"
+        Me.txtTemp_FoxFolder.Size = New System.Drawing.Size(287, 20)
+        Me.txtTemp_FoxFolder.TabIndex = 3
+        Me.txtTemp_FoxFolder.Text = "C:\Users\Cristiano\Desktop\Fox"
+        '
         'ChkContrattiFox
         '
         Me.ChkContrattiFox.AutoSize = True
@@ -1373,7 +1380,7 @@ Partial Class FLogin
         '
         'AdminCmdToolStripMenuItem
         '
-        Me.AdminCmdToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.IDToolStripMenuItem, Me.CaricaSchemaToolStripMenuItem, Me.EseguiToolStripMenuItem, Me.XLSToolStripMenuItem, Me.CSVToolStripMenuItem, Me.AnaliticaDaFattureToolStripMenuItem, Me.RiorganizzaCartelleToolStripMenuItem, Me.RegioneDaProvinciaToolStripMenuItem})
+        Me.AdminCmdToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.IDToolStripMenuItem, Me.EseguiToolStripMenuItem, Me.XLSToolStripMenuItem, Me.CSVToolStripMenuItem, Me.AnaliticaDaFattureToolStripMenuItem, Me.RiorganizzaCartelleToolStripMenuItem, Me.RegioneDaProvinciaToolStripMenuItem})
         Me.AdminCmdToolStripMenuItem.Name = "AdminCmdToolStripMenuItem"
         Me.AdminCmdToolStripMenuItem.Size = New System.Drawing.Size(74, 20)
         Me.AdminCmdToolStripMenuItem.Text = "Adm_cmd"
@@ -1384,12 +1391,6 @@ Partial Class FLogin
         Me.IDToolStripMenuItem.Name = "IDToolStripMenuItem"
         Me.IDToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
         Me.IDToolStripMenuItem.Text = "ID"
-        '
-        'CaricaSchemaToolStripMenuItem
-        '
-        Me.CaricaSchemaToolStripMenuItem.Name = "CaricaSchemaToolStripMenuItem"
-        Me.CaricaSchemaToolStripMenuItem.Size = New System.Drawing.Size(185, 22)
-        Me.CaricaSchemaToolStripMenuItem.Text = "Carica Schema"
         '
         'EseguiToolStripMenuItem
         '
@@ -1517,14 +1518,6 @@ Partial Class FLogin
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
         '
-        'txtTemp_FoxFolder
-        '
-        Me.txtTemp_FoxFolder.Location = New System.Drawing.Point(6, 29)
-        Me.txtTemp_FoxFolder.Name = "txtTemp_FoxFolder"
-        Me.txtTemp_FoxFolder.Size = New System.Drawing.Size(287, 20)
-        Me.txtTemp_FoxFolder.TabIndex = 3
-        Me.txtTemp_FoxFolder.Text = "C:\Users\Cristiano\Desktop\Fox"
-        '
         'FLogin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -1644,7 +1637,6 @@ Partial Class FLogin
     Friend WithEvents IDToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ChkPaghe As CheckBox
     Friend WithEvents BackupDatabaseToolStripMenuItem As ToolStripMenuItem
-    Friend WithEvents CaricaSchemaToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents EseguiToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents XLSToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents CSVToolStripMenuItem As ToolStripMenuItem

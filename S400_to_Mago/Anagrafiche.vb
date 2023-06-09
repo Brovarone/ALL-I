@@ -2,7 +2,7 @@
 Imports System.Web.UI.WebControls
 Imports System.Text
 Imports System.Reflection.MethodBase
-
+Imports ALLSystemTools.SqlTools.Bulk
 Module Anagrafiche
     Public Function ClentiXLS(ByVal dts As DataSet, Optional ByVal bConIntestazione As Boolean = True) As Boolean
         'Clienti - MA_CustSupp

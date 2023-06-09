@@ -1,6 +1,9 @@
 ﻿Imports System.Data.SqlClient
 Imports System.Text
 Imports System.Reflection.MethodBase
+Imports ALLSystemTools.SqlTools.Bulk
+
+
 Public Module Contabilita
 
     Private Const ModCont = "RISCONTI"

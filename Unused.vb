@@ -1,7 +1,7 @@
 ﻿Imports System.Text
 Imports System.Reflection.MethodBase
 Imports System.Linq
-
+Imports ALLSystemTools.SqlTools.Bulk
 'Studiare questo
 'https://github.com/CollaboratingPlatypus/PetaPoco
 'Valori default con linQ
@@ -414,5 +414,6 @@ Module LINQ
     '    Return ds
     'End Function
     'End Class
+
 
 End Module

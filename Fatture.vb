@@ -2,6 +2,7 @@
 Imports System.Reflection.MethodBase
 Imports System.Text
 Imports System.Text.RegularExpressions
+Imports ALLSystemTools.SqlTools.Bulk
 
 Module Fatture
     'TODO: creare dei parametri: vedere qui' per modificare setting attuali http://www.blackbeltcoder.com/Articles/winforms/a-custom-settings-class-for-winforms

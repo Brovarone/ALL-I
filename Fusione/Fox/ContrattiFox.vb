@@ -10,8 +10,18 @@ Imports ALLSystemTools.SqlTools
 
 Module ContrattiFox
     'Gestisce l'import dei contratti da FoxPro a Mago
-    Dim ds As DataSet
+    Private ds As DataSet
     Private OrdiniCntx As OrdiniContext
+
+    'Collection Globali per aggiornamento unico
+    'Creo le entities che usero' poi con BulkInsert
+    Private efMaSaleOrd As New List(Of MaSaleOrd)
+    Private efMaSaleOrdDetails As New List(Of MaSaleOrdDetails)
+    Private efMaSaleOrdSummary As New List(Of MaSaleOrdSummary)
+    Private efAllordCliAcc As New List(Of AllordCliAcc)
+    Private efAllordCliAttivita As New List(Of AllordCliAttivita)
+    Private efAllordCliContratto As New List(Of AllordCliContratto)
+    Private efMaCustSupp As New List(Of MaCustSupp)
 
     ''' <summary>
     ''' Importo ContrattiFox su Mago tramite LINQ e OrdContext
@@ -64,6 +74,16 @@ Module ContrattiFox
             If c Is Nothing Then
                 'CREARE
                 Dim codice As String = r.Item("ACGCODE").ToString
+
+                Dim rCli As New MaCustSupp With {
+                                    .CustSuppType = CustSuppType.Cliente,
+                                    .CustSupp = ""
+                                    }
+                'Aggiungo la riga alla collection
+                efMaCustSupp.Add(rCli)
+                Debug.Print("Nuovo Cliente:(" & codice & ") ")
+                ' debugging.AppendLine(" *Rifatt:" & rRif.Position.ToString & " " & aDaRif.Attivita)
+
             End If
         Next
 
@@ -109,13 +129,7 @@ Module ContrattiFox
     End Sub
     Private Sub ScriviOrdini()
 #Region "Variabili"
-        'Creo le entities che usero' poi con BulkInsert
-        Dim efMaSaleOrd As New List(Of MaSaleOrd)
-        Dim efMaSaleOrdDetails As New List(Of MaSaleOrdDetails)
-        Dim efMaSaleOrdSummary As New List(Of MaSaleOrdSummary)
-        Dim efAllordCliAcc As New List(Of AllordCliAcc)
-        Dim efAllordCliAttivita As New List(Of AllordCliAttivita)
-        Dim efAllordCliContratto As New List(Of AllordCliContratto)
+
 
         Dim defVendite = (From dv In OrdiniCntx.MaUserDefaultSales.ToList Select dv).FirstOrDefault
         ' Dim defContabili = (From dc In OrdiniCntx.MaAccountingDefaults.ToList Select dc).FirstOrDefault

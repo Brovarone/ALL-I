@@ -2,6 +2,7 @@
 Imports System.Data.SqlClient
 Imports System.IO
 Imports System.Reflection.MethodBase
+Imports System.Text
 
 Namespace SqlTools
     Module Connessione
@@ -23,6 +24,8 @@ Namespace SqlTools
             Dim DB As String = If(DBisTMP, FLogin.TxtTmpDB_UNO.Text, FLogin.TxtDB_UNO.Text)
             Return "Data Source=" & FLogin.txtSERVER.Text & "; Database=" & DB & ";User Id=" & FLogin.txtID.Text & ";Password=" & FLogin.txtPSW.Text & ";" & " Pooling=True;" & If(trusted = True, ";TrustServerCertificate=True", "")
         End Function
+    End Module
+    Module RunQuery
         Public Sub RunNonQueryAsynchronously(ByVal commandText As String, ByVal connectionString As String)
 
             ' Given command text and connection string, asynchronously execute
@@ -117,6 +120,258 @@ Namespace SqlTools
             Application.DoEvents()
             Return rowsAffected
         End Function
+    End Module
+    Module Bulk
+        Public Function ScriviBulk(ByVal TableName As String, ByRef dt As DataTable, ByVal tr As SqlTransaction, ByVal Conn As SqlConnection, Optional ByVal rowState As DataRowState = DataRowState.Unchanged, Optional ByRef MyReturnString As String = "", Optional ColumnMapping As Boolean = False) As Boolean
+            Dim esito As Boolean
+            Dim logTxt As String
+            If dt.Rows.Count > 0 Then
+                Using bulkCopy As New SqlBulkCopy(Conn, SqlBulkCopyOptions.KeepIdentity, tr)
+                    bulkCopy.BatchSize = If(dt.Rows.Count < 5000, 0, dt.Rows.Count / 10)
+                    bulkCopy.BulkCopyTimeout = 0
+                    bulkCopy.NotifyAfter = dt.Rows.Count / 10
+                    FLogin.prgCopy.Minimum = 0
+                    FLogin.prgCopy.Maximum = dt.Rows.Count
+                    Application.DoEvents()
+                    'bulkCopy.SqlRowsCopied += Function(sender, EventArgs) Console.WriteLine("Wrote " & eventArgs.RowsCopied & " records.")
+                    AddHandler bulkCopy.SqlRowsCopied, AddressOf BulkBar
+
+                    Dim stopwatch As New System.Diagnostics.Stopwatch
+                    stopwatch.Start()
+                    Debug.Print("Scrivo in Bulk Copy : " & TableName & " , " & dt.Rows.Count.ToString & " record totali.")
+                    bulkCopy.DestinationTableName = TableName
+                    Try
+                        'Dim cmd As New SqlCommand("", Conn)
+                        'cmd.Transaction = Trans
+                        'cmd.CommandText = "ALTER INDEX ALL ON " & TableName & " DISABLE"
+                        ' cmd.ExecuteNonQuery()
+
+                        'Column Mapping
+                        If ColumnMapping Then
+                            For Each c As DataColumn In dt.Columns
+                                bulkCopy.ColumnMappings.Add(c.ColumnName, c.ColumnName)
+                            Next
+                        End If
+                        ' Write unchanged rows from the source to the destination.
+                        If rowState = DataRowState.Unchanged Then
+                            bulkCopy.WriteToServer(dt)
+                        Else
+                            bulkCopy.WriteToServer(dt, rowState)
+                        End If
+                        Debug.Print("OK - " & stopwatch.Elapsed.ToString)
+                        logTxt = "OK - INSERIMENTO: " & TableName & " , " & dt.Rows.Count.ToString & " record totali, in: " & stopwatch.Elapsed.ToString
+                        'stopwatch.Restart()
+                        'cmd.CommandText = "ALTER INDEX ALL ON " & TableName & " REBUILD"
+                        'cmd.ExecuteNonQuery()
+                        ' Debug.Print("Rebuild index - " & stopwatch.Elapsed.ToString)
+                        esito = True
+                    Catch ex As Exception
+                        Debug.Print(ex.Message)
+                        Debug.Print("NON OK la scrittura in Bulk Copy di : " & TableName & " , " & dt.Rows.Count.ToString & " record.")
+                        logTxt = "ERRORE SU INSERIMENTO : " & TableName & " , " & dt.Rows.Count.ToString & " record." & vbCrLf & ex.Message.ToString
+                        esito = False
+                        Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                        mb.ShowDialog()
+                    End Try
+                    RemoveHandler bulkCopy.SqlRowsCopied, AddressOf BulkBar
+                    Application.DoEvents()
+                    stopwatch.Stop()
+                End Using
+            Else
+                'MessageBox.Show("Nessuna riga da inserire su:" & TableName)
+                logTxt = "Nessuna riga da inserire su: " & TableName
+                esito = True
+            End If
+            If String.IsNullOrWhiteSpace(MyReturnString) Then
+                My.Application.Log.WriteEntry(logTxt)
+            Else
+                MyReturnString = logTxt
+            End If
+            Return esito
+        End Function
+
+        Public Function ScriviBulkSQL(ByVal TableName As String, rowCount As Double, ByVal dr As SqlDataReader, ByVal tr As SqlTransaction, ByVal Conn As SqlConnection, Optional ByRef MyReturnString As String = "", Optional ColumnMapping As Boolean = False) As Boolean
+            Dim esito As Boolean
+            Dim logTxt As String
+            If rowCount > 0 Then
+                Using bulkCopy As New SqlBulkCopy(Conn, SqlBulkCopyOptions.KeepIdentity, tr)
+                    'bulkCopy.BatchSize = If(rowCount < 5000, 0, rowCount / 10)
+                    bulkCopy.BatchSize = If(rowCount < 5000, 0, 5000)
+                    'bulkCopy.EnableStreaming = True
+                    bulkCopy.BulkCopyTimeout = 0
+                    bulkCopy.NotifyAfter = rowCount / 10
+                    FLogin.prgCopy.Minimum = 0
+                    FLogin.prgCopy.Maximum = rowCount
+                    Application.DoEvents()
+                    'bulkCopy.SqlRowsCopied += Function(sender, EventArgs) Console.WriteLine("Wrote " & eventArgs.RowsCopied & " records.")
+                    AddHandler bulkCopy.SqlRowsCopied, AddressOf BulkBar
+
+                    Dim stopwatch As New System.Diagnostics.Stopwatch
+                    stopwatch.Start()
+                    Debug.Print("Scrivo in Bulk Copy : " & TableName & " , " & rowCount.ToString & " record totali.")
+                    bulkCopy.DestinationTableName = TableName
+                    Try
+                        'Column Mapping
+                        If ColumnMapping Then
+                            Dim schema As DataTable = dr.GetSchemaTable()
+                            For Each r As DataRow In schema.Rows
+                                bulkCopy.ColumnMappings.Add(r.Item("BaseColumnName"), r.Item("BaseColumnName"))
+                            Next
+                        End If
+                        'Scrivo sul database
+                        'Using validator As New ValidatingDataReader(dr, Conn, bulkCopy, tr)
+                        'bulkCopy.WriteToServer(validator)
+                        'End Using
+                        bulkCopy.WriteToServer(dr)
+
+                        Debug.Print("OK - " & stopwatch.Elapsed.ToString)
+                        logTxt = "OK - INSERIMENTO: " & TableName & " , " & rowCount.ToString & " record totali, in: " & stopwatch.Elapsed.ToString
+                        esito = True
+                    Catch ex As Exception
+                        Debug.Print(ex.Message)
+                        Debug.Print("NON OK la scrittura in Bulk Copy di : " & TableName & " , " & rowCount.ToString & " record.")
+                        logTxt = "ERRORE SU INSERIMENTO : " & TableName & " , " & rowCount.ToString & " record." & vbCrLf & ex.Message.ToString
+                        esito = False
+                        If Not IsDebugging Then
+                            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                            mb.ShowDialog()
+                        End If
+                    End Try
+                    RemoveHandler bulkCopy.SqlRowsCopied, AddressOf BulkBar
+                    Application.DoEvents()
+                    stopwatch.Stop()
+                End Using
+            Else
+                'MessageBox.Show("Nessuna riga da inserire su:" & TableName)
+                logTxt = "Nessuna riga da inserire su: " & TableName
+                esito = True
+            End If
+            MyReturnString = logTxt
+            Return esito
+        End Function
+        Public Function CaricaSchema(TableName As String, Optional withConstraint As Boolean = True, Optional ByVal withData As Boolean = False, Optional query As String = "") As DataTable
+            Dim result As New StringBuilder()
+            Dim stopwatch As New Stopwatch
+            Dim stopwatch2 As New Stopwatch
+            stopwatch.Start()
+            stopwatch2.Start()
+            Debug.Print("Carico schema: " & TableName)
+            Dim dt As New DataTable(TableName)
+            Dim SQLquery As String
+            Dim errorLevel As String = ""
+            If withData Then
+                SQLquery = If(String.IsNullOrWhiteSpace(query), "SELECT * FROM " & TableName, query)
+            Else
+                SQLquery = "SELECT * FROM " & TableName & " where 1=2"
+            End If
+            If Connection.State <> ConnectionState.Open Then
+                MessageBox.Show("Connessione non aperta.")
+                End
+            End If
+            Using da As New SqlDataAdapter(SQLquery, Connection)
+                da.FillSchema(dt, SchemaType.Source)
+                'Debug.Print("Creazione fillschema : " & stopwatch2.Elapsed.ToString)
+                stopwatch2.Restart()
+                da.Fill(dt)
+                Debug.Print("Riempimento tabella : " & stopwatch2.Elapsed.ToString)
+                'Debug.Print("Creazione fill : " & stopwatch2.Elapsed.ToString)
+                stopwatch2.Restart()
+                If withConstraint Then
+                    Using cmd As New SqlCommand("sys.sp_recompile", Connection)
+                        cmd.CommandTimeout = 0
+                        cmd.CommandType = CommandType.StoredProcedure
+                        cmd.Parameters.Add("@objname", SqlDbType.NVarChar, 776)
+                        cmd.Parameters(0).Value = TableName  '"sp_helpconstraint"
+                        cmd.ExecuteNonQuery()
+                        'Debug.Print("recompile : " & stopwatch2.Elapsed.ToString)
+                        stopwatch2.Restart()
+
+                        cmd.CommandText = "sp_helpconstraint"
+                        'cmd.Parameters.Clear()
+                        'cmd.Parameters.Add("@objname", SqlDbType.NVarChar, 776)
+                        'cmd.Parameters(0).Value = TableName
+                        cmd.Parameters.Add("@nomsg", SqlDbType.VarChar, 5)
+                        cmd.Parameters(1).Value = "nomsg"
+                        Dim dr As SqlDataReader = cmd.ExecuteReader()
+                        'Debug.Print("Executereader : " & stopwatch2.Elapsed.ToString)
+                        stopwatch2.Restart()
+
+                        'Iterate over the constraints records in the DataReader.
+                        While dr.Read()
+                            Try
+                                ' Select the default value constraints only.
+                                Dim constraintType As String = dr("constraint_type").ToString()
+                                'Dim constraintType As String = dr(1).ToString()
+                                If (constraintType.StartsWith("DEFAULT")) Then
+                                    Dim constraintKeys As String = dr("constraint_keys").ToString()
+                                    Dim colName As String = constraintType.Substring((constraintType.LastIndexOf("column") + 7))
+                                    Dim defaultValue As String
+                                    If dt.Columns.Contains(colName) Then
+
+                                        Select Case dt.Columns(colName).DataType
+                                            Case GetType(Integer), GetType(Short)
+                                                errorLevel = "Integer " & colName
+                                                'defaultValue = constraintKeys.Substring(2, constraintKeys.Length - 4)
+                                                defaultValue = constraintKeys.Replace("(", "").Replace(")", "")
+                                            Case GetType(Date)
+                                                errorLevel = "Date " & colName
+                                                defaultValue = constraintKeys.Substring(1, constraintKeys.Length - 2)
+                                                Select Case defaultValue
+                                                    Case "getdate()"
+                                                        defaultValue = sOggi
+                                                    Case Else
+                                                        defaultValue = defaultValue.Substring(1, 4) & "-" & defaultValue.Substring(5, 2) & "-" & defaultValue.Substring(7, 2)
+                                                End Select
+                                            Case GetType(Double)
+                                                errorLevel = "Double " & colName
+                                                'defaultValue = constraintKeys.Substring(2, constraintKeys.Length - 4)
+                                                defaultValue = constraintKeys.Replace("(", "").Replace(")", "")
+                                            Case GetType(Guid)
+                                                errorLevel = "Guid " & colName
+                                                defaultValue = Guid.Empty.ToString
+                                            Case GetType(String)
+                                                errorLevel = "String " & colName
+                                                'If dt.Columns(colName).MaxLength = 1 Then
+                                                'defaultValue = constraintKeys.Substring(2, constraintKeys.Length - 4)
+                                                defaultValue = constraintKeys.Replace("(", "").Replace(")", "").Replace("'", "")
+                                                'Else
+                                                'defaultValue = constraintKeys.Substring(1, constraintKeys.Length - 2)
+                                                'End If
+                                            Case Else
+                                                errorLevel = "Case Else " & colName
+                                                'defaultValue = constraintKeys.Substring(1, constraintKeys.Length - 2)
+                                                defaultValue = constraintKeys.Replace("(", "").Replace(")", "")
+                                        End Select
+
+                                        ' Only strips single quotes for numeric default types
+                                        ' add necessary handling as required for nonnumeric defaults
+
+                                        dt.Columns(colName).DefaultValue = defaultValue
+
+                                        result.Append("Column: " & colName & " Default: " & defaultValue & Environment.NewLine)
+                                    End If
+
+                                End If
+                            Catch ex As Exception
+                                Debug.Print(ex.Message)
+                                Dim mb As New MessageBoxWithDetails(errorLevel & Environment.NewLine & ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                                mb.ShowDialog()
+                            End Try
+                            Application.DoEvents()
+                        End While
+                        dr.Close()
+                    End Using
+                End If
+            End Using
+
+            'Debug.Print(result.ToString())
+            Debug.Print("Creazione schema : " & TableName & " " & stopwatch.Elapsed.ToString)
+            stopwatch.Stop()
+            stopwatch2.Stop()
+            Application.DoEvents()
+            Return dt
+        End Function
+
     End Module
 End Namespace
 
@@ -332,5 +587,6 @@ Namespace MySqlServerBackup
         Private Sub OnInfoMessage(ByVal sender As Object, ByVal e As System.Data.SqlClient.SqlInfoMessageEventArgs)
             AvanzaBarra()
         End Sub
+
     End Module
 End Namespace

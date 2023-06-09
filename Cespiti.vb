@@ -1,7 +1,7 @@
 ﻿Imports System.Data.SqlClient
 Imports System.Text
 Imports System.Reflection.MethodBase
-
+Imports ALLSystemTools.SqlTools.Bulk
 Module Cespiti
     Private Function ColumnIndexToColumnLetter(columnNumber As Integer) As String
         Dim dividend As Integer = columnNumber
