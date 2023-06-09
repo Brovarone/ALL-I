@@ -59,6 +59,7 @@ namespace EFMago.Models
         public virtual DbSet<MaDeclarationOfIntent> MaDeclarationOfIntent { get; set; }
         public virtual DbSet<MaDeclarationOfIntentNumbers> MaDeclarationOfIntentNumbers { get; set; }
         public virtual DbSet<MaPlafond> MaPlafond { get; set; }
+        public virtual DbSet<MaSddmandate> MaSddmandate { get; set; }
         public virtual DbSet<ImCustSuppPolicies> ImCustSuppPolicies { get; set; }
         public virtual DbSet<ImSuppliersDiscounts> ImSuppliersDiscounts { get; set; }
         public virtual DbSet<MaCreditCustomer> MaCreditCustomer { get; set; }
@@ -176,7 +177,6 @@ namespace EFMago.Models
                     .HasConstraintName("FK_AllAttivita_Attivita_00");
 
             });
-
             modelBuilder.Entity<Allcespiti>(entity =>
             {
                 entity.HasKey(e => new { e.IdOrdCli, e.Cespite })
@@ -207,7 +207,6 @@ namespace EFMago.Models
                    .HasForeignKey(d => d.IdOrdCli)
                    .OnDelete(DeleteBehavior.ClientSetNull);
             });
-
             modelBuilder.Entity<Alldescrizioni>(entity =>
             {
                 entity.HasKey(e => e.Codice)
@@ -239,7 +238,6 @@ namespace EFMago.Models
                 entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
 
             });
-
             modelBuilder.Entity<AllordCliAcc>(entity =>
             {
                 entity.HasKey(e => e.IdOrdCli)
@@ -394,10 +392,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_AllordCliAcc_SaleOrd_00");
             });
-
-            //Shadow non esiste sul Database
-            //modelBuilder.Entity<AllordCliAttivita>().Property<double>("CanoniRipresi");
-
             modelBuilder.Entity<AllordCliAttivita>(entity =>
             {
                 entity.HasKey(e => new { e.IdOrdCli, e.Line })
@@ -409,8 +403,6 @@ namespace EFMago.Models
                     .HasMaxLength(10)
                     .IsUnicode(false)
                     .HasDefaultValueSql("('')");
-
-                // entity.Property(e => e.CanoniRipresi).HasDefaultValueSql("('0')");
 
                 entity.Property(e => e.DaFatturare)
                     .HasMaxLength(1)
@@ -484,8 +476,7 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull);
                 //.HasPrincipalKey<AllordCliContratto>(p => new { p.IdOrdCli, p.Line })
 
-            }); //.Ignore (i => i.CanoniRipresi);
-
+            });
             modelBuilder.Entity<AllordCliContratto>(entity =>
             {
                 entity.HasKey(e => new { e.IdOrdCli, e.Line })
@@ -593,7 +584,6 @@ namespace EFMago.Models
                     .HasForeignKey(d => d.IdOrdCli)
                     .OnDelete(DeleteBehavior.ClientSetNull);
             });
-
             modelBuilder.Entity<AllordCliDescrizioni>(entity =>
             {
                 entity.HasKey(e => new { e.IdOrdCli, e.Line })
@@ -630,7 +620,6 @@ namespace EFMago.Models
                     .HasForeignKey(d => d.IdOrdCli)
                     .OnDelete(DeleteBehavior.ClientSetNull);
             });
-
             modelBuilder.Entity<AllordCliTipologiaServizi>(entity =>
             {
                 entity.HasKey(e => new { e.IdOrdCli, e.Tipologia })
@@ -662,7 +651,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull);
 
             });
-
             modelBuilder.Entity<AllordFiglio>(entity =>
             {
                 entity.HasKey(e => new { e.IdOrdCli, e.IdOrdFiglio })
@@ -694,7 +682,6 @@ namespace EFMago.Models
                    .HasForeignKey(d => d.IdOrdCli)
                    .OnDelete(DeleteBehavior.ClientSetNull);
             });
-
             modelBuilder.Entity<AllordPadre>(entity =>
             {
                 entity.HasKey(e => new { e.IdOrdCli, e.IdOrdPadre })
@@ -726,7 +713,6 @@ namespace EFMago.Models
                     .HasForeignKey(d => d.IdOrdCli)
                     .OnDelete(DeleteBehavior.ClientSetNull);
             });
-
             modelBuilder.Entity<AlltipoRigaServizio>(entity =>
             {
                 entity.HasKey(e => e.TipoRigaServizio)
@@ -3724,6 +3710,115 @@ namespace EFMago.Models
 
                 entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
             });
+            modelBuilder.Entity<MaSddmandate>(entity =>
+            {
+                entity.HasKey(e => e.MandateCode)
+                    .HasName("PK_SDDMandate")
+                    .IsClustered(false);
+
+                entity.ToTable("MA_SDDMandate");
+
+                entity.Property(e => e.MandateCode)
+                    .HasMaxLength(16)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.Customer)
+                    .HasMaxLength(12)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.CustomerBank)
+                    .HasMaxLength(11)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.CustomerCa)
+                    .HasColumnName("CustomerCA")
+                    .HasMaxLength(18)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.CustomerIban)
+                    .HasColumnName("CustomerIBAN")
+                    .HasMaxLength(34)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.CustomerIbanisManual)
+                    .HasColumnName("CustomerIBANIsManual")
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.Ddmandate)
+                    .HasColumnName("DDMandate")
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.Draft)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.MandateDate)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("('17991231')");
+
+                entity.Property(e => e.MandateFirstDate)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("('17991231')");
+
+                entity.Property(e => e.MandateLastDate)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("('17991231')");
+
+                entity.Property(e => e.MandateOneOff)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.MandateType).HasDefaultValueSql("((2686997))");
+
+                entity.Property(e => e.Notes)
+                    .HasMaxLength(128)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.PrintDate)
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("('17991231')");
+
+                entity.Property(e => e.Printed)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.Tbcreated)
+                    .HasColumnName("TBCreated")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.TbcreatedId).HasColumnName("TBCreatedID");
+
+                entity.Property(e => e.Tbmodified)
+                    .HasColumnName("TBModified")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
+
+                entity.Property(e => e.Umrcode)
+                    .HasColumnName("UMRCode")
+                    .HasMaxLength(35)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+            });
             modelBuilder.Entity<ImCustSuppPolicies>(entity =>
             {
                 entity.HasKey(e => new { e.CustSuppType, e.CustSupp })
@@ -4513,7 +4608,6 @@ namespace EFMago.Models
                     .IsUnicode(false)
                     .HasDefaultValueSql("('')");
             });
-
             modelBuilder.Entity<MaSaleOrdComponents>(entity =>
             {
                 entity.HasKey(e => new { e.SaleOrdId, e.SaleOrdSubId, e.Line })
@@ -4585,7 +4679,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_SaleOrdCom_SaleOrd_00");
             });
-
             modelBuilder.Entity<MaSaleOrdDetails>(entity =>
             {
                 entity.HasKey(e => new { e.SaleOrdId, e.Line })
@@ -5032,7 +5125,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_SaleOrdDet_SaleOrd_00");
             });
-
             modelBuilder.Entity<MaSaleOrdNotes>(entity =>
             {
                 entity.HasKey(e => e.SaleOrdId)
@@ -5068,7 +5160,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_SaleOrdNot_SaleOrd_00");
             });
-
             modelBuilder.Entity<MaSaleOrdPymtSched>(entity =>
             {
                 entity.HasKey(e => new { e.SaleOrdId, e.InstallmentNo })
@@ -5107,7 +5198,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_SaleOrdPym_SaleOrd_00");
             });
-
             modelBuilder.Entity<MaSaleOrdReferences>(entity =>
             {
                 entity.HasKey(e => new { e.SaleOrdId, e.Line })
@@ -5154,7 +5244,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_SaleOrdRef_SaleOrd_00");
             });
-
             modelBuilder.Entity<MaSaleOrdShipping>(entity =>
             {
                 entity.HasKey(e => e.SaleOrdId)
@@ -5272,7 +5361,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_SaleOrdShi_SaleOrd_00");
             });
-
             modelBuilder.Entity<MaSaleOrdSummary>(entity =>
             {
                 entity.HasKey(e => e.SaleOrdId)
@@ -5431,7 +5519,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_SaleOrdSum_SaleOrd_00");
             });
-
             modelBuilder.Entity<MaSaleOrdTaxSummary>(entity =>
             {
                 entity.HasKey(e => new { e.SaleOrdId, e.TaxCode })
@@ -5478,9 +5565,8 @@ namespace EFMago.Models
             });
             #endregion
             #region Item
-
             modelBuilder.Entity<MaItems>(entity =>
-            {
+             {
                 entity.HasKey(e => e.Item)
                     .HasName("PK_Items")
                     .IsClustered(false);
@@ -5918,7 +6004,6 @@ namespace EFMago.Models
                     .HasConstraintName("FK_AllordCliContratto_Servizio_00");
 
             });
-
             modelBuilder.Entity<MaItemsGoodsData>(entity =>
             {
                 entity.HasKey(e => e.Item)
@@ -6119,7 +6204,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemsGoods_Items_00");
             });
-
             modelBuilder.Entity<MaItemsIntrastat>(entity =>
             {
                 entity.HasKey(e => e.Item)
@@ -6191,7 +6275,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemsIntra_ItemsIntra_00");
             });
-
             modelBuilder.Entity<MaItemsManufacturingData>(entity =>
             {
                 entity.HasKey(e => e.Item)
@@ -6440,7 +6523,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemsManuf_Items_00");
             });
-
             modelBuilder.Entity<MaItemNotes>(entity =>
             {
                 entity.HasKey(e => new { e.Item, e.Line })
@@ -6490,7 +6572,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemNo_Item_09");
             });
-
             modelBuilder.Entity<MaItemsComparableUoM>(entity =>
             {
                 entity.HasKey(e => new { e.Item, e.ComparableUoM })
@@ -6586,7 +6667,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemsCompa_Items_00");
             });
-
             modelBuilder.Entity<MaItemsFifo>(entity =>
             {
                 entity.HasKey(e => new { e.Item, e.FiscalYear })
@@ -6645,7 +6725,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemsFIFO_Items_00");
             });
-
             modelBuilder.Entity<MaItemsFifodomCurr>(entity =>
             {
                 entity.HasKey(e => new { e.Item, e.FiscalYear })
@@ -6687,7 +6766,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemsFIFOD_Items_00");
             });
-
             modelBuilder.Entity<MaItemsFiscalData>(entity =>
             {
                 entity.HasKey(e => new { e.FiscalYear, e.FiscalPeriod, e.Storage, e.Item })
@@ -6897,7 +6975,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemsFisca_Items_00");
             });
-
             modelBuilder.Entity<MaItemsFiscalDataDomCurr>(entity =>
             {
                 entity.HasKey(e => new { e.FiscalYear, e.FiscalPeriod, e.Item })
@@ -6954,7 +7031,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemsFisca_Items_01");
             });
-
             modelBuilder.Entity<MaItemsKit>(entity =>
             {
                 entity.HasKey(e => new { e.Item, e.Line })
@@ -7016,7 +7092,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemsKit_Items_00");
             });
-
             modelBuilder.Entity<MaItemsLanguageDescri>(entity =>
             {
                 entity.HasKey(e => new { e.Item, e.Language })
@@ -7068,7 +7143,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemsLangu_Items_00");
             });
-
             modelBuilder.Entity<MaItemsLifo>(entity =>
             {
                 entity.HasKey(e => new { e.Item, e.FiscalYear })
@@ -7119,7 +7193,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemsLIFO_Items_00");
             });
-
             modelBuilder.Entity<MaItemsLifodomCurr>(entity =>
             {
                 entity.HasKey(e => new { e.Item, e.FiscalYear })
@@ -7157,7 +7230,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemsLIFOD_Items_00");
             });
-
             modelBuilder.Entity<MaItemsMonthlyBalances>(entity =>
             {
                 entity.HasKey(e => new { e.Storage, e.Item, e.FiscalYear, e.BalanceYear, e.Balance, e.BalanceMonth })
@@ -7298,7 +7370,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemsMonth_Items_00");
             });
-
             modelBuilder.Entity<MaItemsPriceLists>(entity =>
             {
                 entity.HasKey(e => new { e.Item, e.PriceList, e.ValidityStartingDate, e.Qty })
@@ -7393,7 +7464,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemsPrice_Items_00");
             });
-
             modelBuilder.Entity<MaItemsPurchaseBarCode>(entity =>
             {
                 entity.HasKey(e => new { e.Item, e.BarCode })
@@ -7445,7 +7515,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemsPurch_Items_00");
             });
-
             modelBuilder.Entity<MaItemsStorageQty>(entity =>
             {
                 entity.HasKey(e => new { e.FiscalYear, e.FiscalPeriod, e.Item, e.Storage, e.Specificator, e.SpecificatorType })
@@ -7529,7 +7598,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemsStora_Items_00");
             });
-
             modelBuilder.Entity<MaItemsStorageQtyMonthly>(entity =>
             {
                 entity.HasKey(e => new { e.Storage, e.Specificator, e.SpecificatorType, e.Item, e.FiscalYear, e.BalanceYear, e.Balance, e.BalanceMonth })
@@ -7592,7 +7660,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemsStoraMonth_Items_00");
             });
-
             modelBuilder.Entity<MaItemsSubstitute>(entity =>
             {
                 entity.HasKey(e => new { e.Item, e.Substitute })
@@ -7638,7 +7705,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_ItemsSubst_Items_00");
             });
-
             modelBuilder.Entity<MaItemsWmszones>(entity =>
             {
                 entity.HasKey(e => new { e.Item, e.Storage, e.Zone })
@@ -7745,7 +7811,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_StandardCostHi_00");
             });
-
             modelBuilder.Entity<MaUserDefaultSales>(entity =>
             {
                 entity.HasKey(e => new { e.Branch, e.WorkerId })
@@ -8154,7 +8219,6 @@ namespace EFMago.Models
 
                 entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
             });
-
             modelBuilder.Entity<MaAccountingDefaults>(entity =>
             {
                 entity.HasKey(e => e.AccountingDefaultsId)
@@ -8718,7 +8782,6 @@ namespace EFMago.Models
                     .IsUnicode(false)
                     .HasDefaultValueSql("('')");
             });
-
             modelBuilder.Entity<MaTaxCodesDefaults>(entity =>
             {
                 entity.HasKey(e => e.TaxCodesDefaultsId)
@@ -8805,7 +8868,6 @@ namespace EFMago.Models
 
                 entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
             });
-
             modelBuilder.Entity<MaTaxCodes>(entity =>
             {
                 entity.HasKey(e => e.TaxCode)
@@ -9055,7 +9117,6 @@ namespace EFMago.Models
                     .IsFixedLength()
                     .HasDefaultValueSql("('0')");
             });
-
             modelBuilder.Entity<MaTaxCodesLang>(entity =>
             {
                 entity.HasKey(e => new { e.TaxCode, e.Language })
@@ -9097,7 +9158,6 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_TaxCodesLang_TaxCodes_00");
             });
-
             modelBuilder.Entity<MaTaxCodesLists>(entity =>
             {
                 entity.HasKey(e => e.TaxCode)

@@ -16,12 +16,18 @@ Module ContrattiFox
     'Collection Globali per aggiornamento unico
     'Creo le entities che usero' poi con BulkInsert
     Private efMaSaleOrd As New List(Of MaSaleOrd)
-    Private efMaSaleOrdDetails As New List(Of MaSaleOrdDetails)
+    'Private efMaSaleOrdDetails As New List(Of MaSaleOrdDetails)
     Private efMaSaleOrdSummary As New List(Of MaSaleOrdSummary)
     Private efAllordCliAcc As New List(Of AllordCliAcc)
-    Private efAllordCliAttivita As New List(Of AllordCliAttivita)
     Private efAllordCliContratto As New List(Of AllordCliContratto)
+    Private efAllordCliDescrizioni As New List(Of AllordCliDescrizioni)
+    Private efAllordCliTipologiaServizi As New List(Of AllordCliTipologiaServizi)
     Private efMaCustSupp As New List(Of MaCustSupp)
+    Private efMaCustSuppBranches As New List(Of MaCustSuppBranches)
+    Private efMaCustSuppCustomerOptions As New List(Of MaCustSuppCustomerOptions)
+    Private efMaCustSuppNaturalPerson As New List(Of MaCustSuppNaturalPerson)
+    Private efMaDeclarationOfIntent As New List(Of MaDeclarationOfIntent)
+    Private efMaSddmandate As New List(Of MaSddmandate)
 
     ''' <summary>
     ''' Importo ContrattiFox su Mago tramite LINQ e OrdContext
@@ -35,7 +41,7 @@ Module ContrattiFox
 
         LeggiOrdiniEsistenti()
 
-        ScriviOrdini
+        ScriviOrdini()
         Return True
     End Function
 
@@ -67,37 +73,107 @@ Module ContrattiFox
             OrdiniCntx.Database.ExecuteSqlRaw("SET ARITHABORT ON")
         End If
     End Sub
+    ''' <summary>
+    ''' Aggiungo Clienti Nuovi ( MaCustSupp,Options, Branches,NatualPerson)
+    ''' </summary>
     Private Sub ScriviClientiNuovi()
         Dim dtCli As DataTable = ds.Tables("_LIENORD")
+        Dim dtCliEle As DataTable = ds.Tables("_LIFTELE")
+        Dim dtCliRid As DataTable = ds.Tables("_RID")
+        Dim dtCliEse As DataTable = ds.Tables("_SENTIIV")
+        Dim dvCliEle = New DataView(dtCliEle)
+        Dim dvCliRid = New DataView(dtCliRid)
+        Dim dvCliEse = New DataView(dtCliEse)
+
         For Each r As DataRow In dtCli.Rows
             Dim c As MaCustSupp = OrdiniCntx.MaCustSupp.Find(CustSuppType.Cliente, r.Item("ACGCOD").ToString)
             If c Is Nothing Then
-                'CREARE
+                'todo: completare inserimento nuovo cliente da CLIENORD ( vedere su import fatture ftpa300
                 Dim codice As String = r.Item("ACGCODE").ToString
+                Debug.Print("Nuovo Cliente:(" & codice & ") ")
 
+                dvCliEle.RowFilter = "CLIENTE='" & codice & "'"
+                dvCliRid.RowFilter = "CLIENTE='" & codice & "'"
+                dvCliEse.RowFilter = "CLIENTE='" & codice & "'"
+
+#Region "Testa"
                 Dim rCli As New MaCustSupp With {
                                     .CustSuppType = CustSuppType.Cliente,
-                                    .CustSupp = ""
+                                    .CustSupp = codice
                                     }
                 'Aggiungo la riga alla collection
                 efMaCustSupp.Add(rCli)
-                Debug.Print("Nuovo Cliente:(" & codice & ") ")
-                ' debugging.AppendLine(" *Rifatt:" & rRif.Position.ToString & " " & aDaRif.Attivita)
 
+#End Region
+#Region "Options - Altri dati"
+                Dim rCliOpt As New MaCustSuppCustomerOptions With {
+                                    .CustSuppType = CustSuppType.Cliente,
+                                    .Customer = codice
+                                    }
+                'Aggiungo la riga alla collection
+                efMaCustSuppCustomerOptions.Add(rCliOpt)
+
+#End Region
+#Region "Sedi"
+                Dim rCliBr As New MaCustSuppBranches With {
+                                    .CustSuppType = CustSuppType.Cliente,
+                                    .CustSupp = codice
+                                    }
+                'Aggiungo la riga alla collection
+                efMaCustSuppBranches.Add(rCliBr)
+#End Region
+#Region "Natural Person"
+                Dim rCliNatPer As New MaCustSuppNaturalPerson With {
+                                 .CustSuppType = CustSuppType.Cliente,
+                                 .CustSupp = codice
+                                 }
+                'Aggiungo la riga alla collection
+                efMaCustSuppNaturalPerson.Add(rCliNatPer)
+#End Region
+#Region "Dichiarazioni di Intento"
+                If dvCliEle.Count > 0 Then
+                    If dvCliEle.Count = 1 Then
+                        Dim rIntento As New MaDeclarationOfIntent With {
+                                    .CustSuppType = CustSuppType.Cliente,
+                                    .CustSupp = codice
+                                    }
+                        'Aggiungo la riga alla collection
+                        efMaDeclarationOfIntent.Add(rIntento)
+                    Else
+                        Dim mb As New MessageBoxWithDetails("Cliente: " & codice & " con piu' dichiarazioni di intento", GetCurrentMethod.Name, "")
+                        mb.ShowDialog()
+                    End If
+                End If
+#End Region
+#Region "Mandati"
+                If dvCliRid.Count > 0 Then
+                    If dvCliRid.Count = 1 Then
+                        Dim rRid As New MaSddmandate With {
+                                    .Customer = codice
+                                    }
+                        'Aggiungo la riga alla collection
+                        efMaSddmandate.Add(rRid)
+                    Else
+                        Dim mb As New MessageBoxWithDetails("Cliente: " & codice & " con piu' mandati", GetCurrentMethod.Name, "")
+                        mb.ShowDialog()
+                    End If
+                End If
+#End Region
             End If
         Next
+#Region "Dispose"
+        dtCli.Dispose()
+        dtCliEle.Dispose()
+        dtCliRid.Dispose()
+        dtCliEse.Dispose()
+#End Region
+        'Dim efCli = From c In OrdiniCntx.MaCustSupp _
+        '            .Include(Function(o) o.MaCustSuppCustomerOptions) _
+        '            .Include(Function(br) br.MaCustSuppBranches) _
+        '            .Include(Function(np) np.MaCustSuppNaturalPerson) _
+        '            .Include(Function(nt) nt.MaCustSuppNotes) _
+        '            .ToList
 
-
-        Dim efCli = From c In OrdiniCntx.MaCustSupp _
-                    .Include(Function(o) o.MaCustSuppCustomerOptions) _
-                    .Include(Function(br) br.MaCustSuppBranches) _
-                    .Include(Function(np) np.MaCustSuppNaturalPerson) _
-                    .Include(Function(nt) nt.MaCustSuppNotes) _
-                    .ToList
-
-        For Each r As DataRow In dtCli.Rows
-            Dim S As String = r.Item("ACGCODE")
-        Next
     End Sub
     Private Sub LeggiOrdiniEsistenti()
 
@@ -130,7 +206,6 @@ Module ContrattiFox
     Private Sub ScriviOrdini()
 #Region "Variabili"
 
-
         Dim defVendite = (From dv In OrdiniCntx.MaUserDefaultSales.ToList Select dv).FirstOrDefault
         ' Dim defContabili = (From dc In OrdiniCntx.MaAccountingDefaults.ToList Select dc).FirstOrDefault
         Dim defIva = (From dc In OrdiniCntx.MaTaxCodesDefaults.ToList Select dc).FirstOrDefault
@@ -151,6 +226,97 @@ Module ContrattiFox
         Dim iNrRigheNota As Integer = 0
         Dim iNrRigheAValore As Integer = 0
 #End Region
+
+        Dim dtContratti As DataTable = ds.Tables("_ONTRORD")
+        Dim dtRaggTeste As DataTable = ds.Tables("_AGRFATT")
+        Dim dtRaggDett As DataTable = ds.Tables("_AGRFATD")
+        Dim dtTabelle As DataTable = ds.Tables("_EWTAB")
+        Dim dvContratti = New DataView(dtContratti)
+        Dim dvRaggTeste = New DataView(dtRaggTeste)
+        Dim dvRaggDett = New DataView(dtRaggDett)
+        Dim dvTabelle = New DataView(dtTabelle)
+
+        'Parto dai dati del dettaglio raggruppamento ( che e' 1-1 con _ONTRORD)
+        'NO
+        'non va bene
+        '
+        'in modo da metterli tutti in un unico Ordine di Mago a parità di RAGRFATT
+        'H80064 HA DIVERSI RAGGRUPPAMENTI, SICURITALIA, MA NON HANNO COSE STRANE SONO SOLO CONTRATTI LOGICI DIVERSEI ( FORSE)
+        'FORSE NO, SI VEDA I CONTRATTI 1204 CHE HANNO COMUNQUE 2 GRUPPI DI FATTURA LA 22,23 E 25
+        '
+        'In fase di import Posso unire i contratti in uno solo solo se hanno stesso luogo / Impianto!!!
+        'Ma ad esempio Panattaro già non passa in quanto PRAGSOC e' diversa 
+        For Each r As DataRow In dtRaggDett.Rows
+            ' Dim o As MaSaleOrd = OrdiniCntx.MaSaleOrd.Find(r.Item("CONTRATTO").ToString)
+
+            'todo: completare inserimento nuovo ORDINE
+            Dim codice As String = r.Item("ACGCODE").ToString
+                Debug.Print("Nuovo Cliente:(" & codice & ") ")
+
+                dvContratti.RowFilter = "CLIENTE='" & codice & "'"
+                dvRaggTeste.RowFilter = "CLIENTE='" & codice & "'"
+                dvRaggDett.RowFilter = "CLIENTE='" & codice & "'"
+
+#Region "Testa"
+                Dim rOrd As New MaSaleOrd With {
+                                    .CustSuppType = CustSuppType.Cliente,
+                                    .Customer = codice
+                                    }
+                'Aggiungo la riga alla collection
+                efMaSaleOrd.Add(rOrd)
+
+#End Region
+#Region "All OrdiniAcc"
+                Dim rOrdAcc As New AllordCliAcc With {
+                                    .IdOrdCli = 11111
+                                    }
+                'Aggiungo la riga alla collection
+                efAllordCliAcc.Add(rOrdAcc)
+
+#End Region
+#Region "All Ordini Contratto"
+                Dim rOrdContratto As New AllordCliContratto With {
+                                    .IdOrdCli = 1111
+                                    }
+                'Aggiungo la riga alla collection
+                efAllordCliContratto.Add(rOrdContratto)
+#End Region
+#Region "All Ordini Descrizioni"
+                Dim rOrdDescri As New AllordCliDescrizioni With {
+                                 .IdOrdCli = 1111
+                                 }
+                'Aggiungo la riga alla collection
+                efAllordCliDescrizioni.Add(rOrdDescri)
+#End Region
+#Region "All Ordini Tipologia Servizi"
+                Dim rordTipologiaServizi As New AllordCliTipologiaServizi With {
+                                 .IdOrdCli = 1111
+                                 }
+                'Aggiungo la riga alla collection
+                efAllordCliTipologiaServizi.Add(rordTipologiaServizi)
+#End Region
+#Region "Mandati"
+                Dim rMandato As New MaSddmandate With {
+                                 .Customer = codice
+                                 }
+                'Aggiungo la riga alla collection
+                efMaSddmandate.Add(rMandato)
+#End Region
+
+        Next
+#Region "Dispose"
+        dvContratti.Dispose()
+        dvRaggTeste.Dispose()
+        dvRaggDett.Dispose()
+        dvTabelle.Dispose()
+        dtContratti.Dispose()
+        dtRaggTeste.Dispose()
+        dtRaggDett.Dispose()
+        dtTabelle.Dispose()
+#End Region
+
+
+
 
     End Sub
 End Module

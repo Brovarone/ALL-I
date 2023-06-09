@@ -10,6 +10,19 @@ Comoli H01588 viene fatturato da Milano con codice contratto diveso. Non so come
 Per l import diventa complicato o escludo a priori quelli che sono con filiale di fatturazione diversa
 Silvia dice che su mago un ordine = un impianto
 
+'Chiedere a Pasquale quanti sono i  contratti con valore a ZERO e se c'e' un modo di tenerli legati !
+A partià di impianto ( vedi Panattaro ) ci sono comunque righe a Zero ovvero quando genero le righe sugli ordini le genero solo per quella con il valore.
+Ne consegue che in fattura ho solo un riferimento e quindi in contabilità mi perdo la possibilità di dividere i ricavi.
+Salvo non andare a ritroso e quindi sulla riga ordine "Fatturabile" ci deve essere indicato che e' una somma di n contratti ( simil distinta base).
+In futuro si puo' lavorare come ora
+oppure implementare una logica diversa
+Logica Fox:
+Un ordine per contratto sulla riga Contratto inserire 4 campi ordine + riga (Padre e Figlio). o ( solo 2 per il padre, magari creare un tipo riga contratto figlio o solo flag !!)
+Se padre e' valorizzato deve essere diverso da quello della riga e indica qual'e' l'ordine (con relativa riga) che viene fatturato, il valore canone di fatturazione deve essere 0,00
+In fattura ho il dato e vado a ritroso 
+Logica Nuova
+Come sopra ma la ricerca e' valida anche sullo stesso Ordine, evitandomi mille inserimenti nuovi ( vettori, etc)
+
 //////////////////////////////////////////
         Ipotesi di raggruppamento
 //////////////////////////////////////////
@@ -18,7 +31,10 @@ DEvo rompere al cambio di
 -CIG / CUP
 o piu' facilmente
 -Loro campo Raggruppamento RAGRFATD.RAGRFATT n-1 RAGRFATT.RAGRFATT
+Ci sono gruppo fatturativi che non seguono logiche capibili da me, tipo tutti i contratti 1404 di Sicurtialia H80064 hanno 3 gruppi 22,23,25
 
+non funziona  con il raggruppamento, ogni servizio ha una sede ( tipo Securitalia ha 100 banche)
+Chiedere se hanno un campo che e' questa sede/impianto servizio
 
 
 /////////////////////

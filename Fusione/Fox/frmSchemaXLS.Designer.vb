@@ -249,7 +249,7 @@ Partial Class frmSchemaXLS
         Me.GroupBox7.Size = New System.Drawing.Size(147, 93)
         Me.GroupBox7.TabIndex = 15
         Me.GroupBox7.TabStop = False
-        Me.GroupBox7.Text = "ESENTIV"
+        Me.GroupBox7.Text = "ESENTIIV"
         '
         'CheckedListBox7
         '
