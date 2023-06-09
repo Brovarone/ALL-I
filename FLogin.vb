@@ -4,6 +4,7 @@ Imports System.Data.SqlClient
 Imports System.IO
 Imports System.Configuration.SettingsBase
 Imports System.Configuration.ApplicationSettingsBase
+Imports System.Reflection.MethodBase
 Imports System.Xml
 Imports Bluegrams.Application
 Imports EFMago.Models
@@ -944,6 +945,32 @@ Public Class FLogin
             isAdmin = True
         End If
 
+        If ChkContrattiFox.Checked Then
+            Dim bFound As Boolean
+            Dim contratti As String() = {"_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV"} '"_CHIAVI", "_ONEOPE1","_ONTROPE"
+            Dim contrattiFound(7) As Boolean
+            Dim fileInFolder As String() = Directory.GetFiles(If(String.IsNullOrWhiteSpace(txtTemp_FoxFolder.Text), FolderPath, txtTemp_FoxFolder.Text), "*.*", SearchOption.TopDirectoryOnly)
+
+            For i = 0 To UBound(contratti)
+                For Each sFile As String In FileInFolder
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
+                    bFound = sNomeFile.ToUpper.Equals(contratti(i).ToUpper)
+                    If bFound Then
+                        contrattiFound(i) = True
+                        contratti(i) = sFile
+                        lista.Add(sFile)
+                        Exit For
+                    End If
+                Next
+                If Not contrattiFound(i) Then
+                    MessageBox.Show("Impossibile continuare l'elaborazione dei Contratti a causa di file mancanti: " & contratti(i))
+                    Exit For
+                End If
+            Next
+            ProcessaGruppoContratti(contratti, "Contratti")
+
+        End If
+
         'Scrivo informazioni di Chiusura
         lstStatoConnessione.Items.Add("   ---   Elaborazione completata   ---")
         prgCopy.Value = 0
@@ -970,6 +997,56 @@ Public Class FLogin
 
     End Sub
 
+    ''' <summary>
+    ''' Gestisce tutti i file XLS dei contratti Fox
+    ''' </summary>
+    ''' <param name="lista"></param>
+    ''' <param name="nomegruppo"></param>
+    Private Function ProcessaGruppoContratti(ByVal lista As String(), ByVal nomegruppo As String) As Boolean
+        Dim bOkImport As Boolean
+        Dim dsFOX As New List(Of DataSet)
+        My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  " & nomegruppo & "  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
+        For i = 0 To UBound(lista)
+            Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(lista(i))
+            Dim sExt As String = System.IO.Path.GetExtension(lista(i))
+            lstStatoConnessione.Items.Add(sNomeFile & sExt)
+
+            If sExt.ToUpper = ".CSV" OrElse sExt.ToUpper = ".XLS" OrElse sExt.ToUpper = ".XLSX" Then
+                Dim sFullPath = If(String.IsNullOrWhiteSpace(txtTemp_FoxFolder.Text), FolderPath, txtTemp_FoxFolder.Text) & "\" & sNomeFile & sExt
+                EditTestoBarra("Processo file " & sNomeFile & sExt)
+                prgCopy.Minimum = 0
+                prgCopy.Maximum = 100
+                prgCopy.Update()
+                If New System.IO.FileInfo(sFullPath).Length > 0 Then
+                    Dim dsXLS As DataSet
+                    Application.DoEvents()
+                    'i CSV non hanno intestazione di solito ottengo il file in 
+                    'dsXLS = If(ext.ToUpper = ".CSV", ProcessaCSV(spath, False), ProcessaXLS(spath, True))
+                    Select Case sNomeFile
+                        Case "_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_CLIFTELE", "_ONTRORD", "_RID", "_SENTIIV"
+                            Try
+                                dsXLS = If(sExt.ToUpper = ".CSV", ProcessaCSV(sFullPath, False), LoadXLS(sFullPath, True, True))
+                                dsFOX.Add(dsXLS)
+                                bOkImport = True
+                            Catch ex As Exception
+                                Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                                mb.ShowDialog()
+                                bOkImport = False
+                            End Try
+                            LiberaRam()
+                        Case Else '"CLIENORD"
+                            'vai avanti
+                    End Select
+                    lstStatoConnessione.Items.Add("Esito elaborazione " & nomegruppo & " (" & sNomeFile & "): " & If(bOkImport, "OK", "Errore"))
+                End If
+            End If
+        Next
+        If bOkImport Then
+            ImportaContrattiFox(dsFOX)
+        End If
+        Return True
+
+    End Function
 
     Private Function ProcessaFile(ByVal filename As String, ByVal ext As String) As Boolean
         Dim esito As Boolean = False
@@ -2042,6 +2119,14 @@ Public Class FLogin
     Private Sub RiscontiFusioneToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles RiscontiFusioneToolStripMenuItem.Click
         ChkRiscontiFusione.Checked = True
         SUBConnetti()
+        SUBProcessa()
+    End Sub
+
+    Private Sub ContrattiFoxToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles ContrattiFoxToolStripMenuItem.Click
+        ChkContrattiFox.Checked = True
+        DBisTMP = True
+        isDbUNO = False
+        SUBConnetti(TxtTmpDB_SPA.Text)
         SUBProcessa()
     End Sub
 End Class

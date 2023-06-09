@@ -308,8 +308,8 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Security" />
-    <Reference Include="System.Security.AccessControl, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>packages\System.Security.AccessControl.5.0.0\lib\net461\System.Security.AccessControl.dll</HintPath>
+    <Reference Include="System.Security.AccessControl, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Security.AccessControl.6.0.0\lib\net461\System.Security.AccessControl.dll</HintPath>
     </Reference>
     <Reference Include="System.Security.Cryptography.Algorithms, Version=4.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>packages\System.Security.Cryptography.Algorithms.4.3.1\lib\net463\System.Security.Cryptography.Algorithms.dll</HintPath>
@@ -334,8 +334,8 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
-    <Reference Include="System.Security.Permissions, Version=5.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>packages\System.Security.Permissions.5.0.0\lib\net461\System.Security.Permissions.dll</HintPath>
+    <Reference Include="System.Security.Permissions, Version=7.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Security.Permissions.7.0.0\lib\net462\System.Security.Permissions.dll</HintPath>
     </Reference>
     <Reference Include="System.Security.Principal.Windows, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>packages\System.Security.Principal.Windows.5.0.0\lib\net461\System.Security.Principal.Windows.dll</HintPath>
@@ -393,12 +393,18 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Contabilita\Paghe.vb" />
-    <Compile Include="Fusione\ContrattiFox.vb" />
+    <Compile Include="Fusione\Fox\ContrattiFox.vb" />
     <Compile Include="Fusione\CR.vb" />
     <Compile Include="Fusione\FDocumentNumberDialog.Designer.vb">
       <DependentUpon>FDocumentNumberDialog.vb</DependentUpon>
     </Compile>
     <Compile Include="Fusione\FDocumentNumberDialog.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Fusione\Fox\frmSchemaXLS.Designer.vb">
+      <DependentUpon>frmSchemaXLS.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Fusione\Fox\frmSchemaXLS.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Fusione\Fusione.vb" />
@@ -484,6 +490,9 @@
     <EmbeddedResource Include="Fusione\FDocumentNumberDialog.resx">
       <DependentUpon>FDocumentNumberDialog.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Fusione\Fox\frmSchemaXLS.resx">
+      <DependentUpon>frmSchemaXLS.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MessageBoxWithDetails.resx">
       <DependentUpon>MessageBoxWithDetails.vb</DependentUpon>
     </EmbeddedResource>
@@ -529,7 +538,7 @@
     <None Include="App.config" />
     <None Include="packages.config" />
     <Content Include="Fusione\Procedura.txt" />
-    <Content Include="Fusione\ContrattiFox.txt" />
+    <Content Include="Fusione\Fox\ContrattiFox.txt" />
     <Content Include="Logs\Legenda.txt" />
     <Content Include="Ordini\Istruzioni_ordini.txt" />
     <None Include="PostBuildScripts\AutoUpdateProjectsMinimumRequiredClickOnceVersion.ps1" />

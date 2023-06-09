@@ -82,12 +82,15 @@ Partial Class FLogin
         Me.ChkPartiteFornitori = New System.Windows.Forms.CheckBox()
         Me.ChkPartiteCliente = New System.Windows.Forms.CheckBox()
         Me.TabPagePnota = New System.Windows.Forms.TabPage()
+        Me.ChkRiscontiFusione = New System.Windows.Forms.CheckBox()
         Me.ChkRiscontiRidotto = New System.Windows.Forms.CheckBox()
         Me.ChkRisconti = New System.Windows.Forms.CheckBox()
         Me.ChkPNotaForDaPartitario = New System.Windows.Forms.CheckBox()
         Me.ChkPNotaCliDaPartitario = New System.Windows.Forms.CheckBox()
         Me.TabCespiti = New System.Windows.Forms.TabPage()
         Me.ChkCespiti = New System.Windows.Forms.CheckBox()
+        Me.TabContrattiFox = New System.Windows.Forms.TabPage()
+        Me.ChkContrattiFox = New System.Windows.Forms.CheckBox()
         Me.BtnProcessa = New System.Windows.Forms.Button()
         Me.lblDataInizio = New System.Windows.Forms.Label()
         Me.txtPath = New System.Windows.Forms.TextBox()
@@ -138,14 +141,16 @@ Partial Class FLogin
         Me.ExitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.FusioneToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.EseguiStep = New System.Windows.Forms.ToolStripMenuItem()
-        Me.SettingsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ToolStripTracciatoVecchio = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ToolStripMenuItemDebugging = New System.Windows.Forms.ToolStripMenuItem()
         Me.ComandiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.RiscontiRidottoStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.RiscontiFusioneToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.CespitiStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ImportaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.CancellaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ContrattiFoxToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.SettingsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ToolStripTracciatoVecchio = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ToolStripMenuItemDebugging = New System.Windows.Forms.ToolStripMenuItem()
         Me.AdminCmdToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.IDToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.CaricaSchemaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -166,8 +171,7 @@ Partial Class FLogin
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
-        Me.ChkRiscontiFusione = New System.Windows.Forms.CheckBox()
-        Me.RiscontiFusioneToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.txtTemp_FoxFolder = New System.Windows.Forms.TextBox()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabFusione.SuspendLayout()
@@ -179,6 +183,7 @@ Partial Class FLogin
         Me.TabPagePartite.SuspendLayout()
         Me.TabPagePnota.SuspendLayout()
         Me.TabCespiti.SuspendLayout()
+        Me.TabContrattiFox.SuspendLayout()
         Me.PanelUser.SuspendLayout()
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.MenuStrip1.SuspendLayout()
@@ -369,6 +374,7 @@ Partial Class FLogin
         Me.TabControl1.Controls.Add(Me.TabPagePartite)
         Me.TabControl1.Controls.Add(Me.TabPagePnota)
         Me.TabControl1.Controls.Add(Me.TabCespiti)
+        Me.TabControl1.Controls.Add(Me.TabContrattiFox)
         Me.TabControl1.Enabled = False
         Me.TabControl1.Location = New System.Drawing.Point(10, 113)
         Me.TabControl1.Name = "TabControl1"
@@ -814,6 +820,17 @@ Partial Class FLogin
         Me.TabPagePnota.TabIndex = 4
         Me.TabPagePnota.Text = "Prima Nota"
         '
+        'ChkRiscontiFusione
+        '
+        Me.ChkRiscontiFusione.AutoSize = True
+        Me.ChkRiscontiFusione.BackColor = System.Drawing.Color.Plum
+        Me.ChkRiscontiFusione.Location = New System.Drawing.Point(173, 49)
+        Me.ChkRiscontiFusione.Name = "ChkRiscontiFusione"
+        Me.ChkRiscontiFusione.Size = New System.Drawing.Size(104, 17)
+        Me.ChkRiscontiFusione.TabIndex = 27
+        Me.ChkRiscontiFusione.Text = "Risconti Fusione"
+        Me.ChkRiscontiFusione.UseVisualStyleBackColor = False
+        '
         'ChkRiscontiRidotto
         '
         Me.ChkRiscontiRidotto.AutoSize = True
@@ -874,6 +891,28 @@ Partial Class FLogin
         Me.ChkCespiti.TabIndex = 0
         Me.ChkCespiti.Text = "Cespiti"
         Me.ChkCespiti.UseVisualStyleBackColor = True
+        '
+        'TabContrattiFox
+        '
+        Me.TabContrattiFox.BackColor = System.Drawing.SystemColors.Control
+        Me.TabContrattiFox.Controls.Add(Me.txtTemp_FoxFolder)
+        Me.TabContrattiFox.Controls.Add(Me.ChkContrattiFox)
+        Me.TabContrattiFox.Location = New System.Drawing.Point(4, 22)
+        Me.TabContrattiFox.Name = "TabContrattiFox"
+        Me.TabContrattiFox.Padding = New System.Windows.Forms.Padding(3)
+        Me.TabContrattiFox.Size = New System.Drawing.Size(322, 101)
+        Me.TabContrattiFox.TabIndex = 9
+        Me.TabContrattiFox.Text = "Contratti"
+        '
+        'ChkContrattiFox
+        '
+        Me.ChkContrattiFox.AutoSize = True
+        Me.ChkContrattiFox.Location = New System.Drawing.Point(6, 6)
+        Me.ChkContrattiFox.Name = "ChkContrattiFox"
+        Me.ChkContrattiFox.Size = New System.Drawing.Size(65, 17)
+        Me.ChkContrattiFox.TabIndex = 2
+        Me.ChkContrattiFox.Text = "Contratti"
+        Me.ChkContrattiFox.UseVisualStyleBackColor = True
         '
         'BtnProcessa
         '
@@ -1047,7 +1086,7 @@ Partial Class FLogin
         '
         'MenuStrip1
         '
-        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolsToolStripMenuItem, Me.FileToolStripMenuItem, Me.FusioneToolStripMenuItem, Me.SettingsToolStripMenuItem, Me.ComandiToolStripMenuItem, Me.AdminCmdToolStripMenuItem, Me.HelpToolStripMenuItem})
+        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolsToolStripMenuItem, Me.FileToolStripMenuItem, Me.FusioneToolStripMenuItem, Me.ComandiToolStripMenuItem, Me.SettingsToolStripMenuItem, Me.AdminCmdToolStripMenuItem, Me.HelpToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip1.Name = "MenuStrip1"
         Me.MenuStrip1.Size = New System.Drawing.Size(456, 24)
@@ -1262,6 +1301,53 @@ Partial Class FLogin
         Me.EseguiStep.Size = New System.Drawing.Size(99, 22)
         Me.EseguiStep.Text = "STEP"
         '
+        'ComandiToolStripMenuItem
+        '
+        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.RiscontiRidottoStripMenuItem, Me.RiscontiFusioneToolStripMenuItem, Me.CespitiStripMenuItem, Me.ContrattiFoxToolStripMenuItem})
+        Me.ComandiToolStripMenuItem.Name = "ComandiToolStripMenuItem"
+        Me.ComandiToolStripMenuItem.Size = New System.Drawing.Size(68, 20)
+        Me.ComandiToolStripMenuItem.Text = "Comandi"
+        '
+        'RiscontiRidottoStripMenuItem
+        '
+        Me.RiscontiRidottoStripMenuItem.Enabled = False
+        Me.RiscontiRidottoStripMenuItem.Name = "RiscontiRidottoStripMenuItem"
+        Me.RiscontiRidottoStripMenuItem.Size = New System.Drawing.Size(160, 22)
+        Me.RiscontiRidottoStripMenuItem.Text = "Risconti ridotto"
+        '
+        'RiscontiFusioneToolStripMenuItem
+        '
+        Me.RiscontiFusioneToolStripMenuItem.Enabled = False
+        Me.RiscontiFusioneToolStripMenuItem.Name = "RiscontiFusioneToolStripMenuItem"
+        Me.RiscontiFusioneToolStripMenuItem.Size = New System.Drawing.Size(160, 22)
+        Me.RiscontiFusioneToolStripMenuItem.Text = "Risconti Fusione"
+        '
+        'CespitiStripMenuItem
+        '
+        Me.CespitiStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ImportaToolStripMenuItem, Me.CancellaToolStripMenuItem})
+        Me.CespitiStripMenuItem.Enabled = False
+        Me.CespitiStripMenuItem.Name = "CespitiStripMenuItem"
+        Me.CespitiStripMenuItem.Size = New System.Drawing.Size(160, 22)
+        Me.CespitiStripMenuItem.Text = "Cespiti"
+        '
+        'ImportaToolStripMenuItem
+        '
+        Me.ImportaToolStripMenuItem.Name = "ImportaToolStripMenuItem"
+        Me.ImportaToolStripMenuItem.Size = New System.Drawing.Size(119, 22)
+        Me.ImportaToolStripMenuItem.Text = "Importa"
+        '
+        'CancellaToolStripMenuItem
+        '
+        Me.CancellaToolStripMenuItem.Name = "CancellaToolStripMenuItem"
+        Me.CancellaToolStripMenuItem.Size = New System.Drawing.Size(119, 22)
+        Me.CancellaToolStripMenuItem.Text = "Cancella"
+        '
+        'ContrattiFoxToolStripMenuItem
+        '
+        Me.ContrattiFoxToolStripMenuItem.Name = "ContrattiFoxToolStripMenuItem"
+        Me.ContrattiFoxToolStripMenuItem.Size = New System.Drawing.Size(160, 22)
+        Me.ContrattiFoxToolStripMenuItem.Text = "Contratti Fox"
+        '
         'SettingsToolStripMenuItem
         '
         Me.SettingsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripTracciatoVecchio, Me.ToolStripMenuItemDebugging})
@@ -1273,7 +1359,7 @@ Partial Class FLogin
         '
         Me.ToolStripTracciatoVecchio.CheckOnClick = True
         Me.ToolStripTracciatoVecchio.Name = "ToolStripTracciatoVecchio"
-        Me.ToolStripTracciatoVecchio.Size = New System.Drawing.Size(180, 22)
+        Me.ToolStripTracciatoVecchio.Size = New System.Drawing.Size(151, 22)
         Me.ToolStripTracciatoVecchio.Text = "Vecchio Flusso"
         Me.ToolStripTracciatoVecchio.ToolTipText = "Il flusso NON presenta le nuove colonne  ( dalla IB) dedicate alla contabilità an" &
     "alitica ( NrCanoni e Data decorrenza)"
@@ -1282,42 +1368,8 @@ Partial Class FLogin
         '
         Me.ToolStripMenuItemDebugging.CheckOnClick = True
         Me.ToolStripMenuItemDebugging.Name = "ToolStripMenuItemDebugging"
-        Me.ToolStripMenuItemDebugging.Size = New System.Drawing.Size(180, 22)
+        Me.ToolStripMenuItemDebugging.Size = New System.Drawing.Size(151, 22)
         Me.ToolStripMenuItemDebugging.Text = "Debugging"
-        '
-        'ComandiToolStripMenuItem
-        '
-        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.RiscontiRidottoStripMenuItem, Me.RiscontiFusioneToolStripMenuItem, Me.CespitiStripMenuItem})
-        Me.ComandiToolStripMenuItem.Name = "ComandiToolStripMenuItem"
-        Me.ComandiToolStripMenuItem.Size = New System.Drawing.Size(68, 20)
-        Me.ComandiToolStripMenuItem.Text = "Comandi"
-        '
-        'RiscontiRidottoStripMenuItem
-        '
-        Me.RiscontiRidottoStripMenuItem.Enabled = False
-        Me.RiscontiRidottoStripMenuItem.Name = "RiscontiRidottoStripMenuItem"
-        Me.RiscontiRidottoStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.RiscontiRidottoStripMenuItem.Text = "Risconti ridotto"
-        '
-        'CespitiStripMenuItem
-        '
-        Me.CespitiStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ImportaToolStripMenuItem, Me.CancellaToolStripMenuItem})
-        Me.CespitiStripMenuItem.Enabled = False
-        Me.CespitiStripMenuItem.Name = "CespitiStripMenuItem"
-        Me.CespitiStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.CespitiStripMenuItem.Text = "Cespiti"
-        '
-        'ImportaToolStripMenuItem
-        '
-        Me.ImportaToolStripMenuItem.Name = "ImportaToolStripMenuItem"
-        Me.ImportaToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.ImportaToolStripMenuItem.Text = "Importa"
-        '
-        'CancellaToolStripMenuItem
-        '
-        Me.CancellaToolStripMenuItem.Name = "CancellaToolStripMenuItem"
-        Me.CancellaToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.CancellaToolStripMenuItem.Text = "Cancella"
         '
         'AdminCmdToolStripMenuItem
         '
@@ -1465,23 +1517,13 @@ Partial Class FLogin
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
         '
-        'ChkRiscontiFusione
+        'txtTemp_FoxFolder
         '
-        Me.ChkRiscontiFusione.AutoSize = True
-        Me.ChkRiscontiFusione.BackColor = System.Drawing.Color.Plum
-        Me.ChkRiscontiFusione.Location = New System.Drawing.Point(173, 49)
-        Me.ChkRiscontiFusione.Name = "ChkRiscontiFusione"
-        Me.ChkRiscontiFusione.Size = New System.Drawing.Size(104, 17)
-        Me.ChkRiscontiFusione.TabIndex = 27
-        Me.ChkRiscontiFusione.Text = "Risconti Fusione"
-        Me.ChkRiscontiFusione.UseVisualStyleBackColor = False
-        '
-        'RiscontiFusioneToolStripMenuItem
-        '
-        Me.RiscontiFusioneToolStripMenuItem.Enabled = False
-        Me.RiscontiFusioneToolStripMenuItem.Name = "RiscontiFusioneToolStripMenuItem"
-        Me.RiscontiFusioneToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.RiscontiFusioneToolStripMenuItem.Text = "Risconti Fusione"
+        Me.txtTemp_FoxFolder.Location = New System.Drawing.Point(6, 29)
+        Me.txtTemp_FoxFolder.Name = "txtTemp_FoxFolder"
+        Me.txtTemp_FoxFolder.Size = New System.Drawing.Size(287, 20)
+        Me.txtTemp_FoxFolder.TabIndex = 3
+        Me.txtTemp_FoxFolder.Text = "C:\Users\Cristiano\Desktop\Fox"
         '
         'FLogin
         '
@@ -1517,6 +1559,8 @@ Partial Class FLogin
         Me.TabPagePnota.PerformLayout()
         Me.TabCespiti.ResumeLayout(False)
         Me.TabCespiti.PerformLayout()
+        Me.TabContrattiFox.ResumeLayout(False)
+        Me.TabContrattiFox.PerformLayout()
         Me.PanelUser.ResumeLayout(False)
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.MenuStrip1.ResumeLayout(False)
@@ -1673,4 +1717,8 @@ Partial Class FLogin
     Friend WithEvents CespitiStripMenuItem As ToolStripMenuItem
     Friend WithEvents ChkRiscontiFusione As CheckBox
     Friend WithEvents RiscontiFusioneToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents ContrattiFoxToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents TabContrattiFox As TabPage
+    Friend WithEvents ChkContrattiFox As CheckBox
+    Friend WithEvents txtTemp_FoxFolder As TextBox
 End Class

@@ -269,6 +269,13 @@ Module XLS
 
         Return columnName
     End Function
+    ''' <summary>
+    ''' Carica un foglio Excel con libreria ExcelDataReader
+    ''' </summary>
+    ''' <param name="fullPath">Percorso completo</param>
+    ''' <param name="conIntestazione">Indica se il file contiene l'intestazione</param>
+    ''' <param name="saveHeader">Indica se salvare le intestazioni o sostituirle con le lettere</param>
+    ''' <returns></returns>
     Public Function LoadXLS(ByVal fullPath As String, ByVal conIntestazione As Boolean, Optional ByVal saveHeader As Boolean = True) As DataSet
         Dim stopwatch As New Stopwatch
         Dim reader As IExcelDataReader = Nothing
