@@ -938,8 +938,8 @@ Public Class FLogin
 
         If ChkContrattiFox.Checked Then
             Dim bFound As Boolean
-            Dim contratti As String() = {"_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV"} '"_CHIAVI", "_ONEOPE1","_ONTROPE"
-            Dim contrattiFound(7) As Boolean
+            Dim contratti As String() = {"_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV", "ACGTRPG"} '"_CHIAVI", "_ONEOPE1","_ONTROPE"
+            Dim contrattiFound(8) As Boolean
             Dim fileInFolder As String() = Directory.GetFiles(If(String.IsNullOrWhiteSpace(txtTemp_FoxFolder.Text), FolderPath, txtTemp_FoxFolder.Text), "*.*", SearchOption.TopDirectoryOnly)
 
             For i = 0 To UBound(contratti)
@@ -1014,7 +1014,7 @@ Public Class FLogin
                     'i CSV non hanno intestazione di solito ottengo il file in 
                     'dsXLS = If(ext.ToUpper = ".CSV", ProcessaCSV(spath, False), ProcessaXLS(spath, True))
                     Select Case sNomeFile
-                        Case "_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_CLIFTELE", "_ONTRORD", "_RID", "_SENTIIV"
+                        Case "_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV", "ACGTRPG"
                             Try
                                 dsXLS = If(sExt.ToUpper = ".CSV", ProcessaCSV(sFullPath, False), LoadXLS(sFullPath, True, True))
                                 dsFOX.Add(dsXLS)
@@ -1033,7 +1033,7 @@ Public Class FLogin
             End If
         Next
         If bOkImport Then
-            ImportaContrattiFox(dsFOX)
+            Return ImportaContrattiFox(dsFOX)
         End If
         Return True
 
@@ -2117,7 +2117,14 @@ Public Class FLogin
         ChkContrattiFox.Checked = True
         DBisTMP = True
         isDbUNO = False
+        isAdmin = True
         SUBConnetti(TxtTmpDB_SPA.Text)
+        lstStatoConnessione.Items.Add(If(DBisTMP, "Azienda test: ", "Azienda: ") & TxtTmpDB_SPA.Text & " - Database : " & DBInUse)
+        Application.DoEvents()
         SUBProcessa()
+    End Sub
+
+    Private Sub BtnFox_Click(sender As Object, e As EventArgs) Handles BtnFox.Click
+        ContrattiFoxToolStripMenuItem_Click(sender, e)
     End Sub
 End Class

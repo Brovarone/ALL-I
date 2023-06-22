@@ -459,6 +459,7 @@ Module MagoNet
     End Enum
     Friend Enum CodeType As Integer
         'Tipo Documento non fiscale 57
+        OrdCli = 3735554
         PNota = 3735558
         MovAna = 3735561
         MovCes = 3735585 '  Nr. Riferimento Movimenti Cespiti
@@ -799,6 +800,10 @@ Module MagoNet
         FLogin.prgCopy.Update()
         Application.DoEvents()
     End Sub
+
+    Public Function Valid_Data(value As String) As String
+        Return If(String.IsNullOrWhiteSpace(value), sDataNulla, value)
+    End Function
 End Module
 Public Module FiltriAnalitici
     Public Class FiltroAnalitica
@@ -898,6 +903,59 @@ Public Module Common
     Public Function OnlyDate(ByVal d As Date) As Date
         Dim nd As New Date(d.Year, d.Month, d.Day)
         Return nd
+    End Function
+
+    Public Function GetTextWithNewLines(ByVal Optional value As String = "", ByVal Optional charactersToWrapAt As Integer = 128, ByVal Optional maxLength As Integer = 1016) As String
+        If String.IsNullOrWhiteSpace(value) Then Return ""
+        value = value.Replace("  ", " ")
+        Dim words = value.Split(" "c)
+        Dim sb = New StringBuilder()
+        Dim currString = New StringBuilder()
+
+        For Each word In words
+            If currString.Length + word.Length + 1 < charactersToWrapAt Then
+                sb.AppendFormat(" {0}", word)
+                currString.AppendFormat(" {0}", word)
+            Else
+                currString.Clear()
+                sb.AppendFormat("{0}{1}", Environment.NewLine, word)
+                currString.AppendFormat(" {0}", word)
+            End If
+        Next
+
+        If sb.Length > maxLength Then
+            Return sb.ToString().Substring(0, maxLength) & " ..."
+        End If
+
+        Return sb.ToString().TrimStart().TrimEnd()
+    End Function
+    Public Function GetListTextWithNewLines(ByVal Optional value As String = "", ByVal Optional charactersToWrapAt As Integer = 128) As List(Of String)
+        Dim result As New List(Of String)
+        If String.IsNullOrWhiteSpace(value) Then
+            Return result
+        End If
+        If Len(value) <= charactersToWrapAt Then
+            result.Add(value)
+            Return result
+        End If
+        value = value.Replace("  ", " ")
+        Dim words = value.Split(" "c)
+        Dim sb = New StringBuilder()
+        Dim currString = New StringBuilder()
+
+        For Each word In words
+            If currString.Length + word.Length + 1 < charactersToWrapAt Then
+                sb.AppendFormat(" {0}", word)
+                currString.AppendFormat(" {0}", word)
+            Else
+                currString.Clear()
+                result.Add(word.TrimStart().TrimEnd())
+                'sb.AppendFormat("{0}{1}", Environment.NewLine, word)
+                currString.AppendFormat(" {0}", word)
+            End If
+        Next
+
+        Return result
     End Function
 End Module
 Public Module LogTools

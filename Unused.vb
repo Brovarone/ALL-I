@@ -364,7 +364,7 @@ Module Unused
     End Function
 End Module
 
-Module LINQ
+Module LINQ_UNUSED
     ''https://newbedev.com/how-to-convert-datatable-to-Class-object
     'Public Shared connectionString As String = ConfigurationManager.ConnectionStrings("YourWebConfigConnection").ConnectionString
 

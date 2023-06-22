@@ -167,6 +167,7 @@ Partial Class FLogin
         Me.toolStripSeparator5 = New System.Windows.Forms.ToolStripSeparator()
         Me.AboutToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.PanelDB = New System.Windows.Forms.Panel()
+        Me.BtnFox = New System.Windows.Forms.Button()
         Me.CHKDBTemporaneo = New System.Windows.Forms.CheckBox()
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
@@ -1472,14 +1473,24 @@ Partial Class FLogin
         '
         'PanelDB
         '
+        Me.PanelDB.Controls.Add(Me.BtnFox)
         Me.PanelDB.Controls.Add(Me.CHKDBTemporaneo)
         Me.PanelDB.Controls.Add(Me.BtnSelSPA)
         Me.PanelDB.Controls.Add(Me.BtnSelUNO)
         Me.PanelDB.Controls.Add(Me.Label8)
-        Me.PanelDB.Location = New System.Drawing.Point(2, 345)
+        Me.PanelDB.Location = New System.Drawing.Point(2, 342)
         Me.PanelDB.Name = "PanelDB"
         Me.PanelDB.Size = New System.Drawing.Size(200, 234)
         Me.PanelDB.TabIndex = 47
+        '
+        'BtnFox
+        '
+        Me.BtnFox.Location = New System.Drawing.Point(12, 16)
+        Me.BtnFox.Name = "BtnFox"
+        Me.BtnFox.Size = New System.Drawing.Size(63, 110)
+        Me.BtnFox.TabIndex = 4
+        Me.BtnFox.Text = "Fox"
+        Me.BtnFox.UseVisualStyleBackColor = True
         '
         'CHKDBTemporaneo
         '
@@ -1713,4 +1724,5 @@ Partial Class FLogin
     Friend WithEvents TabContrattiFox As TabPage
     Friend WithEvents ChkContrattiFox As CheckBox
     Friend WithEvents txtTemp_FoxFolder As TextBox
+    Friend WithEvents BtnFox As Button
 End Class

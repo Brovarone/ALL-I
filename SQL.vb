@@ -1,10 +1,78 @@
 ﻿Imports System.Data.Sql
 Imports System.Data.SqlClient
 Imports System.IO
+Imports System.Reflection
 Imports System.Reflection.MethodBase
 Imports System.Text
 
 Namespace SqlTools
+    Module LINQ
+        Public Function LINQResultToDataTable(Of T)(ByVal Linqlist As IEnumerable(Of T)) As DataTable
+            Dim dt As DataTable = New DataTable()
+            Dim columns As PropertyInfo() = Nothing
+            If Linqlist Is Nothing Then Return dt
+
+            For Each Record As T In Linqlist
+
+                If columns Is Nothing Then
+                    columns = (CType(Record.[GetType](), Type)).GetProperties()
+
+                    For Each GetProperty As PropertyInfo In columns
+                        Dim colType As Type = GetProperty.PropertyType
+
+                        If (colType.IsGenericType) AndAlso (colType.GetGenericTypeDefinition() = GetType(Nullable(Of))) Then
+                            colType = colType.GetGenericArguments()(0)
+                        End If
+
+                        dt.Columns.Add(New DataColumn(GetProperty.Name, colType))
+                    Next
+                End If
+
+                Dim dr As DataRow = dt.NewRow()
+
+                For Each pinfo As PropertyInfo In columns
+                    dr(pinfo.Name) = If(pinfo.GetValue(Record, Nothing) Is Nothing, DBNull.Value, pinfo.GetValue(Record, Nothing))
+                Next
+
+                dt.Rows.Add(dr)
+            Next
+
+            Return dt
+        End Function
+        Public Function LINQResultToDataView(Of T)(ByVal Linqlist As IEnumerable(Of T)) As DataView
+            Dim dt As DataTable = New DataTable()
+            Dim dv As DataView = New DataView()
+            Dim columns As PropertyInfo() = Nothing
+            If Linqlist Is Nothing Then Return dv
+
+            For Each Record As T In Linqlist
+
+                If columns Is Nothing Then
+                    columns = (CType(Record.[GetType](), Type)).GetProperties()
+
+                    For Each GetProperty As PropertyInfo In columns
+                        Dim colType As Type = GetProperty.PropertyType
+
+                        If (colType.IsGenericType) AndAlso (colType.GetGenericTypeDefinition() = GetType(Nullable(Of))) Then
+                            colType = colType.GetGenericArguments()(0)
+                        End If
+
+                        dt.Columns.Add(New DataColumn(GetProperty.Name, colType))
+                    Next
+                End If
+
+                Dim dr As DataRow = dt.NewRow()
+
+                For Each pinfo As PropertyInfo In columns
+                    dr(pinfo.Name) = If(pinfo.GetValue(Record, Nothing) Is Nothing, DBNull.Value, pinfo.GetValue(Record, Nothing))
+                Next
+
+                dt.Rows.Add(dr)
+            Next
+
+            Return dt.DefaultView
+        End Function
+    End Module
     Module Connessione
         Public Function GetConnectionStringSPAAsync() As String
             Dim DB As String = If(DBisTMP, FLogin.TxtTmpDB_SPA.Text, FLogin.TxtDB_SPA.Text)
