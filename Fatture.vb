@@ -588,6 +588,7 @@ Module Fatture
                                                                             drDoc("ActionOnLifoFifo") = 26411008
                                                                             drDoc("ModifyOriginalPymtSched") = "0"
 
+                                                                            drDoc("TBGuid") = Guid.NewGuid
                                                                             drDoc("WorkerIDIssue") = My.Settings.mLOGINID 'Matricola
                                                                             drDoc("TBCreatedID") = My.Settings.mLOGINID 'ID utente
                                                                             drDoc("TBModifiedID") = My.Settings.mLOGINID 'ID utente

@@ -1,5 +1,6 @@
 ﻿Imports System.Data.SqlClient
 Imports System.Text
+Imports System.Text.RegularExpressions
 Imports System.Reflection.MethodBase
 Imports System.Runtime.CompilerServices
 Imports EFMago.Models
@@ -20,6 +21,7 @@ Module ContrattiFox
     Dim dvPagamentiFox As DataView
     Private OrdiniCntx As OrdiniContext
     ReadOnly sLoginId As String = My.Settings.mLOGINID
+    Private charSpeciali As New List(Of Carattere_Speciale)
 
     'Collection Globali per aggiornamento unico
     'Creo le entities che usero' poi con BulkInsert
@@ -51,7 +53,8 @@ Module ContrattiFox
         GeneraRelazionieDatatable()
         ConnettiContesto()
 
-        'Dim sb As List(Of String) = CheckOrdini()
+        Dim sb As List(Of String) = CheckOrdini()
+        'TODO temporaneamente la sospendo Checkordini
         'If sb.Count > 0 Then
         '    For i = 0 To sb.Count - 1
         '        FLogin.lstStatoConnessione.Items.Add(sb(i))
@@ -60,7 +63,7 @@ Module ContrattiFox
         '    Return False
         'End If
 
-        'metto in pausa un attimo ScriviClientiNuovi()
+        'TODO temporaneamente la sospendo ScriviClientiNuovi()
 
         'LeggiOrdiniEsistenti()
 
@@ -420,8 +423,17 @@ Module ContrattiFox
 
 
             If Len(r("DNOTE").ToString.Trim) > 251 Then avvisi.Add("DNOTE troppo lunga su contratto:" & (r("CONTRATTO")).ToString)
+            'Rimpiazzo caratteri Speciali conosciuti e cerco per non gestiti
+            'Elenco Caratteri speciali
+            Dim s As String() = {"DNOTE", "DNOTE2", "DNOTE3", "DNOTE4", "DNOTE5", "DNOTE6", "DNOTE7", "DNOTE8", "DESCAN", "DFAT1", "DFAT2", "DFAT3", "DFAT4"}
+            r = Cerca_Sostituisci_CaratteriSpeciali(r, s)
             AvanzaBarra()
         Next
+        If charSpeciali.Count > 0 Then
+            For Each c In charSpeciali.ToArray
+                avvisi.Add(String.Concat("Carattere speciale: ", c.Carattere, " Ascii: ", c.Asc.ToString, " Nr: ", c.Occorrenze.ToString))
+            Next
+        End If
         Return avvisi
     End Function
     Private Sub ScriviOrdini()
@@ -509,6 +521,12 @@ Module ContrattiFox
 
                 Dim driv As String = String.Concat(r("DRIV1").ToString, r("DRIV2").ToString, r("DRIV3").ToString, r("DRIV4").ToString).Trim
                 Dim agente As String = TrovaAgente(r("PRODUTTORE").ToString)
+
+                'SEDE:
+                'Devo cercare il campo Codice Sdi su _LIFTELE e Matcharlo con "Codice Sdi" Cliente e poi Sede
+                'sdi e dati FE
+                'su LIftele ci sono solo i dati accessori oltre al codice sdi se 00000 allora devo cercare la pec
+                'se c'e' corrispondenza con rRAGRFATT uso quella altrimenti esiste un generico senza valore
 #End Region
 #Region "Testa"
                 Dim rOrd As New MaSaleOrd With {
@@ -665,7 +683,7 @@ Module ContrattiFox
                 Dim rOrdAcc As New AllordCliAcc With {
                                         .IdOrdCli = saleOrdId,
                                         .ApplicoIstat = If(r("AUMENTO") = 1, "1", "0"),
-                                        .MesiDurata = 0,
+                                        .MesiDurata = CalcolaDurataContratto(r("GGDURATA")),
                                         .MesiRinnovo = 0,
                                         .Ggdisdetta = 0,
                                         .DataScadenzaFissa = Valid_Data(r("DTCESSFATT").ToString),
@@ -694,12 +712,12 @@ Module ContrattiFox
                                         .Vettore = vettore,
                                         .CdC = dvTabelle.CercaValoreSuTabelleFox("CC", r("CCOSTO").ToString),
                                         .ImpiantoDue = "",
-                                        .DataPrevistaScadenza = sDataNulla,
                                         .Tbcreated = Now,
                                         .Tbmodified = Now,
                                         .TbcreatedId = sLoginId,
                                         .TbmodifiedId = sLoginId
                                         }
+                rOrdAcc.DataPrevistaScadenza = rOrdAcc.DataDecorrenza.Value.AddMonths(rOrdAcc.MesiDurata)
                 'Aggiungo la riga alla collection
                 efAllordCliAcc.Add(rOrdAcc)
 
@@ -1400,7 +1418,7 @@ Module ContrattiFox
         Dim originalFilter As String = dv.RowFilter
         dv.RowFilter = $"TIPO = '{tipo}' AND CODICE = '{valore}'"
         If dv.Count = 1 Then
-            result = dv(0)("VALORE")
+            result = dv(0)("VALORE").ToString
         Else
             If Not excludeMessage Then
                 Dim mb As New MessageBoxWithDetails("Dato non trovato:" & $"TIPO = '{tipo}' AND CODICE = '{valore}'", GetCurrentMethod.Name, "")
@@ -1462,5 +1480,78 @@ Module ContrattiFox
         End Select
         Return esito
     End Function
+    Private Function CalcolaDurataContratto(value As Integer) As Integer
+        Dim i As Integer
+        Select Case value
+            Case <= 31
+                i = 1
+            Case 32 To 62
+                i = 2
+            Case 63 To 92
+                i = 3
+            Case 365
+                i = 12
+            Case 730
+                i = 24
+            Case 1095
+                i = 36
+            Case 1460
+                i = 48
+            Case 1825
+                i = 60
+            Case 3650
+                i = 120
+            Case Else
+                i = CInt(Math.Round(value / 30, 0))
+        End Select
+        Return i
+    End Function
+    Private Function Cerca_Sostituisci_CaratteriSpeciali(dr As DataRow, campi As String()) As DataRow
+        For Each value In campi
+            'If String.IsNullOrWhiteSpace(value.ToString) Then
+            '    Continue For
+            'Else
+            If String.IsNullOrWhiteSpace(dr(value).ToString) Then
+                Continue For
+            End If
+            Dim s As String = dr(value).ToString
+            'Rimpiazzo caratteri speciali conosciuti
+            'https://www.asciitable.it/
+            s = Regex.Replace(s, "Ó", "à")  '211 to 224
+            s = Regex.Replace(s, "Þ", "è")  '222 to 232
+            s = Regex.Replace(s, "ý", "ì")  '253 to 236
+            s = Regex.Replace(s, "¨", "ù")  '168 to 249
+            'value = Regex.Replace(value, "ý", "o")
+            dr.Item(value) = s
+
+            For Each c In value.ToCharArray
+                Dim a As Integer = Asc(c)
+                Select Case a
+                    Case 0, 32 To 126, 128
+                    Case 10, 13
+                        'LF e CR
+                    Case Else
+                        Dim cha As Carattere_Speciale = charSpeciali.Find(Function(x) x.Asc = a)
+                        If cha Is Nothing Then
+                            cha = New Carattere_Speciale With {
+                                    .Asc = a,
+                                    .Carattere = c,
+                                    .Occorrenze = 1
+                                    }
+                            charSpeciali.Add(cha)
+                        Else
+                            cha.Occorrenze += 1
+                        End If
+                        Continue For
+                End Select
+            Next
+        Next
+        Return dr
+    End Function
+    Private Class Carattere_Speciale
+        Public Carattere As String
+        Public Asc As Integer
+        Public Occorrenze As Integer
+    End Class
 End Module
 

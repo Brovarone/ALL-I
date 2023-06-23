@@ -938,21 +938,28 @@ Public Module Common
             result.Add(value)
             Return result
         End If
-        value = value.Replace("  ", " ")
-        Dim words = value.Split(" "c)
+        'value = value.Replace("  ", " ")
+        'Dim words = value.Split(" "c)
+        Dim lines = Regex.Split(Regex.Replace(Regex.Replace(value, vbCrLf, Environment.NewLine), "  ", " "), Environment.NewLine)
         Dim sb = New StringBuilder()
         Dim currString = New StringBuilder()
-
-        For Each word In words
-            If currString.Length + word.Length + 1 < charactersToWrapAt Then
-                sb.AppendFormat(" {0}", word)
-                currString.AppendFormat(" {0}", word)
-            Else
-                currString.Clear()
-                result.Add(word.TrimStart().TrimEnd())
-                'sb.AppendFormat("{0}{1}", Environment.NewLine, word)
-                currString.AppendFormat(" {0}", word)
+        For Each line In lines
+            If Len(line) <= charactersToWrapAt Then
+                result.Add(line)
+                Continue For
             End If
+            Dim words = Regex.Split(line, " "c)
+            For Each word In words
+                If currString.Length + word.Length + 1 < charactersToWrapAt Then
+                    sb.AppendFormat(" {0}", word)
+                    currString.AppendFormat(" {0}", word)
+                Else
+                    currString.Clear()
+                    result.Add(word.TrimStart().TrimEnd())
+                    'sb.AppendFormat("{0}{1}", Environment.NewLine, word)
+                    currString.AppendFormat(" {0}", word)
+                End If
+            Next
         Next
 
         Return result
