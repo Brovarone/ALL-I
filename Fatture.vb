@@ -2738,7 +2738,8 @@ Module MovimentiAnaliticiDaFatture
                                                             WHERE (MA_SaleDocDetail.LineType = " & LineType.Merce & " OR MA_SaleDocDetail.LineType = " & LineType.Servizio & ") 
                                                             AND ( MA_SaleDoc.DocumentDate >=@FromDate  AND MA_SaleDoc.DocumentDate <=@ToDate ) 
                                                             AND (@AllNumbers = 1 Or (@AllNumbers = 0 and MA_SaleDoc.DocNo >=@NrFirst AND MA_SaleDoc.DocNo <=@NrLast )) 
-                                                            AND MA_SaleDoc.PostedToCostAccounting =@GiaRegistrate 
+                                                            AND MA_SaleDoc.PostedToCostAccounting = @GiaRegistrate 
+                                                            AND MA_SaleDoc.PostedToAccounting = '1'
                                                             AND MA_ChartOfAccounts.PostableInCostAcc = @MovInAnalitica 
                                                             AND MA_SaleDoc.DocumentType IN (" & DocumentType.Fattura & " , " & DocumentType.FatturaAccompagnatoria & " , " & DocumentType.NotaCredito & " , " & DocumentType.AutoFattura & " , " & DocumentType.AutoNotaCredito & ")
                                                             ORDER BY MA_SaleDoc.DocNo, MA_SaleDocDetail.Offset", Connection)
