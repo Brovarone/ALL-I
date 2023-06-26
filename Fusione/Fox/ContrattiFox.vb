@@ -59,7 +59,7 @@ Module ContrattiFox
         '    For i = 0 To sb.Count - 1
         '        FLogin.lstStatoConnessione.Items.Add(sb(i))
         '    Next
-        '    FLogin.lstStatoConnessione.Items.Add("Imposibile continuare controllare errori precedenti")
+        '    FLogin.lstStatoConnessione.Items.Add("Impossibile continuare controllare errori precedenti")
         '    Return False
         'End If
 
@@ -110,6 +110,15 @@ Module ContrattiFox
         dvTabelle = New DataView(dtTabelle)
         dtPagamentiFox = ds.Tables("ACGTRPG")
         dvPagamentiFox = New DataView(dtPagamentiFox)
+    End Sub
+    Private Sub DisposeTables()
+        dtContratti.Dispose()
+        dtRaggTeste.Dispose()
+        dtRaggDett.Dispose()
+        dtTabelle.Dispose()
+        dvTabelle.Dispose()
+        dtPagamentiFox.Dispose()
+        dvPagamentiFox.Dispose()
     End Sub
     Private Sub ConnettiContesto()
         EditTestoBarra("Connessione al contesto")
@@ -452,17 +461,9 @@ Module ContrattiFox
         Dim dtFattEle As DataTable = ds.Tables("_LIFTELE")
         Dim dvFattEle As New DataView(dtFattEle)
 
-#End Region
-#Region "Inizializzazione"
-        'Resetto alcune cose 
-        'Dim iNewRowsCount As Integer = 0
-        'Dim isNewRows As Boolean = False    ' Indica se ci sono righe contratto che vengono fatturate e quindi inserite nelle righe
-        'Dim isUpdateRows As Boolean = False ' Indica se ci sono righe contratto che vengono aggiorate
-        'Inizializzo alcuni valori
-        'Dim curLastLine As Integer = If(o.MaSaleOrdDetails.Any, o.MaSaleOrdDetails.Max(Function(m) m.Line), 0)
-        'Dim curLastPosition As Integer = If(o.MaSaleOrdDetails.Any, o.MaSaleOrdDetails.Max(Function(m) m.Position), 0)
-        'Dim iNrRigheNota As Integer = 0
-        'Dim iNrRigheAValore As Integer = 0
+        Dim dtRID As DataTable = ds.Tables("_RID")
+        Dim dvRID As New DataView(dtRID)
+
         efMaIdnumbers.Add(OrdiniCntx.MaIdnumbers.FirstOrDefault(Function(k) k.CodeType = IdType.OrdCli))
         Dim saleOrdId As Integer = efMaIdnumbers(0).LastId
         efMaNonFiscalNumbers = OrdiniCntx.MaNonFiscalNumbers.Where(Function(k) k.CodeType = CodeType.OrdCli).ToList
@@ -474,7 +475,8 @@ Module ContrattiFox
         FLogin.prgCopy.Maximum = dtContratti.Rows.Count
         FLogin.prgCopy.Step = 1
         For Each r As DataRow In dtContratti.Rows
-            If FLogin.prgCopy.Value = 13 Then Exit For
+            'todo : inserito limite a 14 righe
+            If FLogin.prgCopy.Value = 14 Then Exit For
             Dim contratto As String = r("CONTRATTO").ToString
             Dim clienteFox As String = r("CLIENTE").ToString
             'Cerco se esite:
@@ -482,6 +484,23 @@ Module ContrattiFox
 
             If o Is Nothing Then
 #Region "Controlli ed estrazioni"
+                'Cliente
+                Dim clienteACG As String = r.Item("ACGCOD").ToString
+                Dim cli As MaCustSupp = OrdiniCntx.MaCustSupp.Find(CustSuppType.Cliente, clienteACG)
+                'Dim cli As MaCustSupp = OrdiniCntx.MaCustSupp.AsNoTracking.FirstOrDefault(Function(k) k.CustSupp.Equals(r("ACGCOD").ToString)
+                If cli Is Nothing Then
+                    Dim mb As New MessageBoxWithDetails("Cliente non trovato:" & clienteACG, GetCurrentMethod.Name)
+                    mb.ShowDialog()
+                    Continue For
+                End If
+
+                'SEDE:
+                'Devo cercare il campo Codice Sdi su _LIFTELE e Matcharlo con "Codice Sdi" Cliente e poi Sede
+                'sdi e dati FE
+                'su LIftele ci sono solo i dati accessori oltre al codice sdi se 00000 allora devo cercare la pec
+                'se c'e' corrispondenza con rRAGRFATT uso quella altrimenti esiste un generico senza valore
+
+
                 'todo: inserimento nuovo ORDINE
                 'dvRaggDett.RowFilter = $"CONTRATTO = '{contratto}'"
                 'Dim codiceRaggruppamento As String = dvRaggDett(0)("RAGRFATT")
@@ -506,6 +525,8 @@ Module ContrattiFox
                 dvPagamentiFox.RowFilter = "CPAGAM = '" & r("CPAGAM").ToString & "' AND ( SPLITPAY IS NULL OR SPLITPAY = '' )"
                 Dim condPagAcg = dvPagamentiFox(0)("ACGCOD").ToString
                 Dim condPag As String = OrdiniCntx.MaPaymentTerms.AsNoTracking.FirstOrDefault(Function(k) k.Acgcode.Equals(condPagAcg)).Payment
+                dvRID.RowFilter = $"CLIENTE = '{clienteFox}' AND RAGRFATT = '{codiceRaggruppamento}'"
+                Dim codiceUMR As String = If(dvRID.Count = 1, dvRID(0)("CODINDIVID").ToString, "")
 
                 Dim vettore As String = If(codiceRaggruppamento.Equals(contratto), "", CInt(codiceRaggruppamento).ToString)
                 Dim codIva As String = OrdiniCntx.MaTaxCodes.AsNoTracking.FirstOrDefault(Function(k) k.Acgcode.Equals(r("CIVA").ToString)).TaxCode
@@ -519,14 +540,10 @@ Module ContrattiFox
                 saleOrdId += 1
                 efMaIdnumbers(0).LastId = saleOrdId
 
-                Dim driv As String = String.Concat(r("DRIV1").ToString, r("DRIV2").ToString, r("DRIV3").ToString, r("DRIV4").ToString).Trim
+                Dim sRivolgersiA As String = String.Concat(r("DRIV1").ToString, r("DRIV2").ToString, r("DRIV3").ToString, r("DRIV4").ToString).Trim
                 Dim agente As String = TrovaAgente(r("PRODUTTORE").ToString)
 
-                'SEDE:
-                'Devo cercare il campo Codice Sdi su _LIFTELE e Matcharlo con "Codice Sdi" Cliente e poi Sede
-                'sdi e dati FE
-                'su LIftele ci sono solo i dati accessori oltre al codice sdi se 00000 allora devo cercare la pec
-                'se c'e' corrispondenza con rRAGRFATT uso quella altrimenti esiste un generico senza valore
+
 #End Region
 #Region "Testa"
                 Dim rOrd As New MaSaleOrd With {
@@ -535,15 +552,15 @@ Module ContrattiFox
                     .InternalOrdNo = ordNo,
                     .ExternalOrdNo = "",
                     .OrderDate = Valid_Data(r("DTPRODUZ").ToString),
-                    .Customer = r("ACGCOD").ToString,
+                    .Customer = clienteACG,
                     .Payment = condPag,
-                    .CustomerBank = "todo",
-                    .CompanyBank = "todo",
-                    .SendDocumentsTo = "todo",
-                    .PaymentAddress = "todo",
+                    .CustomerBank = cli.CustSuppBank,
+                    .CompanyBank = cli.CompanyBank,
+                    .SendDocumentsTo = "sede",
+                    .PaymentAddress = "sede",
                     .Area = r("FILIALE").ToString,
                     .Salesperson = agente,
-                    .Notes = driv,
+                    .Notes = codiceUMR,
                     .AccTpl = defOrdini.SaleOrderAccTpl,
                     .TaxJournal = "VEN",
                     .InvRsn = defOrdini.SaleOrderInvRsn,
@@ -561,12 +578,12 @@ Module ContrattiFox
                     .Carrier1 = vettore,
                     .OurReference = r("FILFATT").ToString,
                     .YourReference = contratto,
-                    .CompanyCa = "todo",
-                    .CompanyPymtCa = "todo",
+                    .CompanyCa = cli.CompanyCa,
+                    .CompanyPymtCa = cli.CustomerCompanyCa,
                     .Presentation = 1376260,
                     .CompulsoryDeliveryDate = sDataNulla,
-                    .ShipToAddress = "todo",
-                    .BankAuthorization = "todo",
+                    .ShipToAddress = "sede",
+                    .BankAuthorization = "",
                     .ContractCode = drFattEle("F2126").ToString.Trim,
                     .ProjectCode = drFattEle("F2127").ToString.Trim,
                     .Tbguid = Guid.NewGuid,
@@ -704,11 +721,11 @@ Module ContrattiFox
                                         .MotivoSospensione = r("WHYCESS").ToString,
                                         .Agente = agente,
                                         .ImportoProvvigione = 0,
-                                        .Impianto = "todo",
-                                        .Nota = "todo",
+                                        .Impianto = "sede",
+                                        .Nota = "???",
                                         .ModelloContratto = 1229717506,
                                         .CondPag = condPag,
-                                        .SedeInvioDoc = "todo",
+                                        .SedeInvioDoc = "sede",
                                         .Vettore = vettore,
                                         .CdC = dvTabelle.CercaValoreSuTabelleFox("CC", r("CCOSTO").ToString),
                                         .ImpiantoDue = "",
@@ -737,7 +754,7 @@ Module ContrattiFox
                                         .ValUnitIstat = r("CANONE"),
                                         .DataUltRivIstat = Valid_Data(r("DTVARCAN").ToString),
                                         .Franchigia = 0,
-                                        .Nota = "todo",
+                                        .Nota = "???",
                                         .TipoRigaServizio = r("FREQ").ToString,
                                         .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
                                         .NonRiportaInFatt = "0",
@@ -1034,13 +1051,7 @@ Module ContrattiFox
 
         Next
 
-#Region "Dispose"
-        dvTabelle.Dispose()
-        dtContratti.Dispose()
-        dtRaggTeste.Dispose()
-        dtRaggDett.Dispose()
-        dtTabelle.Dispose()
-#End Region
+        DisposeTables()
 
     End Sub
     Private Sub SalvaOrdini()

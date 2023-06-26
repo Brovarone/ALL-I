@@ -211,15 +211,15 @@ Public Class FLogin
     End Sub
     Private Sub LoadSettings()
         Dim n As String = "settings.json"
-        'Dim s As String = My.Application.Info.DirectoryPath + "\" + n
-        Dim s As String = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\Brovarone Cristiano" + "\" + n
+        Dim f As String = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\Brovarone Cristiano"
+        Dim s As String = f + "\" + n
 
         'Controllo esistenza del file 
         If System.IO.File.Exists(s) Then
             'Carico dal file Json
             'Parametri Config dal nuovo gestore
             PortableJsonSettingsProvider.SettingsFileName = n
-            PortableJsonSettingsProvider.SettingsDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\Brovarone Cristiano"   '"Some\custom\location"
+            PortableJsonSettingsProvider.SettingsDirectory = f   '"Some\custom\location"
             PortableJsonSettingsProvider.ApplyProvider(My.MySettings.[Default])
 
             'Carico dal file config
@@ -233,8 +233,9 @@ Public Class FLogin
             TxtTmpDB_UNO.Text = My.Settings.mDBTEMPUNO
             TxtTmpDB_SPA.Text = My.Settings.mDBTEMPSPA
             FolderPath = txtPath.Text
+            txtTemp_FoxFolder.Text = My.Settings.mFOXPATH
         Else
-            Directory.CreateDirectory(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\Brovarone Cristiano" + "\")
+            Directory.CreateDirectory(f + "\")
             'Carico dal file config
             TxtDB_UNO.Text = My.Settings.mDATABASE
             TxtDB_SPA.Text = My.Settings.mDATABASE_SPA
@@ -246,9 +247,10 @@ Public Class FLogin
             TxtTmpDB_UNO.Text = My.Settings.mDBTEMPUNO
             TxtTmpDB_SPA.Text = My.Settings.mDBTEMPSPA
             FolderPath = txtPath.Text
+            txtTemp_FoxFolder.Text = My.Settings.mFOXPATH
             'Imposto nuovo gestore
             PortableJsonSettingsProvider.SettingsFileName = n
-            PortableJsonSettingsProvider.SettingsDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\Brovarone Cristiano"   '"Some\custom\location"
+            PortableJsonSettingsProvider.SettingsDirectory = f  '"Some\custom\location"
             PortableJsonSettingsProvider.ApplyProvider(My.MySettings.[Default])
             'Salvo sul nuovo file
             My.Settings.mDATABASE = TxtDB_UNO.Text
@@ -261,6 +263,7 @@ Public Class FLogin
             My.Settings.mDBTEMPUNO = TxtTmpDB_UNO.Text
             My.Settings.mDBTEMPSPA = TxtTmpDB_SPA.Text
             txtPath.Text = FolderPath
+            My.Settings.mFOXPATH = txtTemp_FoxFolder.Text
             My.MySettings.Default.Save()
         End If
 
@@ -293,6 +296,8 @@ Public Class FLogin
                 My.Settings.mDBTEMPUNO = tb.Text
             Case "TXTTMPDB_SPA"
                 My.Settings.mDBTEMPSPA = tb.Text
+            Case "TXTTEMP_FOXFOLDER"
+                My.Settings.mFOXPATH = tb.Text
         End Select
     End Sub
     Private Sub DtDataInizio_ValueChanged(sender As Object, e As EventArgs) Handles DtDataInizio.ValueChanged
@@ -940,7 +945,7 @@ Public Class FLogin
             Dim bFound As Boolean
             Dim contratti As String() = {"_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV", "ACGTRPG"} '"_CHIAVI", "_ONEOPE1","_ONTROPE"
             Dim contrattiFound(8) As Boolean
-            Dim fileInFolder As String() = Directory.GetFiles(If(String.IsNullOrWhiteSpace(txtTemp_FoxFolder.Text), FolderPath, txtTemp_FoxFolder.Text), "*.*", SearchOption.TopDirectoryOnly)
+            Dim fileInFolder As String() = Directory.GetFiles(If(String.IsNullOrWhiteSpace(My.Settings.mFOXPATH), FolderPath, My.Settings.mFOXPATH), "*.*", SearchOption.TopDirectoryOnly)
 
             For i = 0 To UBound(contratti)
                 For Each sFile As String In FileInFolder
@@ -2127,4 +2132,5 @@ Public Class FLogin
     Private Sub BtnFox_Click(sender As Object, e As EventArgs) Handles BtnFox.Click
         ContrattiFoxToolStripMenuItem_Click(sender, e)
     End Sub
+
 End Class

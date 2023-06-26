@@ -184,6 +184,18 @@ Namespace My
                 Me("mDATABASE_SPA") = value
             End Set
         End Property
+        
+        <Global.System.Configuration.UserScopedSettingAttribute(),  _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(),  _
+         Global.System.Configuration.DefaultSettingValueAttribute("")>  _
+        Public Property mFOXPATH() As String
+            Get
+                Return CType(Me("mFOXPATH"),String)
+            End Get
+            Set
+                Me("mFOXPATH") = value
+            End Set
+        End Property
     End Class
 End Namespace
 
