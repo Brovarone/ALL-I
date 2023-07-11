@@ -491,10 +491,10 @@ Module Ordini
                                     .PacksUoM = cOrdRow.UoM,
                                     .Qty = aDaRif.CanoniRipresi,
                                     .UnitValue = Math.Round(aDaRif.ValUnit.Value, decTax), ' Pesco il valore unitario dall'attività
-                                    .NetPrice = Math.Round(cOrdRow.ValUnit, decTax),
-                                    .TaxableAmount = Math.Round(aDaRif.CanoniRipresi * cOrdRow.ValUnit, decTax),
+                                    .NetPrice = Math.Round(aDaRif.ValUnit.Value, decTax),
+                                    .TaxableAmount = Math.Round(aDaRif.CanoniRipresi * aDaRif.ValUnit.Value, decTax),
                                     .TaxCode = cOrdRow.CodIva,
-                                    .TotalAmount = Math.Round((aDaRif.CanoniRipresi * cOrdRow.ValUnit) * ((100 + cOrdRow.PercIva) / 100), decTax),
+                                    .TotalAmount = Math.Round((aDaRif.CanoniRipresi * aDaRif.ValUnit.Value) * ((100 + cOrdRow.PercIva) / 100), decTax),
                                     .ExpectedDeliveryDate = cOrdRow.DataPrevistaConsegna,
                                     .ConfirmedDeliveryDate = cOrdRow.DataConfermaConsegna,
                                     .AllNrCanoni = aDaRif.CanoniRipresi,
