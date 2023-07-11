@@ -1195,7 +1195,7 @@ Module Ordini
                             isNewRowsAtt = True
                             Debug.Print("### Riga contratto:(" & c.Line.ToString & ") " & c.Servizio)
                             debugging.AppendLine("### Riga contratto:(" & c.Line.ToString & ") " & c.Servizio)
-                            Dim newValUnit As Double = Math.Round(cOrdRow.ValUnit * (1 + (percIstat / 100)), decValUnit)
+                            Dim newValUnit As Double = Math.Round(cOrdRow.ValUnit * (1 + (percIstat / 100)), decTax)
                             c.ValUnitIstat = newValUnit
                             c.DataUltRivIstat = Now
                             c.DataFineElaborazione = Now
