@@ -842,8 +842,12 @@ Module Fatture
                                                                                     drSSD = dtSSDNew.NewRow
                                                                                     'Devo trovare il nuovo contatore dei mandati
                                                                                     dvSSD.RowFilter = "Customer='" & .Item("AA").ToString & "'"
+                                                                                    dvSSD.Sort = "MandateCode"
                                                                                     Dim iMandateCounter As Integer = dvSSD.Count
-                                                                                    drSSD("MandateCode") = .Item("AA").ToString & "_" & iMandateCounter.ToString
+                                                                                    Dim iSDDContatoreIpotetico As Integer
+                                                                                    Integer.TryParse(Right(dvSSD(iMandateCounter - 1)("MandateCode").ToString, 1), iSDDContatoreIpotetico)
+                                                                                    drSSD("MandateCode") = .Item("AA").ToString & "_" & If(iMandateCounter > iSDDContatoreIpotetico, iMandateCounter, (iSDDContatoreIpotetico + 1)).ToString
+                                                                                    dvSSD.Sort = "Customer"
                                                                                     Debug.Print("Nuovo mandato: " & drSSD("MandateCode"))
                                                                                     drSSD("UMRCode") = .Item("FL").ToString
                                                                                     drSSD("Customer") = .Item("AA").ToString
