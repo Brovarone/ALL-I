@@ -491,10 +491,10 @@ Module Ordini
                                     .PacksUoM = cOrdRow.UoM,
                                     .Qty = aDaRif.CanoniRipresi,
                                     .UnitValue = Math.Round(aDaRif.ValUnit.Value, decTax), ' Pesco il valore unitario dall'attività
-                                    .NetPrice = Math.Round(cOrdRow.ValUnit, decTax),
-                                    .TaxableAmount = Math.Round(aDaRif.CanoniRipresi * cOrdRow.ValUnit, decTax),
+                                    .NetPrice = Math.Round(aDaRif.ValUnit.Value, decTax),
+                                    .TaxableAmount = Math.Round(aDaRif.CanoniRipresi * aDaRif.ValUnit.Value, decTax),
                                     .TaxCode = cOrdRow.CodIva,
-                                    .TotalAmount = Math.Round((aDaRif.CanoniRipresi * cOrdRow.ValUnit) * ((100 + cOrdRow.PercIva) / 100), decTax),
+                                    .TotalAmount = Math.Round((aDaRif.CanoniRipresi * aDaRif.ValUnit.Value) * ((100 + cOrdRow.PercIva) / 100), decTax),
                                     .ExpectedDeliveryDate = cOrdRow.DataPrevistaConsegna,
                                     .ConfirmedDeliveryDate = cOrdRow.DataConfermaConsegna,
                                     .AllNrCanoni = aDaRif.CanoniRipresi,
@@ -1195,7 +1195,7 @@ Module Ordini
                             isNewRowsAtt = True
                             Debug.Print("### Riga contratto:(" & c.Line.ToString & ") " & c.Servizio)
                             debugging.AppendLine("### Riga contratto:(" & c.Line.ToString & ") " & c.Servizio)
-                            Dim newValUnit As Double = Math.Round(cOrdRow.ValUnit * (1 + (percIstat / 100)), decValUnit)
+                            Dim newValUnit As Double = Math.Round(cOrdRow.ValUnit * (1 + (percIstat / 100)), decTax)
                             c.ValUnitIstat = newValUnit
                             c.DataUltRivIstat = Now
                             c.DataFineElaborazione = Now

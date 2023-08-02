@@ -6,6 +6,7 @@ Imports ALLSystemTools.SqlTools.Bulk
 Public Module Paghe
     Private dtTeste As DataTable
     Private dtRighe As DataTable
+    Private dtTranscode As DataTable
     Private Const ContoTransitorioMAGO = "2DIP999"
     Private Const ModCont = "PAGHE"
     Private Const CauRiga = "PAGHE"
@@ -25,9 +26,11 @@ Public Module Paghe
                 If Not String.IsNullOrWhiteSpace(currentLine) Then
                     If String.IsNullOrWhiteSpace(Left(currentLine, 6)) Then
                         currentRow = Testata(currentLine)
+                        currentRow = currentRow.Append(TranscodeCdc(currentRow(9))).ToArray
                         dtTeste.Rows.Add(currentRow)
                     Else
                         currentRow = Riga(currentLine)
+                        currentRow = currentRow.Append(TranscodeCdc(currentRow(1))).ToArray
                         dtRighe.Rows.Add(currentRow)
                     End If
 
@@ -109,9 +112,10 @@ Public Module Paghe
         dtTeste.Columns.Add("DataReg") '6 'AAMMGG
         dtTeste.Columns.Add("NrRif") '6
         dtTeste.Columns.Add("NrSequenza") '2
+        dtTeste.Columns.Add("CdCMago") 'Varchar(8) Campo di Mago da Valorizzare con tabela di Transcodifica
 
     End Sub
-    Private Sub InitalizeRighe()
+    Private Sub InitializeRighe()
 
         dtRighe.Columns.Add("Filler0")      '1
         dtRighe.Columns.Add("CdC")          '2
@@ -135,13 +139,48 @@ Public Module Paghe
         dtRighe.Columns.Add("DataReg")      '6 'AAMMGG
         dtRighe.Columns.Add("NrRif")        '6
         dtRighe.Columns.Add("NrSequenza")   '2
+        dtRighe.Columns.Add("CdCMago") 'Varchar(8) Campo di Mago da Valorizzare con tabela di Transcodifica
 
     End Sub
+
+    ''' <summary> 
+    ''' Transcodifica Centri di Costo Da Paghe a Mago <br/>
+    ''' A Seguito accorpamento UNO -- SPA
+    ''' </summary>
+    Private Sub InitializeTranscode()
+        dtTranscode = New DataTable
+        dtTranscode.Columns.Add("CodPaghe")
+        dtTranscode.PrimaryKey = New DataColumn() {dtTranscode.Columns("CodPaghe")}
+        dtTranscode.Columns.Add("CodMago")
+        dtTranscode.Rows.Add("A1", "AL1")
+        dtTranscode.Rows.Add("A2", "ALBA1")
+        dtTranscode.Rows.Add("A3", "AO1")
+        dtTranscode.Rows.Add("A4", "AT1")
+        dtTranscode.Rows.Add("BI", "BI1")
+        dtTranscode.Rows.Add("BO", "BO1")
+        dtTranscode.Rows.Add("CI", "CI1")
+        dtTranscode.Rows.Add("C2", "CN1")
+        dtTranscode.Rows.Add("M1", "MI1")
+        dtTranscode.Rows.Add("N1", "NO1")
+        dtTranscode.Rows.Add("RO", "RO1")
+        dtTranscode.Rows.Add("T1", "TO1")
+        dtTranscode.Rows.Add("UT", "UT1")
+        dtTranscode.Rows.Add("V1", "VC1")
+    End Sub
+    Private Function TranscodeCdc(Cdc As String) As String
+        Dim dr As DataRow = dtTranscode.Rows.Find(Cdc)
+        If dr Is Nothing Then
+            Return Cdc
+        Else
+            Return dr("CodMago").ToString
+        End If
+    End Function
     Private Sub InizializzaMascheraMatching()
         dtTeste = New DataTable
         InitializeTestata()
         dtRighe = New DataTable
-        InitalizeRighe()
+        InitializeRighe()
+        InitializeTranscode()
     End Sub
     ''' <summary>
     ''' Creo la scrittura in contabilità per le paghe
@@ -206,7 +245,8 @@ Public Module Paghe
                                         DataRiga = MagoFormatta("20" & .Item("DataReg"), GetType(DateTime)).DataTempo
                                         'Controllo la filiale e se diversa chiudo la registrazione, 
                                         'quadro a conto transitorio e creo nuovo movimento
-                                        If filToReg <> .Item("CdC") OrElse bChiudiRegistrazione Then
+                                        '02/08/2023 Cambio Campo per adeguamento e transcodifica UNO-SPA
+                                        If filToReg <> .Item("CdCMago") OrElse bChiudiRegistrazione Then
                                             If Not isNewReg Then
                                                 'Aggiorno la testa con quello che ho calcolato
                                                 drPn("TotalAmount") = Math.Round(If(totDare > totAvere, totDare, totAvere), 2)
@@ -240,8 +280,8 @@ Public Module Paghe
                                                 bChiudiRegistrazione = False
                                             End If
                                             'resetto e rivalorizzo
-                                            If filToReg <> .Item("CdC") Then ireg = 0
-                                            filToReg = .Item("CdC")
+                                            If filToReg <> .Item("CdCMago") Then ireg = 0
+                                            filToReg = .Item("CdCMago")
                                             quadratura = 0
                                             quadraturaDaFile = 0
                                             totDare = 0
@@ -498,7 +538,7 @@ Public Module Paghe
                                                 'Righe MA_CostAccEntriesDetail
                                                 ''''''''''''''''''''''
                                                 Dim isDare = .Item("DebitCreditSign") = 4980736
-                                                Dim CdC As String = Left(TestePN.Rows(irow).Item("DocNo"), 2)
+                                                Dim CdC As String = Split(TestePN.Rows(irow).Item("DocNo"), "-").First
                                                 drAnaD = dtMovAnaD.NewRow
                                                 drAnaD("EntryId") = idMovAna
                                                 drAnaD("Line") = 1 'Linea dettaglio Cdc, ne ho sempre solo una

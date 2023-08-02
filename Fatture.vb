@@ -587,6 +587,8 @@ Module Fatture
                                                                             drDoc("CountryOfPayment") = "IT"
                                                                             drDoc("ActionOnLifoFifo") = 26411008
                                                                             drDoc("ModifyOriginalPymtSched") = "0"
+                                                                            'todo : IMPLEMENTARE QUESTO FLAG
+                                                                            'drDoc("SplitPaymentActive") = "0"
 
                                                                             drDoc("TBGuid") = Guid.NewGuid
                                                                             drDoc("WorkerIDIssue") = My.Settings.mLOGINID 'Matricola
