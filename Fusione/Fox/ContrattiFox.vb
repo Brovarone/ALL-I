@@ -546,6 +546,9 @@ Module ContrattiFox
 
 #End Region
 #Region "Testa"
+                'Data Consegna il (ExpectedDeliveryDate) = Decorrenza
+                'Data Confermata il (ConfirmedDeliveryDate) = non usata
+                'Non oltre il (CompulsoryDeliveryDate) = Data scadenza fissa o cessazione ( ma non comanda nulla)
                 Dim rOrd As New MaSaleOrd With {
                      .Priority = 88,
                     .CustSuppType = CustSuppType.Cliente,
@@ -575,13 +578,13 @@ Module ContrattiFox
                     .InvoicingCustomer = r("ACGCOD").ToString,
                     .ExpectedDeliveryDate = Valid_Data(r("DTDECORR").ToString),
                     .ConfirmedDeliveryDate = sDataNulla,
+                    .CompulsoryDeliveryDate = Valid_Data(r("DTCESSFATT").ToString),
                     .Carrier1 = vettore,
                     .OurReference = r("FILFATT").ToString,
                     .YourReference = contratto,
                     .CompanyCa = cli.CompanyCa,
                     .CompanyPymtCa = cli.CustomerCompanyCa,
                     .Presentation = 1376260,
-                    .CompulsoryDeliveryDate = sDataNulla,
                     .ShipToAddress = "sede",
                     .BankAuthorization = "",
                     .ContractCode = drFattEle("F2126").ToString.Trim,
@@ -723,7 +726,7 @@ Module ContrattiFox
                                         .ImportoProvvigione = 0,
                                         .Impianto = "sede",
                                         .Nota = "???",
-                                        .ModelloContratto = 1229717506,
+                                        .ModelloContratto = 1229717507,
                                         .CondPag = condPag,
                                         .SedeInvioDoc = "sede",
                                         .Vettore = vettore,
@@ -743,15 +746,16 @@ Module ContrattiFox
                 Dim iLine As Integer = 1
                 'Al momento non scrivo descrizione = left(r("DESCAN").ToString.Trim,128) perche' e' gestita con le righe sdescrittive
                 'todo qta !!!
+                Dim qtaOrdine As Double = TranscodificaQuantita(r("FREQ").ToString)
                 Dim rOrdContratto As New AllordCliContratto With {
                                         .IdOrdCli = saleOrdId,
                                         .Line = iLine,
                                         .Servizio = r("TIPSERV"),
                                         .Descrizione = "",
-                                        .Qta = 0,
+                                        .Qta = qtaOrdine,
                                         .Um = "",
-                                        .ValUnit = If(r("OLDCANONE") = 0, r("CANONE"), r("OLDCANONE")),
-                                        .ValUnitIstat = r("CANONE"),
+                                        .ValUnit = Math.Round(If(r("OLDCANONE") = 0, r("CANONE"), r("OLDCANONE")) / qtaOrdine, 2),
+                                        .ValUnitIstat = Math.Round(r("CANONE") / qtaOrdine, 2),
                                         .DataUltRivIstat = Valid_Data(r("DTVARCAN").ToString),
                                         .Franchigia = 0,
                                         .Nota = "???",
@@ -1488,6 +1492,28 @@ Module ContrattiFox
                 esito = "NEGRO"    'NEGRO DANIELE
             Case Else
                 esito = "XXX"
+        End Select
+        Return esito
+    End Function
+    Private Function TranscodificaQuantita(ByVal codice As String) As Double
+        Dim esito As Integer
+        Select Case codice.ToUpper
+            Case "0A", "0P"
+                esito = 12      'ANNUALE
+            Case "1A", "1P"
+                esito = 1       'MENSILE
+            Case "2A", "2P"
+                esito = 2       'BIMESTRALE
+            Case "3A", "3P"
+                esito = 3       'TRIMESTRALE
+            Case "4A", "4P"
+                esito = 4       'QUADRIMESTRALE
+            Case "6A", "6P"
+                esito = 6       'SEMESTRALE
+            Case "NO"
+                esito = 0       'SOLO CANONI SUPPLEMENTARI
+            Case Else
+                esito = "999"
         End Select
         Return esito
     End Function

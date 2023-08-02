@@ -449,6 +449,10 @@
     </Compile>
     <Compile Include="GlobalSuppressions.vb" />
     <Compile Include="Ordini\FattureDaOrdini.vb" />
+    <Compile Include="Ordini\frmSchemaOrdini.Designer.vb">
+      <DependentUpon>frmSchemaOrdini.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Ordini\frmSchemaOrdini.vb" />
     <Compile Include="Ordini\Ordini.vb" />
     <Compile Include="Settings.vb" />
     <Compile Include="SQL.vb" />
@@ -517,6 +521,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Ordini\FAskFiltriOrdini.resx">
       <DependentUpon>FAskFiltriOrdini.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Ordini\frmSchemaOrdini.resx">
+      <DependentUpon>frmSchemaOrdini.vb</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

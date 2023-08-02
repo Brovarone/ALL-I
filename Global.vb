@@ -801,6 +801,11 @@ Module MagoNet
         Application.DoEvents()
     End Sub
 
+    ''' <summary>
+    ''' Restituisce una data valida o "Data Nulla"
+    ''' </summary>
+    ''' <param name="value"></param>
+    ''' <returns></returns>
     Public Function Valid_Data(value As String) As String
         Return If(String.IsNullOrWhiteSpace(value), sDataNulla, value)
     End Function
