@@ -845,7 +845,11 @@ Module Fatture
                                                                                     dvSSD.Sort = "MandateCode"
                                                                                     Dim iMandateCounter As Integer = dvSSD.Count
                                                                                     Dim iSDDContatoreIpotetico As Integer
-                                                                                    Integer.TryParse(Right(dvSSD(iMandateCounter - 1)("MandateCode").ToString, 1), iSDDContatoreIpotetico)
+                                                                                    If iMandateCounter = 0 Then
+                                                                                        iSDDContatoreIpotetico = 0
+                                                                                    Else
+                                                                                        Integer.TryParse(Right(dvSSD(iMandateCounter - 1)("MandateCode").ToString, 1), iSDDContatoreIpotetico)
+                                                                                    End If
                                                                                     drSSD("MandateCode") = .Item("AA").ToString & "_" & If(iMandateCounter > iSDDContatoreIpotetico, iMandateCounter, (iSDDContatoreIpotetico + 1)).ToString
                                                                                     dvSSD.Sort = "Customer"
                                                                                     Debug.Print("Nuovo mandato: " & drSSD("MandateCode"))
