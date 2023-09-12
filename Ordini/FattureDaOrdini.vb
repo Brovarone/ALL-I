@@ -24,7 +24,7 @@ Module FattureDaOrdini
         Dim sMsg As String
         Try
             s.Append("Update MA_SaleDocDetail SET ALL_CanoniDataI = Ord.ALL_CanoniDataI , ALL_CanoniDataF = Ord.ALL_CanoniDataF, ALL_NrCanoni = Ord.ALL_NrCanoni, TBModified = @DataMod , TBModifiedID = @User ")
-            s.Append("From MA_SaleDoc Testa INNER JOIN MA_SaleDocDetail Doc ON Testa.SaleDocId = Doc.SaleDocId INNER Join MA_SaleOrdDetails Ord ON Ord.SaleOrdId = Doc.SaleOrdId And Ord.SubId = Doc.SaleOrdSubId ")
+            s.Append("From MA_SaleDoc Testa INNER JOIN MA_SaleDocDetail Doc ON Testa.SaleDocId = Doc.SaleDocId INNER Join MA_SaleOrdDetails Ord ON Ord.SaleOrdId = Doc.SaleOrdId And Ord.SubId = Doc.SaleOrdSubId AND Ord.Position = Doc.SaleOrdPos ")
             s.Append("WHERE (Doc.LineType = " & LineType.Merce & " OR Doc.LineType = " & LineType.Servizio & ") ")
             s.Append("AND (Testa.DocumentType=" & DocumentType.Fattura & " Or Testa.DocumentType=" & DocumentType.FatturaAccompagnatoria & " Or Testa.DocumentType=" & DocumentType.NotaCredito & ") ")
             s.Append("AND (Testa.DocumentDate >=@FromDate  And Testa.DocumentDate <=@ToDate ) ")

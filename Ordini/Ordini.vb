@@ -482,7 +482,7 @@ Module Ordini
                                 Dim rRif As New MaSaleOrdDetails With {
                                     .Line = cOrd.LastLine + iNewRowsCount,
                                     .Position = curLastPosition + iNrRigheAValore,
-                                    .SubId = cOrd.LastLine + iNewRowsCount,
+                                    .SubId = cOrd.LastSubId + iNewRowsCount,
                                     .SaleOrdId = cOrd.SaleOrdId,
                                     .LineType = LineType.Servizio,
                                     .Item = cOrdRow.Item,
@@ -534,7 +534,7 @@ Module Ordini
                                 Dim r As New MaSaleOrdDetails With {
                                     .Line = cOrd.LastLine + iNewRowsCount,
                                     .Position = curLastPosition + iNrRigheAValore,
-                                    .SubId = cOrd.LastLine + iNewRowsCount,
+                                    .SubId = cOrd.LastSubId + iNewRowsCount,
                                     .SaleOrdId = cOrd.SaleOrdId,
                                     .LineType = LineType.Servizio,
                                     .Item = cOrdRow.Item
@@ -618,7 +618,7 @@ Module Ordini
                                 Dim rd As New MaSaleOrdDetails With {
                                 .Line = cOrd.LastLine + iNewRowsCount,
                                 .Position = 0,
-                                .SubId = cOrd.LastLine + iNewRowsCount,
+                                .SubId = cOrd.LastSubId + iNewRowsCount,
                                 .SaleOrdId = cOrd.SaleOrdId,
                                 .LineType = LineType.Nota,
                                 .Description = aIst.TestoFattura,
@@ -686,7 +686,7 @@ Module Ordini
                         o.Invoiced = "0"
                         o.Delivered = "0"
                         o.Picked = "0"
-                        o.LastSubId = cOrd.LastLine + iNewRowsCount
+                        o.LastSubId = cOrd.LastSubId + iNewRowsCount
                         o.Tbmodified = Now
                         o.TbmodifiedId = sLoginId
                         efMaSaleOrd.Add(o)
@@ -866,7 +866,7 @@ Module Ordini
         Dim rd As New MaSaleOrdDetails With {
                                                 .Line = cOrdRow.Parent.LastLine + iNewRowsCount,
                                                 .Position = 0,
-                                                .SubId = cOrdRow.Parent.LastLine + iNewRowsCount,
+                                                .SubId = cOrdRow.Parent.LastSubId + iNewRowsCount,
                                                 .SaleOrdId = cOrdRow.Parent.SaleOrdId,
                                                 .LineType = LineType.Nota,
                                                 .Description = d,

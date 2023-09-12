@@ -847,7 +847,11 @@ Module Fatture
                                                                                     dvSSD.Sort = "MandateCode"
                                                                                     Dim iMandateCounter As Integer = dvSSD.Count
                                                                                     Dim iSDDContatoreIpotetico As Integer
-                                                                                    Integer.TryParse(Right(dvSSD(iMandateCounter - 1)("MandateCode").ToString, 1), iSDDContatoreIpotetico)
+                                                                                    If iMandateCounter = 0 Then
+                                                                                        iSDDContatoreIpotetico = 0
+                                                                                    Else
+                                                                                        Integer.TryParse(Right(dvSSD(iMandateCounter - 1)("MandateCode").ToString, 1), iSDDContatoreIpotetico)
+                                                                                    End If
                                                                                     drSSD("MandateCode") = .Item("AA").ToString & "_" & If(iMandateCounter > iSDDContatoreIpotetico, iMandateCounter, (iSDDContatoreIpotetico + 1)).ToString
                                                                                     dvSSD.Sort = "Customer"
                                                                                     Debug.Print("Nuovo mandato: " & drSSD("MandateCode"))
@@ -3094,7 +3098,7 @@ Module MovimentiAnaliticiDaFatture
                                                                 drAna("TotalAmount") += .Item("TaxableAmount")
                                                             End If
                                                             'Creo n righe
-                                                            Dim importo As Double = .Item("TaxableAmount")
+                                                            Dim imponibile As Double = .Item("TaxableAmount")
                                                             tempAmount = 0
                                                             Dim iCanoni As Double
                                                             If .Item("ALL_NrCanoni") = 0 Then
@@ -3103,7 +3107,9 @@ Module MovimentiAnaliticiDaFatture
                                                             Else
                                                                 iCanoni = Math.Abs(.Item("ALL_NrCanoni"))
                                                             End If
-                                                            Dim importoMensile As Double = importo / iCanoni
+                                                            Dim iRigheAnalitiche As Integer = CInt(Math.Ceiling(iCanoni))
+                                                            Dim importoMensile As Double = imponibile / iCanoni
+                                                            Dim importoMezzo As Double
                                                             Dim dataDecorrenza As Date
                                                             If .Item("ALL_CanoniDataI").ToString = sDataNulla Then
                                                                 dataDecorrenza = .Item("DocumentDate")
@@ -3111,17 +3117,36 @@ Module MovimentiAnaliticiDaFatture
                                                             Else
                                                                 dataDecorrenza = .Item("ALL_CanoniDataI")
                                                             End If
+                                                            '04/09/2023 : Gestione Mezzi Canoni
+                                                            Dim bMezzoCanone As Boolean = Math.Abs(iCanoni Mod 1) <> 0
+                                                            Dim bMezzoCannoneUtilizzato As Boolean = False
+                                                            Dim bTroncoIniziale As Boolean
+                                                            Dim bTroncoFinale As Boolean
+                                                            If bMezzoCanone Then
+                                                                bTroncoIniziale = dataDecorrenza.Day <> 1
+                                                                bTroncoFinale = dataDecorrenza.Day = 1
+                                                                'iRigheAnalitiche = CInt(Math.Ceiling(iCanoni))
+                                                                Dim resto As Double = iCanoni Mod 1
+                                                                Select Case True
+                                                                    Case (resto > 0.4 AndAlso resto < 0.6)
+                                                                        importoMezzo = Math.Round(importoMensile / 2, 2)
+                                                                    Case Else
+                                                                        avvisi.AppendLine("A03: Impossibile determinare quota competenza. Doc: " & .Item("DocNo") & " riga : " & .Item("Line"))
+                                                                End Select
+                                                            End If
                                                             Dim isDare = drAna("DebitCreditSign") = 8192000
                                                             Dim CdC As String = .Item("CostCenter")
                                                             If String.IsNullOrWhiteSpace(CdC) Then errori.AppendLine("E50: Doc: " & .Item("DocNo") & " riga : " & .Item("Line") & " - Centro di Costo assente!")
                                                             Dim isNotOkAnnualita As Boolean = Annualita <> CShort(Year(dataDecorrenza))
-                                                            For n = 0 To iCanoni - 1
+
+                                                            For n = 0 To iRigheAnalitiche - 1
                                                                 ''''''''''''''''''''''
                                                                 'Righe MA_CostAccEntriesDetail
                                                                 ''''''''''''''''''''''
                                                                 Dim dataMensile As DateTime = dataDecorrenza.AddMonths(n)
                                                                 'Se vado all' anno precedente NON scrivere e segnalare !!!
                                                                 'Sull'anno successivo scrivo ma segnala
+                                                                Dim amount As Double = 0
                                                                 If Annualita <> CShort(Year(dataMensile)) Then
                                                                     isNotOkAnnualita = True
                                                                     If CShort(Year(dataMensile)) < Annualita Then
@@ -3129,9 +3154,20 @@ Module MovimentiAnaliticiDaFatture
                                                                         'Le righe con anni precedente non vanno generate
                                                                         annidiversiP.AppendLine("Riga:" & .Item("Line").ToString & " Conto:" & .Item("Offset") & " Competenza: " & dataMensile.ToString("dd-MM-yyyy"))
                                                                         'Conto ugualmente l'importo per poter scrivere i dati correttamente
-                                                                        tempAmount += Math.Round(importoMensile, 2)
+
+                                                                        If bMezzoCanone AndAlso bTroncoIniziale Then
+                                                                            If bMezzoCannoneUtilizzato Then
+                                                                                amount = Math.Round(importoMensile, 2)
+                                                                            Else
+                                                                                bMezzoCannoneUtilizzato = True
+                                                                                amount = Math.Round(importoMezzo, 2)
+                                                                            End If
+                                                                        Else
+                                                                            amount = Math.Round(importoMensile, 2)
+                                                                        End If
+                                                                        tempAmount += Math.Round(amount, 2)
                                                                         '23/04/2021 lo sottraggo dal totale registrazione in modo che il report di Mago funzioni
-                                                                        drAna("TotalAmount") -= Math.Round(importoMensile, 2)
+                                                                        drAna("TotalAmount") -= Math.Round(amount, 2)
                                                                         Continue For
                                                                     Else
                                                                         bIsAnnoSuccessivo = True
@@ -3152,8 +3188,18 @@ Module MovimentiAnaliticiDaFatture
                                                                 drAnaD("Qty") = 1
                                                                 drAnaD("DebitCreditSign") = If(isDare, 4980736, 4980737)
                                                                 'Se e' l'ultima riga saldo
-                                                                drAnaD("Amount") = Math.Round(If(n = iCanoni - 1, importo - tempAmount, importoMensile), 2)
-                                                                tempAmount += Math.Round(importoMensile, 2)
+                                                                If bMezzoCanone AndAlso bTroncoIniziale Then
+                                                                    If bMezzoCannoneUtilizzato Then
+                                                                        amount = Math.Round(importoMensile, 2)
+                                                                    Else
+                                                                        bMezzoCannoneUtilizzato = True
+                                                                        amount = Math.Round(importoMezzo, 2)
+                                                                    End If
+                                                                Else
+                                                                    amount = Math.Round(importoMensile, 2)
+                                                                End If
+                                                                drAnaD("Amount") = Math.Round(If(n = iRigheAnalitiche - 1, imponibile - tempAmount, amount), 2)
+                                                                tempAmount += Math.Round(amount, 2)
                                                                 drAnaD("Notes") = Left(.Item("Description"), 64)
                                                                 drAnaD("TBCreatedID") = My.Settings.mLOGINID 'ID utente
                                                                 drAnaD("TBModifiedID") = My.Settings.mLOGINID 'ID utente
