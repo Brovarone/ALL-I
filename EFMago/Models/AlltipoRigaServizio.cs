@@ -33,6 +33,8 @@ namespace EFMago.Models
         public int? TipologiaServizio { get; set; }
         // Creato da me
         public virtual AllordCliContratto AllordCliContratto { get; set; }
+        public virtual AllordCliContrattoDistinta AllordCliContrattoDistinta { get; set; }
+        public virtual AllordCliContrattoServAgg AllordCliContrattoServAgg { get; set; }
 
     }
 }

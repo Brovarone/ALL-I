@@ -45,7 +45,7 @@ namespace EFMago.Models
         public double? AccrualPercAtInvoiceDate { get; set; }
         public string AreaManager { get; set; }
         // Creato da me Non lo mappo in quanto ntext
-        [NotMapped] 
+        [NotMapped]
         public string Notes { get; set; }
         public string AccTpl { get; set; }
         public string TaxJournal { get; set; }
@@ -130,7 +130,7 @@ namespace EFMago.Models
         public short? SubIdContratto { get; set; }
         public short? SubIdDescrizione { get; set; }
         public string IdContractIntegra { get; set; }
-        
+
         public virtual MaSaleOrdNotes MaSaleOrdNotes { get; set; }
         public virtual MaSaleOrdShipping MaSaleOrdShipping { get; set; }
         public virtual MaSaleOrdSummary MaSaleOrdSummary { get; set; }
@@ -139,15 +139,15 @@ namespace EFMago.Models
         public virtual ICollection<MaSaleOrdPymtSched> MaSaleOrdPymtSched { get; set; }
         public virtual ICollection<MaSaleOrdReferences> MaSaleOrdReferences { get; set; }
         public virtual ICollection<MaSaleOrdTaxSummary> MaSaleOrdTaxSummary { get; set; }
-		
-		public virtual AllordCliAcc ALLOrdCliAcc { get; set; }
+
+        public virtual AllordCliAcc ALLOrdCliAcc { get; set; }
         public virtual ICollection<Allcespiti> ALLCespiti { get; set; }
-		public virtual ICollection<AllordCliAttivita> AllordCliAttivita { get; set; }
-		public virtual ICollection<AllordCliContratto> ALLordCliContratto { get; set; }
-		public virtual ICollection<AllordCliDescrizioni> ALLordCliDescrizioni { get; set; }
-		public virtual ICollection<AllordCliTipologiaServizi> ALLordCliTipologiaServizi { get; set; }
-		public virtual ICollection<AllordPadre> AllordPadre { get; set; }
-		public virtual ICollection<AllordFiglio> AllordFiglio { get; set; }
-		
+        public virtual ICollection<AllordCliAttivita> AllordCliAttivita { get; set; }
+        public virtual ICollection<AllordCliContratto> ALLordCliContratto { get; set; }
+        public virtual ICollection<AllordCliDescrizioni> ALLordCliDescrizioni { get; set; }
+        public virtual ICollection<AllordCliTipologiaServizi> ALLordCliTipologiaServizi { get; set; }
+        public virtual ICollection<AllordPadre> AllordPadre { get; set; }
+        public virtual ICollection<AllordFiglio> AllordFiglio { get; set; }
+      
     }
 }

@@ -32,6 +32,9 @@ namespace EFMago.Models
         public virtual DbSet<AllordCliAcc> AllordCliAcc { get; set; }
         public virtual DbSet<AllordCliAttivita> AllordCliAttivita { get; set; }
         public virtual DbSet<AllordCliContratto> AllordCliContratto { get; set; }
+        public virtual DbSet<AllordCliContrattoDescFatt> AllordCliContrattoDescFatt { get; set; }
+        public virtual DbSet<AllordCliContrattoDistinta> AllordCliContrattoDistinta { get; set; }
+        public virtual DbSet<AllordCliContrattoServAgg> AllordCliContrattoServAgg { get; set; }
         public virtual DbSet<AllordCliDescrizioni> AllordCliDescrizioni { get; set; }
         public virtual DbSet<AllordCliTipologiaServizi> AllordCliTipologiaServizi { get; set; }
         public virtual DbSet<AllordFiglio> AllordFiglio { get; set; }
@@ -495,6 +498,12 @@ namespace EFMago.Models
 
                 entity.ToTable("ALLOrdCliContratto");
 
+                entity.Property(e => e.CodIntegra)
+                 .HasColumnName("CodIntegra")
+                 .HasMaxLength(15)
+                 .IsUnicode(false)
+                 .HasDefaultValueSql("('')");
+
                 entity.Property(e => e.DataDecorrenza)
                     .HasColumnName("DataDecorrenza")
                     .HasColumnType("datetime")
@@ -520,6 +529,13 @@ namespace EFMago.Models
                     .HasMaxLength(128)
                     .IsUnicode(false)
                     .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.Distinta)
+                    .HasColumnName("Distinta")
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
 
                 entity.Property(e => e.Fatturato)
                     .HasColumnName("Fatturato")
@@ -589,10 +605,240 @@ namespace EFMago.Models
                     .HasColumnName("ValUnitISTAT")
                     .HasDefaultValueSql("((0))");
 
+                entity.Property(e => e.SubLineDescFatt)
+                    .HasColumnName("SubLineDescFatt")
+                    .HasDefaultValueSql("((0))");
+
+                entity.Property(e => e.SubLineDistinta)
+                    .HasColumnName("SubLineDistinta")
+                    .HasDefaultValueSql("((0))");
+
+                entity.Property(e => e.SubLineServAgg)
+                    .HasColumnName("SubLineServAgg")
+                    .HasDefaultValueSql("((0))");
+
                 // AGGIUNTO DA ME
                 entity.HasOne(d => d.SaleOrd)
                     .WithMany(p => p.ALLordCliContratto)
                     .HasForeignKey(d => d.IdOrdCli)
+                    .OnDelete(DeleteBehavior.ClientSetNull);
+            });
+            modelBuilder.Entity<AllordCliContrattoDescFatt>(entity =>
+            {
+                entity.HasKey(e => new { e.IdOrdCli, e.Line, e.RifLinea })
+                    .IsClustered(false);
+
+                entity.ToTable("ALLOrdCliContratto_DescFatt");
+
+                entity.Property(e => e.Codice)
+                        .HasMaxLength(12)
+                        .IsUnicode(false)
+                        .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.Descrizione)
+                    .HasMaxLength(128)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.Tbcreated)
+                    .HasColumnName("TBCreated")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.TbcreatedId).HasColumnName("TBCreatedID");
+
+                entity.Property(e => e.Tbmodified)
+                    .HasColumnName("TBModified")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
+
+                entity.HasOne(d => d.AllordCliContratto)
+                    .WithMany(p => p.AllordCliContrattoDescFatt)
+                    .HasForeignKey(d => new { d.IdOrdCli, d.RifLinea })
+                    .OnDelete(DeleteBehavior.ClientSetNull);
+            });
+            modelBuilder.Entity<AllordCliContrattoDistinta>(entity =>
+            {
+                entity.HasKey(e => new { e.IdOrdCli, e.Line, e.RifLinea })
+                    .IsClustered(false);
+
+                entity.ToTable("ALLOrdCliContratto_Distinta");
+
+                entity.Property(e => e.CodIntegra)
+                   .HasColumnName("CodIntegra")
+                   .HasMaxLength(15)
+                   .IsUnicode(false)
+                   .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.DataDecorrenza)
+                    .HasColumnName("DataDecorrenza")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("('17991231')");
+
+                entity.Property(e => e.DataFineElaborazione)
+                    .HasColumnName("DataFineElaborazione")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("('17991231')");
+
+                entity.Property(e => e.DataProssimaFatt)
+                    .HasColumnName("DataProssimaFatt")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("('17991231')");
+
+                entity.Property(e => e.DataUltRivIstat)
+                    .HasColumnName("DataUltRivISTAT")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("('17991231')");
+
+                entity.Property(e => e.Descrizione)
+                    .HasColumnName("Descrizione")
+                    .HasMaxLength(128)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.Qta)
+                    .HasColumnName("Qta")
+                    .HasDefaultValueSql("((0))");
+
+                entity.Property(e => e.Servizio)
+                    .HasColumnName("Servizio")
+                    .HasMaxLength(21)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.Tbcreated)
+                    .HasColumnName("TBCreated")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.TbcreatedId).HasColumnName("TBCreatedID");
+
+                entity.Property(e => e.Tbmodified)
+                    .HasColumnName("TBModified")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
+
+                entity.Property(e => e.TipoRigaServizio)
+                    .HasColumnName("TipoRigaServizio")
+                    .HasMaxLength(12)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.Um)
+                    .HasColumnName("UM")
+                    .HasMaxLength(8)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.ValUnit)
+                    .HasColumnName("ValUnit")
+                    .HasDefaultValueSql("((0))");
+
+                entity.Property(e => e.ValUnitIstat)
+                    .HasColumnName("ValUnitISTAT")
+                    .HasDefaultValueSql("((0))");
+
+                // AGGIUNTO DA ME
+                entity.HasOne(d => d.AllordCliContratto)
+                    .WithMany(p => p.AllordCliContrattoDistinta)
+                    .HasForeignKey(d => new { d.IdOrdCli, d.RifLinea })
+                    .OnDelete(DeleteBehavior.ClientSetNull);
+            });
+            modelBuilder.Entity<AllordCliContrattoServAgg>(entity =>
+            {
+                entity.HasKey(e => new { e.IdOrdCli, e.Line, e.RifLinea })
+                    .IsClustered(false);
+
+                entity.ToTable("ALLOrdCliContratto_ServAgg");
+
+                entity.Property(e => e.CodIntegra)
+                    .HasColumnName("CodIntegra")
+                    .HasMaxLength(15)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.DataDecorrenza)
+                    .HasColumnName("DataDecorrenza")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("('17991231')");
+
+                entity.Property(e => e.DataFineElaborazione)
+                    .HasColumnName("DataFineElaborazione")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("('17991231')");
+
+                entity.Property(e => e.DataProssimaFatt)
+                    .HasColumnName("DataProssimaFatt")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("('17991231')");
+
+                entity.Property(e => e.DataUltRivIstat)
+                    .HasColumnName("DataUltRivISTAT")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("('17991231')");
+
+                entity.Property(e => e.Descrizione)
+                    .HasColumnName("Descrizione")
+                    .HasMaxLength(128)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.Franchigia)
+                    .HasColumnName("Franchigia")
+                    .HasDefaultValueSql("((0))");
+
+                entity.Property(e => e.Qta)
+                    .HasColumnName("Qta")
+                    .HasDefaultValueSql("((0))");
+
+                entity.Property(e => e.Servizio)
+                    .HasColumnName("Servizio")
+                    .HasMaxLength(21)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.Tbcreated)
+                    .HasColumnName("TBCreated")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.TbcreatedId).HasColumnName("TBCreatedID");
+
+                entity.Property(e => e.Tbmodified)
+                    .HasColumnName("TBModified")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
+
+                entity.Property(e => e.TipoRigaServizio)
+                    .HasColumnName("TipoRigaServizio")
+                    .HasMaxLength(12)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.Um)
+                    .HasColumnName("UM")
+                    .HasMaxLength(8)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.ValUnit)
+                    .HasColumnName("ValUnit")
+                    .HasDefaultValueSql("((0))");
+
+                entity.Property(e => e.ValUnitIstat)
+                    .HasColumnName("ValUnitISTAT")
+                    .HasDefaultValueSql("((0))");
+
+                // AGGIUNTO DA ME
+                entity.HasOne(d => d.AllordCliContratto)
+                    .WithMany(p => p.AllordCliContrattoServAgg)
+                    .HasForeignKey(d => new { d.IdOrdCli, d.RifLinea })
                     .OnDelete(DeleteBehavior.ClientSetNull);
             });
             modelBuilder.Entity<AllordCliDescrizioni>(entity =>
@@ -845,6 +1091,20 @@ namespace EFMago.Models
                     .HasPrincipalKey<AllordCliContratto>(p => p.TipoRigaServizio)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_AlltipoRigaServizio_TipoRigaServizio_00");
+
+                entity.HasOne(d => d.AllordCliContrattoDistinta)
+                    .WithOne(p => p.AlltipoRigaServizio)
+                    .HasForeignKey<AlltipoRigaServizio>(d => d.TipoRigaServizio)
+                    .HasPrincipalKey<AllordCliContrattoDistinta>(p => p.TipoRigaServizio)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_AlltipoRigaServizio_TipoRigaServizio_01");
+
+                entity.HasOne(d => d.AllordCliContrattoServAgg)
+                    .WithOne(p => p.AlltipoRigaServizio)
+                    .HasForeignKey<AlltipoRigaServizio>(d => d.TipoRigaServizio)
+                    .HasPrincipalKey<AllordCliContrattoServAgg>(p => p.TipoRigaServizio)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_AlltipoRigaServizio_TipoRigaServizio_02");
             });
             #endregion
             #region CustSupp
@@ -6013,6 +6273,18 @@ namespace EFMago.Models
                      .HasForeignKey(d => d.Servizio)
                      .OnDelete(DeleteBehavior.ClientSetNull)
                      .HasConstraintName("FK_AllordCliContratto_Servizio_00");
+
+                 entity.HasMany(d => d.AllordCliContrattoDistinta)
+                    .WithOne(p => p.MaItems)
+                    .HasForeignKey(d => d.Servizio)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_AllordCliContrattoDistinta_Servizio_00");
+
+                 entity.HasMany(d => d.AllordCliContrattoServAgg)
+                    .WithOne(p => p.MaItems)
+                    .HasForeignKey(d => d.Servizio)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK_AllordCliContrattoServAgg_Servizio_00");
 
              });
             modelBuilder.Entity<MaItemsGoodsData>(entity =>

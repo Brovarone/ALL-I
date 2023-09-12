@@ -31,12 +31,21 @@ namespace EFMago.Models
         public int TbmodifiedId { get; set; }
         public DateTime? DataFineElaborazione { get; set; }
         public DateTime? DataProssimaFatt { get; set; }
+        public string Distinta { get; set; }
+        public string CodIntegra { get; set; }
+        public short? SubLineDescFatt { get; set; }
+        public short? SubLineDistinta { get; set; }
+        public short? SubLineServAgg { get; set; }
+
 
         // Creato da me
         public virtual MaSaleOrd SaleOrd { get; set; }
         public virtual MaItems MaItems { get; set; }
         public virtual AlltipoRigaServizio AlltipoRigaServizio { get; set; }
         public virtual ICollection<AllordCliAttivita> AllordCliAttivita { get; set; }
+        public virtual ICollection<AllordCliContrattoDescFatt> AllordCliContrattoDescFatt { get; set; }
+        public virtual ICollection<AllordCliContrattoDistinta> AllordCliContrattoDistinta { get; set; }
+        public virtual ICollection<AllordCliContrattoServAgg> AllordCliContrattoServAgg { get; set; }
 
     }
 }
