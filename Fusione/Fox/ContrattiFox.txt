@@ -48,3 +48,10 @@ DECISIONI DI MASSIMA:
 #Le fatture non vengono piu' a blocchi eventualente si generano le righe dal software per area/filiale (prevedere filtro se non c'e' già)
 #Alcuni dati accessori ( Fatture elettroniche, Lettera dich Intento, nr canoni e date competenza analitiche, scritture di rettifica contabili per scissione ricavo) 
     sono gestite tramite procedure di postproduzione
+
+///////////////////////
+    Domande da fare
+///////////////////////
+H00140 ha 2 contratti (uno a Canone zero) con Produttori diversi ?
+H00616 ha 2 produttori
+H00172 ha contratto ma non viene fatturato, anche H00626

@@ -10,6 +10,19 @@ Imports ALLSystemTools.SqlTools
 
 
 Module ContrattiFox
+    Private lOK As String() = {"H00008", "H00010", "H00012", "H00050", "H00074", "H00088", "H00140", "H00172", "H00242", "H00616", "H00626", "H00650"}
+    '10 e 12 hanno 2 frequenze diverse
+    '50 e 74 si potrebbero escludere,
+    '88 ha 2 contratti con unica fattura
+    '140 anche ma ha gruppo inserito ovvero un canone a ZERO e quindi --> Distinta + raggruppamento su FT
+    '242 ha 2 righe contratto fatturate in un unica fattura e raggruppamento su FT
+    'entrambe hanno raggruppamento su FT
+    '172 ha canone  zero , non viene fatturato
+    '626 idem 
+    '616 5 contratti, 3 in una ft, 1 e 1 -> 3 siti -> 3 ft
+    '650 distinta di 3 contratti con 2 a conone a zero
+
+
     'Gestisce l'import dei contratti da FoxPro a Mago
     Private ds As DataSet
     Dim dtContratti As DataTable
@@ -484,10 +497,9 @@ Module ContrattiFox
         FLogin.prgCopy.Maximum = dtContratti.Rows.Count
         FLogin.prgCopy.Step = 1
         'TODO: LISTA CLIENTI DA PROCESSARE
-        Dim lOK As String() = {"H00008", "H00010", "H00012", "H00050", "H00074", "H00088", "H00140", "H00146", "H00626", "H00650"}
         For Each drv As DataRowView In dvContratti
             Dim r As DataRow = drv.Row
-            'Prevedo il bypass di alcune righe a causa di accorpamento contratti
+            'Prevedo il bypass di alcune righe a causa di accorpamento contratti (GRP -> Distinta)
             If rowsToExclude > 0 Then
                 rowCounterToExclude += 1
                 If rowCounterToExclude = rowsToExclude Then
