@@ -2131,6 +2131,9 @@ namespace EFMago.Models
         .HasMaxLength(10)
         .IsUnicode(false)
         .HasDefaultValueSql("('')");
+
+    entity.Property(e => e.MaxBranchCounter)
+        .HasDefaultValueSql("((0.00))");
 });
             modelBuilder.Entity<MaCustSuppBalances>(entity =>
 {

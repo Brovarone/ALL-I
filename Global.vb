@@ -864,46 +864,6 @@ Public Module Common
         FLogin.prgCopy.Update()
         Application.DoEvents()
     End Sub
-    Public Sub ScriviLogESposta()
-        Dim s As New List(Of String)
-        ScriviLogESposta(s)
-    End Sub
-    Public Sub ScriviLogESposta(lista As List(Of String))
-        My.Application.Log.DefaultFileLogWriter.Flush()
-        My.Application.Log.DefaultFileLogWriter.Close()
-
-        'Sposto i file e il log
-        Dim b As DialogResult = If(isAdmin, MessageBox.Show("Elaborazione terminata" & vbCrLf & "Si vogliono storicizzare i file?", My.Application.Info.Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question), DialogResult.Yes)
-        If b = DialogResult.Yes Then
-            SpostaFile(lista)
-        End If
-    End Sub
-
-    Private Sub SpostaFile(lista As List(Of String))
-        Const sl As String = "\"
-        'Dim newFolder As String = FolderPath & "\PROCESSATI\" & DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")
-        Dim d As DateTime = DateTime.Now
-        Dim periodo As String = d.ToString("yyyy") & sl & d.ToString("MMMM", New Globalization.CultureInfo("it-IT")).ToUpper
-        Dim newFolder As String = FolderPath & sl & "PROCESSATI" & sl & periodo & sl & d.ToString("yyyy-MM-dd HH-mm-ss")
-        Try
-            Directory.CreateDirectory(newFolder)
-        Catch ex As Exception
-            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
-            mb.ShowDialog()
-        End Try
-
-        If lista.Count > 0 Then
-            For Each f As String In lista
-                Dim newFilename As String = System.IO.Path.GetFileName(f)
-                File.Move(f, newFolder & sl & newFilename)
-            Next
-        End If
-        Dim l As String = My.Application.Log.DefaultFileLogWriter.FullLogFileName
-        File.Copy(l, newFolder & sl & System.IO.Path.GetFileName(l))
-        My.Settings.mLastLogPath = newFolder
-        My.Settings.Save()
-
-    End Sub
 
     Public Function OnlyDate(ByVal d As Date) As Date
         Dim nd As New Date(d.Year, d.Month, d.Day)
@@ -971,6 +931,46 @@ Public Module Common
     End Function
 End Module
 Public Module LogTools
+    Public Sub ScriviLogESposta()
+        Dim s As New List(Of String)
+        ScriviLogESposta(s)
+    End Sub
+    Public Sub ScriviLogESposta(lista As List(Of String))
+        My.Application.Log.DefaultFileLogWriter.Flush()
+        My.Application.Log.DefaultFileLogWriter.Close()
+
+        'Sposto i file e il log
+        Dim b As DialogResult = If(isAdmin, MessageBox.Show("Elaborazione terminata" & vbCrLf & "Si vogliono storicizzare i file?", My.Application.Info.Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question), DialogResult.Yes)
+        If b = DialogResult.Yes Then
+            SpostaFile(lista)
+        End If
+    End Sub
+
+    Private Sub SpostaFile(lista As List(Of String))
+        Const sl As String = "\"
+        'Dim newFolder As String = FolderPath & "\PROCESSATI\" & DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")
+        Dim d As DateTime = DateTime.Now
+        Dim periodo As String = d.ToString("yyyy") & sl & d.ToString("MMMM", New Globalization.CultureInfo("it-IT")).ToUpper
+        Dim newFolder As String = FolderPath & sl & "PROCESSATI" & sl & periodo & sl & d.ToString("yyyy-MM-dd HH-mm-ss")
+        Try
+            Directory.CreateDirectory(newFolder)
+        Catch ex As Exception
+            Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+            mb.ShowDialog()
+        End Try
+
+        If lista.Count > 0 Then
+            For Each f As String In lista
+                Dim newFilename As String = System.IO.Path.GetFileName(f)
+                File.Move(f, newFolder & sl & newFilename)
+            Next
+        End If
+        Dim l As String = My.Application.Log.DefaultFileLogWriter.FullLogFileName
+        File.Copy(l, newFolder & sl & System.IO.Path.GetFileName(l))
+        My.Settings.mLastLogPath = newFolder
+        My.Settings.Save()
+
+    End Sub
     Public Sub ScriviLog(ByVal message As String, Optional flush As Boolean = True)
         My.Application.Log.DefaultFileLogWriter.WriteLine(message)
         If flush Then

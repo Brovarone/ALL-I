@@ -46,7 +46,7 @@ DECISIONI DI MASSIMA:
 #Gli ordini nuovi li inseriscono TUTTI a Verrone
     - La 1° fattura di avviamento avviene come ora inserendo a mano le righe nell'ordine.
 #Le fatture non vengono piu' a blocchi eventualente si generano le righe dal software per area/filiale (prevedere filtro se non c'e' già)
-#Alcuni dati accessori ( Fatture elettroniche, Lettera dich Intento, nr canoni e date competenza analitiche, scritture di rettifica contabili per scissione ricavo) 
+#Alcuni dati accessori ( Fatture elettroniche, Lettera Ritenuta acconto( condomini), nr canoni e date competenza analitiche, campi Fatture Elettroniche PA scritture di rettifica contabili per scissione ricavo) 
     sono gestite tramite procedure di postproduzione
 
 ///////////////////////
@@ -54,4 +54,29 @@ DECISIONI DI MASSIMA:
 ///////////////////////
 H00140 ha 2 contratti (uno a Canone zero) con Produttori diversi ?
 H00616 ha 2 produttori
-H00172 ha contratto ma non viene fatturato, anche H00626
+H00172 ha contratto ma non viene fatturato, 
+H00626/H00975 fattura milano
+
+IMPORTANTE come lo determino il SITO / IMPIANTO ??? 
+-> DEVO CREARE DELLE SEDI SUI CLIENTI
+I dati di _ONTRORD sono quelli della sede
+///////////////////////////////////////////////
+ Ipotesi di raggruppamento post incontro 15/09
+///////////////////////////////////////////////
+-Campo Raggruppamento RAGRFATD.RAGRFATT
+-Condizione pagamento
+-CIG / CUP
+-GRP
+-Data DTPRODUZ -> 
+sono in attesa loro per ora considero da accorpare solo contratti con stesso GRP
+
+CANONE [U] = zero E CANALLEUR [CV] = 0 --> Non Importare
+
+
+[MA_EI_ITAdditionalData] c'e' l'elenco dei campi aguntivi
+[MA_EI_ITDocAdditionalData] e' la tabella della fattura a cui aggiungere le info dell'ordine. Copiare e inseire in ordine
+Presentare come maschera o comunque a dato "singolo" per ordine
+
+Su mago controllare al salvataggio ( e all'inserimento) che uno stesso gruppo fatturativo [Vettore] abbia solo su un ordine i valori di fatturazione elettronica 
+Eventualmente indicare da qualche parte il capo cordata e sui figli ereditare e disabilitare :
+Dati fatt_ele, pagamento?, vettore

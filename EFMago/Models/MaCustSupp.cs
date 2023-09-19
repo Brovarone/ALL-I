@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 // Code scaffolded by EF Core assumes nullable reference types (NRTs) are not used or disabled.
 // If you have enabled NRTs for your project, then un-comment the following line:
@@ -160,6 +161,10 @@ namespace EFMago.Models
         public int? EiunitValue { get; set; }
         public string AllcopiaCartacea { get; set; }
         public string InLiquidation { get; set; }
+
+        //Aggiunto da me
+        [NotMapped]
+        public short MaxBranchCounter { get; set; }
 
         public virtual ImCustSuppPolicies ImCustSuppPolicies { get; set; }
         public virtual MaCreditCustomer MaCreditCustomer { get; set; }
