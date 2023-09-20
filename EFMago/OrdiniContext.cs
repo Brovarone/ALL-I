@@ -182,7 +182,7 @@ namespace EFMago.Models
 
                 entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
 
-                // AGGIUNTO DA ME SU CAMPO NON CHIAVE ( aggiungo HasPrinciaplKey)
+                // AGGIUNTO DA ME SU CAMPO NON CHIAVE ( aggiungo HasPrincipalKey)
                 entity.HasOne(d => d.AllordCliAttivita)
                     .WithOne(p => p.Allattivita)
                     .HasForeignKey<Allattivita>(d => d.Attivita)
@@ -2132,8 +2132,6 @@ namespace EFMago.Models
         .IsUnicode(false)
         .HasDefaultValueSql("('')");
 
-    entity.Property(e => e.MaxBranchCounter)
-        .HasDefaultValueSql("((0.00))");
 });
             modelBuilder.Entity<MaCustSuppBalances>(entity =>
 {

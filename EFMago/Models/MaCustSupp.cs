@@ -162,7 +162,7 @@ namespace EFMago.Models
         public string AllcopiaCartacea { get; set; }
         public string InLiquidation { get; set; }
 
-        //Aggiunto da me
+        //Aggiunto da me       
         [NotMapped]
         public short MaxBranchCounter { get; set; }
 
