@@ -62,13 +62,14 @@ Module MovMagazzino
                 iNrEntryForStorage = 1
                 efIdNumbers.FirstOrDefault.LastId = entryId
                 currentStorage = deps_qty.FirstOrDefault.Storage
-                currentSpecificator = deps_qty.FirstOrDefault.Specificator
+                currentSpecificator = If(deps_qty.FirstOrDefault.Specificator.Equals("-"), "", deps_qty.FirstOrDefault.Specificator)
 
                 For Each d In deps_qty
                     AvanzaBarra()
                     Debug.Print("Deposito: " & d.Storage & " articolo " & d.Item)
                     'Inizializzazione
-                    If iNewRowsCount = 100 OrElse Not currentStorage.Equals(d.Storage) OrElse Not currentSpecificator.Equals(d.Specificator) Then
+                    Dim rSpecificator As String = If(d.Specificator.Equals("-"), "", d.Specificator)
+                    If iNewRowsCount = 100 OrElse Not currentStorage.Equals(d.Storage) OrElse Not currentSpecificator.Equals(rSpecificator) Then
                         'Nuova scrittura
                         iNewRowsCount = 1
                         entryId += 1
@@ -79,7 +80,7 @@ Module MovMagazzino
                         End If
                         efIdNumbers.FirstOrDefault.LastId = entryId
                         currentStorage = d.Storage
-                        currentSpecificator = d.Specificator
+                        currentSpecificator = rSpecificator
 
                     End If
                     'Testa
@@ -95,7 +96,7 @@ Module MovMagazzino
                             .DocumentDate = sdata,
                             .StoragePhase1 = d.Storage,
                             .Specificator1Type = d.SpecificatorType,
-                            .SpecificatorPhase1 = d.Specificator,
+                            .SpecificatorPhase1 = rSpecificator,
                             .Currency = "EUR",
                             .Notes = String.Empty,
                             .EntryId = entryId, '.LastSubId = 1,
