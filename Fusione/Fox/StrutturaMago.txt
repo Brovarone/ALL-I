@@ -1,0 +1,38 @@
+﻿Ordine/
+├─ info/acc/
+├─ TAB_CONTRATTO ( Righe)
+│  ├─ [Servizio Fatturativo 1 - RONDA] {Line}
+│  │  ├─ #Descrizioni#
+│  │  │  ├─ Fattura 1
+│  │  │  ├─ Fattura n
+│  │  ├─ #Distinta#
+│  │  │  ├─ Servizio (Capo "Ronda")
+│  │  │	 │  ├─ #Attività# --> ORA E' SOLO SULLA RIGA DI SERVIZIO FATTURATIVO
+│  │  │  │  │  ├─ Sospensione
+│  │  │  │  │  ├─ ISTAT
+│  │  │	 │  ├─ #Canoni aggiuntivi#
+│  │  │  │  │  ├─ Apertura/Chiusura
+│  │  │  │  │  ├─ Ispezione
+│  │  │  ├─ Servizio ( figlio)
+│  │  │	 │  ├─ #Attività#
+│  │  │  │  │  ├─ ISTAT
+│  │  │	 │  ├─ #Canoni aggiuntivi#
+│  │  │  │  │  ├─ Piantonamento
+│  │  │  │  │  ├─ Ispezione
+│  │  │  ├─ Tecnologia (ALL1)
+│  ├─ [Servizio fatturativo 2 - VIGILANZA VIDEO]
+│  │  ├─ #Descrizioni#
+│  │  │  ├─ Fattura secondo
+│  │  │  ├─ Fattura ..
+│  │  ├─ #Distinta#
+│  │  │  ├─ Servizio (Capo "Vigilanza Video")
+│  │  │	 │  ├─ #Attività#
+│  │  │  │  │  ├─ Sospensione
+│  │  │  │  │  ├─ ISTAT
+│  │  │	 │  ├─ #Canoni aggiuntivi#
+│  │  │  │  │  ├─ Apertura/Chiusura
+│  │  │  │  │  ├─ Ispezione
+│  │  │  ├─ Servizio ( figlio)
+│  │  │	 │  ├─ #Canoni aggiuntivi#
+│  │  │  │  │  ├─ Ispezione
+├─ TAB_TOTALI/

@@ -80,3 +80,8 @@ Presentare come maschera o comunque a dato "singolo" per ordine
 Su mago controllare al salvataggio ( e all'inserimento) che uno stesso gruppo fatturativo [Vettore] abbia solo su un ordine i valori di fatturazione elettronica 
 Eventualmente indicare da qualche parte il capo cordata e sui figli ereditare e disabilitare :
 Dati fatt_ele, pagamento?, vettore
+
+
+Schema Mago al 20/09/2023
+Ordine
+

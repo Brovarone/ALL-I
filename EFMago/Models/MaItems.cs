@@ -140,6 +140,6 @@ namespace EFMago.Models
         // Creato da me
         public virtual ICollection<AllordCliContratto> AllordCliContratto { get; set; }
         public virtual ICollection<AllordCliContrattoDistinta> AllordCliContrattoDistinta { get; set; }
-        public virtual ICollection<AllordCliContrattoServAgg> AllordCliContrattoServAgg { get; set; }
+        public virtual ICollection<AllordCliContrattoDistintaServAgg> AllordCliContrattoServAgg { get; set; }
     }
 }

@@ -141,6 +141,7 @@ namespace EFMago.Models
         public virtual ICollection<MaSaleOrdTaxSummary> MaSaleOrdTaxSummary { get; set; }
 
         public virtual AllordCliAcc ALLOrdCliAcc { get; set; }
+        public virtual AllordCliFattEle ALLOrdCliFattEle { get; set; }
         public virtual ICollection<Allcespiti> ALLCespiti { get; set; }
         public virtual ICollection<AllordCliAttivita> AllordCliAttivita { get; set; }
         public virtual ICollection<AllordCliContratto> ALLordCliContratto { get; set; }

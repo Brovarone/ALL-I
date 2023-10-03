@@ -544,6 +544,7 @@
     </None>
     <None Include="App.config" />
     <None Include="packages.config" />
+    <Content Include="Fusione\Fox\StrutturaMago.txt" />
     <Content Include="Fusione\Procedura.txt" />
     <Content Include="Fusione\Fox\ContrattiFox.txt" />
     <Content Include="Logs\Legenda.txt" />

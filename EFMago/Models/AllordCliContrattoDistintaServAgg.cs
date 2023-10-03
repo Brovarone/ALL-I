@@ -7,11 +7,21 @@ using System.Collections.Generic;
 
 namespace EFMago.Models
 {
-    public partial class AllordCliContrattoServAgg
+    public partial class AllordCliContrattoDistintaServAgg
     {
         public int IdOrdCli { get; set; }
+        /// <summary>
+        /// Numero di Linea
+        /// </summary>
         public short Line { get; set; }
+        /// <summary>
+        /// Riferimento Linea Distinta
+        /// </summary>
         public short RifLinea { get; set; }
+        /// <summary>
+        /// Riferimento Linea Contratto
+        /// </summary>
+        public short RifRifLinea { get; set; }
         public string Servizio { get; set; }
         public string TipoRigaServizio { get; set; }
         //public string CodiceIva { get; set; }
@@ -25,7 +35,7 @@ namespace EFMago.Models
         public double? ValUnitIstat { get; set; }
         public DateTime? DataUltRivIstat { get; set; }
         public DateTime? DataFineElaborazione { get; set; }
-        public string CodIntegra { get; set; }
+        //public string CodIntegra { get; set; }
         //public string Nota { get; set; }
         //public string NonRiportaInFatt { get; set; }
         //public string Fatturato { get; set; }
@@ -35,7 +45,7 @@ namespace EFMago.Models
         public int TbmodifiedId { get; set; }
 
         // Creato da me
-        public virtual AllordCliContratto AllordCliContratto { get; set; }
+        public virtual AllordCliContrattoDistinta AllordCliContrattoDistinta { get; set; }
         public virtual MaItems MaItems { get; set; }
         public virtual AlltipoRigaServizio AlltipoRigaServizio { get; set; }
         //public virtual ICollection<AllordCliAttivita> AllordCliAttivita { get; set; }

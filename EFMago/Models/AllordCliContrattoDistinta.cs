@@ -10,7 +10,13 @@ namespace EFMago.Models
     public partial class AllordCliContrattoDistinta
     {
         public int IdOrdCli { get; set; }
+        /// <summary>
+        /// Numero di Linea
+        /// </summary>
         public short Line { get; set; }
+        /// <summary>
+        /// Riferimento Linea Contratto
+        /// </summary>
         public short RifLinea { get; set; }
         public string Servizio { get; set; }
         public string TipoRigaServizio { get; set; }
@@ -29,15 +35,23 @@ namespace EFMago.Models
         //public string Nota { get; set; }
         //public string NonRiportaInFatt { get; set; }
         //public string Fatturato { get; set; }
+        public short? SubLineServAgg { get; set; }
+
         public DateTime Tbcreated { get; set; }
         public DateTime Tbmodified { get; set; }
         public int TbcreatedId { get; set; }
         public int TbmodifiedId { get; set; }
+        public string Impianto { get; set; }
+        public string CdC { get; set; }
+        public string Cespite { get; set; }
+        public string Nota { get; set; }
 
         // Creato da me
         public virtual AllordCliContratto AllordCliContratto { get; set; }
         public virtual MaItems MaItems { get; set; }
         public virtual AlltipoRigaServizio AlltipoRigaServizio { get; set; }
+        public virtual ICollection<AllordCliContrattoDistintaServAgg> AllordCliContrattoServAgg { get; set; }
+
         //public virtual ICollection<AllordCliAttivita> AllordCliAttivita { get; set; }
     }
 }
