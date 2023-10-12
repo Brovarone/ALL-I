@@ -4801,11 +4801,6 @@ namespace EFMago.Models
 
                 entity.Property(e => e.FromExternalProgram).HasDefaultValueSql("((32505856))");
 
-                entity.Property(e => e.IdContractIntegra)
-                    .HasMaxLength(20)
-                    .IsUnicode(false)
-                    .HasDefaultValueSql("('')");
-
                 entity.Property(e => e.InstallmStartDate)
                     .HasColumnType("datetime")
                     .HasDefaultValueSql("('17991231')");

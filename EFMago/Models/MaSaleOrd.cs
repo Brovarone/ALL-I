@@ -129,8 +129,7 @@ namespace EFMago.Models
         public short? SubIdAttivita { get; set; }
         public short? SubIdContratto { get; set; }
         public short? SubIdDescrizione { get; set; }
-        public string IdContractIntegra { get; set; }
-
+        
         public virtual MaSaleOrdNotes MaSaleOrdNotes { get; set; }
         public virtual MaSaleOrdShipping MaSaleOrdShipping { get; set; }
         public virtual MaSaleOrdSummary MaSaleOrdSummary { get; set; }

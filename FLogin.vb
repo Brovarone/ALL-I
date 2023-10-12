@@ -964,6 +964,7 @@ Public Class FLogin
                 End If
             Next
             ProcessaGruppoContratti(contratti, "Contratti")
+            En_Dis_Controls(True, True, True)
 
         End If
 
