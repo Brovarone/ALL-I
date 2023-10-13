@@ -275,7 +275,7 @@ Module Fatture
                                                                                 drCli("CustSuppKind") = TrovaNaturaCliFor(drCli("ISOCountryCode").ToString, dvISO, "Cliente: " & .Item("AA").ToString & " Doc. nr: " & .Item("O").ToString & Environment.NewLine, errori)
                                                                                 drCli("FiscalCode") = dvClienOrd(iClienOrdFound).Item("O").ToString '("AI" della fattura)
                                                                                 drCli("TaxIdNumber") = dvClienOrd(iClienOrdFound).Item("N").ToString '("AJ" della fattura)
-                                                                                drCli("Currency") = If(.Item("R").ToString = "EUR", "EUR", .Item("O").ToString)
+                                                                                drCli("Currency") = If(.Item("R").ToString = "EUR", "", .Item("O").ToString)
                                                                                 drCli("NaturalPerson") = If(dvClienOrd(iClienOrdFound).Item("E").ToString = "1", "0", "1")
                                                                                 If drCli("NaturalPerson") = "1" Then
                                                                                     Dim cognomeNome As String() = Split(dvClienOrd(iClienOrdFound).Item("G").ToString, "*")
@@ -400,13 +400,24 @@ Module Fatture
                                                                                     Dim sIPACode As String() = { .Item("AA").ToString, .Item("Z").ToString}
                                                                                     Dim rvSedi As DataRowView() = dvSedi.FindRows(sIPACode)
                                                                                     Dim cliSedeFound As Integer = rvSedi.Length
+                                                                                    ' Primo controllo ad IPA valorizzato ( Reale o 0000000)
                                                                                     If cliSedeFound = 0 Then
-                                                                                        'Non ho trovato IPA sulle sedi lo segno in modo da creare la sede dopo
-                                                                                        okUsaSede = False
-                                                                                        okSedeFound = False
+                                                                                        sIPACode(1) = sIPACode(1).Trim("0")
+                                                                                        rvSedi = dvSedi.FindRows(sIPACode)
+                                                                                        cliSedeFound = rvSedi.Length
+                                                                                        'Controllo con IPA = ""
+                                                                                        If cliSedeFound = 0 Then
+                                                                                            'Non ho trovato IPA sulle sedi lo segno in modo da creare la sede dopo
+                                                                                            okUsaSede = False
+                                                                                            okSedeFound = False
+                                                                                        Else
+                                                                                            okUsaSede = True
+                                                                                        End If
                                                                                     Else
-                                                                                        'Esistono delle SEDI con quell' IPA
                                                                                         okUsaSede = True
+                                                                                    End If
+                                                                                    If okUsaSede Then
+                                                                                        'Esistono delle SEDI con quell' IPA
                                                                                         'Cerco la sede corretta tra le eventuali n con i campi indirizzo, rif. amministrazione etc 
 
                                                                                         For x = 0 To rvSedi.Length - 1
@@ -423,8 +434,7 @@ Module Fatture
                                                                                                 Exit For
                                                                                             End If
                                                                                         Next
-                                                                                    End If
-                                                                                    If okUsaSede Then
+
                                                                                         If okSedeFound Then
                                                                                             'Aggiorno la sede, la cerco per codice in quanto l'ho trovata sopra
                                                                                             Using dvBranch As New DataView(dsClienti.Tables("MA_CustSuppBranches"), "CustSupp='" & .Item("AA").ToString & "'", "Branch", DataViewRowState.CurrentRows)
@@ -552,7 +562,7 @@ Module Fatture
                                                                             'drDoc("CustomerBank") = .Item("xxx").ToString
                                                                             'drDoc("CompanyBank") = .Item("xxx").ToString
                                                                             drDoc("InvoiceFollows") = "0"
-                                                                            drDoc("Currency") = If(.Item("R").ToString = "EUR", "EUR", .Item("O").ToString)
+                                                                            drDoc("Currency") = If(.Item("R").ToString = "EUR", "", .Item("O").ToString)
 
                                                                             'drDoc("ContractCode") = .Item("HP").ToString 'CIG in "X" a  volte e' vuoto
                                                                             'drDoc("ProjectCode") = .Item("HO").ToString 'CUP in "Y" a  volte e' vuoto
@@ -2563,9 +2573,13 @@ Module Fatture
                 'Solo per le aziende [colonna E = 1] controllo il secondo campo ragione sociale
                 If .Item("E").ToString = "1" Then sRagSoc = If(String.IsNullOrEmpty(.Item("G").ToString), sRagSoc, sRagSoc & Environment.NewLine & .Item("G").ToString)
                 If Not String.Equals(Regex.Replace(anag.Item("CompanyName").ToString, "\s", ""), Regex.Replace(sRagSoc, "\s", ""), StringComparison.OrdinalIgnoreCase) Then
-                    avvisi.AppendLine("Ragione sociale : (" & sRagSoc & ") [" & anag.Item("CompanyName") & "]")
-                    anag.Item("CompanyName") = sRagSoc
+                    warnings.AppendLine("Ragione sociale : (" & sRagSoc & ") [" & anag.Item("CompanyName") & "]")
+                    '13/10/2023: non viene piu' corretta
+                    If IsDeprecated Then
+                        anag.Item("CompanyName") = sRagSoc
+                    End If
                 End If
+
                 'TODO: cond pag, iva
                 'Su clienord colonna E = 1 = azienda , = 2 persona fisica
                 If .Item("E").ToString = "2" AndAlso anag.Item("NaturalPerson").ToString = "0" Then warnings.AppendLine("WAC1: Flag Persona Fisica non impostato")
