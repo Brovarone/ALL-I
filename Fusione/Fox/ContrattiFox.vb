@@ -545,6 +545,7 @@ Module ContrattiFox
         efMaNonFiscalNumbers = OrdiniCntx.MaNonFiscalNumbers.Where(Function(k) k.CodeType = CodeType.OrdCli).ToList
 
         Dim cli As New MaCustSupp
+        'Dim cliLINQ = From c In OrdiniCntx.MaCustSupp.Include(Function(o) o.MaCustSuppCustomerOptions)
         Dim sediCliente As New List(Of MaCustSuppBranches)
         Dim drDatiFatturaXls As DataRow = dtRaggTeste.NewRow
         Dim masterDistinta As New DistintaMaster
@@ -696,7 +697,6 @@ Module ContrattiFox
 
             If newBranches Then
                 If String.IsNullOrWhiteSpace(sito) Then sito = "I0001"
-
                 Dim rCliBr As New MaCustSuppBranches With {
                                     .CustSuppType = CustSuppType.Cliente,
                                     .CustSupp = clienteACG,
@@ -742,7 +742,6 @@ Module ContrattiFox
                 'Cliente
                 clienteACG = r.Item("ACGCOD").ToString
                 cli = OrdiniCntx.MaCustSupp.Find(CustSuppType.Cliente, clienteACG)
-                'Dim cli As MaCustSupp = OrdiniCntx.MaCustSupp.AsNoTracking.First(Function(k) k.CustSupp.Equals(r("ACGCOD").ToString)
                 If cli Is Nothing Then
                     Dim mb As New MessageBoxWithDetails("Cliente non trovato:" & clienteACG, GetCurrentMethod.Name)
                     mb.ShowDialog()
@@ -794,6 +793,7 @@ Module ContrattiFox
                     '  Dim ragSocDatifatturaXls As String = Left(String.Concat(drDatiFatturaXls("RAGSOC").ToString, If(IsPrivato(cli.TaxIdNumber, cli.FiscalCode), "", " " & drDatiFatturaXls("PRAGSOC").ToString)).Trim, 128)
                     Dim ragSocDatifatturaXls As String = Left(String.Concat(drDatiFatturaXls("R_RSO").ToString, If(IsPrivato(cli.TaxIdNumber, cli.FiscalCode), "", " " & drDatiFatturaXls("R_PSO").ToString)).Trim, 128)
                     Dim sendDocumentTo As String = ""
+                    'Dim IpaZero As String = If(cli.MaCustSuppCustomerOptions.PublicAuthority = "1", "000000", "0000000")
                     If ragSocDatifatturaXls.Equals(cli.CompanyName.Replace(Environment.NewLine, " ")) AndAlso drDatiFatturaXls("INDIRIZZO").Equals(cli.Address) AndAlso masterOrder.CodiceSdi.Equals(cli.Ipacode) Then
                         'Corrette RagSoc, Indirizzo , IPA Code
                         sendDocumentTo = ""
@@ -807,7 +807,7 @@ Module ContrattiFox
                         ElseIf sediRidotte.Count = 1 Then
                             'Se ne ho una controllo ipa
                             If sediRidotte.First.Ipacode.Equals(cli.Ipacode) OrElse sediRidotte.First.Ipacode.Equals("") Then
-                                'Se e' vuota posso usarla per l'indirizzo e lasciare IPA di Anagrafica
+                                'Solo se e' vuota posso usarla per l'indirizzo e lasciare IPA di Anagrafica
                                 sendDocumentTo = sediRidotte.First.Branch
                             Else
                                 newSendDoc = True
@@ -909,7 +909,7 @@ Module ContrattiFox
                         mb.ShowDialog()
                     End If
                 End If
-                If Not codiceRaggruppamento.Equals(masterOrder.RaggruppamentoFattura) Then
+                If Not codiceRaggruppamento.Equals(masterOrder.RaggruppamentoFattura) AndAlso CDbl(r("CANONE").ToString) <> 0 Then
                     errori.AppendLine("Raggruppamento fattura diverso da quello Master (" & masterOrder.Contratto & ") su Contratto: " & contratto)
                 End If
                 'Cond pag
@@ -1290,26 +1290,19 @@ Module ContrattiFox
 
 #Region "Padre/Figlio"
             If Not String.IsNullOrWhiteSpace(r("CONTRSUCC").ToString) Then
-                If masterDistinta.RigheDistinta > 0 AndAlso rowToExclude_cnt > 0 Then
-                    errori.AppendLine("(NO SAVE) Padre/Figlio: presente CONTRSUCC Ordine:" & r("CONTRATTO").ToString)
-                Else
-                    Dim rOrdFiglio As New AllordFiglio With {
-                    .IdOrdCli = saleOrdId,
-                    .IdOrdFiglio = 0,
-                    .NrOrdFiglio = r("CONTRSUCC").ToString,
-                    .Tbcreated = Now,
-                    .Tbmodified = Now,
-                    .TbcreatedId = sLoginId,
-                    .TbmodifiedId = sLoginId
-                     }
-                    efAllordFiglio.Add(rOrdFiglio)
-                End If
+                Dim rOrdFiglio As New AllordFiglio With {
+                .IdOrdCli = saleOrdId,
+                .IdOrdFiglio = 0,
+                .NrOrdFiglio = r("CONTRSUCC").ToString,
+                .Tbcreated = Now,
+                .Tbmodified = Now,
+                .TbcreatedId = sLoginId,
+                .TbmodifiedId = sLoginId
+                 }
+                efAllordFiglio.Add(rOrdFiglio)
             End If
             If Not String.IsNullOrWhiteSpace(r("CONTRPREC").ToString) Then
-                If masterDistinta.RigheDistinta > 0 AndAlso rowToExclude_cnt > 0 Then
-                    errori.AppendLine("(NO SAVE) Padre/Figlio: presente CONTRPREC Ordine:" & r("CONTRATTO").ToString)
-                Else
-                    Dim rOrdPadre As New AllordPadre With {
+                Dim rOrdPadre As New AllordPadre With {
                     .IdOrdCli = saleOrdId,
                     .IdOrdPadre = 0,
                     .NrOrdPadre = r("CONTRPREC").ToString,
@@ -1318,8 +1311,7 @@ Module ContrattiFox
                     .TbcreatedId = sLoginId,
                     .TbmodifiedId = sLoginId
                      }
-                    efAllordPadre.Add(rOrdPadre)
-                End If
+                efAllordPadre.Add(rOrdPadre)
             End If
 #End Region
 #Region "All Ordini Tipologia Servizi"
@@ -1467,7 +1459,7 @@ Module ContrattiFox
                 .IdOrdCli = saleOrdId,
                 .ApplicoIstat = If(r("AUMENTO") = 1, "1", "0"),
                 .MesiDurata = If(String.IsNullOrWhiteSpace(r("GGDURATA").ToString), 0, CalcolaDurataContratto(r("GGDURATA"))),
-                .MesiRinnovo = If(String.IsNullOrWhiteSpace(r("GGRIN").ToString), 0, CalcolaDurataContratto(r("GGRIN"))),
+                .MesiRinnovo = If(String.IsNullOrWhiteSpace(r("GGDURATA").ToString), 0, CalcolaDurataContratto(r("GGDURATA"))),
                 .Ggdisdetta = CShort(r("GGPREAVVIS")),
                 .DataScadenzaFissa = sDataNulla,
                 .DataRiscatto = sDataNulla,
@@ -1476,7 +1468,7 @@ Module ContrattiFox
                 .ImportoRiduzione = 0,
                 .PercRiduzione = 0,
                 .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
-                .DataCessazione = sDataNulla,
+                .DataCessazione = Valid_Data(r("DTCESSFATT").ToString),
                 .MotivoCessazione = "",
                 .TipoContratto = 1108934656,
                 .ImpiantoProprietaCliente = "0",
@@ -1484,7 +1476,7 @@ Module ContrattiFox
                 .ContributoInstallazione = 0,
                 .OrdineSospeso = "0",
                 .DataSospensione = sDataNulla,
-                .MotivoSospensione = r("WHYCESS").ToString,
+                .MotivoSospensione = "",
                 .Agente = agente,
                 .ImportoProvvigione = 0,
                 .Impianto = "REMOVE",
@@ -1501,8 +1493,7 @@ Module ContrattiFox
                 .TbmodifiedId = sLoginId
                 }
                 '.ContributoInstallazione = If(String.IsNullOrWhiteSpace(r("CANALLEUR").ToString), 0, Math.Round(r("CANALLEUR"), 2)),
-                '.DataScadenzaFissa = Valid_Data(r("DTCESSFATT").ToString),
-
+                '
                 'incremento Data per portarla a post Data Odierna
                 rOrdAcc.DataPrevistaScadenza = CalcolaScadenzaFutura(rOrdAcc)
                 'Aggiungo la riga alla collection
@@ -1933,6 +1924,36 @@ Module ContrattiFox
                 'Aggiungo la riga alla collection
                 efAllordCliTipologiaServizi.Add(rOrdTipologiaServizi)
             End If
+
+            'Padre Figlio
+            If Not String.IsNullOrWhiteSpace(r("CONTRSUCC").ToString) Then
+                If Not efAllordFiglio.Exists(Function(f) f.IdOrdCli.Equals(rifDistinta.IdOrdCli And f.NrOrdFiglio.Equals(r("CONTRSUCC").ToString))) Then
+                    Dim rOrdFiglio As New AllordFiglio With {
+                        .IdOrdCli = saleOrdId,
+                        .IdOrdFiglio = 0,
+                        .NrOrdFiglio = r("CONTRSUCC").ToString,
+                        .Tbcreated = Now,
+                        .Tbmodified = Now,
+                        .TbcreatedId = sLoginId,
+                        .TbmodifiedId = sLoginId
+                         }
+                    efAllordFiglio.Add(rOrdFiglio)
+                End If
+            End If
+            If Not String.IsNullOrWhiteSpace(r("CONTRPREC").ToString) Then
+                If Not efAllordPadre.Exists(Function(f) f.IdOrdCli.Equals(rifDistinta.IdOrdCli And f.NrOrdPadre.Equals(r("CONTRPREC").ToString))) Then
+                    Dim rOrdPadre As New AllordPadre With {
+                       .IdOrdCli = saleOrdId,
+                       .IdOrdPadre = 0,
+                       .NrOrdPadre = r("CONTRPREC").ToString,
+                       .Tbcreated = Now,
+                       .Tbmodified = Now,
+                       .TbcreatedId = sLoginId,
+                       .TbmodifiedId = sLoginId
+                        }
+                    efAllordPadre.Add(rOrdPadre)
+                End If
+            End If
         Next
 #End Region
 #Region "Ordini Padre/Figlio"
@@ -1945,6 +1966,12 @@ Module ContrattiFox
         For Each f In efAllordFiglio
             idSub -= 1
             f.IdOrdFiglio = idSub
+        Next
+#End Region
+#Region "Adeguo Contatori sub"
+        For Each o In efMaSaleOrd
+            Dim rifContratto As List(Of AllordCliContratto) = efAllordCliContratto.FindAll(Function(f) f.IdOrdCli = o.SaleOrdId)
+            o.SubIdContratto = rifContratto.Count
         Next
 #End Region
         DisposeTables()
@@ -2465,7 +2492,7 @@ Module ContrattiFox
         Return result
     End Function
     Private Function TrovaAgente(ByVal codice As String, filiale As String) As String
-        Dim esito As String = "XYZ"
+        Dim esito As String
         Select Case filiale.ToUpper
             Case "08" 'Biella / Vigliano
                 Select Case codice.ToUpper
