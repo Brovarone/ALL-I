@@ -684,12 +684,7 @@ namespace EFMago.Models
                     .IsClustered(false);
 
                 entity.ToTable("ALLOrdCliContratto_Distinta");
-
-                entity.Property(e => e.Cespite)
-                    .HasMaxLength(10)
-                    .IsUnicode(false)
-                    .HasDefaultValueSql("('')");
-
+                
                 entity.Property(e => e.CdC)
                     .HasColumnName("CdC")
                     .HasMaxLength(8)

@@ -986,8 +986,7 @@ Module ContrattiFox
                     .SubLineDescFatt = 0,
                     .SubLineDistinta = 0,
                     .CdC = centro,
-                    .Impianto = "",
-                    .Cespite = ""
+                    .Impianto = ""
                     }
                 'Aggiungo la riga alla collection
                 efAllordCliContratto.Add(rOrdContratto)
@@ -1066,12 +1065,12 @@ Module ContrattiFox
                 .DataFineElaborazione = sDataNulla,
                 .DataProssimaFatt = New DateTime(2023, 12, 31).ToString,
                 .CodIntegra = contratto,
+                .CodContratto = contratto,
                 .Tbcreated = Now,
                 .Tbmodified = Now,
                 .TbcreatedId = sLoginId,
                 .TbmodifiedId = sLoginId,
                 .Nota = "",
-                .Cespite = "",
                 .CdC = centro,
                 .Impianto = sito
                  }
@@ -1271,13 +1270,13 @@ Module ContrattiFox
                     .DataFineElaborazione = sDataNulla,
                     .DataProssimaFatt = New DateTime(2023, 12, 31).ToString,
                     .CodIntegra = contratto,
+                    .CodContratto = contratto,
                     .Tbcreated = Now,
                     .Tbmodified = Now,
                     .TbcreatedId = sLoginId,
                     .TbmodifiedId = sLoginId,
                     .Nota = "",
-                    .Cespite = "",
-                    .CdC = r("CDC_ALL1").ToString,
+                     .CdC = r("CDC_ALL1").ToString,
                     .Impianto = sito
                  }
                 'Aggiungo la riga alla collection
@@ -1587,7 +1586,7 @@ Module ContrattiFox
         Dim sediClienteMerged As New List(Of MaCustSuppBranches)
         For Each r In contrattiDaUnire
             'Cerco id
-            Dim rifDistinta As AllordCliContrattoDistinta = efAllordCliContrattoDistinta.Find(Function(f) f.CodIntegra.Equals(r("GRP_CONTRATTO").ToString))
+            Dim rifDistinta As AllordCliContrattoDistinta = efAllordCliContrattoDistinta.Find(Function(f) f.CodContratto.Equals(r("GRP_CONTRATTO").ToString))
             If rifDistinta Is Nothing Then
                 Dim mb As New MessageBoxWithDetails("Errore FATALE!" & Environment.NewLine & "Codice GRP_CONTRATTO (" & r("GRP_CONTRATTO").ToString & ") assente in CONTRATTO", GetCurrentMethod.Name, "")
                 mb.ShowDialog()
@@ -1689,12 +1688,12 @@ Module ContrattiFox
                 .DataFineElaborazione = sDataNulla,
                 .DataProssimaFatt = New DateTime(2023, 12, 31).ToString,
                 .CodIntegra = r("CONTRATTO").ToString,
+                .CodContratto = r("CONTRATTO").ToString,
                 .Tbcreated = Now,
                 .Tbmodified = Now,
                 .TbcreatedId = sLoginId,
                 .TbmodifiedId = sLoginId,
                 .Nota = "",
-                .Cespite = "",
                 .CdC = dvTabelle.CercaValoreSuTabelleFox("CC", r("CCOSTO").ToString),
                 .Impianto = sito,
                 .SubLineServAgg = 0
@@ -1895,12 +1894,12 @@ Module ContrattiFox
                     .DataFineElaborazione = sDataNulla,
                     .DataProssimaFatt = New DateTime(2023, 12, 31).ToString,
                     .CodIntegra = r("CONTRATTO").ToString,
+                    .CodContratto = r("CONTRATTO").ToString,
                     .Tbcreated = Now,
                     .Tbmodified = Now,
                     .TbcreatedId = sLoginId,
                     .TbmodifiedId = sLoginId,
                     .Nota = "",
-                    .Cespite = "",
                     .CdC = r("CDC_ALL1").ToString,
                     .Impianto = sito,
                     .SubLineServAgg = 0

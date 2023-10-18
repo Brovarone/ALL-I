@@ -44,8 +44,7 @@ namespace EFMago.Models
         public int TbmodifiedId { get; set; }
         public string Impianto { get; set; }
         public string CdC { get; set; }
-        public string Cespite { get; set; }
-        public string Nota { get; set; }
+         public string Nota { get; set; }
 
         // Creato da me
         public virtual AllordCliContratto AllordCliContratto { get; set; }
