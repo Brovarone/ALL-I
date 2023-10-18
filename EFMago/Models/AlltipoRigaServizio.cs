@@ -34,7 +34,7 @@ namespace EFMago.Models
         // Creato da me
         public virtual AllordCliContratto AllordCliContratto { get; set; }
         public virtual AllordCliContrattoDistinta AllordCliContrattoDistinta { get; set; }
-        public virtual AllordCliContrattoDistintaServAgg AllordCliContrattoServAgg { get; set; }
+        public virtual AllordCliContrattoDistintaServAgg AllordCliContrattoDistintaServAgg { get; set; }
 
     }
 }

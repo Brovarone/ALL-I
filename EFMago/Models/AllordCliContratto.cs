@@ -31,13 +31,15 @@ namespace EFMago.Models
         public int TbmodifiedId { get; set; }
         public DateTime? DataFineElaborazione { get; set; }
         public DateTime? DataProssimaFatt { get; set; }
+        public string CodContratto { get; set; }
         public string CodIntegra { get; set; }
+        public short? SubLineAttivita { get; set; }
         public short? SubLineDescFatt { get; set; }
         public short? SubLineDistinta { get; set; }
         public string Impianto { get; set; }
+        public string MultiImpianto { get; set; }
         public string CdC { get; set; }
-        public string Cespite { get; set; }
-
+       
         // Creato da me
         public virtual MaSaleOrd SaleOrd { get; set; }
         public virtual MaItems MaItems { get; set; }

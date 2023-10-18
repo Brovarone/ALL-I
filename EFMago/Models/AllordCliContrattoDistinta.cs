@@ -31,6 +31,7 @@ namespace EFMago.Models
         public DateTime? DataUltRivIstat { get; set; }
         public DateTime? DataFineElaborazione { get; set; }
         public string CodIntegra { get; set; }
+        public string CodContratto { get; set; }
         //public double? Franchigia { get; set; }
         //public string Nota { get; set; }
         //public string NonRiportaInFatt { get; set; }
@@ -50,7 +51,8 @@ namespace EFMago.Models
         public virtual AllordCliContratto AllordCliContratto { get; set; }
         public virtual MaItems MaItems { get; set; }
         public virtual AlltipoRigaServizio AlltipoRigaServizio { get; set; }
-        public virtual ICollection<AllordCliContrattoDistintaServAgg> AllordCliContrattoServAgg { get; set; }
+        public virtual ICollection<AllordCliContrattoDistintaServAgg> AllordCliContrattoDistintaServAgg { get; set; }
+        public virtual ICollection<AllordCliContrattoDistCesp> AllordCliContrattoDistCesp { get; set; }
 
         //public virtual ICollection<AllordCliAttivita> AllordCliAttivita { get; set; }
     }
