@@ -24,6 +24,7 @@
 		E22: Modello contabile di Default non trovato per "& .Item("O").ToString
 		
 		A12: note di credito con riferimento ddt
+		A13: Doc: " & drDoc("DocNo") & " con Bolli e Ritenuta di acconto
 Modulo Analitica da fatture
 	Errori
 		E52
