@@ -52,7 +52,6 @@ Module ContrattiFox
     Private efAllordCliAcc As New List(Of AllordCliAcc)
     Private efAllordCliFattEle As New List(Of AllordCliFattEle)
     Private efAllordCliContratto As New List(Of AllordCliContratto)
-    Private efAllordCliAttivita As New List(Of AllordCliAttivita)
     Private efAllordCliContrattoDescFatt As New List(Of AllordCliContrattoDescFatt)
     Private efAllordCliContrattoDistinta As New List(Of AllordCliContrattoDistinta)
     Private efAllordCliContrattoDistintaServAgg As New List(Of AllordCliContrattoDistintaServAgg)
@@ -468,28 +467,6 @@ Module ContrattiFox
             MessageBox.Show("Impossibile continuare colonne assenti vettore su _ONTRORD", "Check Ordini", MessageBoxButtons.OK, MessageBoxIcon.Error)
             End
         End If
-        If Not dtContratti.Columns.Contains("scadenza") Then
-            MessageBox.Show("Impossibile continuare colonne assenti scadenza su _ONTRORD", "Check Ordini", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            End
-        End If
-        If Not dtContratti.Columns.Contains("data inizio sospensione") Then
-            MessageBox.Show("Impossibile continuare colonne assenti data inizio sospensione su _ONTRORD", "Check Ordini", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            End
-        Else
-            dtContratti.Columns("data inizio sospensione").ColumnName = "DATA_INIZIO_SOSP"
-        End If
-        If Not dtContratti.Columns.Contains("data fine sospensione") Then
-            MessageBox.Show("Impossibile continuare colonne assenti data fine sospensione su _ONTRORD", "Check Ordini", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            End
-        Else
-            dtContratti.Columns("data fine sospensione").ColumnName = "DATA_FINE_SOSP"
-        End If
-        If Not dtContratti.Columns.Contains("motivo sospensione") Then
-            MessageBox.Show("Impossibile continuare colonne assenti motivo sospensione su _ONTRORD", "Check Ordini", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            End
-        Else
-            dtContratti.Columns("motivo sospensione").ColumnName = "motivo"
-        End If
     End Sub
     ''' <summary>
     ''' Esegue check sulla presenza dei dati di match nelle tabelle di mago
@@ -896,6 +873,7 @@ Module ContrattiFox
                 dvRID.RowFilter = $"CLIENTE = '{clienteFox}' AND RAGRFATT = '{codiceRaggruppamento}'"
                 masterOrder.UMRCode = If(dvRID.Count = 1, dvRID(0)("CODINDIVID").ToString, "")
 
+                'vettore = If(codiceRaggruppamento.Equals(contratto), "", CInt(codiceRaggruppamento).ToString)
                 vettore = newCodragg
                 codIva = OrdiniCntx.MaTaxCodes.AsNoTracking.First(Function(k) k.Acgcode.Equals(r("CIVA").ToString)).TaxCode
                 masterOrder.CodIva = codIva
@@ -986,7 +964,7 @@ Module ContrattiFox
                     .IdOrdCli = saleOrdId,
                     .Line = iLineContratto,
                     .Servizio = servizioMago,
-                    .Descrizione = "",
+                    .Descrizione = If(String.IsNullOrWhiteSpace(descriCanone), r("DTS"), descriCanone),
                     .Qta = qtaOrdine,
                     .Um = "",
                     .ValUnit = valunitFattura,
@@ -1008,12 +986,8 @@ Module ContrattiFox
                     .SubLineDescFatt = 0,
                     .SubLineDistinta = 0,
                     .CdC = centro,
-                    .CodIntegra = contratto,
-                    .CodContratto = contratto,
                     .Impianto = ""
                     }
-                '.Descrizione = If(String.IsNullOrWhiteSpace(descriCanone), r("DTS"), descriCanone),
-
                 'Aggiungo la riga alla collection
                 efAllordCliContratto.Add(rOrdContratto)
 
@@ -1071,6 +1045,7 @@ Module ContrattiFox
                 efAllordCliContratto.Last.SubLineDescFatt = iLineDescFatt
             End If
 #End Region
+
 #Region "Distinta"
             'E' obbligatorio avere una riga distinta !!
             iLineDistinta += 1
@@ -1101,36 +1076,7 @@ Module ContrattiFox
                  }
             'Aggiungo la riga alla collection
             efAllordCliContrattoDistinta.Add(rOrdDistinta)
-#End Region
-#Region "Attività di Sospensione"
-            If Not String.IsNullOrWhiteSpace(r("motivo").ToString) Then
-                Dim motivo As String = If(r("motivo").Equals("ATTESA ATTIVAZIONE"), "ATTATT", r("motivo"))
-                If Len(motivo) > 10 Then
-                    errori.AppendLine("Motivo sospensione troppo lungo su Contratto: " & contratto)
-                    motivo = "ERRORE"
-                End If
-                Dim rOrdAttivita As New AllordCliAttivita With {
-                    .IdOrdCli = saleOrdId,
-                    .Line = 1,
-                    .RifLinea = iLineContratto,
-                    .Attivita = motivo,
-                    .DataInizio = Valid_Data(r("DATA_INIZIO_SOSP").ToString),
-                    .DataFine = Valid_Data(r("DATA_FINE_SOSP").ToString),
-                    .DaFatturare = "0",
-                    .DataRifatturazione = sDataNulla,
-                    .Fatturata = "0",
-                    .Nota = "",
-                    .RifServizio = servizioMago,
-                    .ValUnit = valunitFattura,
-                    .TestoFattura = "",
-                    .Tbcreated = Now,
-                    .Tbmodified = Now,
-                    .TbcreatedId = sLoginId,
-                    .TbmodifiedId = sLoginId
-                }
-                efAllordCliAttivita.Add(rOrdAttivita)
-            End If
-#End Region
+
 #Region "Servizi Aggiuntivi"
             Dim iLineServAgg As Short = 0
             'Costo Servizi Aggiuntivi (loro li chiamano Canone)
@@ -1338,7 +1284,7 @@ Module ContrattiFox
             End If
             'Aggiorno Sub
             efAllordCliContratto.Last.SubLineDistinta = iLineDistinta
-
+#End Region
 #End Region
 
 #Region "Padre/Figlio"
@@ -1521,7 +1467,7 @@ Module ContrattiFox
                 .ImportoRiduzione = 0,
                 .PercRiduzione = 0,
                 .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
-                .DataCessazione = Valid_Data(r("scadenza").ToString),
+                .DataCessazione = Valid_Data(r("DTCESSFATT").ToString),
                 .MotivoCessazione = "",
                 .TipoContratto = 1108934656,
                 .ImpiantoProprietaCliente = "0",
@@ -1532,7 +1478,7 @@ Module ContrattiFox
                 .MotivoSospensione = "",
                 .Agente = agente,
                 .ImportoProvvigione = 0,
-                .Impianto = "",
+                .Impianto = "REMOVE",
                 .Nota = "",
                 .ModelloContratto = 1229717507,
                 .CondPag = condPag,
@@ -2021,21 +1967,10 @@ Module ContrattiFox
             f.IdOrdFiglio = idSub
         Next
 #End Region
-#Region "Adeguamenti post import"
-        'Contatori sub
+#Region "Adeguo Contatori sub"
         For Each o In efMaSaleOrd
             Dim rifContratto As List(Of AllordCliContratto) = efAllordCliContratto.FindAll(Function(f) f.IdOrdCli = o.SaleOrdId)
             o.SubIdContratto = rifContratto.Count
-        Next
-        For Each c In efAllordCliContratto
-            Dim listImpianto As List(Of String) = efAllordCliContrattoDistinta.FindAll(Function(f) f.IdOrdCli = c.IdOrdCli).Select(Function(f) f.Impianto).Distinct().ToList
-            If listImpianto.Count = 1 Then
-                c.Impianto = listImpianto.First
-                c.MultiImpianto = "0"
-            Else
-                c.Impianto = ""
-                c.MultiImpianto = "1"
-            End If
         Next
 #End Region
         DisposeTables()
@@ -2057,7 +1992,7 @@ Module ContrattiFox
         While d < Today
             d = d.AddMonths(rOrdAcc.MesiDurata)
         End While
-        Return d.AddDays(-1)
+        Return d
     End Function
 
     Private Sub SalvaOrdini()
@@ -2201,21 +2136,6 @@ Module ContrattiFox
                         OrdiniCntx.BulkInsertOrUpdate(efAllordCliContrattoDescFatt, cfgOrdConDescFatt, Function(d) d)
                         Debug.Print("AllordCliContratto_DescFatt Ins:" & cfgOrdConDescFatt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDescFatt.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("AllordCliContratto_DescFatt Ins:" & cfgOrdConDescFatt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDescFatt.StatsInfo.StatsNumberUpdated.ToString)
-                    End If
-                    iStep += 1
-                    EditTestoBarra("Salvataggio: Inserimento righe attività contratto ")
-                    If efAllordCliAttivita.Any Then
-                        Dim t = efAllordCliAttivita.Count
-                        Dim cfgOrdConAtt As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                        OrdiniCntx.BulkInsertOrUpdate(efAllordCliAttivita, cfgOrdConAtt, Function(d) d)
-                        Debug.Print("ALLOrdCliAttivita Ins:" & cfgOrdConAtt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConAtt.StatsInfo.StatsNumberUpdated.ToString)
-                        bulkMessage.AppendLine("ALLOrdCliAttivita Ins:" & cfgOrdConAtt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConAtt.StatsInfo.StatsNumberUpdated.ToString)
                     End If
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento righe distinta contratto ")
