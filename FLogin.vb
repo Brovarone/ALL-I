@@ -2122,10 +2122,10 @@ Public Class FLogin
     Private Sub ContrattiFoxToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles ContrattiFoxToolStripMenuItem.Click
         ChkContrattiFox.Checked = True
         DBisTMP = True
-        isDbUNO = False
+        isDbUNO = True
         isAdmin = True
-        SUBConnetti(TxtTmpDB_SPA.Text)
-        lstStatoConnessione.Items.Add(If(DBisTMP, "Azienda test: ", "Azienda: ") & TxtTmpDB_SPA.Text & " - Database : " & DBInUse)
+        'SUBConnetti(TxtTmpDB_SPA.Text)
+        lstStatoConnessione.Items.Add(If(DBisTMP, "Azienda test: ", "Azienda: ") & TxtTmpDB_UNO.Text & " - Database : " & DBInUse)
         Application.DoEvents()
         SUBProcessa()
     End Sub
