@@ -407,6 +407,7 @@
     <Compile Include="Fusione\Fox\frmSchemaXLS.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Fusione\Fox\Produttori.vb" />
     <Compile Include="Fusione\Fusione.vb" />
     <Compile Include="Fusione\Deprecate\FusioneWithDataRow.vb" />
     <Compile Include="Fusione\Deprecate\FusioneWithDataTable.vb" />

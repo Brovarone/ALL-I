@@ -887,7 +887,11 @@ namespace EFMago.Models
                     .IsClustered(false);
 
                 entity.ToTable("ALLOrdCliContratto_Dist_Cesp");
-                            
+
+                entity.Property(e => e.Cespite)
+                    .HasMaxLength(10)
+                    .IsUnicode(false);
+
                 entity.Property(e => e.Tbcreated)
                     .HasColumnName("TBCreated")
                     .HasColumnType("datetime")

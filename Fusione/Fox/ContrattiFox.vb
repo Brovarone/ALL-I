@@ -155,7 +155,8 @@ Module ContrattiFox
     End Sub
     Private Sub ConnettiContesto()
         EditTestoBarra("Connessione al contesto")
-        Dim cs As String = GetConnectionStringSPA(True)
+        'SUBConnetti(TxtTmpDB_SPA.Text)
+        Dim cs As String = GetConnectionStringUNO(True)
         Dim dbcb As New DbContextOptionsBuilder(Of OrdiniContext)
         dbcb.UseSqlServer(cs)
 
@@ -516,7 +517,9 @@ Module ContrattiFox
             If String.IsNullOrEmpty(dvPdc.CercaContropartitaFox(contropartitaFox)) Then avvisi.Add("Valore assente su Mago - Contropartita(TIPSERV):" & r("TIPSERV").ToString)
             'AGENTE
             Dim produttore As String = dvTabelle.CercaValoreSuTabelleFox("PT", r("PRODUTTORE").ToString)
-            If TrovaAgente(r("PRODUTTORE").ToString, r("FILIALE")) = "XXX" Then avvisi.Add("Agente assente su Mago(PRODUTTORE):" & r("PRODUTTORE").ToString)
+            If Right(TrovaAgente(r("PRODUTTORE").ToString, r("FILIALE")), 3) = "XXX" Then avvisi.Add("Agente assente su Mago(PRODUTTORE):" & r("PRODUTTORE").ToString)
+            'Tipo Servizio
+            If TranscodificaServizio(r("TIPSERV").ToString).Equals("XXXXX") Then avvisi.Add("Trascodifica Servizio assente: " & r("TIPSERV").ToString & " su Contratto: " & r("CONTRATTO").ToString)
             'Frequenza = NO e Canone <> 0
             If r("FREQ").ToString = "NO" AndAlso CDbl(r("CANONE")) <> 0 Then errori.Add("Contratto con frequenza = NO ma Canone <> 0 :" & r("CONTRATTO").ToString)
             'contratto accorpato non presente
@@ -958,6 +961,7 @@ Module ContrattiFox
 #End Region
 #Region "Riga Contratto (Fatturativa)"
             Dim servizioMago As String = TranscodificaServizio(r("TIPSERV").ToString)
+            If servizioMago.Equals("XXXXX") Then errori.AppendLine("Trascodifica Servizio non esitente: " & r("TIPSERV").ToString & " su Contratto: " & contratto)
             Dim descriCanone As String = Left(r("DESCAN").ToString.Trim, 128)
             If descriCanone = "*" Or descriCanone = "-" Or descriCanone = "*/" Then descriCanone = ""
             If Left(descriCanone, 1).Equals("*") Then descriCanone = descriCanone.Substring(1).Trim
@@ -1043,7 +1047,9 @@ Module ContrattiFox
                         'End If
                     End If
                 Else
-                    Dim descriList As List(Of String) = GetListTextWithNewLines(descriFatt, 128)
+                    '20/10/2023 : Mail Laura dice di togliere a capo e righe vuote
+                    'Dim descriList As List(Of String) = GetListTextWithNewLines(descriFatt, 128)
+                    Dim descriList As List(Of String) = GetListTextWithoutNewLines(descriFatt, 128)
                     If descriList.Count > 0 Then
                         'If masterDistinta.RigheDistinta > 0 AndAlso rowToExclude_cnt > 0 Then
                         '    errori.AppendLine("(NO SAVE) DescFatt: presente DFAT* Ordine:" & r("CONTRATTO").ToString)
@@ -1388,7 +1394,7 @@ Module ContrattiFox
                 'Non oltre il (CompulsoryDeliveryDate) = Data scadenza fissa o cessazione ( ma non comanda nulla)
                 'todo:PaymentAddress
                 Dim rOrd As New MaSaleOrd With {
-                     .Priority = 88,
+                     .Priority = r("FILIALE").ToString,
                     .CustSuppType = CustSuppType.Cliente,
                     .InternalOrdNo = masterOrder.OrderNo,
                     .ExternalOrdNo = Today.ToShortDateString,
@@ -1705,6 +1711,7 @@ Module ContrattiFox
             End If
 
             Dim servizioMago As String = TranscodificaServizio(r("TIPSERV").ToString)
+            If servizioMago.Equals("XXXXX") Then errori.AppendLine("Trascodifica Servizio non esitente: " & r("TIPSERV").ToString & " su Contratto: " & r("CONTRATTO").ToString)
             Dim descriCanone As String = Left(r("DESCAN").ToString.Trim, 128)
             If descriCanone = "*" Or descriCanone = "-" Or descriCanone = "*/" Then descriCanone = ""
             If Left(descriCanone, 1).Equals("*") Then descriCanone = descriCanone.Substring(1).Trim
@@ -2028,7 +2035,7 @@ Module ContrattiFox
             o.SubIdContratto = rifContratto.Count
         Next
         For Each c In efAllordCliContratto
-            Dim listImpianto As List(Of String) = efAllordCliContrattoDistinta.FindAll(Function(f) f.IdOrdCli = c.IdOrdCli).Select(Function(f) f.Impianto).Distinct().ToList
+            Dim listImpianto As List(Of String) = efAllordCliContrattoDistinta.FindAll(Function(f) f.IdOrdCli = c.IdOrdCli And f.RifLinea = c.Line).Select(Function(f) f.Impianto).Distinct().ToList
             If listImpianto.Count = 1 Then
                 c.Impianto = listImpianto.First
                 c.MultiImpianto = "0"
@@ -2367,6 +2374,7 @@ Module ContrattiFox
 
                 Catch ex As Exception
                     someTrouble = True
+
                     Debug.Print(ex.Message)
                     FLogin.lstStatoConnessione.Items.Add("Annullamento operazione: Riscontrati errori allo step " & iStep)
                     bulkMessage.AppendLine("[Salvataggio] - STEP: " & iStep & " - Sono stati riscontrati degli errori. (Vedere sezione Errori)")
@@ -2570,172 +2578,7 @@ Module ContrattiFox
         dv.RowFilter = originalFilter
         Return result
     End Function
-    Private Function TrovaAgente(ByVal codice As String, filiale As String) As String
-        Dim esito As String
-        Select Case filiale.ToUpper
-            Case "08" 'Biella / Vigliano
-                Select Case codice.ToUpper
-                    Case "017"
-                        esito = "UFFICIO"    'UFFICIO
-                    Case "018"
-                        esito = "BURATTI"    'BURATTI PAOLO
-                    Case "019"
-                        esito = "AULETTA"    'AULETTA ANDREA
-                    Case "020"
-                        esito = "CARDAMON"    'CARDAMONE UPPOLITO
-                    Case "021"
-                        esito = "GIULIANI"    'GIULIANI
-                    Case "022"
-                        esito = "LUPA"    'LUPA
-                    Case "023"
-                        esito = "BOZZA P"    'BOZZA PIERO
-                    Case "024"
-                        esito = "BONO"    'BONO ROBERTO
-                    Case "025"
-                        esito = "SILVESTR"    'SILVESTRI
-                    Case "026"
-                        esito = "NEGRO"    'NEGRO DANIELE
-                    Case "N01"
-                        esito = "BERTUCCI"
-                    Case "N02"
-                        esito = "AUDISIO"
-                    Case "N03"
-                        esito = "NICOTRA"
-                    Case "N04"
-                        esito = "GIANNI"
-                    Case "N05"
-                        esito = "GILETTI"
-                    Case "N06"
-                        esito = "GUERRIERO"
-                    Case "N07"
-                        esito = "GIORDANO"
-                    Case "N08"
-                        esito = "PAGANOTT"
-                    Case "N09"
-                        esito = "ARCHE"
-                    Case "N10"
-                        esito = "VSYSTEM"
-                    Case "N11"
-                        esito = "MORARDO"
-                    Case Else
-                        esito = "08BI_XXX"
-                End Select
-            Case "01" ' Torino
-                Select Case codice.ToUpper
-                    Case "017"
-                        esito = "UUUUUU"    'UFFICIO
-                    Case Else
-                        esito = "01TO_XXX"
-                End Select
-            Case "02" ' Milano
-                Select Case codice.ToUpper
-                    Case "017"
-                        esito = "UUUUUU"    'UFFICIO
-                    Case Else
-                        esito = "02MI_XXX"
-                End Select
-            Case "03" 'Asti
-                Select Case codice.ToUpper
-                    Case "017"
-                        esito = "UUUUUU"    'UFFICIO
-                    Case Else
-                        esito = "03AT_XXX"
-                End Select
-            Case "04" 'Aosta
-                Select Case codice.ToUpper
-                    Case "017"
-                        esito = "UUUUUU"    'UFFICIO
-                    Case Else
-                        esito = "04AO_XXX"
-                End Select
-            Case "05" ' Novara
-                Select Case codice.ToUpper
-                    Case "017"
-                        esito = "UUUUUU"    'UFFICIO
-                    Case Else
-                        esito = "05NO_XXX"
-                End Select
-            Case "08" 'Biella / Vigliano
-                Select Case codice.ToUpper
-                    Case "017"
-                        esito = "UFFICIO"    'UFFICIO
-                    Case "018"
-                        esito = "BURATTI"    'BURATTI PAOLO
-                    Case "019"
-                        esito = "AULETTA"    'AULETTA ANDREA
-                    Case "020"
-                        esito = "CARDAMON"    'CARDAMONE UPPOLITO
-                    Case "021"
-                        esito = "GIULIANI"    'GIULIANI
-                    Case "022"
-                        esito = "LUPA"    'LUPA
-                    Case "023"
-                        esito = "BOZZA P"    'BOZZA PIERO
-                    Case "024"
-                        esito = "BONO"    'BONO ROBERTO
-                    Case "025"
-                        esito = "SILVESTR"    'SILVESTRI
-                    Case "026"
-                        esito = "NEGRO"    'NEGRO DANIELE
-                    Case "N01"
-                        esito = "BERTUCCI"
-                    Case "N02"
-                        esito = "AUDISIO"
-                    Case "N03"
-                        esito = "NICOTRA"
-                    Case "N04"
-                        esito = "GIANNI"
-                    Case "N05"
-                        esito = "GILETTI"
-                    Case "N06"
-                        esito = "GUERRIERO"
-                    Case "N07"
-                        esito = "GIORDANO"
-                    Case "N08"
-                        esito = "PAGANOTT"
-                    Case "N09"
-                        esito = "ARCHE"
-                    Case "N10"
-                        esito = "VSYSTEM"
-                    Case "N11"
-                        esito = "MORARDO"
-                    Case Else
-                        esito = "08BI_XXX"
-                End Select
-            Case "09" ' Varese
-                Select Case codice.ToUpper
-                    Case "017"
-                        esito = "UUUUUU"    'UFFICIO
-                    Case Else
-                        esito = "09VA_XXX"
-                End Select
-            Case "10" ' Sede
-                Select Case codice.ToUpper
-                    Case "017"
-                        esito = "UUUUUU"    'UFFICIO
-                    Case Else
-                        esito = "10_XXX"
-                End Select
-            Case "11" ' Cuneo
-                Select Case codice.ToUpper
-                    Case "017"
-                        esito = "UUUUUU"    'UFFICIO
-                    Case Else
-                        esito = "11CN_XXX"
-                End Select
-            Case "12" ' Alessandria
-                Select Case codice.ToUpper
-                    Case "017"
-                        esito = "UUUUUU"    'UFFICIO
-                    Case Else
-                        esito = "11AL_XXX"
-                End Select
-            Case Else
-                esito = "XYZ"
-        End Select
 
-        Return esito
-    End Function
     Private Function TranscodificaQuantita(ByVal codice As String) As Double
         Dim esito As Integer
         Select Case codice.ToUpper
