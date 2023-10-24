@@ -929,6 +929,35 @@ Public Module Common
 
         Return result
     End Function
+
+    Public Function GetListTextWithoutNewLines(ByVal Optional value As String = "", ByVal Optional charactersToWrapAt As Integer = 128) As List(Of String)
+        Dim result As New List(Of String)
+        If String.IsNullOrWhiteSpace(value) Then
+            Return result
+        End If
+        Dim tmpValue As String = Regex.Replace(Regex.Replace(value, vbCrLf, Environment.NewLine), Environment.NewLine, " ")
+        If Len(tmpValue) <= charactersToWrapAt Then
+            result.Add(tmpValue)
+            Return result
+        End If
+        Dim sb = New StringBuilder()
+        Dim currString = New StringBuilder()
+
+        Dim words = Regex.Split(tmpValue, " "c)
+        For Each word In words
+            If currString.Length + word.Length + 1 < charactersToWrapAt Then
+                sb.AppendFormat(" {0}", word)
+                currString.AppendFormat(" {0}", word)
+            Else
+                result.Add(currString.ToString.Trim)
+                currString.Clear()
+                'sb.AppendFormat("{0}{1}", Environment.NewLine, word)
+                currString.AppendFormat(" {0}", word)
+            End If
+        Next
+
+        Return result
+    End Function
 End Module
 Public Module LogTools
     Public Sub ScriviLogESposta()
