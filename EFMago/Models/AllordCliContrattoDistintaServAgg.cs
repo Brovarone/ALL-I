@@ -43,6 +43,7 @@ namespace EFMago.Models
         public DateTime Tbmodified { get; set; }
         public int TbcreatedId { get; set; }
         public int TbmodifiedId { get; set; }
+        public int? Periodicita { get; set; }
 
         // Creato da me
         public virtual AllordCliContrattoDistinta AllordCliContrattoDistinta { get; set; }

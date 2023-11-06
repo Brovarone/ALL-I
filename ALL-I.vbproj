@@ -408,6 +408,13 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Fusione\Fox\Produttori.vb" />
+    <Compile Include="Fusione\Fox\TipoServizio.vb" />
+    <Compile Include="Fusione\Fox\frmFoxFiliali.Designer.vb">
+      <DependentUpon>frmFoxFiliali.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Fusione\Fox\frmFoxFiliali.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Fusione\Fusione.vb" />
     <Compile Include="Fusione\Deprecate\FusioneWithDataRow.vb" />
     <Compile Include="Fusione\Deprecate\FusioneWithDataTable.vb" />
@@ -497,6 +504,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Fusione\Fox\frmSchemaXLS.resx">
       <DependentUpon>frmSchemaXLS.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Fusione\Fox\frmFoxFiliali.resx">
+      <DependentUpon>frmFoxFiliali.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MessageBoxWithDetails.resx">
       <DependentUpon>MessageBoxWithDetails.vb</DependentUpon>

@@ -50,7 +50,6 @@ Public Class FLogin
 
     Private isDbUNO As Boolean = True ' mi serve per comandare i filtrianalitici in periodo transitorio per adeguamento fatture da ordini
     Public Sub New()
-
         ' This call is required by the designer.
         InitializeComponent()
 
@@ -942,29 +941,57 @@ Public Class FLogin
         End If
 
         If ChkContrattiFox.Checked Then
-            Dim bFound As Boolean
-            Dim contratti As String() = {"_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV", "ACGTRPG"} '"_CHIAVI", "_ONEOPE1","_ONTROPE"
-            Dim contrattiFound(8) As Boolean
-            Dim fileInFolder As String() = Directory.GetFiles(If(String.IsNullOrWhiteSpace(My.Settings.mFOXPATH), FolderPath, My.Settings.mFOXPATH), "*.*", SearchOption.TopDirectoryOnly)
 
-            For i = 0 To UBound(contratti)
-                For Each sFile As String In FileInFolder
-                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
-                    bFound = sNomeFile.ToUpper.Equals(contratti(i).ToUpper)
-                    If bFound Then
-                        contrattiFound(i) = True
-                        contratti(i) = sFile
-                        lista.Add(sFile)
-                        Exit For
-                    End If
-                Next
-                If Not contrattiFound(i) Then
-                    MessageBox.Show("Impossibile continuare l'elaborazione dei Contratti a causa di file mancanti: " & contratti(i))
-                    Exit For
+            Using ff = New frmFoxFiliali
+                Dim result As DialogResult = ff.ShowDialog
+                If result = DialogResult.OK Then
+                    Dim bFound As Boolean
+                    Dim contratti As String() = {"_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV"} '"_CHIAVI", "_ONEOPE1","_ONTROPE"
+                    Dim contrattiFound(8) As Boolean
+                    Dim fileInFolder As String()
+
+                    Dim listaFiliali As List(Of String) = ff.okFil
+                    For Each f As String In listaFiliali
+                        fileInFolder = Directory.GetFiles(f, "*.*", SearchOption.TopDirectoryOnly)
+                        For i = 0 To UBound(contratti)
+                            For Each sFile As String In fileInFolder
+                                Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
+                                bFound = sNomeFile.ToUpper.Equals(contratti(i).ToUpper)
+                                If bFound Then
+                                    contrattiFound(i) = True
+                                    contratti(i) = sFile
+                                    lista.Add(sFile)
+                                    Exit For
+                                End If
+                            Next
+                            If Not contrattiFound(i) Then
+                                MessageBox.Show("Impossibile continuare l'elaborazione dei Contratti a causa di file mancanti: " & contratti(i))
+                                Exit For
+                            End If
+                        Next
+                        fileInFolder = Directory.GetFiles(If(String.IsNullOrWhiteSpace(My.Settings.mFOXPATH), FolderPath, My.Settings.mFOXPATH), "*.*", SearchOption.TopDirectoryOnly)
+                        For Each sFile As String In fileInFolder
+                            Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
+                            bFound = sNomeFile.ToUpper.Equals("ACGTRPG")
+                            If bFound Then
+                                contrattiFound(8) = True
+                                ReDim Preserve contratti(8)
+                                contratti(8) = sFile
+                                lista.Add(sFile)
+                                Exit For
+                            End If
+                            If Not contrattiFound(8) Then
+                                MessageBox.Show("Impossibile continuare l'elaborazione dei Contratti a causa di file mancanti: " & contratti(8))
+                                Exit For
+                            End If
+                        Next
+
+                        ProcessaGruppoContratti(contratti, "Contratti")
+                        En_Dis_Controls(True, True, True)
+                    Next
+
                 End If
-            Next
-            ProcessaGruppoContratti(contratti, "Contratti")
-            En_Dis_Controls(True, True, True)
+            End Using
 
         End If
 
@@ -1003,13 +1030,17 @@ Public Class FLogin
         Dim bOkImport As Boolean
         Dim dsFOX As New List(Of DataSet)
         My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  " & nomegruppo & "  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
+        Dim sFolder = New System.IO.DirectoryInfo(System.IO.Path.GetDirectoryName(lista(0))).Name
+        lstStatoConnessione.Items.Add(sFolder)
+        My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  " & sFolder & "  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
         For i = 0 To UBound(lista)
             Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(lista(i))
             Dim sExt As String = System.IO.Path.GetExtension(lista(i))
             lstStatoConnessione.Items.Add(sNomeFile & sExt)
 
+
             If sExt.ToUpper = ".CSV" OrElse sExt.ToUpper = ".XLS" OrElse sExt.ToUpper = ".XLSX" Then
-                Dim sFullPath = If(String.IsNullOrWhiteSpace(txtTemp_FoxFolder.Text), FolderPath, txtTemp_FoxFolder.Text) & "\" & sNomeFile & sExt
+                Dim sFullPath = lista(i)
                 EditTestoBarra("Processo file " & sNomeFile & sExt)
                 prgCopy.Minimum = 0
                 prgCopy.Maximum = 100
@@ -2120,6 +2151,7 @@ Public Class FLogin
     End Sub
 
     Private Sub ContrattiFoxToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles ContrattiFoxToolStripMenuItem.Click
+
         ChkContrattiFox.Checked = True
         DBisTMP = True
         isDbUNO = True

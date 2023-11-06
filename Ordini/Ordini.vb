@@ -33,6 +33,7 @@ Module Ordini
         Quadrimestrale = 1094254596
         Semestrale = 1094254598
         Variabile = 1094254692
+        Nessuno = 1094254597
     End Enum
 
     ReadOnly sLoginId As String = My.Settings.mLOGINID
@@ -204,6 +205,9 @@ Module Ordini
             Dim efAllordCliAcc As New List(Of AllordCliAcc)
             Dim efAllordCliAttivita As New List(Of AllordCliAttivita)
             Dim efAllordCliContratto As New List(Of AllordCliContratto)
+            Dim efAllordCliContrattoDistinta As New List(Of AllordCliContrattoDistinta)
+            Dim efAllordCliContrattoDistintaServAgg As New List(Of AllordCliContrattoDistintaServAgg)
+
 #End Region
 
             If allOrders.Any Then
@@ -239,7 +243,6 @@ Module Ordini
                     Dim isUpdateRows As Boolean = False ' Indica se ci sono righe contratto che vengono aggiorate
                     'Inizializzo alcuni valori
                     Dim cOrd As New CurOrd(o)
-                    'Dim cOrd As CurOrd = Eval_CurrentOrder(o)
                     Dim curLastLine As Integer = If(o.MaSaleOrdDetails.Any, o.MaSaleOrdDetails.Max(Function(m) m.Line), 0)
                     Dim curLastPosition As Integer = If(o.MaSaleOrdDetails.Any, o.MaSaleOrdDetails.Max(Function(m) m.Position), 0)
                     Dim bScrittoDescrizioni As Boolean = False
@@ -830,6 +833,36 @@ Module Ordini
                                 Debug.Print("AllordCliContratto Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                                 bulkMessage.AppendLine("AllordCliContratto Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                             End If
+                            iStep += 1
+                            EditTestoBarra("Salvataggio: Aggiornamento righe distinta ")
+                            If efAllordCliContrattoDistinta.Any Then
+                                Dim t = efAllordCliContrattoDistinta.Count
+                                Dim cfgOrdConDis As New BulkConfig With {
+                                        .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                        .BulkCopyTimeout = 0,
+                                        .CalculateStats = True,
+                                        .BatchSize = If(t < 5000, 0, t / 10),
+                                        .NotifyAfter = t / 10
+                                        }
+                                OrdContext.BulkUpdate(efAllordCliContrattoDistinta, cfgOrdConDis, Function(d) d)
+                                Debug.Print("AllordCliContrattoDistinta Ins:" & cfgOrdConDis.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDis.StatsInfo.StatsNumberUpdated.ToString)
+                                bulkMessage.AppendLine("AllordCliContrattoDistinta Ins:" & cfgOrdConDis.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDis.StatsInfo.StatsNumberUpdated.ToString)
+                            End If
+                            iStep += 1
+                            EditTestoBarra("Salvataggio: Aggiornamento righe Servizi Aggiuntivi ")
+                            If efAllordCliContrattoDistintaServAgg.Any Then
+                                Dim t = efAllordCliContrattoDistintaServAgg.Count
+                                Dim cfgOrdConDisServAgg As New BulkConfig With {
+                                        .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                        .BulkCopyTimeout = 0,
+                                        .CalculateStats = True,
+                                        .BatchSize = If(t < 5000, 0, t / 10),
+                                        .NotifyAfter = t / 10
+                                        }
+                                OrdContext.BulkUpdate(efAllordCliContrattoDistintaServAgg, cfgOrdConDisServAgg, Function(d) d)
+                                Debug.Print("AllordCliContrattoDistintaServAgg Ins:" & cfgOrdConDisServAgg.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDisServAgg.StatsInfo.StatsNumberUpdated.ToString)
+                                bulkMessage.AppendLine("AllordCliContrattoDistintaServAgg Ins:" & cfgOrdConDisServAgg.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDisServAgg.StatsInfo.StatsNumberUpdated.ToString)
+                            End If
 
                             If someTrouble Then
                                 bulkTrans.Rollback()
@@ -857,8 +890,8 @@ Module Ordini
                         End Try
                     End Using
                 End If
-            End If
 #End Region
+            End If
 
         Catch ex As Exception
             Debug.Print(ex.Message)

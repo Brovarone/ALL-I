@@ -831,6 +831,8 @@ namespace EFMago.Models
                     .HasColumnName("Franchigia")
                     .HasDefaultValueSql("((0))");
 
+                entity.Property(e => e.Periodicita).HasDefaultValueSql("((1094254597))");
+
                 entity.Property(e => e.Qta)
                     .HasColumnName("Qta")
                     .HasDefaultValueSql("((0))");

@@ -5,7 +5,7 @@
 
 Per ogni ordini devo ciclare le righe contratto ( non fatturate = escludo già le righe unatantum)
 	[VALUTARE SE INSERIRE IN FILTRO AL MOMENTO DELL'ESTRAZIONE]
-	PIU ->Non rip in fatt = Si
+	PIU -> Non rip in fatt = Si
 	PIU -> Fatturato = No -> ( mi esclude gli unatantum già fatturati)
  ?	PIU -> Data Competenza Inserita & < di data fine elaborazione
  !! PIU -> DataProssimaFatt Between [date del filtro]
@@ -36,7 +36,9 @@ Fatturazione da MAGO
 
 Data Sospensione in Info non viene utilizzata
 
-ISTAT
+-------
+ ISTAT
+-------
  Per ogni ordine che corrisponde ai filtri superiori (Data, Cliente, Filiale)
  Ciclo le righe di contratto e vengono escluse:
 	A consuntivo
