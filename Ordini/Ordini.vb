@@ -142,6 +142,7 @@ Module Ordini
         Try
 #Region "Estrazioni dati con Query LINQ"
             'https://entityframework.net/why-first-query-slow
+            'Tipizzare con (Of ) solo le Tabelle singole 1-1 che NON hanno 1-n / Collection
             Dim q = (From o In OrdContext.MaSaleOrd _
                             .Include(Function(r) r.MaSaleOrdDetails) _
                             .Include(Function(acc) acc.ALLOrdCliAcc) _
@@ -152,9 +153,32 @@ Module Ordini
                                 .ThenInclude(Of AlltipoRigaServizio)(Function(trs) trs.AlltipoRigaServizio) _
                             .Include(Function(con) con.ALLordCliContratto) _
                                  .ThenInclude(Function(att) att.AllordCliAttivita) _
+                            .Include(Function(con) con.ALLordCliContratto) _
+                                 .ThenInclude(Function(att) att.AllordCliAttivita) _
                                         .ThenInclude(Of Allattivita)(Function(at) at.Allattivita) _
-                            .Include(Function(att) att.AllordCliAttivita) _
-                                .ThenInclude(Of Allattivita)(Function(at) at.Allattivita)) ' _
+                            .Include(Function(con) con.ALLordCliContratto) _
+                                .ThenInclude(Function(dis) dis.AllordCliContrattoDistinta) _
+                            .Include(Function(con) con.ALLordCliContratto) _
+                                .ThenInclude(Function(dis) dis.AllordCliContrattoDistinta) _
+                                    .ThenInclude(Of MaItems)(Function(it) it.MaItems) _
+                            .Include(Function(con) con.ALLordCliContratto) _
+                                .ThenInclude(Function(dis) dis.AllordCliContrattoDistinta) _
+                                    .ThenInclude(Of AlltipoRigaServizio)(Function(trs) trs.AlltipoRigaServizio) _
+                            .Include(Function(con) con.ALLordCliContratto) _
+                                .ThenInclude(Function(dis) dis.AllordCliContrattoDistinta) _
+                                    .ThenInclude(Function(servAgg) servAgg.AllordCliContrattoDistintaServAgg) _
+                            .Include(Function(con) con.ALLordCliContratto) _
+                                .ThenInclude(Function(dis) dis.AllordCliContrattoDistinta) _
+                                    .ThenInclude(Function(servAgg) servAgg.AllordCliContrattoDistintaServAgg) _
+                                        .ThenInclude(Of MaItems)(Function(it) it.MaItems) _
+                            .Include(Function(con) con.ALLordCliContratto) _
+                                .ThenInclude(Function(dis) dis.AllordCliContrattoDistinta) _
+                                    .ThenInclude(Function(servAgg) servAgg.AllordCliContrattoDistintaServAgg) _
+                                        .ThenInclude(Of AlltipoRigaServizio)(Function(trs) trs.AlltipoRigaServizio) _
+                            .Include(Function(con) con.ALLordCliContratto) _
+                                .ThenInclude(Function(des) des.AllordCliContrattoDescFatt)
+                         )
+ _
             'q = q.Where(Function(i) i.MaSaleOrdDetails..)
             'AGGIUNGO  FILTRI
             'Vengono esclusi a priori gli ordini con data cessazione > di Data Competenza
