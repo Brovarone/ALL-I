@@ -946,12 +946,12 @@ Public Class FLogin
                 Dim result As DialogResult = ff.ShowDialog
                 If result = DialogResult.OK Then
                     Dim bFound As Boolean
-                    Dim contratti As String() = {"_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV"} '"_CHIAVI", "_ONEOPE1","_ONTROPE"
                     Dim contrattiFound(8) As Boolean
                     Dim fileInFolder As String()
 
                     Dim listaFiliali As List(Of String) = ff.okFil
                     For Each f As String In listaFiliali
+                        Dim contratti As String() = {"_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV"} '"_CHIAVI", "_ONEOPE1","_ONTROPE"
                         fileInFolder = Directory.GetFiles(f, "*.*", SearchOption.TopDirectoryOnly)
                         For i = 0 To UBound(contratti)
                             For Each sFile As String In fileInFolder
@@ -980,11 +980,11 @@ Public Class FLogin
                                 lista.Add(sFile)
                                 Exit For
                             End If
-                            If Not contrattiFound(8) Then
-                                MessageBox.Show("Impossibile continuare l'elaborazione dei Contratti a causa di file mancanti: " & contratti(8))
-                                Exit For
-                            End If
                         Next
+                        If Not contrattiFound(8) Then
+                            MessageBox.Show("Impossibile continuare l'elaborazione dei Contratti a causa di file mancanti: ACGTRPG ")
+                            Exit For
+                        End If
 
                         ProcessaGruppoContratti(contratti, "Contratti")
                         En_Dis_Controls(True, True, True)

@@ -122,6 +122,30 @@ Module ContrattiFox
             ds.Tables.Add(d.Tables(0).Copy)
             AvanzaBarra()
         Next
+        efMaSaleOrd = New List(Of MaSaleOrd)
+        ' efMaSaleOrdDetails = New List(Of MaSaleOrdDetails)
+        efMaSaleOrdSummary = New List(Of MaSaleOrdSummary)
+        efMaSaleOrdShipping = New List(Of MaSaleOrdShipping)
+        efMaSaleOrdNotes = New List(Of MaSaleOrdNotes)
+        efAllordCliAcc = New List(Of AllordCliAcc)
+        efAllordCliFattEle = New List(Of AllordCliFattEle)
+        efAllordCliContratto = New List(Of AllordCliContratto)
+        efAllordCliAttivita = New List(Of AllordCliAttivita)
+        efAllordCliContrattoDescFatt = New List(Of AllordCliContrattoDescFatt)
+        efAllordCliContrattoDistinta = New List(Of AllordCliContrattoDistinta)
+        efAllordCliContrattoDistintaServAgg = New List(Of AllordCliContrattoDistintaServAgg)
+        efAllordCliDescrizioni = New List(Of AllordCliDescrizioni)
+        efAllordCliTipologiaServizi = New List(Of AllordCliTipologiaServizi)
+        efAllordPadre = New List(Of AllordPadre)
+        efAllordFiglio = New List(Of AllordFiglio)
+        efMaCustSupp = New List(Of MaCustSupp)
+        efMaCustSuppBranches = New List(Of MaCustSuppBranches)
+        efMaCustSuppCustomerOptions = New List(Of MaCustSuppCustomerOptions)
+        efMaCustSuppNaturalPerson = New List(Of MaCustSuppNaturalPerson)
+        efMaDeclarationOfIntent = New List(Of MaDeclarationOfIntent)
+        efMaSddmandate = New List(Of MaSddmandate)
+        efMaIdnumbers = New List(Of MaIdnumbers)
+        efMaNonFiscalNumbers = New List(Of MaNonFiscalNumbers)
     End Sub
     ''' <summary>
     ''' Crea solo le relazioni 1-n
@@ -1445,7 +1469,7 @@ Module ContrattiFox
                      .Priority = r("FILIALE").ToString,
                     .CustSuppType = CustSuppType.Cliente,
                     .InternalOrdNo = masterOrder.OrderNo,
-                    .ExternalOrdNo = centro & Today.ToString("dd/MM/yy"),
+                    .ExternalOrdNo = TranscodificaFiliale(r("FILIALE").ToString) & Today.ToString("dd/MM/yy"),
                     .OrderDate = Valid_Data(r("DTPRODUZ").ToString),
                     .Customer = clienteACG,
                     .Payment = condPag,
@@ -2676,6 +2700,32 @@ Module ContrattiFox
                 esito = Periodo.Semestrale
             Case Else
                 esito = Periodo.Nessuno
+        End Select
+        Return esito
+    End Function
+    Private Function TranscodificaFiliale(ByVal codice As String) As String
+        Dim esito As String
+        Select Case codice
+            Case "01"
+                esito = "TO"    'TORINO
+            Case "02"
+                esito = "MI"    'MILANO
+            Case "03"
+                esito = "AT"    'ASTI
+            Case "04"
+                esito = "AO"    'AOSTA
+            Case "05"
+                esito = "NO"    'NOVARA
+            Case "08"
+                esito = "BI"    'VERCELLI/BIELLA
+            Case "09"
+                esito = "VA"    'VARESE
+            Case "11"
+                esito = "CN"    'CUNEO
+            Case "12"
+                esito = "AL"    'ALESSANDRIA
+            Case Else
+                esito = ""
         End Select
         Return esito
     End Function
