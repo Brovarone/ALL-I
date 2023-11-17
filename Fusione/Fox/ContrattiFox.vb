@@ -546,9 +546,9 @@ Module ContrattiFox
             If String.IsNullOrEmpty(dvPdc.CercaContropartitaFox(contropartitaFox)) Then avvisi.Add("Valore assente su Mago - Contropartita(TIPSERV):" & r("TIPSERV").ToString)
             'AGENTE
             Dim produttore As String = dvTabelle.CercaValoreSuTabelleFox("PT", r("PRODUTTORE").ToString)
-            If Right(TrovaAgente(r("PRODUTTORE").ToString, r("FILIALE")), 3) = "XXX" Then avvisi.Add("Agente assente su Mago(PRODUTTORE):" & r("PRODUTTORE").ToString)
+            If Right(TrovaAgente(r("PRODUTTORE").ToString, r("FILIALE")), 3) = "XXX" Then avvisi.Add("Agente assente su Mago(PRODUTTORE):" & r("PRODUTTORE").ToString & " Contratto: " & r("CONTRATTO").ToString)
             'Tipo Servizio
-            If TranscodificaServizio(r("TIPSERV").ToString).Equals("XXXXX") Then avvisi.Add("Trascodifica Servizio assente: " & r("TIPSERV").ToString & " su Contratto: " & r("CONTRATTO").ToString)
+            If TranscodificaServizio(r("TIPSERV").ToString).Equals("XXXXX") Then avvisi.Add("Trascodifica Servizio assente: " & r("TIPSERV").ToString & " Contratto: " & r("CONTRATTO").ToString)
             'Frequenza = NO e Canone <> 0
             If r("FREQ").ToString = "NO" AndAlso CDbl(r("CANONE")) <> 0 Then errori.Add("Contratto con frequenza = NO ma Canone <> 0 :" & r("CONTRATTO").ToString)
             'GRP_Contratto
@@ -1162,7 +1162,8 @@ Module ContrattiFox
                 .TbmodifiedId = sLoginId,
                 .Nota = "",
                 .CdC = centro,
-                .Impianto = sito
+                .Impianto = sito,
+                .SubLineServAgg = 0
                  }
             'Aggiungo la riga alla collection
             efAllordCliContrattoDistinta.Add(rOrdDistinta)
@@ -1408,7 +1409,8 @@ Module ContrattiFox
                     .TbmodifiedId = sLoginId,
                     .Nota = "",
                      .CdC = r("CDC_ALL1").ToString,
-                    .Impianto = sito
+                    .Impianto = sito,
+                    .SubLineServAgg = 0
                  }
                 'Aggiungo la riga alla collection
                 efAllordCliContrattoDistinta.Add(rOrdDistintaAll1)
