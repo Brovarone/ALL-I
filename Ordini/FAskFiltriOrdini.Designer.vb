@@ -64,12 +64,16 @@ Partial Class FAskFiltriOrdini
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
         Me.GroupDecorrenza = New System.Windows.Forms.GroupBox()
         Me.DtaDecorrenza = New System.Windows.Forms.DateTimePicker()
+        Me.GroupMomento = New System.Windows.Forms.GroupBox()
+        Me.RadioTypeServAgg = New System.Windows.Forms.RadioButton()
+        Me.RadioTypeCanoni = New System.Windows.Forms.RadioButton()
         Me.TableLayoutPanel1.SuspendLayout()
         Me.GroupOrdini.SuspendLayout()
         Me.GroupDataFatt.SuspendLayout()
         Me.GroupPeriodo.SuspendLayout()
         Me.GroupIstat.SuspendLayout()
         Me.GroupDecorrenza.SuspendLayout()
+        Me.GroupMomento.SuspendLayout()
         Me.SuspendLayout()
         '
         'TableLayoutPanel1
@@ -80,7 +84,7 @@ Partial Class FAskFiltriOrdini
         Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
         Me.TableLayoutPanel1.Controls.Add(Me.OK_Button, 0, 0)
         Me.TableLayoutPanel1.Controls.Add(Me.Cancel_Button, 1, 0)
-        Me.TableLayoutPanel1.Location = New System.Drawing.Point(337, 436)
+        Me.TableLayoutPanel1.Location = New System.Drawing.Point(337, 510)
         Me.TableLayoutPanel1.Name = "TableLayoutPanel1"
         Me.TableLayoutPanel1.RowCount = 1
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
@@ -252,7 +256,7 @@ Partial Class FAskFiltriOrdini
         Me.GroupDataFatt.Controls.Add(Me.Label7)
         Me.GroupDataFatt.Controls.Add(Me.DtaFattDa)
         Me.GroupDataFatt.Controls.Add(Me.DtaFattA)
-        Me.GroupDataFatt.Location = New System.Drawing.Point(6, 224)
+        Me.GroupDataFatt.Location = New System.Drawing.Point(6, 296)
         Me.GroupDataFatt.Name = "GroupDataFatt"
         Me.GroupDataFatt.Size = New System.Drawing.Size(228, 81)
         Me.GroupDataFatt.TabIndex = 14
@@ -294,7 +298,7 @@ Partial Class FAskFiltriOrdini
         Me.GroupPeriodo.Controls.Add(Me.ChkP_Quadrimestrali)
         Me.GroupPeriodo.Controls.Add(Me.ChkP_Semestrali)
         Me.GroupPeriodo.Controls.Add(Me.ChkP_Annuali)
-        Me.GroupPeriodo.Location = New System.Drawing.Point(6, 311)
+        Me.GroupPeriodo.Location = New System.Drawing.Point(6, 383)
         Me.GroupPeriodo.Name = "GroupPeriodo"
         Me.GroupPeriodo.Size = New System.Drawing.Size(228, 114)
         Me.GroupPeriodo.TabIndex = 15
@@ -489,13 +493,47 @@ Partial Class FAskFiltriOrdini
         Me.DtaDecorrenza.Size = New System.Drawing.Size(96, 20)
         Me.DtaDecorrenza.TabIndex = 13
         '
+        'GroupMomento
+        '
+        Me.GroupMomento.Controls.Add(Me.RadioTypeServAgg)
+        Me.GroupMomento.Controls.Add(Me.RadioTypeCanoni)
+        Me.GroupMomento.Location = New System.Drawing.Point(6, 224)
+        Me.GroupMomento.Name = "GroupMomento"
+        Me.GroupMomento.Size = New System.Drawing.Size(228, 66)
+        Me.GroupMomento.TabIndex = 26
+        Me.GroupMomento.TabStop = False
+        Me.GroupMomento.Text = "Tipo"
+        '
+        'RadioTypeServAgg
+        '
+        Me.RadioTypeServAgg.AutoSize = True
+        Me.RadioTypeServAgg.Location = New System.Drawing.Point(7, 42)
+        Me.RadioTypeServAgg.Name = "RadioTypeServAgg"
+        Me.RadioTypeServAgg.Size = New System.Drawing.Size(105, 17)
+        Me.RadioTypeServAgg.TabIndex = 1
+        Me.RadioTypeServAgg.Text = "Servizi Aggiuntivi"
+        Me.RadioTypeServAgg.UseVisualStyleBackColor = True
+        '
+        'RadioTypeCanoni
+        '
+        Me.RadioTypeCanoni.AutoSize = True
+        Me.RadioTypeCanoni.Checked = True
+        Me.RadioTypeCanoni.Location = New System.Drawing.Point(7, 20)
+        Me.RadioTypeCanoni.Name = "RadioTypeCanoni"
+        Me.RadioTypeCanoni.Size = New System.Drawing.Size(58, 17)
+        Me.RadioTypeCanoni.TabIndex = 0
+        Me.RadioTypeCanoni.TabStop = True
+        Me.RadioTypeCanoni.Text = "Canoni"
+        Me.RadioTypeCanoni.UseVisualStyleBackColor = True
+        '
         'FAskFiltriOrdini
         '
         Me.AcceptButton = Me.OK_Button
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.CancelButton = Me.Cancel_Button
-        Me.ClientSize = New System.Drawing.Size(495, 477)
+        Me.ClientSize = New System.Drawing.Size(495, 551)
+        Me.Controls.Add(Me.GroupMomento)
         Me.Controls.Add(Me.GroupDecorrenza)
         Me.Controls.Add(Me.GroupIstat)
         Me.Controls.Add(Me.GroupPeriodo)
@@ -519,6 +557,8 @@ Partial Class FAskFiltriOrdini
         Me.GroupIstat.ResumeLayout(False)
         Me.GroupIstat.PerformLayout()
         Me.GroupDecorrenza.ResumeLayout(False)
+        Me.GroupMomento.ResumeLayout(False)
+        Me.GroupMomento.PerformLayout()
         Me.ResumeLayout(False)
 
     End Sub
@@ -563,4 +603,7 @@ Partial Class FAskFiltriOrdini
     Friend WithEvents Label7 As Label
     Friend WithEvents GroupDecorrenza As GroupBox
     Friend WithEvents DtaDecorrenza As DateTimePicker
+    Friend WithEvents GroupMomento As GroupBox
+    Friend WithEvents RadioTypeServAgg As RadioButton
+    Friend WithEvents RadioTypeCanoni As RadioButton
 End Class

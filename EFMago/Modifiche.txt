@@ -1,4 +1,9 @@
-﻿Da eseguire al Contesto MagoContext PER ELIMINARE L'ERRORE DI IDENTITY
+﻿https://www.c-sharpcorner.com/blogs/auto-generate-dbcontext-class-from-database-in-asp-net-core-31
+Scaffold-DbContext "Server=acerbo\sqlexpress;Database=ALSPA;Trusted_Connection=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Database -Context "ApplicationDbContext" -DataAnnotations  -f Integra_Interventi
+
+
+
+Da eseguire al Contesto MagoContext PER ELIMINARE L'ERRORE DI IDENTITY
 	IM_JobsDetails.Line  IM_JobsDetails.Section
 	ImJobsDetailsVcl.JobSection', 'ImJobsDetailsVcl.JobLine', 'ImJobsDetailsVcl.Line'
 AGGIUNGERE

@@ -50,7 +50,7 @@ Public Class FAskFiltriOrdini
     End Sub
 
     Private Sub FAskFiltriOrdini_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        Me.Size = New Size(262, 516) ' Misura standard
+        Me.Size = New Size(262, 590) ' Misura standard
         ToolTip1 = New ToolTip()
         If IsIstat Then
             Me.Size = New Size(262, 498)
@@ -91,6 +91,12 @@ Public Class FAskFiltriOrdini
 
     Private Sub DtaFattDa_ValueChanged(sender As Object, e As EventArgs) Handles DtaFattDa.ValueChanged
         DtaFattA.Value = DtaFattDa.Value
+    End Sub
+
+    Private Sub RadioTypeServAgg_CheckedChanged(sender As Object, e As EventArgs) Handles RadioTypeServAgg.CheckedChanged
+        Dim b As Boolean = Not RadioTypeServAgg.Checked
+        GroupPeriodo.Enabled = b
+        'GroupDataFatt.Enabled = b
     End Sub
 
 

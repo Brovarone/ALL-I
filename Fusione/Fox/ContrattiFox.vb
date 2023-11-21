@@ -856,14 +856,14 @@ Module ContrattiFox
                     dvFattEle.RowFilter = $"CLIENTE = '{clienteFox}'"
                     If dvFattEle.Count = 0 Then
                         errori.AppendLine("Cliente (" & clienteACG & ") assente dai dati di Fatturazione Elettronica (CLIFTELE): " & contratto)
-                        Dim mb As New MessageBoxWithDetails("Cliente (" & clienteACG & ") assente dai dati di Fatturazione Elettronica (CLIFTELE): " & contratto, GetCurrentMethod.Name)
-                        mb.ShowDialog()
+                        'Dim mb As New MessageBoxWithDetails("Cliente (" & clienteACG & ") assente dai dati di Fatturazione Elettronica (CLIFTELE): " & contratto, GetCurrentMethod.Name)
+                        ' mb.ShowDialog()
                     ElseIf dvFattEle.Count = 1 Then
                         drFattEle = dvFattEle(0).Row
                     Else
-                        Dim mb As New MessageBoxWithDetails("Più righe di Fatturazione Elettronica (CLIFTELE) impossibile determinare quella corretta: " & contratto, GetCurrentMethod.Name)
                         errori.AppendLine("Più righe di Fatturazione Elettronica (CLIFTELE) impossibile determinare quella corretta: " & contratto)
-                        mb.ShowDialog()
+                        'Dim mb As New MessageBoxWithDetails("Più righe di Fatturazione Elettronica (CLIFTELE) impossibile determinare quella corretta: " & contratto, GetCurrentMethod.Name)
+                        'mb.ShowDialog()
                     End If
                 End If
                 masterOrder.CodiceSdi = drFattEle("F114").ToString.Trim
@@ -983,14 +983,14 @@ Module ContrattiFox
                     dvFattEle.RowFilter = $"CLIENTE = '{clienteFox}'"
                     If dvFattEle.Count = 0 Then
                         errori.AppendLine("Cliente (" & clienteACG & ") assente dai dati di Fatturazione Elettronica (CLIFTELE): " & contratto)
-                        Dim mb As New MessageBoxWithDetails("Cliente (" & clienteACG & ") assente dai dati di Fatturazione Elettronica (CLIFTELE): " & contratto, GetCurrentMethod.Name)
-                        mb.ShowDialog()
+                        'Dim mb As New MessageBoxWithDetails("Cliente (" & clienteACG & ") assente dai dati di Fatturazione Elettronica (CLIFTELE): " & contratto, GetCurrentMethod.Name)
+                        'mb.ShowDialog()
                     ElseIf dvFattEle.Count = 1 Then
                         drFattEle = dvFattEle(0).Row
                     Else
-                        Dim mb As New MessageBoxWithDetails("Più righe di Fatturazione Elettronica (CLIFTELE) impossbile determinare quella corretta: " & contratto, GetCurrentMethod.Name)
                         errori.AppendLine("Più righe di Fatturazione Elettronica (CLIFTELE) impossbile determinare quella corretta: " & contratto)
-                        mb.ShowDialog()
+                        'Dim mb As New MessageBoxWithDetails("Più righe di Fatturazione Elettronica (CLIFTELE) impossbile determinare quella corretta: " & contratto, GetCurrentMethod.Name)
+                        'mb.ShowDialog()
                     End If
                 End If
                 If Not codiceRaggruppamento.Equals(masterOrder.RaggruppamentoFattura) AndAlso CDbl(r("CANONE").ToString) <> 0 Then
@@ -1170,18 +1170,19 @@ Module ContrattiFox
             nrDistinte += 1
 #End Region
 #Region "Attività di Sospensione"
-            If r("GRP_CONTRATTO").ToString.Equals("SOSPESO") Then
-                r("motivo") = "SOSPESO"
-                r("DATA_INIZIO_SOSP") = "01/01/2000"
-                r("DATA_FINE_SOSP") = "31/12/2099"
-            End If
-            If Not String.IsNullOrWhiteSpace(r("motivo").ToString) Then
-                Dim motivo As String = If(r("motivo").Equals("ATTESA ATTIVAZIONE"), "ATTATT", r("motivo"))
-                If Len(motivo) > 10 Then
-                    errori.AppendLine("Motivo sospensione troppo lungo su Contratto: " & contratto)
-                    motivo = "ERRORE"
+            If Not masterDistinta.Sospeso Then
+                If r("GRP_CONTRATTO").ToString.Equals("SOSPESO") Then
+                    r("motivo") = "SOSPESO"
+                    r("DATA_INIZIO_SOSP") = "01/01/2000"
+                    r("DATA_FINE_SOSP") = "31/12/2099"
                 End If
-                Dim rOrdAttivita As New AllordCliAttivita With {
+                If Not String.IsNullOrWhiteSpace(r("motivo").ToString) Then
+                    Dim motivo As String = If(r("motivo").Equals("ATTESA ATTIVAZIONE"), "ATTATT", r("motivo"))
+                    If Len(motivo) > 10 Then
+                        errori.AppendLine("Motivo sospensione troppo lungo su Contratto: " & contratto)
+                        motivo = "ERRORE"
+                    End If
+                    Dim rOrdAttivita As New AllordCliAttivita With {
                     .IdOrdCli = saleOrdId,
                     .Line = 1,
                     .RifLinea = iLineContratto,
@@ -1200,7 +1201,9 @@ Module ContrattiFox
                     .TbcreatedId = sLoginId,
                     .TbmodifiedId = sLoginId
                 }
-                efAllordCliAttivita.Add(rOrdAttivita)
+                    efAllordCliAttivita.Add(rOrdAttivita)
+                    masterDistinta.Sospeso = True
+                End If
             End If
 #End Region
 #Region "Servizi Aggiuntivi"
@@ -1426,7 +1429,7 @@ Module ContrattiFox
                 Dim rOrdFiglio As New AllordFiglio With {
                 .IdOrdCli = saleOrdId,
                 .IdOrdFiglio = 0,
-                .NrOrdFiglio = r("CONTRSUCC").ToString,
+                .NrOrdFiglio = Strings.Right(r("CONTRSUCC").ToString, 10),
                 .Tbcreated = Now,
                 .Tbmodified = Now,
                 .TbcreatedId = sLoginId,
@@ -1438,7 +1441,7 @@ Module ContrattiFox
                 Dim rOrdPadre As New AllordPadre With {
                     .IdOrdCli = saleOrdId,
                     .IdOrdPadre = 0,
-                    .NrOrdPadre = r("CONTRPREC").ToString,
+                    .NrOrdPadre = Strings.Right(r("CONTRPREC").ToString, 10),
                     .Tbcreated = Now,
                     .Tbmodified = Now,
                     .TbcreatedId = sLoginId,
@@ -2862,12 +2865,14 @@ Module ContrattiFox
         Public ClienteMago As String
         Public GruppoDistinta As String
         Public RigheDistinta As Integer
+        Public Sospeso As Boolean
 
         Public Sub New()
             Me.ClienteFox = ""
             Me.ClienteMago = ""
             Me.GruppoDistinta = ""
             Me.RigheDistinta = 0
+            Me.Sospeso = False
         End Sub
     End Class
     Friend Class ServiziAggiuntivi

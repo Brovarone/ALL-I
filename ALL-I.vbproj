@@ -69,7 +69,7 @@
     <OutputPath>bin\Release\</OutputPath>
     <DocumentationFile>ALL-I.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
-	<ExcludeFoldersFromDeployment>bin\ar;bin\cs;bin\de;bin\es;bin\fr;bin\he;bin\hi;bin\ja;bin\ko;bin\nl;bin\pl;bin\pt;bin\ru;bin\tr-TR;bin\zh-Hans;bin\zh-Hant</ExcludeFoldersFromDeployment>
+    <ExcludeFoldersFromDeployment>bin\ar;bin\cs;bin\de;bin\es;bin\fr;bin\he;bin\hi;bin\ja;bin\ko;bin\nl;bin\pl;bin\pt;bin\ru;bin\tr-TR;bin\zh-Hans;bin\zh-Hant</ExcludeFoldersFromDeployment>
   </PropertyGroup>
   <PropertyGroup>
     <OptionExplicit>On</OptionExplicit>
@@ -458,12 +458,19 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="GlobalSuppressions.vb" />
+    <Compile Include="Ordini\FAskFiltriOrdiniConsuntivo.Designer.vb">
+      <DependentUpon>FAskFiltriOrdiniConsuntivo.vb</DependentUpon>
+    </Compile>
+    <Compile Include="Ordini\FAskFiltriOrdiniConsuntivo.vb">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Ordini\FattureDaOrdini.vb" />
     <Compile Include="Ordini\frmSchemaOrdini.Designer.vb">
       <DependentUpon>frmSchemaOrdini.vb</DependentUpon>
     </Compile>
     <Compile Include="Ordini\frmSchemaOrdini.vb" />
     <Compile Include="Ordini\Ordini.vb" />
+    <Compile Include="Ordini\OrdiniConsuntivi.vb" />
     <Compile Include="Settings.vb" />
     <Compile Include="SQL.vb" />
     <Compile Include="Contabilita\Contabilita.vb" />
@@ -534,6 +541,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Ordini\FAskFiltriOrdini.resx">
       <DependentUpon>FAskFiltriOrdini.vb</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Ordini\FAskFiltriOrdiniConsuntivo.resx">
+      <DependentUpon>FAskFiltriOrdiniConsuntivo.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Ordini\frmSchemaOrdini.resx">
       <DependentUpon>frmSchemaOrdini.vb</DependentUpon>

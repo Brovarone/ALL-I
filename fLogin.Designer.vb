@@ -33,13 +33,6 @@ Partial Class FLogin
         Me.txtSERVER = New System.Windows.Forms.TextBox()
         Me.TxtDB_UNO = New System.Windows.Forms.TextBox()
         Me.PanelAdmin = New System.Windows.Forms.Panel()
-        Me.PanelDB = New System.Windows.Forms.Panel()
-        Me.ChkEscludiControllo = New System.Windows.Forms.CheckBox()
-        Me.BtnFox = New System.Windows.Forms.Button()
-        Me.CHKDBTemporaneo = New System.Windows.Forms.CheckBox()
-        Me.BtnSelSPA = New System.Windows.Forms.Button()
-        Me.BtnSelUNO = New System.Windows.Forms.Button()
-        Me.Label8 = New System.Windows.Forms.Label()
         Me.Label7 = New System.Windows.Forms.Label()
         Me.TxtDB_SPA = New System.Windows.Forms.TextBox()
         Me.Label6 = New System.Windows.Forms.Label()
@@ -106,6 +99,13 @@ Partial Class FLogin
         Me.txtLoginId = New System.Windows.Forms.TextBox()
         Me.BtnPath = New System.Windows.Forms.Button()
         Me.lblPath = New System.Windows.Forms.Label()
+        Me.PanelDB = New System.Windows.Forms.Panel()
+        Me.ChkEscludiControllo = New System.Windows.Forms.CheckBox()
+        Me.BtnFox = New System.Windows.Forms.Button()
+        Me.CHKDBTemporaneo = New System.Windows.Forms.CheckBox()
+        Me.BtnSelSPA = New System.Windows.Forms.Button()
+        Me.BtnSelUNO = New System.Windows.Forms.Button()
+        Me.Label8 = New System.Windows.Forms.Label()
         Me.PanelUser = New System.Windows.Forms.Panel()
         Me.BtnOrdiniISTAT = New System.Windows.Forms.Button()
         Me.BtnOrdini = New System.Windows.Forms.Button()
@@ -173,8 +173,8 @@ Partial Class FLogin
         Me.SearchToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.toolStripSeparator5 = New System.Windows.Forms.ToolStripSeparator()
         Me.AboutToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.CheckIntegraToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.PanelAdmin.SuspendLayout()
-        Me.PanelDB.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabFusione.SuspendLayout()
         Me.TabPageCancella.SuspendLayout()
@@ -186,6 +186,7 @@ Partial Class FLogin
         Me.TabPagePnota.SuspendLayout()
         Me.TabCespiti.SuspendLayout()
         Me.TabContrattiFox.SuspendLayout()
+        Me.PanelDB.SuspendLayout()
         Me.PanelUser.SuspendLayout()
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.MenuStrip1.SuspendLayout()
@@ -298,77 +299,6 @@ Partial Class FLogin
         Me.PanelAdmin.Name = "PanelAdmin"
         Me.PanelAdmin.Size = New System.Drawing.Size(456, 240)
         Me.PanelAdmin.TabIndex = 18
-        '
-        'PanelDB
-        '
-        Me.PanelDB.Controls.Add(Me.ChkEscludiControllo)
-        Me.PanelDB.Controls.Add(Me.BtnFox)
-        Me.PanelDB.Controls.Add(Me.CHKDBTemporaneo)
-        Me.PanelDB.Controls.Add(Me.BtnSelSPA)
-        Me.PanelDB.Controls.Add(Me.BtnSelUNO)
-        Me.PanelDB.Controls.Add(Me.Label8)
-        Me.PanelDB.Location = New System.Drawing.Point(2, 323)
-        Me.PanelDB.Name = "PanelDB"
-        Me.PanelDB.Size = New System.Drawing.Size(200, 234)
-        Me.PanelDB.TabIndex = 47
-        '
-        'ChkEscludiControllo
-        '
-        Me.ChkEscludiControllo.AutoSize = True
-        Me.ChkEscludiControllo.Checked = True
-        Me.ChkEscludiControllo.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.ChkEscludiControllo.Location = New System.Drawing.Point(12, 114)
-        Me.ChkEscludiControllo.Name = "ChkEscludiControllo"
-        Me.ChkEscludiControllo.Size = New System.Drawing.Size(74, 17)
-        Me.ChkEscludiControllo.TabIndex = 5
-        Me.ChkEscludiControllo.Text = "No Check"
-        Me.ChkEscludiControllo.UseVisualStyleBackColor = True
-        '
-        'BtnFox
-        '
-        Me.BtnFox.Location = New System.Drawing.Point(12, 16)
-        Me.BtnFox.Name = "BtnFox"
-        Me.BtnFox.Size = New System.Drawing.Size(63, 88)
-        Me.BtnFox.TabIndex = 4
-        Me.BtnFox.Text = "Fox"
-        Me.BtnFox.UseVisualStyleBackColor = True
-        '
-        'CHKDBTemporaneo
-        '
-        Me.CHKDBTemporaneo.AutoSize = True
-        Me.CHKDBTemporaneo.Location = New System.Drawing.Point(162, 114)
-        Me.CHKDBTemporaneo.Name = "CHKDBTemporaneo"
-        Me.CHKDBTemporaneo.Size = New System.Drawing.Size(121, 17)
-        Me.CHKDBTemporaneo.TabIndex = 3
-        Me.CHKDBTemporaneo.Text = "Azienda Demo/Test"
-        Me.CHKDBTemporaneo.UseVisualStyleBackColor = True
-        '
-        'BtnSelSPA
-        '
-        Me.BtnSelSPA.Location = New System.Drawing.Point(233, 40)
-        Me.BtnSelSPA.Name = "BtnSelSPA"
-        Me.BtnSelSPA.Size = New System.Drawing.Size(117, 68)
-        Me.BtnSelSPA.TabIndex = 2
-        Me.BtnSelSPA.Text = "SPA"
-        Me.BtnSelSPA.UseVisualStyleBackColor = True
-        '
-        'BtnSelUNO
-        '
-        Me.BtnSelUNO.Location = New System.Drawing.Point(90, 40)
-        Me.BtnSelUNO.Name = "BtnSelUNO"
-        Me.BtnSelUNO.Size = New System.Drawing.Size(117, 68)
-        Me.BtnSelUNO.TabIndex = 1
-        Me.BtnSelUNO.Text = "UNO"
-        Me.BtnSelUNO.UseVisualStyleBackColor = True
-        '
-        'Label8
-        '
-        Me.Label8.AutoSize = True
-        Me.Label8.Location = New System.Drawing.Point(92, 16)
-        Me.Label8.Name = "Label8"
-        Me.Label8.Size = New System.Drawing.Size(271, 13)
-        Me.Label8.TabIndex = 0
-        Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
         '
         'Label7
         '
@@ -1054,6 +984,77 @@ Partial Class FLogin
         Me.lblPath.TabIndex = 33
         Me.lblPath.Text = "Path"
         '
+        'PanelDB
+        '
+        Me.PanelDB.Controls.Add(Me.ChkEscludiControllo)
+        Me.PanelDB.Controls.Add(Me.BtnFox)
+        Me.PanelDB.Controls.Add(Me.CHKDBTemporaneo)
+        Me.PanelDB.Controls.Add(Me.BtnSelSPA)
+        Me.PanelDB.Controls.Add(Me.BtnSelUNO)
+        Me.PanelDB.Controls.Add(Me.Label8)
+        Me.PanelDB.Location = New System.Drawing.Point(2, 323)
+        Me.PanelDB.Name = "PanelDB"
+        Me.PanelDB.Size = New System.Drawing.Size(200, 234)
+        Me.PanelDB.TabIndex = 47
+        '
+        'ChkEscludiControllo
+        '
+        Me.ChkEscludiControllo.AutoSize = True
+        Me.ChkEscludiControllo.Checked = True
+        Me.ChkEscludiControllo.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.ChkEscludiControllo.Location = New System.Drawing.Point(12, 114)
+        Me.ChkEscludiControllo.Name = "ChkEscludiControllo"
+        Me.ChkEscludiControllo.Size = New System.Drawing.Size(74, 17)
+        Me.ChkEscludiControllo.TabIndex = 5
+        Me.ChkEscludiControllo.Text = "No Check"
+        Me.ChkEscludiControllo.UseVisualStyleBackColor = True
+        '
+        'BtnFox
+        '
+        Me.BtnFox.Location = New System.Drawing.Point(12, 16)
+        Me.BtnFox.Name = "BtnFox"
+        Me.BtnFox.Size = New System.Drawing.Size(63, 88)
+        Me.BtnFox.TabIndex = 4
+        Me.BtnFox.Text = "Fox"
+        Me.BtnFox.UseVisualStyleBackColor = True
+        '
+        'CHKDBTemporaneo
+        '
+        Me.CHKDBTemporaneo.AutoSize = True
+        Me.CHKDBTemporaneo.Location = New System.Drawing.Point(162, 114)
+        Me.CHKDBTemporaneo.Name = "CHKDBTemporaneo"
+        Me.CHKDBTemporaneo.Size = New System.Drawing.Size(121, 17)
+        Me.CHKDBTemporaneo.TabIndex = 3
+        Me.CHKDBTemporaneo.Text = "Azienda Demo/Test"
+        Me.CHKDBTemporaneo.UseVisualStyleBackColor = True
+        '
+        'BtnSelSPA
+        '
+        Me.BtnSelSPA.Location = New System.Drawing.Point(233, 40)
+        Me.BtnSelSPA.Name = "BtnSelSPA"
+        Me.BtnSelSPA.Size = New System.Drawing.Size(117, 68)
+        Me.BtnSelSPA.TabIndex = 2
+        Me.BtnSelSPA.Text = "SPA"
+        Me.BtnSelSPA.UseVisualStyleBackColor = True
+        '
+        'BtnSelUNO
+        '
+        Me.BtnSelUNO.Location = New System.Drawing.Point(90, 40)
+        Me.BtnSelUNO.Name = "BtnSelUNO"
+        Me.BtnSelUNO.Size = New System.Drawing.Size(117, 68)
+        Me.BtnSelUNO.TabIndex = 1
+        Me.BtnSelUNO.Text = "UNO"
+        Me.BtnSelUNO.UseVisualStyleBackColor = True
+        '
+        'Label8
+        '
+        Me.Label8.AutoSize = True
+        Me.Label8.Location = New System.Drawing.Point(92, 16)
+        Me.Label8.Name = "Label8"
+        Me.Label8.Size = New System.Drawing.Size(271, 13)
+        Me.Label8.TabIndex = 0
+        Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
+        '
         'PanelUser
         '
         Me.PanelUser.Controls.Add(Me.BtnOrdiniISTAT)
@@ -1383,7 +1384,7 @@ Partial Class FLogin
         '
         'ComandiToolStripMenuItem
         '
-        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.RiscontiRidottoStripMenuItem, Me.RiscontiFusioneToolStripMenuItem, Me.CespitiStripMenuItem, Me.ContrattiFoxToolStripMenuItem})
+        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.RiscontiRidottoStripMenuItem, Me.RiscontiFusioneToolStripMenuItem, Me.CespitiStripMenuItem, Me.ContrattiFoxToolStripMenuItem, Me.CheckIntegraToolStripMenuItem})
         Me.ComandiToolStripMenuItem.Name = "ComandiToolStripMenuItem"
         Me.ComandiToolStripMenuItem.Size = New System.Drawing.Size(68, 20)
         Me.ComandiToolStripMenuItem.Text = "Comandi"
@@ -1392,14 +1393,14 @@ Partial Class FLogin
         '
         Me.RiscontiRidottoStripMenuItem.Enabled = False
         Me.RiscontiRidottoStripMenuItem.Name = "RiscontiRidottoStripMenuItem"
-        Me.RiscontiRidottoStripMenuItem.Size = New System.Drawing.Size(160, 22)
+        Me.RiscontiRidottoStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.RiscontiRidottoStripMenuItem.Text = "Risconti ridotto"
         '
         'RiscontiFusioneToolStripMenuItem
         '
         Me.RiscontiFusioneToolStripMenuItem.Enabled = False
         Me.RiscontiFusioneToolStripMenuItem.Name = "RiscontiFusioneToolStripMenuItem"
-        Me.RiscontiFusioneToolStripMenuItem.Size = New System.Drawing.Size(160, 22)
+        Me.RiscontiFusioneToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.RiscontiFusioneToolStripMenuItem.Text = "Risconti Fusione"
         '
         'CespitiStripMenuItem
@@ -1407,7 +1408,7 @@ Partial Class FLogin
         Me.CespitiStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ImportaToolStripMenuItem, Me.CancellaToolStripMenuItem})
         Me.CespitiStripMenuItem.Enabled = False
         Me.CespitiStripMenuItem.Name = "CespitiStripMenuItem"
-        Me.CespitiStripMenuItem.Size = New System.Drawing.Size(160, 22)
+        Me.CespitiStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.CespitiStripMenuItem.Text = "Cespiti"
         '
         'ImportaToolStripMenuItem
@@ -1425,7 +1426,7 @@ Partial Class FLogin
         'ContrattiFoxToolStripMenuItem
         '
         Me.ContrattiFoxToolStripMenuItem.Name = "ContrattiFoxToolStripMenuItem"
-        Me.ContrattiFoxToolStripMenuItem.Size = New System.Drawing.Size(160, 22)
+        Me.ContrattiFoxToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.ContrattiFoxToolStripMenuItem.Text = "Contratti Fox"
         '
         'SettingsToolStripMenuItem
@@ -1543,6 +1544,12 @@ Partial Class FLogin
         Me.AboutToolStripMenuItem.Size = New System.Drawing.Size(122, 22)
         Me.AboutToolStripMenuItem.Text = "&About..."
         '
+        'CheckIntegraToolStripMenuItem
+        '
+        Me.CheckIntegraToolStripMenuItem.Name = "CheckIntegraToolStripMenuItem"
+        Me.CheckIntegraToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.CheckIntegraToolStripMenuItem.Text = "Check_Integra"
+        '
         'FLogin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
@@ -1560,8 +1567,6 @@ Partial Class FLogin
         Me.Text = "ALL-I"
         Me.PanelAdmin.ResumeLayout(False)
         Me.PanelAdmin.PerformLayout()
-        Me.PanelDB.ResumeLayout(False)
-        Me.PanelDB.PerformLayout()
         Me.TabControl1.ResumeLayout(False)
         Me.TabFusione.ResumeLayout(False)
         Me.TabFusione.PerformLayout()
@@ -1581,6 +1586,8 @@ Partial Class FLogin
         Me.TabCespiti.PerformLayout()
         Me.TabContrattiFox.ResumeLayout(False)
         Me.TabContrattiFox.PerformLayout()
+        Me.PanelDB.ResumeLayout(False)
+        Me.PanelDB.PerformLayout()
         Me.PanelUser.ResumeLayout(False)
         CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.MenuStrip1.ResumeLayout(False)
@@ -1740,4 +1747,5 @@ Partial Class FLogin
     Friend WithEvents txtTemp_FoxFolder As TextBox
     Friend WithEvents BtnFox As Button
     Friend WithEvents ChkEscludiControllo As CheckBox
+    Friend WithEvents CheckIntegraToolStripMenuItem As ToolStripMenuItem
 End Class

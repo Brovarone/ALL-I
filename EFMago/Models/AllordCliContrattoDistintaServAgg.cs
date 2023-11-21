@@ -50,5 +50,6 @@ namespace EFMago.Models
         public virtual MaItems MaItems { get; set; }
         public virtual AlltipoRigaServizio AlltipoRigaServizio { get; set; }
         //public virtual ICollection<AllordCliAttivita> AllordCliAttivita { get; set; }
+       // public virtual ICollection<IntegraInterventi> IntegraInterventi { get; set; }
     }
 }

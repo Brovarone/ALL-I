@@ -2166,4 +2166,36 @@ Public Class FLogin
         ContrattiFoxToolStripMenuItem_Click(sender, e)
     End Sub
 
+    Private Sub CheckIntegraToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles CheckIntegraToolStripMenuItem.Click
+        En_Dis_Controls(False, True, True)
+        If LINQConnetti() Then
+
+            'TODO: ripristinare creazione file di log
+            Me.Cursor = Cursors.WaitCursor
+            lstStatoConnessione.Items.Add("   ---   Controllo Flusso Integra   ---")
+            lstStatoConnessione.Items.Add("Attendere... il processo potrebbe durare qualche minuto")
+            'INIZIALIZZO NUOVO LOG
+            My.Application.Log.DefaultFileLogWriter.BaseFileName += "-" & DateTime.Now.ToString("dd-MM-yyyy--HH-mm-ss")
+            My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Azienda: " & DBInUse & "  ---  ")
+            My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Controllo Flusso Integra  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
+
+            'ESEGUO LA PROCEDURA
+            Dim esito As Boolean
+            esito = ControllaFlussoIntegra()
+            OrdContext.Dispose()
+            lstStatoConnessione.Items.Add("Esito Controllo Flusso Integra " & If(esito, "OK", "Errore"))
+            lstStatoConnessione.Items.Add("   ---   Elaborazione completata   ---")
+            prgCopy.Value = 0
+            prgCopy.Text = "Elaborazione completata"
+            prgCopy.Refresh()
+            Application.DoEvents()
+            Me.Cursor = Cursors.Default
+            Me.Refresh()
+
+            'Salvo il log
+            ScriviLogESposta()
+        End If
+
+    End Sub
+
 End Class
