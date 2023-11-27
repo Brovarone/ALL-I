@@ -883,6 +883,7 @@ namespace EFMago.Models
                     .WithMany(p => p.AllordCliContrattoDistintaServAgg)
                     .HasForeignKey(d => new { d.IdOrdCli, d.RifLinea , d.RifRifLinea })
                     .OnDelete(DeleteBehavior.ClientSetNull);
+                                
             });
 
             modelBuilder.Entity<IntegraInterventi>(entity =>
@@ -991,10 +992,12 @@ namespace EFMago.Models
                 entity.Property(e => e.TBModifiedID).HasColumnName("TBModifiedID");
              
                 // AGGIUNTO DA ME
-                //entity.HasOne(d => d.AllordCliContrattoDistintaServAgg)
-                //    .WithMany(p => p.IntegraInterventi)
-                //    .HasForeignKey(d => new { d.IdOrdCli, d.RifLinea, d.RifRifLinea })
-                //    .OnDelete(DeleteBehavior.ClientSetNull);
+                entity.HasOne(d => d.AllordCliContrattoDistinta)
+                    .WithMany(p => p.IntegraInterventi)
+                    .HasForeignKey(p => p.Contratto)
+                    .HasPrincipalKey(d =>d.CodIntegra)
+                    .OnDelete(DeleteBehavior.ClientSetNull);
+
             });
 
             modelBuilder.Entity<AllordCliContrattoDistCesp>(entity =>

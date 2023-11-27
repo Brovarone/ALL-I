@@ -2179,11 +2179,15 @@ Public Class FLogin
             My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Azienda: " & DBInUse & "  ---  ")
             My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Controllo Flusso Integra  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
 
-            'ESEGUO LA PROCEDURA
             Dim esito As Boolean
-            esito = ControllaFlussoIntegra()
+            'ESEGUO IL TEST  
+            'esito = ControllaFlussoIntegra()
+            'lstStatoConnessione.Items.Add("Esito Controllo Flusso Integra " & If(esito, "OK", "Errore"))
+            'ESEGUO LA PROCEDURA
+            esito = GeneraRigheOrdineConsuntivo()
             OrdContext.Dispose()
             lstStatoConnessione.Items.Add("Esito Controllo Flusso Integra " & If(esito, "OK", "Errore"))
+
             lstStatoConnessione.Items.Add("   ---   Elaborazione completata   ---")
             prgCopy.Value = 0
             prgCopy.Text = "Elaborazione completata"

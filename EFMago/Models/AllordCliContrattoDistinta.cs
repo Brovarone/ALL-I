@@ -52,7 +52,7 @@ namespace EFMago.Models
         public virtual AlltipoRigaServizio AlltipoRigaServizio { get; set; }
         public virtual ICollection<AllordCliContrattoDistintaServAgg> AllordCliContrattoDistintaServAgg { get; set; }
         public virtual ICollection<AllordCliContrattoDistCesp> AllordCliContrattoDistCesp { get; set; }
+        public virtual ICollection<IntegraInterventi> IntegraInterventi { get; set; }
 
-        //public virtual ICollection<AllordCliAttivita> AllordCliAttivita { get; set; }
     }
 }

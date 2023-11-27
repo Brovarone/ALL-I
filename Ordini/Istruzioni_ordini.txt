@@ -48,3 +48,14 @@ Data Sospensione in Info non viene utilizzata
 
 Se per l'anno indicato e' già stata eseguita 
 una rivalutazione la riga non verrà processata
+
+----------
+ CONSUNTIVI
+----------
+Dopo le query ottengo una lista di ordini in cui ho solo le righe con interventi ( e simili)
+Ciclo per ogni ordine:
+	? devo conrollare se la riga fatturativa e' sospesa per qualche motivo ?
+	? devo conrollare se la riga fatturativa o il contratto e' cessato per qualche motivo ?
+	Svuto tabella temporanea a ricreo
+
+? gestione Istat su righe servizio aggiuntivo

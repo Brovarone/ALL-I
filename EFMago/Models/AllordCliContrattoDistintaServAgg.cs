@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 // Code scaffolded by EF Core assumes nullable reference types (NRTs) are not used or disabled.
 // If you have enabled NRTs for your project, then un-comment the following line:
@@ -50,6 +51,18 @@ namespace EFMago.Models
         public virtual MaItems MaItems { get; set; }
         public virtual AlltipoRigaServizio AlltipoRigaServizio { get; set; }
         //public virtual ICollection<AllordCliAttivita> AllordCliAttivita { get; set; }
-       // public virtual ICollection<IntegraInterventi> IntegraInterventi { get; set; }
+
+        //Sezione interventi presi da Distinta (Parent) non presenti 
+        [NotMapped]
+        public int? AnnoIntervento { get; set; }
+        [NotMapped]        
+        public double? NrInterventiFranchigia { get; set; }
+        [NotMapped]
+        public double? NrInterventiPeriodo { get; set; }
+        [NotMapped]
+        public double? NrInterventiMese { get; set; }
+        [NotMapped]
+        public double? NrInterventiOltreFranchigia { get; set; }
+
     }
 }

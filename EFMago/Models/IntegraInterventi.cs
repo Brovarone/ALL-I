@@ -28,7 +28,7 @@ namespace EFMago.Models
 		public DateTime TBModified { get; set; }
 		public int TBCreatedID { get; set; }
 		public int TBModifiedID { get; set; }
-		//public virtual AllordCliContrattoDistintaServAgg AllordCliContrattoDistintaServAgg { get; set; }
-
+		public virtual AllordCliContrattoDistinta AllordCliContrattoDistinta { get; set; }
+		
 	}
 }

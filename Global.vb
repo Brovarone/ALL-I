@@ -53,6 +53,7 @@ Module Variabili
     ''' </summary>
     Public Const IsDeprecated As Boolean = False
     Public FolderPath As String ' percorso globale
+    Public Const TECNO_ALL1 As String = "NOLEGGIO SPA"
 
     'Contesto LINQ2EF Core
     'Public InitialMagoContext As MagoContext

@@ -591,7 +591,6 @@ Module ContrattiFox
         Dim defIva = (From di In OrdiniCntx.MaTaxCodesDefaults.ToList Select di).First
         Dim sDefContropartita As String = defVendite.ServicesSalesAccount
         Dim sDefCodIva As String = defIva.TaxCode
-        Const TECNO_ALL1 As String = "NOLEGGIO SPA"
         Dim tecno_All1Descri As String = (From da In OrdiniCntx.MaItems.Where(Function(f) f.Item.Equals(TECNO_ALL1)).ToList Select da).First.Description
 
         Dim dvFattEle As New DataView(dtFattEle)
@@ -1404,7 +1403,7 @@ Module ContrattiFox
                     .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
                     .DataFineElaborazione = sDataNulla,
                     .DataProssimaFatt = New DateTime(2023, 12, 31).ToString,
-                    .CodIntegra = contratto,
+                    .CodIntegra = "",
                     .CodContratto = contratto,
                     .Tbcreated = Now,
                     .Tbmodified = Now,
@@ -2032,7 +2031,7 @@ Module ContrattiFox
                     .DataDecorrenza = Valid_Data(rA("DTDECORR").ToString),
                     .DataFineElaborazione = sDataNulla,
                     .DataProssimaFatt = New DateTime(2023, 12, 31).ToString,
-                    .CodIntegra = rA("CONTRATTO").ToString,
+                    .CodIntegra = "",
                     .CodContratto = rA("CONTRATTO").ToString,
                     .Tbcreated = Now,
                     .Tbmodified = Now,

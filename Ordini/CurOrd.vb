@@ -5,6 +5,9 @@ Public Class CurOrd
     Public Property LastLine As Integer
     Public Property LastPosition As Integer
     Public Property LastSubId As Integer
+    Public Property CurrentLastLine As Integer
+    Public Property CurrentLastPosition As Integer
+    Public Property CurrentLastSubId As Integer
     Public Property Cliente As String
     Public Property OrdDate As Date
     Public Property OrdNo As String
@@ -32,6 +35,9 @@ Public Class CurOrd
         LastLine = 0
         LastPosition = 0
         LastSubId = 0
+        CurrentLastLine = 0
+        CurrentLastPosition = 0
+        CurrentLastSubId = 0
         Cliente = String.Empty
         OrdDate = d
         OrdNo = String.Empty
@@ -51,6 +57,9 @@ Public Class CurOrd
         LastLine = If(o.MaSaleOrdDetails.Any, o.MaSaleOrdDetails.Max(Function(m) m.Line), 0)
         LastPosition = If(o.MaSaleOrdDetails.Any, o.MaSaleOrdDetails.Max(Function(m) m.Position), 0)
         LastSubId = If(o.MaSaleOrdDetails.Any, o.MaSaleOrdDetails.Max(Function(m) m.SubId), 0)
+        CurrentLastLine = LastLine
+        CurrentLastPosition = LastPosition
+        CurrentLastSubId = LastSubId
         Cliente = o.Customer
         OrdDate = o.OrderDate
         OrdNo = o.InternalOrdNo
