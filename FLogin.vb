@@ -2170,23 +2170,26 @@ Public Class FLogin
         En_Dis_Controls(False, True, True)
         If LINQConnetti() Then
 
-            'TODO: ripristinare creazione file di log
             Me.Cursor = Cursors.WaitCursor
-            lstStatoConnessione.Items.Add("   ---   Controllo Flusso Integra   ---")
             lstStatoConnessione.Items.Add("Attendere... il processo potrebbe durare qualche minuto")
+            lstStatoConnessione.Items.Add("   ---   Controllo Flusso Integra   ---")
             'INIZIALIZZO NUOVO LOG
             My.Application.Log.DefaultFileLogWriter.BaseFileName += "-" & DateTime.Now.ToString("dd-MM-yyyy--HH-mm-ss")
             My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Azienda: " & DBInUse & "  ---  ")
-            My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Controllo Flusso Integra  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
+            My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Consuntivazione Flusso Integra  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
 
             Dim esito As Boolean
             'ESEGUO IL TEST  
-            'esito = ControllaFlussoIntegra()
-            'lstStatoConnessione.Items.Add("Esito Controllo Flusso Integra " & If(esito, "OK", "Errore"))
-            'ESEGUO LA PROCEDURA
-            esito = GeneraRigheOrdineConsuntivo()
-            OrdContext.Dispose()
-            lstStatoConnessione.Items.Add("Esito Controllo Flusso Integra " & If(esito, "OK", "Errore"))
+            esito = ControllaFlussoIntegra()
+            lstStatoConnessione.Items.Add("Esito Controllo Flusso Integra : " & If(esito, "OK", "Errore"))
+            If esito Then
+                'ESEGUO LA PROCEDURA
+                lstStatoConnessione.Items.Add("   ---   Generazione righe Ordine   ---")
+                esito = GeneraRigheOrdineConsuntivo()
+                OrdContext.Dispose()
+                lstStatoConnessione.Items.Add("Esito Generazione righe Ordine : " & If(esito, "OK", "Errore"))
+
+            End If
 
             lstStatoConnessione.Items.Add("   ---   Elaborazione completata   ---")
             prgCopy.Value = 0

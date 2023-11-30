@@ -62,7 +62,7 @@ namespace EFMago.Models
         [NotMapped]
         public double? NrInterventiMese { get; set; }
         [NotMapped]
-        public double? NrInterventiOltreFranchigia { get; set; }
-
+        public double? NrInterventiOltreFranchigia { get; set; }      
+ 
     }
 }

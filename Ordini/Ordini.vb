@@ -177,7 +177,7 @@ Partial Module Ordini
                                     .ThenInclude(Function(servAgg) servAgg.AllordCliContrattoDistintaServAgg) _
                                         .ThenInclude(Of AlltipoRigaServizio)(Function(trs) trs.AlltipoRigaServizio) _
                             .Include(Function(con) con.ALLordCliContratto) _
-                                .ThenInclude(Function(des) des.AllordCliContrattoDescFatt)
+                                .ThenInclude(Function(desft) desft.AllordCliContrattoDescFatt)
                          )
  _
             'q = q.Where(Function(i) i.MaSaleOrdDetails..)
@@ -486,10 +486,10 @@ Partial Module Ordini
                             'Scrivo Testo descrittivo su MaSaleOrdDetails
                             isNewRows = True
                             If Not bScrittoDescrizioni Then
+                                bScrittoDescrizioni = True
                                 For Each d In o.ALLordCliDescrizioni
                                     iNewRowsCount += 1
                                     iNrRigheNota += 1
-                                    bScrittoDescrizioni = True
                                     Dim rd As MaSaleOrdDetails = RigaDescrittiva(iNewRowsCount, cOrdRow, d.Descrizione)
                                     'Aggiungo la riga alla collection
                                     efMaSaleOrdDetails.Add(rd)

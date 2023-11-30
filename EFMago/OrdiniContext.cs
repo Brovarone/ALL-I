@@ -1475,26 +1475,26 @@ namespace EFMago.Models
                 entity.Property(e => e.TipologiaServizio).HasDefaultValueSql("((1276116992))");
 
                 // AGGIUNTO DA ME
-                entity.HasOne(d => d.AllordCliContratto)
+                entity.HasMany(d => d.AllordCliContratto)
                     .WithOne(p => p.AlltipoRigaServizio)
-                    .HasForeignKey<AlltipoRigaServizio>(d => d.TipoRigaServizio)
-                    .HasPrincipalKey<AllordCliContratto>(p => p.TipoRigaServizio)
+                    .HasForeignKey(d => d.TipoRigaServizio)
+                    .HasPrincipalKey(p => p.TipoRigaServizio)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_AlltipoRigaServizio_TipoRigaServizio_00");
+                    .HasConstraintName("FK_AllordCliContratto_TipoRigaServizio_00");
 
-                entity.HasOne(d => d.AllordCliContrattoDistinta)
+                entity.HasMany(d => d.AllordCliContrattoDistinta)
                     .WithOne(p => p.AlltipoRigaServizio)
-                    .HasForeignKey<AlltipoRigaServizio>(d => d.TipoRigaServizio)
-                    .HasPrincipalKey<AllordCliContrattoDistinta>(p => p.TipoRigaServizio)
+                    .HasForeignKey(d => d.TipoRigaServizio)
+                    .HasPrincipalKey(p => p.TipoRigaServizio)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_AlltipoRigaServizio_TipoRigaServizio_01");
+                    .HasConstraintName("FK_AllordCliContrattoDistinta_TipoRigaServizio_00");
 
-                entity.HasOne(d => d.AllordCliContrattoDistintaServAgg)
+                entity.HasMany(d => d.AllordCliContrattoDistintaServAgg)
                     .WithOne(p => p.AlltipoRigaServizio)
-                    .HasForeignKey<AlltipoRigaServizio>(d => d.TipoRigaServizio)
-                    .HasPrincipalKey<AllordCliContrattoDistintaServAgg>(p => p.TipoRigaServizio)
+                    .HasForeignKey(d => d.TipoRigaServizio)
+                    .HasPrincipalKey(p => p.TipoRigaServizio)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK_AlltipoRigaServizio_TipoRigaServizio_02");
+                    .HasConstraintName("FK_AllordCliContrattoDistintaServAgg_TipoRigaServizio_00");
             });
             #endregion
             #region CustSupp

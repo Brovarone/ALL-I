@@ -32,9 +32,9 @@ namespace EFMago.Models
         public string Campagna { get; set; }
         public int? TipologiaServizio { get; set; }
         // Creato da me
-        public virtual AllordCliContratto AllordCliContratto { get; set; }
-        public virtual AllordCliContrattoDistinta AllordCliContrattoDistinta { get; set; }
-        public virtual AllordCliContrattoDistintaServAgg AllordCliContrattoDistintaServAgg { get; set; }
+        public virtual ICollection<AllordCliContratto> AllordCliContratto { get; set; }
+        public virtual ICollection<AllordCliContrattoDistinta> AllordCliContrattoDistinta { get; set; }
+        public virtual ICollection<AllordCliContrattoDistintaServAgg> AllordCliContrattoDistintaServAgg { get; set; }
 
     }
 }

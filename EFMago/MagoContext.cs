@@ -2003,10 +2003,10 @@ namespace EFMago.Models
                 entity.Property(e => e.TipologiaServizio).HasDefaultValueSql("((1276116992))");
 
                 // AGGIUNTO DA ME
-                entity.HasOne(d => d.AllordCliContratto)
+                entity.HasMany(d => d.AllordCliContratto)
                     .WithOne(p => p.AlltipoRigaServizio)
-                    .HasForeignKey<AlltipoRigaServizio>(d => d.TipoRigaServizio)
-                    .HasPrincipalKey<AllordCliContratto>(p => p.TipoRigaServizio)
+                    .HasForeignKey(d => d.TipoRigaServizio)
+                    .HasPrincipalKey(p => p.TipoRigaServizio)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_AlltipoRigaServizio_TipoRigaServizio_00");
             });
