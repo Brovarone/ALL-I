@@ -1097,24 +1097,23 @@ Public Module Common
         FLogin.prgCopy.Update()
         Application.DoEvents()
     End Sub
-    Public Sub ScriviLogESposta()
+    Public Sub ScriviLogESposta(nome As String)
         Dim s As New List(Of String)
-        ScriviLogESposta(s)
+        ScriviLogESposta(s, nome)
     End Sub
-    Public Sub ScriviLogESposta(lista As List(Of String))
+    Public Sub ScriviLogESposta(lista As List(Of String), nome As String)
         My.Application.Log.DefaultFileLogWriter.Flush()
         My.Application.Log.DefaultFileLogWriter.Close()
 
         'Sposto i file e il log
         Dim b As DialogResult = If(isAdmin, MessageBox.Show("Elaborazione terminata" & vbCrLf & "Si vogliono storicizzare i file?", My.Application.Info.Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question), DialogResult.Yes)
         If b = DialogResult.Yes Then
-            SpostaFile(lista)
+            SpostaFile(lista, nome)
         End If
     End Sub
 
-    Private Sub SpostaFile(lista As List(Of String))
+    Private Sub SpostaFile(lista As List(Of String), nome As String)
         Const sl As String = "\"
-        'Dim newFolder As String = FolderPath & "\PROCESSATI\" & DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")
         Dim d As DateTime = DateTime.Now
         Dim periodo As String = d.ToString("yyyy") & sl & d.ToString("MMMM", New Globalization.CultureInfo("it-IT")).ToUpper
         Dim newFolder As String = FolderPath & sl & "PROCESSATI" & sl & periodo & sl & d.ToString("yyyy-MM-dd HH-mm-ss")
@@ -1132,7 +1131,13 @@ Public Module Common
             Next
         End If
         Dim l As String = My.Application.Log.DefaultFileLogWriter.FullLogFileName
-        File.Copy(l, newFolder & sl & System.IO.Path.GetFileName(l))
+        Dim dest As String = newFolder & sl & System.IO.Path.GetFileName(l)
+        File.Copy(l, dest)
+        'Aggiungo desccrittore file
+        If Not String.IsNullOrWhiteSpace(nome) Then
+            Dim newLogFilename As String = nome & " " & System.IO.Path.GetFileName(dest)
+            File.Move(dest, newFolder & sl & newLogFilename)
+        End If
         My.Settings.mLastLogPath = newFolder
         My.Settings.Save()
 
