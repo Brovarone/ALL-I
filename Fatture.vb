@@ -125,6 +125,7 @@ Module Fatture
                         Dim dvDocDet As New DataView(dtDocDet, "", "SaleDocId", DataViewRowState.CurrentRows)
                         EditTestoBarra("Carico Schema: Dati accessori")
                         Using dtDocSumm As DataTable = CaricaSchema("MA_SaleDocSummary")
+                            Dim dvDocSumm As New DataView(dtDocSumm, "", "SaleDocId", DataViewRowState.CurrentRows)
                             Using dtEI As DataTable = CaricaSchema("MA_EI_ITDocAdditionalData")
                                 Using dtBancheCli As DataTable = CaricaSchema("MA_Banks", True, True, "Select ABI, CAB, Bank, IsACompanyBank, Description , TBCreatedID, TBModifiedID FROM MA_Banks where IsACompanyBank=0")
                                     Dim dvBancheCli As New DataView(dtBancheCli, "", "Bank", DataViewRowState.CurrentRows)
@@ -229,7 +230,6 @@ Module Fatture
                                                                     'TIREH Colonna G = 1=Testata 3=Riga Fattura 6=Riga descrittiva 9=Riepilogo fattura
                                                                     Select Case .Item("G").ToString
                                                                         Case "1" 'Testata ovvero nuova Fattura
-                                                                            Debug.Print("Riga " & .Item("I").ToString & " Doc: " & .Item("O").ToString & " Cliente: " & .Item("AA").ToString)
                                                                             'Resetto questo check
                                                                             isNewCliente = False
                                                                             isTipoSicuritalia = False
@@ -241,6 +241,8 @@ Module Fatture
                                                                             ReDim sContratto(2)
                                                                             iLinea = 0
                                                                             iSubLinea = 0
+                                                                            Debug.Print("Riga " & .Item("I").ToString & " Doc: " & .Item("O").ToString & " Cliente: " & .Item("AA").ToString & " SaleDocid:" & idDoc.ToString)
+
 #Region "Controllo Cliente New/Update"
                                                                             'Controllo se il cliente esiste
                                                                             Dim iCliFound As Integer = dvClienti.Find(.Item("AA").ToString)
@@ -635,34 +637,65 @@ Module Fatture
                                                                                     If .Item("BB").ToString = "AC" Then
                                                                                         'Riga accessoria usata per i Bolli
                                                                                         'Verosimilmente non ci possono essere righe AC e righe con W ( ritenuta Acconto)
+                                                                                        Dim iDocSum As Integer = dvDocSumm.Find(idDoc)
+                                                                                        Dim isTaxEsclusoIva As Boolean = False
                                                                                         'Loro le scrivono sul corpo, vanno gestite diversamente, non creo la riga
-                                                                                        drDocSumm = dtDocSumm.NewRow
-                                                                                        drDocSumm("SaleDocId") = idDoc
-                                                                                        drDocSumm("StampsCharges") = MagoFormatta(.Item("BM").ToString, GetType(Double)).MONey ' Potrebbe anche calcolarlo Mago
-                                                                                        drDocSumm("StampsChargesIsAuto") = "0" ' Impedisco il ricalcolo altrimenti sui clienti non in esenzione non la metterebbe
-                                                                                        Dim isTaxEsclusoIva As Boolean
-                                                                                        If Not String.IsNullOrWhiteSpace(.Item("CQ").ToString) Then
-                                                                                            'Cerco Codice iva su tabella transcode
-                                                                                            Dim iTax As Integer = dvTax.Find(.Item("CQ").ToString)
-                                                                                            If iTax <> -1 Then
-                                                                                                drDocSumm("StampsChargesTaxCode") = dvTax.Item(iTax).Item("TaxCode").ToString
-                                                                                                isTaxEsclusoIva = dvTax.Item(iTax).Item("ExemptInvoice").ToString
-                                                                                            Else
-                                                                                                drDocSumm("StampsChargesTaxCode") = .Item("CQ").ToString
-                                                                                                errori.AppendLine("E19: Doc: " & drDoc("DocNo") & " con Codice iva Spese Bolli senza corrispondenza: " & .Item("CQ").ToString)
-                                                                                                l_Err.Add("E19", "Doc: " & drDoc("DocNo") & " con Codice iva Spese Bolli senza corrispondenza: " & .Item("CQ").ToString)
+                                                                                        If iDocSum = -1 Then
+                                                                                            drDocSumm = dtDocSumm.NewRow
+                                                                                            drDocSumm("SaleDocId") = idDoc
+                                                                                            drDocSumm("StampsCharges") = MagoFormatta(.Item("BM").ToString, GetType(Double)).MONey ' Potrebbe anche calcolarlo Mago
+                                                                                            drDocSumm("StampsChargesIsAuto") = "0" ' Impedisco il ricalcolo altrimenti sui clienti non in esenzione non la metterebbe
+                                                                                            If Not String.IsNullOrWhiteSpace(.Item("CQ").ToString) Then
+                                                                                                'Cerco Codice iva su tabella transcode
+                                                                                                Dim iTax As Integer = dvTax.Find(.Item("CQ").ToString)
+                                                                                                If iTax <> -1 Then
+                                                                                                    drDocSumm("StampsChargesTaxCode") = dvTax.Item(iTax).Item("TaxCode").ToString
+                                                                                                    isTaxEsclusoIva = dvTax.Item(iTax).Item("ExemptInvoice").ToString
+                                                                                                Else
+                                                                                                    drDocSumm("StampsChargesTaxCode") = .Item("CQ").ToString
+                                                                                                    errori.AppendLine("E19: Doc: " & drDoc("DocNo") & " con Codice iva Spese Bolli senza corrispondenza: " & .Item("CQ").ToString)
+                                                                                                    l_Err.Add("E19", "Doc: " & drDoc("DocNo") & " con Codice iva Spese Bolli senza corrispondenza: " & .Item("CQ").ToString)
+                                                                                                End If
                                                                                             End If
+                                                                                            drDocSumm("TBCreatedID") = My.Settings.mLOGINID 'ID utente
+                                                                                            drDocSumm("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+                                                                                            'Se e' una nota di credito segnalo la cosa sul campo nr Xab Bolla
+                                                                                            ' e inserisco importo di abbuono
+                                                                                            If drDoc("DocumentType") = DocumentType.NotaCredito Then
+                                                                                                drDoc("PreprintedDocNo") = "BOLLI"
+                                                                                                avvisi.AppendLine("A01: Controllare bolli su Nota di credito nr: " & drDoc("DocNo").ToString)
+                                                                                                drDocSumm("Allowances") = MagoFormatta(.Item("BM").ToString, GetType(Double)).MONey ' Potrebbe anche calcolarlo Mago
+                                                                                            End If
+                                                                                            dtDocSumm.Rows.Add(drDocSumm)
+
+                                                                                        Else
+                                                                                            Dim drv As DataRowView = dvDocSumm.Item(iDocSum)
+                                                                                            drv.BeginEdit()
+                                                                                            drv.Item("StampsCharges") = MagoFormatta(.Item("BM").ToString, GetType(Double)).MONey ' Potrebbe anche calcolarlo Mago
+                                                                                            drv.Item("StampsChargesIsAuto") = "0" ' Impedisco il ricalcolo altrimenti sui clienti non in esenzione non la metterebbe
+                                                                                            If Not String.IsNullOrWhiteSpace(.Item("CQ").ToString) Then
+                                                                                                    'Cerco Codice iva su tabella transcode
+                                                                                                    Dim iTax As Integer = dvTax.Find(.Item("CQ").ToString)
+                                                                                                    If iTax <> -1 Then
+                                                                                                    drv.Item("StampsChargesTaxCode") = dvTax.Item(iTax).Item("TaxCode").ToString
+                                                                                                    isTaxEsclusoIva = dvTax.Item(iTax).Item("ExemptInvoice").ToString
+                                                                                                    Else
+                                                                                                    drv.Item("StampsChargesTaxCode") = .Item("CQ").ToString
+                                                                                                    errori.AppendLine("E19: Doc: " & drDoc("DocNo") & " con Codice iva Spese Bolli senza corrispondenza: " & .Item("CQ").ToString)
+                                                                                                        l_Err.Add("E19", "Doc: " & drDoc("DocNo") & " con Codice iva Spese Bolli senza corrispondenza: " & .Item("CQ").ToString)
+                                                                                                    End If
+                                                                                                End If
+                                                                                                'Se e' una nota di credito segnalo la cosa sul campo nr Xab Bolla
+                                                                                                ' e inserisco importo di abbuono
+                                                                                                If drDoc("DocumentType") = DocumentType.NotaCredito Then
+                                                                                                    drDoc("PreprintedDocNo") = "BOLLI"
+                                                                                                    avvisi.AppendLine("A01: Controllare bolli su Nota di credito nr: " & drDoc("DocNo").ToString)
+                                                                                                drv.Item("Allowances") = MagoFormatta(.Item("BM").ToString, GetType(Double)).MONey ' Potrebbe anche calcolarlo Mago
+                                                                                            End If
+                                                                                            drv.EndEdit()
+                                                                                            avvisi.AppendLine("A13: Doc: " & drDoc("DocNo") & " con Bolli e Ritenuta di acconto")
+                                                                                            l_Avv.Add("A13", "Doc: " & drDoc("DocNo") & " con Bolli e Ritenuta di acconto")
                                                                                         End If
-                                                                                        drDocSumm("TBCreatedID") = My.Settings.mLOGINID 'ID utente
-                                                                                        drDocSumm("TBModifiedID") = My.Settings.mLOGINID 'ID utente
-                                                                                        'Se e' una nota di credito segnalo la cosa sul cmpo nr Xab Bolla
-                                                                                        ' e inserisco importo di abbuono
-                                                                                        If drDoc("DocumentType") = DocumentType.NotaCredito Then
-                                                                                            drDoc("PreprintedDocNo") = "BOLLI"
-                                                                                            avvisi.AppendLine("A01: Controllare bolli su Nota di credito nr: " & drDoc("DocNo").ToString)
-                                                                                            drDocSumm("Allowances") = MagoFormatta(.Item("BM").ToString, GetType(Double)).MONey ' Potrebbe anche calcolarlo Mago
-                                                                                        End If
-                                                                                        dtDocSumm.Rows.Add(drDocSumm)
 
                                                                                         'Aggiorno il flag sull'anagrafica cliente
                                                                                         Dim iCliopt As Integer = dvCliOpt.Find(.Item("AA").ToString)
@@ -1054,16 +1087,29 @@ Module Fatture
                                                                                 dtEI.Rows.Add(drEI)
                                                                             End If
                                                                         Case "R"
+                                                                            Dim iDocSum As Integer = dvDocSumm.Find(idDoc)
                                                                             'Ritenuta d'acconto
-                                                                            drDocSumm = dtDocSumm.NewRow
-                                                                            drDocSumm("SaleDocId") = idDoc
-                                                                            drDocSumm("WithholdingTaxManagement") = "1"
-                                                                            drDocSumm("WithholdingTax") = MagoFormatta(.Item("DB").ToString, GetType(Double)).MONey ' Potrebbe anche calcolarlo Mago
-                                                                            drDocSumm("WithholdingTaxPerc") = MagoFormatta(.Item("DT").ToString, GetType(Double)).MONey '4%
-                                                                            drDocSumm("WithholdingTaxBasePerc") = 100
-                                                                            drDocSumm("TBCreatedID") = My.Settings.mLOGINID 'ID utente
-                                                                            drDocSumm("TBModifiedID") = My.Settings.mLOGINID 'ID utente
-                                                                            dtDocSumm.Rows.Add(drDocSumm)
+                                                                            If iDocSum = -1 Then
+                                                                                drDocSumm = dtDocSumm.NewRow
+                                                                                drDocSumm("SaleDocId") = idDoc
+                                                                                drDocSumm("WithholdingTaxManagement") = "1"
+                                                                                drDocSumm("WithholdingTax") = MagoFormatta(.Item("DB").ToString, GetType(Double)).MONey ' Potrebbe anche calcolarlo Mago
+                                                                                drDocSumm("WithholdingTaxPerc") = MagoFormatta(.Item("DT").ToString, GetType(Double)).MONey '4%
+                                                                                drDocSumm("WithholdingTaxBasePerc") = 100
+                                                                                drDocSumm("TBCreatedID") = My.Settings.mLOGINID 'ID utente
+                                                                                drDocSumm("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+                                                                                dtDocSumm.Rows.Add(drDocSumm)
+                                                                            Else
+                                                                                Dim drv As DataRowView = dvDocSumm.Item(iDocSum)
+                                                                                drv.BeginEdit()
+                                                                                drv.Item("WithholdingTaxManagement") = "1"
+                                                                                drv.Item("WithholdingTax") = MagoFormatta(.Item("DB").ToString, GetType(Double)).MONey ' Potrebbe anche calcolarlo Mago
+                                                                                drv.Item("WithholdingTaxPerc") = MagoFormatta(.Item("DT").ToString, GetType(Double)).MONey '4%
+                                                                                drv.Item("WithholdingTaxBasePerc") = 100
+                                                                                drv.EndEdit()
+                                                                                avvisi.AppendLine("A13: Doc: " & drDoc("DocNo") & " con Bolli e Ritenuta di acconto")
+                                                                                l_Avv.Add("A13", "Doc: " & drDoc("DocNo") & " con Bolli e Ritenuta di acconto")
+                                                                            End If
 
                                                                             '2.1.1.5.4 <CausalePagamento>
                                                                             drEI = dtEI.NewRow

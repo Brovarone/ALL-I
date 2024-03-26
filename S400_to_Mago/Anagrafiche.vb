@@ -459,12 +459,24 @@ Module Anagrafiche
                                 'A seconda che esista il protocollo telematico faccio ricerche diverse
                                 Dim custsupp = drXLS(irxls).Item("A").ToString
                                 If Not String.IsNullOrWhiteSpace(drXLS(irxls).Item("L").ToString) Then
+                                    'Aggiungo nuova logica di controllo in quanto se cambiano testo si crea una possibile incongruenza.
+                                    'cambio logica usando Substring che e' svincolato da VB
+                                    'Nota: In VB6 il carattere di partenza era in base 1
+                                    'in .NET il carattere di partenza è a base 0
+                                    Dim t As String = drXLS(irxls).Item("L").ToString.TrimEnd
+                                    Dim telProtFromRight As String = Strings.Left(t.Substring(t.Length - 7 - 17), 17)
+                                    'Dim docProtFromRight As String = Right(drXLS(irxls).Item("L").ToString.TrimEnd, 6)
                                     Dim telProtocol As String = Mid(drXLS(irxls).Item("L").ToString, 42, 17)
-                                    Dim docProtocol As String = Right(drXLS(irxls).Item("L").ToString, 6)
-                                    dvInt.RowFilter = "CustSupp='" & custsupp & "' AND TelProtocol='" & telProtocol & "' AND DocProtocol='" & docProtocol & "'"
+                                    Dim docProtocol As String = Right(drXLS(irxls).Item("L").ToString.TrimEnd, 6)
+                                    If Not telProtFromRight.Equals(telProtocol) Then
+                                        result.AppendLine("Cliente " & custsupp & " controllare Dichiarazione d'intento")
+                                        Dim mb As New MessageBoxWithDetails("Cliente " & custsupp & " controllare Dichiarazione d'intento", GetCurrentMethod.Name)
+                                        mb.ShowDialog()
+                                    End If
+                                    dvInt.RowFilter = "CustSupp='" & custsupp & "' AND TelProtocol='" & telProtFromRight & "' AND DocProtocol='" & docProtocol & "'"
                                     dichFound = dvInt.Count
-                                Else
-                                    Dim fromdate As DateTime = MagoFormatta("20" & drXLS(irxls).Item("D").ToString, GetType(DateTime)).DataTempo
+                                    Else
+                                        Dim fromdate As DateTime = MagoFormatta("20" & drXLS(irxls).Item("D").ToString, GetType(DateTime)).DataTempo
                                     Dim todate As DateTime = MagoFormatta("20" & drXLS(irxls).Item("E").ToString, GetType(DateTime)).DataTempo
                                     dvInt.RowFilter = "CustSupp='" & custsupp & "' AND FromDate='" & fromdate & "' AND ToDate='" & todate & "'"
                                     dichFound = dvInt.Count
