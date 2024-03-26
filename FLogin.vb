@@ -1054,8 +1054,17 @@ Public Class FLogin
                         Case "_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV", "ACGTRPG"
                             Try
                                 dsXLS = If(sExt.ToUpper = ".CSV", ProcessaCSV(sFullPath, False), LoadXLS(sFullPath, True, True))
-                                dsFOX.Add(dsXLS)
+                                If sNomeFile = "_ONTRORD" AndAlso dsXLS.Tables("_ONTRORD").Columns("GRP CONTRATTO").DataType <> GetType(String) Then
+                                    Dim dummyDT As DataTable = dsXLS.Tables("_ONTRORD").Clone
+                                    dummyDT.Columns("GRP CONTRATTO").DataType = GetType(String)
+                                    For Each row As DataRow In dsXLS.Tables("_ONTRORD").Rows
+                                        dummyDT.ImportRow(row)
+                                    Next
+                                    dsXLS.Tables.Remove("_ONTRORD")
+                                    dsXLS.Tables.Add(dummyDT)
+                                End If
                                 bOkImport = True
+                                dsFOX.Add(dsXLS)
                             Catch ex As Exception
                                 Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                                 mb.ShowDialog()

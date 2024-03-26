@@ -960,7 +960,20 @@ Module ContrattiFox
                 vettore = newCodragg
                 codIva = OrdiniCntx.MaTaxCodes.AsNoTracking.First(Function(k) k.Acgcode.Equals(r("CIVA").ToString.Trim)).TaxCode
                 masterOrder.CodIva = codIva
-                curNfCounter = efMaNonFiscalNumbers.First(Function(k) k.BalanceYear = Year(r("DTPRODUZ")))
+                Try
+                    curNfCounter = efMaNonFiscalNumbers.First(Function(k) k.BalanceYear = Year(r("DTPRODUZ")))
+                Catch ex As Exception
+                    Debug.Print("Numeratore non fiscale (Anno Assente)")
+                    Dim nfn As New MaNonFiscalNumbers With {
+                        .BalanceYear = Year(r("DTPRODUZ")),
+                        .CodeType = CodeType.OrdCli,
+                        .LastDocNo = 0,
+                        .Separators = "/"
+                        }
+
+                    efMaNonFiscalNumbers.Add(nfn)
+                    curNfCounter = nfn
+                End Try
                 curNfCounter.LastDocNo += 1
                 efMaNonFiscalNumbers.First(Function(k) k.BalanceYear = Year(r("DTPRODUZ"))).LastDocNo = curNfCounter.LastDocNo
                 ordNo = Right(Year(r("DTPRODUZ")), 2) & curNfCounter.Separators & CInt(curNfCounter.LastDocNo).ToString("00000")
@@ -1720,6 +1733,9 @@ Module ContrattiFox
         Dim currentCustomer As String = ""
         contrattiDaUnire.OrderBy(Function(f) f("ACGCOD"))
         Dim sediClienteMerged As New List(Of MaCustSuppBranches)
+        For Each rAA In contrattiDaUnire
+            Debug.Print(rAA("GRP_CONTRATTO").ToString() + vbCrLf)
+        Next
         For Each rA In contrattiDaUnire
             'Cerco id
             Dim rifDistinta As AllordCliContrattoDistinta = efAllordCliContrattoDistinta.Find(Function(f) f.CodContratto.Equals(rA("GRP_CONTRATTO").ToString))

@@ -1,10 +1,12 @@
 ﻿Public Class frmFoxFiliali
     Public okFil As List(Of String)
     Private Sub frmFoxFiliali_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        ChkOrdBI.Checked = True
-        ChkOrdVA.Checked = True
-        ChkOrdNO.Checked = True
-        ChkOrdAL.Checked = True
+        'ChkOrdBI.Checked = True
+        'ChkOrdVA.Checked = True
+        'ChkOrdNO.Checked = True
+        'ChkOrdAL.Checked = True
+        'ChkOrdAT.Checked = True
+        ChkOrdAO.Checked = True
     End Sub
 
     Private Sub BtnOk_Click(sender As Object, e As EventArgs) Handles BtnOk.Click

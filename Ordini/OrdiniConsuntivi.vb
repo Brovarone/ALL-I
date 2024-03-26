@@ -170,7 +170,7 @@ Partial Module Ordini
                 For Each o In ordini
                     'C'e' la possibilità di estrarre interventi senza ordine
                     If o Is Nothing Then
-                        errori.AppendLine("FATAL ERROR: esistono interventi sanza corrispondenza")
+                        errori.AppendLine("FATAlL ERROR: esistono interventi sanza corrispondenza")
                         Continue For
                     End If
                     AvanzaBarra()
