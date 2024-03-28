@@ -125,6 +125,7 @@ Partial Module Ordini
                                             .ThenInclude(Of Allattivita)(Function(at) at.Allattivita)
 
             If bAskFilter Then
+                'todo: rivedere filtri
                 'intFiltrati = intFiltrati.Where(Function(oDate) oDate.InizioAllarme.Value.Date >= fromLogDate And oDate.InizioAllarme.Value.Date <= toLogDate)
                 If bSingolaFiliale Then intFiltrati = intFiltrati.Where(Function(oFiliale) oFiliale.Filiale.Equals(filiale))
             Else
@@ -141,9 +142,6 @@ Partial Module Ordini
             Dim customComparer As IEqualityComparer(Of MaSaleOrd) = New PropertyComparer(Of MaSaleOrd)("SaleOrdId")
             Dim ordini As IEnumerable(Of MaSaleOrd) = dummyOrdiniList.Distinct(customComparer).ToList
 
-            'Dim xordini2 = intFiltrati.Select(Of MaSaleOrd)(Function(u) u.AllordCliContrattoDistinta.AllordCliContratto.SaleOrd)
-            ' Dim xordini2List = xordini2.ToList
-            'Dim xordini2DistinctList = xordini2.Distinct.ToList
             For Each o In ordini
                 Debug.Print(o.InternalOrdNo)
             Next
@@ -157,6 +155,7 @@ Partial Module Ordini
             Dim efAllordCliContratto As New List(Of AllordCliContratto)
             Dim efAllordCliContrattoDistinta As New List(Of AllordCliContrattoDistinta)
             Dim efAllordCliContrattoDistintaServAgg As New List(Of AllordCliContrattoDistintaServAgg)
+            Dim efIntegraInterventi As New List(Of IntegraInterventi)
 
             If ordini.Any Then
                 bIsSomething = True
@@ -675,127 +674,25 @@ Partial Module Ordini
                     Dim iStep As Integer
                     Try
                         OrdContext.Database.ExecuteSqlRaw("DBCC TRACEON(610)")
+                        Dim tablesToUpdate As New Dictionary(Of String, IEnumerable(Of Object)) From {
+                            {"MaSaleOrd|U|teste ordini", efMaSaleOrd},
+                            {"MaSaleOrdDetails|IU|righe ordini", efMaSaleOrdDetails},
+                            {"MaSaleOrdSummary|IU|totali ordini", efMaSaleOrdSummary},
+                            {"AllordCliAcc|IU|dati accessori ordini", efAllordCliAcc},
+                            {"AllordCliAttivita|U|righe attività", efAllordCliAttivita},
+                            {"AllordCliContratto|U|righe contratto", efAllordCliContratto},
+                            {"AllordCliContrattoDistinta|U|righe distinta", efAllordCliContrattoDistinta},
+                            {"AllordCliContrattoDistintaServAgg|U|righe servizi aggiuntivi", efAllordCliContrattoDistintaServAgg},
+                            {"IntegraInterventi|U|interventi", efIntegraInterventi}
+                        }
 
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Aggiornamento teste ordini")
-                        If efMaSaleOrd.Any Then
-                            Dim t = efMaSaleOrd.Count
-                            Dim cfgOrd As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdContext.BulkUpdate(efMaSaleOrd, cfgOrd, Function(d) d)
-                            Debug.Print("MaSaleOrd Ins:" & cfgOrd.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrd.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("MaSaleOrd Ins:" & cfgOrd.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrd.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento/Aggiornamento righe ordini")
-                        If efMaSaleOrdDetails.Any Then
-                            Dim t = efMaSaleOrdDetails.Count
-                            Dim cfgOrdDet As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdContext.BulkInsertOrUpdate(efMaSaleOrdDetails, cfgOrdDet, Function(d) d)
-                            Debug.Print("MaSaleOrdDetails Ins:" & cfgOrdDet.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdDet.StatsInfo.StatsNumberUpdated.ToString) '& " Canc:" & cfgOrdDet.StatsInfo.StatsNumberDeleted.ToString)
-                            bulkMessage.AppendLine("MaSaleOrdDetails Ins:" & cfgOrdDet.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdDet.StatsInfo.StatsNumberUpdated.ToString) ' & " Canc:" & cfgOrdDet.StatsInfo.StatsNumberDeleted.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento/Aggiornamento totali ordini")
-                        If efMaSaleOrdSummary.Any Then
-                            Dim t = efMaSaleOrdSummary.Count
-                            Dim cfgOrdTot As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdContext.BulkInsertOrUpdate(efMaSaleOrdSummary, cfgOrdTot, Function(d) d)
-                            Debug.Print("MaSaleOrdSummary Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("MaSaleOrdSummary Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento/Aggiornamento dati accessori ordini")
-                        If efAllordCliAcc.Any Then
-                            Dim t = efAllordCliAcc.Count
-                            Dim cfgOrdAcc As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdContext.BulkInsertOrUpdate(efAllordCliAcc, cfgOrdAcc, Function(d) d)
-                            Debug.Print("ALLOrdCliAcc Ins:" & cfgOrdAcc.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdAcc.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("ALLOrdCliAcc Ins:" & cfgOrdAcc.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdAcc.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Aggiornamento righe attività ")
-                        If efAllordCliAttivita.Any Then
-                            Dim t = efAllordCliAttivita.Count
-                            Dim cfgOrdAtt As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdContext.BulkUpdate(efAllordCliAttivita, cfgOrdAtt, Function(d) d)
-                            Debug.Print("AllordCliAttivita Ins:" & cfgOrdAtt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdAtt.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("AllordCliAttivita Ins:" & cfgOrdAtt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdAtt.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Aggiornamento righe contratto ")
-                        If efAllordCliContratto.Any Then
-                            Dim t = efAllordCliContratto.Count
-                            Dim cfgOrdCon As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdContext.BulkUpdate(efAllordCliContratto, cfgOrdCon, Function(d) d)
-                            Debug.Print("AllordCliContratto Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("AllordCliContratto Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Aggiornamento righe distinta ")
-                        If efAllordCliContrattoDistinta.Any Then
-                            Dim t = efAllordCliContrattoDistinta.Count
-                            Dim cfgOrdConDis As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdContext.BulkUpdate(efAllordCliContrattoDistinta, cfgOrdConDis, Function(d) d)
-                            Debug.Print("AllordCliContrattoDistinta Ins:" & cfgOrdConDis.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDis.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("AllordCliContrattoDistinta Ins:" & cfgOrdConDis.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDis.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Aggiornamento righe Servizi Aggiuntivi ")
-                        If efAllordCliContrattoDistintaServAgg.Any Then
-                            Dim t = efAllordCliContrattoDistintaServAgg.Count
-                            Dim cfgOrdConDisServAgg As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdContext.BulkUpdate(efAllordCliContrattoDistintaServAgg, cfgOrdConDisServAgg, Function(d) d)
-                            Debug.Print("AllordCliContrattoDistintaServAgg Ins:" & cfgOrdConDisServAgg.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDisServAgg.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("AllordCliContrattoDistintaServAgg Ins:" & cfgOrdConDisServAgg.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDisServAgg.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
+                        For Each kvp As KeyValuePair(Of String, IEnumerable(Of Object)) In tablesToUpdate
+                            Dim keys As String = kvp.Key
+                            Dim entityList As List(Of Object) = kvp.Value
+
+                            iStep += 1
+                            EseguiBulkUpdate(OrdContext, entityList, keys, bulkMessage)
+                        Next
 
                         If someTrouble Then
                             bulkTrans.Rollback()
@@ -995,7 +892,42 @@ Partial Module Ordini
         If value = "" Then ret = ServiziAggiuntivi.Frequenza  '"SUPPLEMENTAR"
         Return ret
     End Function
+    Private Sub EseguiBulkUpdate(Of T As Class)(ByVal context As OrdiniContext, ByVal entityList As List(Of T), ByVal keys As String, log As StringBuilder)
 
+        Dim operation() As String = keys.Split("|")
+        Dim tablename As String = operation(0)
+        Dim whatTodo As String = operation(1)
+        Dim stepDescription As String = operation(2)
+        Select Case whatTodo
+            Case "I"
+                stepDescription = "Inserimento" & stepDescription
+            Case "U"
+                stepDescription = "Aggiornamento" & stepDescription
+            Case "IU"
+                stepDescription = "Inserimento/Aggiornamento" & stepDescription
+        End Select
+        EditTestoBarra($"Salvataggio: {stepDescription} {tablename}")
+        If entityList.Any() Then
+            Dim c As Integer = entityList.Count
+            Dim bulkConfig As New BulkConfig With {
+        .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+        .BulkCopyTimeout = 0,
+        .CalculateStats = True,
+        .BatchSize = If(c < 5000, 0, c / 10),
+        .NotifyAfter = c / 10
+            }
+            Select Case whatTodo
+                Case "I"
+                    context.BulkInsert(entityList, bulkConfig, Function(d) d)
+                Case "U"
+                    context.BulkUpdate(entityList, bulkConfig, Function(d) d)
+                Case "IU"
+                    context.BulkInsertOrUpdate(entityList, bulkConfig, Function(d) d)
+            End Select
+            Debug.Print($"{tablename} Ins:{bulkConfig.StatsInfo.StatsNumberInserted} Agg:{bulkConfig.StatsInfo.StatsNumberUpdated}")
+            log.AppendLine($"{tablename} Ins:{bulkConfig.StatsInfo.StatsNumberInserted} Agg:{bulkConfig.StatsInfo.StatsNumberUpdated}")
+        End If
+    End Sub
 End Module
 Module test_LINQ
     Public Sub LinqStringQuery()
@@ -1061,4 +993,6 @@ Module test_LINQ
 
         Dim d = (From o In OrdContext.AllordCliContrattoDistinta.Include(Function(sa) sa.AllordCliContrattoDistintaServAgg))
     End Sub
+
+
 End Module
