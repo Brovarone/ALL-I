@@ -208,6 +208,7 @@ Partial Module Ordini
                         'TODO ciclo le righe servizio aggiuntivo???
                         For Each d As AllordCliContrattoDistinta In c.AllordCliContrattoDistinta
                             For Each s As AllordCliContrattoDistintaServAgg In d.AllordCliContrattoDistintaServAgg
+                                'TODO: non va bene, porei non averlo, devo invece
 #Region "Calcolo Interventi"
                                 Dim evento As String = TranscodificaEventoIntegra(s.Servizio)
                                 Dim periodFranchigia As Periodo = s.Periodicita
@@ -788,26 +789,18 @@ Partial Module Ordini
 #Region "Estrazioni dati con Query LINQ"
             'https://entityframework.net/why-first-query-slow
             'Tipizzare con (Of ) solo le Tabelle singole 1-1 che NON hanno 1-n / Collection
-            'Interventi+Distinta con filtro ( partendo dagli iterventi)
-            Dim intFiltrati = (From o In OrdContext.IntegraInterventi _
-                            .Include(Function(sa) sa.AllordCliContrattoDistinta) _
-                            .Include(Function(sa) sa.AllordCliContrattoDistinta) _
-                                .ThenInclude(Function(i) i.AllordCliContrattoDistintaServAgg) _
-                            .Where(Function(wsa) Not wsa.AllordCliContrattoDistinta.Servizio.Equals(TECNO_ALL1)))
-            If bAskFilter Then
-                intFiltrati = intFiltrati.Where(Function(oDate) oDate.InizioAllarme.Value.Date >= fromLogDate And oDate.InizioAllarme.Value.Date <= toLogDate)
-                If bSingolaFiliale Then intFiltrati = intFiltrati.Where(Function(oFiliale) oFiliale.Filiale.Equals(filiale))
-            Else
-            End If
-
-            'Rigiro l'estrazione per avere le distinte
-            Dim allFiltrati = intFiltrati.Select(Of AllordCliContrattoDistinta)(Function(u) u.AllordCliContrattoDistinta).Distinct.ToList
 
             Dim allDistinte = (From o In OrdContext.AllordCliContrattoDistinta _
                          .Include(Function(sa) sa.AllordCliContrattoDistintaServAgg) _
                          .Where(Function(wsa) Not wsa.Servizio.Equals(TECNO_ALL1)))
-#End Region
+
             Dim allInterventi = (From o In OrdContext.IntegraInterventi).ToList
+            If bAskFilter Then
+                allInterventi = allInterventi.Where(Function(oDate) oDate.InizioAllarme.Value.Date >= fromLogDate And oDate.InizioAllarme.Value.Date <= toLogDate)
+                If bSingolaFiliale Then allInterventi = allInterventi.Where(Function(oFiliale) oFiliale.Filiale.Equals(filiale))
+            Else
+            End If
+#End Region
             If allInterventi.Any Then
                 totInterventi = allInterventi.Count
                 Debug.Print("Interventi Estratti : " & totInterventi.ToString)
@@ -868,9 +861,10 @@ Partial Module Ordini
             My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Errori ---" & Environment.NewLine & errori.ToString)
             FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati errori : Controllare file di Log")
             someTrouble = True
-
+        Else
+            FLogin.lstStatoConnessione.Items.Add("Nessun errore")
         End If
-
+        Application.DoEvents()
         Return Not someTrouble
 
     End Function
