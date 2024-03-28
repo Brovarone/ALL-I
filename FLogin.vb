@@ -534,7 +534,6 @@ Public Class FLogin
         SUBProcessa()
     End Sub
     Private Sub SUBProcessa(Optional ByVal pag As Boolean = False, Optional ByVal fatture As Boolean = False)
-        Dim nomeLog As String = ""
         If String.IsNullOrEmpty(FolderPath) Then
             MessageBox.Show("Inserire un percorso valido", My.Application.Info.ProductName)
             Return
@@ -628,8 +627,7 @@ Public Class FLogin
                 ReDim Preserve fat(0)
             End If
             'lista.RemoveAt(lista.Count)
-            nomeLog = "Fatture"
-            ProcessaGruppo(fat, nomeLog)
+            ProcessaGruppo(fat, "Fatture")
         End If
 
         If ChkInsertSepaOnBankAuth.Checked Then
@@ -715,8 +713,7 @@ Public Class FLogin
             Next
 
             If pagheFound(0) OrElse pagheFound(1) Then
-                nomeLog = "Paghe"
-                ProcessaGruppo(paghe, nomeLog)
+                ProcessaGruppo(paghe, "Paghe")
             Else
                 MessageBox.Show("Impossibile continuare l'elaborazione delle Paghe a causa di file mancanti")
             End If
@@ -747,8 +744,7 @@ Public Class FLogin
             'Elimino il file di transcode QTMP_CPAG in quanto viene letto dalla procedura
             ReDim Preserve ParC(0)
             ' lista.RemoveAt(lista.Count)
-            nomeLog = "Partite Clienti"
-            ProcessaGruppo(ParC, nomeLog)
+            ProcessaGruppo(ParC, "Partite Clienti")
         End If
 
         If ChkPartiteFornitori.Checked OrElse ChkDifferenzialeFornitori.Checked Then
@@ -775,8 +771,7 @@ Public Class FLogin
             Next
             ReDim Preserve ParF(0)
             'lista.RemoveAt(lista.Count)
-            nomeLog = "Partite Fornitori"
-            ProcessaGruppo(ParF, nomeLog)
+            ProcessaGruppo(ParF, "Partite Fornitori")
         End If
 
         If ChkNoteCliente.Checked Then
@@ -801,8 +796,7 @@ Public Class FLogin
                     Exit For
                 End If
             Next
-            nomeLog = "Note Clienti da FoxPro"
-            ProcessaGruppo(NoteC, nomeLog)
+            ProcessaGruppo(NoteC, "Note Clienti da FoxPro")
         End If
 
         If ChkPNotaCliDaPartitario.Checked OrElse ChkPNotaForDaPartitario.Checked Then
@@ -840,8 +834,7 @@ Public Class FLogin
                     Exit For
                 End If
             Next
-            nomeLog = "Risconti"
-            ProcessaGruppo(risc, nomeLog)
+            ProcessaGruppo(risc, "Risconti")
         End If
 
         If ChkRiscontiRidotto.Checked Then
@@ -866,8 +859,7 @@ Public Class FLogin
                     Exit For
                 End If
             Next
-            nomeLog = "Risconti Ridotto"
-            ProcessaGruppo(risc, nomeLog)
+            ProcessaGruppo(risc, "Risconti Ridotto")
         End If
 
         If ChkRiscontiFusione.Checked Then
@@ -892,8 +884,7 @@ Public Class FLogin
                     Exit For
                 End If
             Next
-            nomeLog = "Risconti Fusione"
-            ProcessaGruppo(risc, nomeLog)
+            ProcessaGruppo(risc, "Risconti Fusione")
         End If
 
         If ChkCespiti.Checked Then
@@ -918,8 +909,7 @@ Public Class FLogin
                     Exit For
                 End If
             Next
-            nomeLog = "Cespiti"
-            ProcessaGruppo(cespiti, nomeLog)
+            ProcessaGruppo(cespiti, "Cespiti")
         End If
 
         If ChkFusioneAnagrafiche.Checked OrElse ChkFusioneAcquisti.Checked OrElse ChkFusioneVendite.Checked OrElse ChkFusionePartite.Checked _
@@ -945,8 +935,7 @@ Public Class FLogin
                     Exit For
                 End If
             Next
-            nomeLog = "Fusione"
-            ProcessaGruppo(fusione, nomeLog)
+            ProcessaGruppo(fusione, "Fusione")
             'Imposto admin cosi' da non spostare il file excel
             isAdmin = True
         End If
@@ -1016,7 +1005,7 @@ Public Class FLogin
         Me.Cursor = Cursors.Default
         Me.Refresh()
         'Salvo il log
-        ScriviLogESposta(lista, nomeLog)
+        ScriviLogESposta(lista)
 
     End Sub
     Private Sub ProcessaGruppo(ByVal lista As String(), ByVal nomegruppo As String)
@@ -1547,7 +1536,7 @@ Public Class FLogin
             Me.Refresh()
 
             'Salvo il log
-            ScriviLogESposta("Analitica")
+            ScriviLogESposta()
 
         End If
     End Sub
@@ -1896,7 +1885,7 @@ Public Class FLogin
             Me.Refresh()
 
             'Salvo il log
-            ScriviLogESposta("Ordini")
+            ScriviLogESposta()
         End If
 
     End Sub
@@ -1925,7 +1914,7 @@ Public Class FLogin
             Me.Refresh()
 
             'Salvo il log
-            ScriviLogESposta("Istat")
+            ScriviLogESposta()
         End If
     End Sub
 
@@ -2047,7 +2036,7 @@ Public Class FLogin
             Me.Refresh()
 
             'Salvo il log
-            ScriviLogESposta("Regione-Provincia")
+            ScriviLogESposta()
 
         End If
     End Sub

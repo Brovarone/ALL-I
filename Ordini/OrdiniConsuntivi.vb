@@ -2,6 +2,7 @@
 Imports System.Text
 Imports System.Reflection.MethodBase
 
+Imports EFMago.Linq
 Imports EFMago.Models
 Imports Microsoft.EntityFrameworkCore
 Imports EFCore.BulkExtensions
@@ -46,6 +47,8 @@ Partial Module Ordini
         FLogin.prgCopy.Value = 1
         FLogin.Refresh()
         Application.DoEvents()
+
+        'test_LINQ.LinqStringQuery()
 
         Try
             OrdContext.Database.SetCommandTimeout(120)
@@ -127,10 +130,23 @@ Partial Module Ordini
             Else
             End If
             Dim interventi = intFiltrati.ToList
-            'Rigiro l'estrazione per avere le distinte
-            'Dim distinte = intFiltrati.Select(Of AllordCliContrattoDistinta)(Function(u) u.AllordCliContrattoDistinta).Distinct.ToList
-            Dim ordini = intFiltrati.Select(Of MaSaleOrd)(Function(u) u.AllordCliContrattoDistinta.AllordCliContratto.SaleOrd).Distinct.ToList
 
+            'Rigiro l'estrazione per avere le Distinte/Contratti
+            'Dim distinte = intFiltrati.Select(Of AllordCliContrattoDistinta)(Function(u) u.AllordCliContrattoDistinta).ToList
+            'Rigiro per avere gli ordini
+            Dim dummyOrdini = intFiltrati.Select(Of MaSaleOrd)(Function(u) u.AllordCliContrattoDistinta.AllordCliContratto.SaleOrd)
+            Dim dummyOrdiniList = dummyOrdini.ToList
+            'Applico il mio comparatore per avere una collection dei soli ordini DISTINCT
+            'https://www.codeproject.com/Articles/94272/A-Generic-IEqualityComparer-for-Linq-Distinct
+            Dim customComparer As IEqualityComparer(Of MaSaleOrd) = New PropertyComparer(Of MaSaleOrd)("SaleOrdId")
+            Dim ordini As IEnumerable(Of MaSaleOrd) = dummyOrdiniList.Distinct(customComparer).ToList
+
+            'Dim xordini2 = intFiltrati.Select(Of MaSaleOrd)(Function(u) u.AllordCliContrattoDistinta.AllordCliContratto.SaleOrd)
+            ' Dim xordini2List = xordini2.ToList
+            'Dim xordini2DistinctList = xordini2.Distinct.ToList
+            For Each o In ordini
+                Debug.Print(o.InternalOrdNo)
+            Next
 #End Region
             'Creo le entities che usero' poi con BulkInsert
             Dim efMaSaleOrd As New List(Of MaSaleOrd)
@@ -194,7 +210,6 @@ Partial Module Ordini
                         For Each d As AllordCliContrattoDistinta In c.AllordCliContrattoDistinta
                             For Each s As AllordCliContrattoDistintaServAgg In d.AllordCliContrattoDistintaServAgg
 #Region "Calcolo Interventi"
-                                'Calcola_Interventi(d, anno, fromLogDate, toLogDate)
                                 Dim evento As String = TranscodificaEventoIntegra(s.Servizio)
                                 Dim periodFranchigia As Periodo = s.Periodicita
                                 Dim n = d.IntegraInterventi.Where(Function(w) w.TipoEvento.Equals(evento))
@@ -644,6 +659,7 @@ Partial Module Ordini
 
 
 #Region "Bulk Insert"
+            'todo : forse ci sono da togliere dei bulk insert
             msgLog = "Ordini con righe Contratto valide : " & totOrdiniConNuoveRighe.ToString
             My.Application.Log.DefaultFileLogWriter.WriteLine(msgLog)
             FLogin.lstStatoConnessione.Items.Add(msgLog)
@@ -834,30 +850,6 @@ Partial Module Ordini
 
     End Function
 
-    Private Sub Calcola_Interventi(d As AllordCliContrattoDistinta, anno As Integer, fromData As Date, toData As Date)
-        'Todo risposostare nel corpo sopra che tato faccio un ciclo uguale
-        For Each s In d.AllordCliContrattoDistintaServAgg
-            Dim evento As String = TranscodificaEventoIntegra(s.Servizio)
-            Dim periodFranchigia As Periodo = s.Periodicita
-            Dim n = d.IntegraInterventi.Where(Function(w) w.TipoEvento.Equals(evento))
-            If n.Any Then
-                s.AnnoIntervento = anno
-                Dim toDataMese As New Date(Year(toData), Month(toData), Date.DaysInMonth(Year(toData), Month(toData)))
-                Dim fromDataMese As New Date(toDataMese.Year, toDataMese.Month, 1)
-                s.NrInterventiMese = n.Where(Function(wp) wp.InizioAllarme >= fromDataMese And wp.InizioAllarme <= toDataMese).Sum(Function(q) q.Qta)
-                s.NrInterventiPeriodo = n.Where(Function(wp) wp.InizioAllarme >= fromData And wp.InizioAllarme <= toData).Sum(Function(q) q.Qta)
-                If periodFranchigia = Periodo.Nessuno Then
-                    s.NrInterventiFranchigia = 0
-                    s.NrInterventiOltreFranchigia = s.NrInterventiMese
-                Else
-                    s.NrInterventiOltreFranchigia = s.NrInterventiPeriodo - s.Franchigia
-                    s.NrInterventiFranchigia = If(s.NrInterventiOltreFranchigia <= 0, s.NrInterventiMese, s.Franchigia)
-                End If
-            End If
-        Next
-
-    End Sub
-
     ''' <summary>
     ''' Controllo Flusso Integra
     ''' </summary>
@@ -932,7 +924,7 @@ Partial Module Ordini
                 'Ciclo su tutti gli Interventi
                 For Each i In allInterventi
                     AvanzaBarra()
-                    Debug.Print("Intervento: " & i.ID)
+                    Debug.Print("ID Intervento: " & i.ID)
 
                     Dim chkContratto = allDistinte.Where(Function(x) x.CodIntegra.Equals(i.Contratto))
                     If Not chkContratto.Any Then
@@ -1006,11 +998,11 @@ Partial Module Ordini
 
 End Module
 Module test_LINQ
-    Private Sub LinqStringQuery()
+    Public Sub LinqStringQuery()
         'https://entityframework.net/why-first-query-slow
         'Tipizzare con (Of ) solo le Tabelle singole 1-1 che NON hanno 1-n / Collection
         Dim l = (From o In OrdContext.IntegraInterventi)
-        If 1 = 1 Then
+        If 1 = 2 Then
             l = l.Where(Function(oDate) oDate.DataInsert.Value.Date >= "20230101" And oDate.DataInsert.Value.Date <= "20231231")
             If 2 = 2 Then l = l.Where(Function(oFiliale) oFiliale.Filiale.Equals("filialE"))
         End If
@@ -1048,18 +1040,24 @@ Module test_LINQ
                                 .Include(Function(sa) sa.AllordCliContrattoDistinta) _
                                     .ThenInclude(Function(i) i.AllordCliContrattoDistintaServAgg) _
                                 .Where(Function(wsa) Not wsa.AllordCliContrattoDistinta.Servizio.Equals(TECNO_ALL1)))
+        Dim allIntFiltrati = intFiltrati.ToList
+        'Anche questa lavora bene
+        Dim alldistinte = intFiltrati.Select(Of AllordCliContrattoDistinta)(Function(u) u.AllordCliContrattoDistinta)
+        Dim ll = alldistinte.ToList
 
-        If 1 = 1 Then
+        If 1 = 2 Then
             intFiltrati = intFiltrati.Where(Function(oDate) oDate.InizioAllarme.Value.Date >= "20230101" And oDate.InizioAllarme.Value.Date <= "20231231")
             If 2 = 2 Then distWithInt = intFiltrati.Where(Function(oFiliale) oFiliale.Filiale.Equals("filialE"))
         Else
             'distWithInt = distWithInt.Where(Function(x) x.IntegraInterventi.Count > 0 AndAlso x.IntegraInterventi.Any(Function(oDate) oDate.Contratto.Equals("935/PR")))
             '.Include(Function(inte) inte.IntegraInterventi) _
             'distWithInt = distWithInt.Where(Function(n) n.IntegraInterventi.Count > 0)
-            intFiltrati = intFiltrati.Where(Function(oDate) oDate.Contratto.Equals("935/PR"))
+            'intFiltrati = intFiltrati.Where(Function(oDate) oDate.Contratto.Equals("935/PR"))
         End If
         'Rigiro l'estrazione per avere le distinte
-        Dim allFiltrati = intFiltrati.Select(Of AllordCliContrattoDistinta)(Function(u) u.AllordCliContrattoDistinta).Distinct.ToList
+        Dim aalldistinte = intFiltrati.Select(Of AllordCliContrattoDistinta)(Function(u) u.AllordCliContrattoDistinta)
+        Dim aall = alldistinte.ToList
+        'Dim allordini = intFiltrati.Select(Of AllordCliContrattoDistinta)(Function(u) u.AllordCliContrattoDistinta.IdOrdCli).Distinct().ToList
 
         Dim d = (From o In OrdContext.AllordCliContrattoDistinta.Include(Function(sa) sa.AllordCliContrattoDistintaServAgg))
     End Sub
