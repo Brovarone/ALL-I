@@ -893,6 +893,12 @@ namespace EFMago.Models
 
                 entity.ToTable("Integra_Interventi");
 
+                entity.Property(e => e.ID)
+                    .HasColumnName("ID")
+                    .HasMaxLength(40)
+                    .ValueGeneratedOnAdd()
+                    .IsUnicode(false);
+
                 entity.Property(e => e.Filiale)
                    .HasColumnName("Filiale")
                    .HasMaxLength(2)
@@ -908,6 +914,7 @@ namespace EFMago.Models
                     .HasColumnName("Contratto")
                     .HasMaxLength(12)
                     .IsUnicode(false)
+                    .ValueGeneratedOnAdd()
                     .HasDefaultValueSql("('')");
 
                 entity.Property(e => e.TipoEvento)
@@ -956,7 +963,7 @@ namespace EFMago.Models
 
                 entity.Property(e => e.EsitoIntervento)
                     .HasColumnName("EsitoIntervento")
-                     .HasMaxLength(6)
+                     .HasMaxLength(50)
                      .IsUnicode(false)
                      .HasDefaultValueSql("('')");
 
@@ -982,24 +989,64 @@ namespace EFMago.Models
                     .HasColumnType("datetime")
                     .HasDefaultValueSql("(getdate())");
 
-                entity.Property(e => e.TBCreatedID).HasColumnName("TBCreatedID");
+                entity.Property(e => e.TBCreatedID)
+                    .HasColumnName("TBCreatedID")
+                    .HasDefaultValueSql("((0))"); 
 
                 entity.Property(e => e.TBModified)
                     .HasColumnName("TBModified")
                     .HasColumnType("datetime")
                     .HasDefaultValueSql("(getdate())");
 
-                entity.Property(e => e.TBModifiedID).HasColumnName("TBModifiedID");
-             
+                entity.Property(e => e.TBModifiedID)
+                    .HasColumnName("TBModifiedID")
+                    .HasDefaultValueSql("((0))");
+
+                entity.Property(e => e.MAssociato)
+                    .HasColumnName("MAssociato")
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.MIdOrdCli)
+                    .HasColumnName("MIdOrdCli")
+                    .ValueGeneratedOnAdd()
+                    .HasDefaultValueSql("((0))");
+
+                entity.Property(e => e.MLineaContratto)
+                    .HasColumnName("MLineaContratto")
+                    .ValueGeneratedOnAdd()
+                    .HasDefaultValueSql("((0))");
+
+                entity.Property(e => e.MLineaDistinta)
+                    .HasColumnName("MLineaDistinta")
+                    .ValueGeneratedOnAdd()
+                    .HasDefaultValueSql("((0))");
+
                 // AGGIUNTO DA ME
-                entity.HasOne(d => d.AllordCliContrattoDistinta)
-                    .WithMany(p => p.IntegraInterventi)
+                entity.HasOne(d => d.ALLAllordCliContrattoDistinta)
+                    .WithMany(p => p.AllIntegraInterventi)
                     .HasForeignKey(p => p.Contratto)
-                    .HasPrincipalKey(d =>d.CodIntegra)
+                    .HasPrincipalKey(d => d.CodIntegra)
+                    .IsRequired(false)
                     .OnDelete(DeleteBehavior.ClientSetNull);
 
-            });
+                entity.HasOne(d => d.AllordCliContrattoDistinta)
+                    .WithMany(p => p.IntegraInterventi)
+                    .HasForeignKey(p => new { p.Contratto, p.MLineaContratto, p.MLineaDistinta })
+                    .HasPrincipalKey(d => new { d.CodIntegra, d.RifLinea, d.Line })
+                    .IsRequired(false)
+                    .OnDelete(DeleteBehavior.ClientSetNull);
 
+                entity.HasOne(d => d.SaleOrd)
+                   .WithMany(p => p.IntegraInterventi)
+                   .HasForeignKey(p => p.MIdOrdCli)
+                   .HasPrincipalKey(d => d.SaleOrdId)
+                   .IsRequired(false)
+                   .OnDelete(DeleteBehavior.ClientSetNull);
+            });
+                        
             modelBuilder.Entity<AllordCliContrattoDistCesp>(entity =>
             {
                 entity.HasKey(e => new { e.IdOrdCli, e.Cespite, e.RifLinea, e.RifRifLinea })

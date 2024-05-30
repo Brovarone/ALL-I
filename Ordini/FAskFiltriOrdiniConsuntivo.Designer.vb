@@ -37,7 +37,12 @@ Partial Class FAskFiltriOrdiniConsuntivo
         Me.firstLogDate = New System.Windows.Forms.DateTimePicker()
         Me.lastLogDate = New System.Windows.Forms.DateTimePicker()
         Me.ChkNoFilter = New System.Windows.Forms.CheckBox()
+        Me.CmbYear = New System.Windows.Forms.ComboBox()
+        Me.LblYear = New System.Windows.Forms.Label()
+        Me.ChkRiassegna = New System.Windows.Forms.CheckBox()
+        Me.GroupBoxCheck = New System.Windows.Forms.GroupBox()
         Me.TableLayoutPanel1.SuspendLayout()
+        Me.GroupBoxCheck.SuspendLayout()
         Me.SuspendLayout()
         '
         'TableLayoutPanel1
@@ -48,7 +53,7 @@ Partial Class FAskFiltriOrdiniConsuntivo
         Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
         Me.TableLayoutPanel1.Controls.Add(Me.OK_Button, 0, 0)
         Me.TableLayoutPanel1.Controls.Add(Me.Cancel_Button, 1, 0)
-        Me.TableLayoutPanel1.Location = New System.Drawing.Point(154, 204)
+        Me.TableLayoutPanel1.Location = New System.Drawing.Point(154, 291)
         Me.TableLayoutPanel1.Name = "TableLayoutPanel1"
         Me.TableLayoutPanel1.RowCount = 1
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
@@ -88,30 +93,30 @@ Partial Class FAskFiltriOrdiniConsuntivo
         Me.RadOnlyCheck.AutoSize = True
         Me.RadOnlyCheck.Checked = True
         Me.RadOnlyCheck.Enabled = False
-        Me.RadOnlyCheck.Location = New System.Drawing.Point(71, 68)
+        Me.RadOnlyCheck.Location = New System.Drawing.Point(6, 19)
         Me.RadOnlyCheck.Name = "RadOnlyCheck"
-        Me.RadOnlyCheck.Size = New System.Drawing.Size(80, 17)
+        Me.RadOnlyCheck.Size = New System.Drawing.Size(90, 17)
         Me.RadOnlyCheck.TabIndex = 3
         Me.RadOnlyCheck.TabStop = True
-        Me.RadOnlyCheck.Text = "Solo Check"
+        Me.RadOnlyCheck.Text = "Solo Controllo"
         Me.RadOnlyCheck.UseVisualStyleBackColor = True
         '
         'RadCheckAndFatt
         '
         Me.RadCheckAndFatt.AutoSize = True
         Me.RadCheckAndFatt.Enabled = False
-        Me.RadCheckAndFatt.Location = New System.Drawing.Point(71, 91)
+        Me.RadCheckAndFatt.Location = New System.Drawing.Point(6, 42)
         Me.RadCheckAndFatt.Name = "RadCheckAndFatt"
-        Me.RadCheckAndFatt.Size = New System.Drawing.Size(101, 17)
+        Me.RadCheckAndFatt.Size = New System.Drawing.Size(136, 17)
         Me.RadCheckAndFatt.TabIndex = 4
-        Me.RadCheckAndFatt.Text = "Check + Fattura"
+        Me.RadCheckAndFatt.Text = "Controllo + Fatturazione"
         Me.RadCheckAndFatt.UseVisualStyleBackColor = True
         '
         'RadOnlyFatt
         '
         Me.RadOnlyFatt.AutoSize = True
         Me.RadOnlyFatt.Enabled = False
-        Me.RadOnlyFatt.Location = New System.Drawing.Point(71, 114)
+        Me.RadOnlyFatt.Location = New System.Drawing.Point(6, 87)
         Me.RadOnlyFatt.Name = "RadOnlyFatt"
         Me.RadOnlyFatt.Size = New System.Drawing.Size(107, 17)
         Me.RadOnlyFatt.TabIndex = 5
@@ -121,7 +126,7 @@ Partial Class FAskFiltriOrdiniConsuntivo
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(12, 150)
+        Me.Label1.Location = New System.Drawing.Point(12, 223)
         Me.Label1.Name = "Label1"
         Me.Label1.Size = New System.Drawing.Size(54, 13)
         Me.Label1.TabIndex = 7
@@ -131,7 +136,7 @@ Partial Class FAskFiltriOrdiniConsuntivo
         '
         Me.DtaFatt.Enabled = False
         Me.DtaFatt.Format = System.Windows.Forms.DateTimePickerFormat.[Short]
-        Me.DtaFatt.Location = New System.Drawing.Point(72, 147)
+        Me.DtaFatt.Location = New System.Drawing.Point(72, 220)
         Me.DtaFatt.Name = "DtaFatt"
         Me.DtaFatt.Size = New System.Drawing.Size(96, 20)
         Me.DtaFatt.TabIndex = 8
@@ -148,7 +153,7 @@ Partial Class FAskFiltriOrdiniConsuntivo
         'TxtOrdFiliale
         '
         Me.TxtOrdFiliale.Enabled = False
-        Me.TxtOrdFiliale.Location = New System.Drawing.Point(107, 173)
+        Me.TxtOrdFiliale.Location = New System.Drawing.Point(107, 246)
         Me.TxtOrdFiliale.Name = "TxtOrdFiliale"
         Me.TxtOrdFiliale.Size = New System.Drawing.Size(96, 20)
         Me.TxtOrdFiliale.TabIndex = 12
@@ -157,7 +162,7 @@ Partial Class FAskFiltriOrdiniConsuntivo
         '
         Me.ChkFiliale.AutoSize = True
         Me.ChkFiliale.Enabled = False
-        Me.ChkFiliale.Location = New System.Drawing.Point(6, 173)
+        Me.ChkFiliale.Location = New System.Drawing.Point(6, 246)
         Me.ChkFiliale.Name = "ChkFiliale"
         Me.ChkFiliale.Size = New System.Drawing.Size(90, 17)
         Me.ChkFiliale.TabIndex = 11
@@ -190,13 +195,57 @@ Partial Class FAskFiltriOrdiniConsuntivo
         Me.ChkNoFilter.Text = "Filtra"
         Me.ChkNoFilter.UseVisualStyleBackColor = True
         '
+        'CmbYear
+        '
+        Me.CmbYear.Enabled = False
+        Me.CmbYear.FormattingEnabled = True
+        Me.CmbYear.Location = New System.Drawing.Point(72, 62)
+        Me.CmbYear.Name = "CmbYear"
+        Me.CmbYear.Size = New System.Drawing.Size(106, 21)
+        Me.CmbYear.TabIndex = 17
+        '
+        'LblYear
+        '
+        Me.LblYear.AutoSize = True
+        Me.LblYear.Location = New System.Drawing.Point(12, 65)
+        Me.LblYear.Name = "LblYear"
+        Me.LblYear.Size = New System.Drawing.Size(33, 13)
+        Me.LblYear.TabIndex = 16
+        Me.LblYear.Text = "Mese"
+        '
+        'ChkRiassegna
+        '
+        Me.ChkRiassegna.AutoSize = True
+        Me.ChkRiassegna.Enabled = False
+        Me.ChkRiassegna.Location = New System.Drawing.Point(6, 65)
+        Me.ChkRiassegna.Name = "ChkRiassegna"
+        Me.ChkRiassegna.Size = New System.Drawing.Size(76, 17)
+        Me.ChkRiassegna.TabIndex = 18
+        Me.ChkRiassegna.Text = "Riassegna"
+        Me.ChkRiassegna.UseVisualStyleBackColor = True
+        '
+        'GroupBoxCheck
+        '
+        Me.GroupBoxCheck.Controls.Add(Me.RadOnlyCheck)
+        Me.GroupBoxCheck.Controls.Add(Me.ChkRiassegna)
+        Me.GroupBoxCheck.Controls.Add(Me.RadCheckAndFatt)
+        Me.GroupBoxCheck.Controls.Add(Me.RadOnlyFatt)
+        Me.GroupBoxCheck.Location = New System.Drawing.Point(72, 89)
+        Me.GroupBoxCheck.Name = "GroupBoxCheck"
+        Me.GroupBoxCheck.Size = New System.Drawing.Size(200, 114)
+        Me.GroupBoxCheck.TabIndex = 19
+        Me.GroupBoxCheck.TabStop = False
+        '
         'FAskFiltriOrdiniConsuntivo
         '
         Me.AcceptButton = Me.OK_Button
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.CancelButton = Me.Cancel_Button
-        Me.ClientSize = New System.Drawing.Size(312, 245)
+        Me.ClientSize = New System.Drawing.Size(312, 332)
+        Me.Controls.Add(Me.GroupBoxCheck)
+        Me.Controls.Add(Me.CmbYear)
+        Me.Controls.Add(Me.LblYear)
         Me.Controls.Add(Me.ChkNoFilter)
         Me.Controls.Add(Me.lastLogDate)
         Me.Controls.Add(Me.firstLogDate)
@@ -205,9 +254,6 @@ Partial Class FAskFiltriOrdiniConsuntivo
         Me.Controls.Add(Me.CmbMonth)
         Me.Controls.Add(Me.DtaFatt)
         Me.Controls.Add(Me.Label1)
-        Me.Controls.Add(Me.RadOnlyFatt)
-        Me.Controls.Add(Me.RadCheckAndFatt)
-        Me.Controls.Add(Me.RadOnlyCheck)
         Me.Controls.Add(Me.LblMonth)
         Me.Controls.Add(Me.TableLayoutPanel1)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
@@ -218,6 +264,8 @@ Partial Class FAskFiltriOrdiniConsuntivo
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
         Me.Text = "Consuntivazione"
         Me.TableLayoutPanel1.ResumeLayout(False)
+        Me.GroupBoxCheck.ResumeLayout(False)
+        Me.GroupBoxCheck.PerformLayout()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -237,4 +285,8 @@ Partial Class FAskFiltriOrdiniConsuntivo
     Friend WithEvents firstLogDate As DateTimePicker
     Friend WithEvents lastLogDate As DateTimePicker
     Friend WithEvents ChkNoFilter As CheckBox
+    Friend WithEvents CmbYear As ComboBox
+    Friend WithEvents LblYear As Label
+    Friend WithEvents ChkRiassegna As CheckBox
+    Friend WithEvents GroupBoxCheck As GroupBox
 End Class

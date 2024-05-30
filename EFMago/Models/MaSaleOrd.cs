@@ -148,6 +148,7 @@ namespace EFMago.Models
         public virtual ICollection<AllordCliTipologiaServizi> ALLordCliTipologiaServizi { get; set; }
         public virtual ICollection<AllordPadre> AllordPadre { get; set; }
         public virtual ICollection<AllordFiglio> AllordFiglio { get; set; }
-      
+        public virtual ICollection<IntegraInterventi> IntegraInterventi { get; set; }
+
     }
 }

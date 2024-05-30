@@ -328,6 +328,7 @@ End Module
 
 Module MagoNet
     Public sOggi As String = DateTime.Today.ToString("yyyy-MM-dd")
+    Public dataNulla As Date = New DateTime(1799, 12, 31)
     Public sDataNulla As String = New DateTime(1799, 12, 31).ToString
     Public Const ACGIVASplit As String = "32" 'Codice iva che identifica l'iva SPLIT
     ''' <summary>
@@ -858,7 +859,7 @@ Public Module Common
     Public Sub LiberaRam()
         GC.Collect()
         GC.WaitForPendingFinalizers()
-
+        Application.DoEvents()
     End Sub
     Public Sub AvanzaBarra()
         FLogin.prgCopy.PerformStep()

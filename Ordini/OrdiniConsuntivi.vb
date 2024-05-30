@@ -13,13 +13,13 @@ Imports ALLSystemTools
 Partial Module Ordini
 
     Private nrMonth As Integer
-    Private anno As Integer
     Private dataFatt As Date
     Private bSingolaFiliale As Boolean
     Private filiale As String = String.Empty
     Private fromLogDate As Date
     Private toLogDate As Date
     Private bAskFilter As Boolean
+    Private bRiassegna As Boolean
 
 
     ''' <summary>
@@ -55,8 +55,9 @@ Partial Module Ordini
 #Region "Estrazioni dati con Query LINQ"
             'https://entityframework.net/why-first-query-slow
             'Tipizzare con (Of ) solo le Tabelle singole 1-1 che NON hanno 1-n / Collection
-            'Interventi+Distinta con filtro ( partendo dagli iterventi)
+            'Interventi+Distinta con filtro ( partendo dagli interventi)
             Dim intFiltrati = (From interv In OrdContext.IntegraInterventi _
+                            .Include(Function(ord) ord.SaleOrd) _
                             .Include(Function(dis) dis.AllordCliContrattoDistinta) _
                             .Where(Function(wdis) Not wdis.AllordCliContrattoDistinta.Servizio.Equals(TECNO_ALL1)))
             'Se mi fermassi qui' otterrei solo quelle con una distinta valida, se proseguo mi estrae correttamente tutto.
@@ -135,6 +136,10 @@ Partial Module Ordini
             'Rigiro l'estrazione per avere le Distinte/Contratti
             'Dim distinte = intFiltrati.Select(Of AllordCliContrattoDistinta)(Function(u) u.AllordCliContrattoDistinta).ToList
             'Rigiro per avere gli ordini
+            'nuoo
+            Dim ooo = intFiltrati.Select(Of MaSaleOrd)(Function(u) u.SaleOrd)
+            Dim oooList = ooo.ToList
+            'cvecchio che va
             Dim dummyOrdini = intFiltrati.Select(Of MaSaleOrd)(Function(u) u.AllordCliContrattoDistinta.AllordCliContratto.SaleOrd)
             Dim dummyOrdiniList = dummyOrdini.ToList
             'Applico il mio comparatore per avere una collection dei soli ordini DISTINCT
@@ -205,16 +210,14 @@ Partial Module Ordini
 #End Region
                     'STEP 1 : Ciclo le righe contratto
                     For Each c As AllordCliContratto In o.ALLordCliContratto
-                        'TODO ciclo le righe servizio aggiuntivo???
                         For Each d As AllordCliContrattoDistinta In c.AllordCliContrattoDistinta
                             For Each s As AllordCliContrattoDistintaServAgg In d.AllordCliContrattoDistintaServAgg
-                                'TODO: non va bene, porei non averlo, devo invece
 #Region "Calcolo Interventi"
                                 Dim evento As String = TranscodificaEventoIntegra(s.Servizio)
                                 Dim periodFranchigia As Periodo = s.Periodicita
                                 Dim n = d.IntegraInterventi.Where(Function(w) w.TipoEvento.Equals(evento))
                                 If n.Any Then
-                                    s.AnnoIntervento = anno
+                                    s.AnnoIntervento = Year(toLogDate)
                                     Dim toDataMese As New Date(Year(toLogDate), Month(toLogDate), Date.DaysInMonth(Year(toLogDate), Month(toLogDate)))
                                     Dim fromDataMese As New Date(toDataMese.Year, toDataMese.Month, 1)
                                     s.NrInterventiMese = n.Where(Function(wp) wp.InizioAllarme >= fromDataMese And wp.InizioAllarme <= toDataMese).Sum(Function(q) q.Qta)
@@ -227,13 +230,17 @@ Partial Module Ordini
                                         s.NrInterventiFranchigia = If(s.NrInterventiOltreFranchigia <= 0, s.NrInterventiMese, s.Franchigia)
                                     End If
                                     debugging.AppendLine(evento & " Int mese=" & s.NrInterventiMese.ToString & " Periodo(" & Periodo.GetName(GetType(Periodo), periodFranchigia) & " Int=" & s.NrInterventiPeriodo.ToString & " in Franc=" & s.Franchigia)
+                                    'Aggiorno Flag Analizzato sull'intervento
+                                    For Each intervento In n
+                                        'intervento.Fatturare = "1"
+                                    Next
                                 End If
 #End Region
                                 If s.NrInterventiOltreFranchigia Is Nothing Then
                                     debugging.AppendLine(evento & " Escluso (senza record)")
                                 ElseIf s.NrInterventiOltreFranchigia.GetValueOrDefault <= 0 Then
                                     'isDaEscludere  = true
-                                    debugging.AppendLine(evento & " Escludso (In franchigia)")
+                                    debugging.AppendLine(evento & " Escluso (In franchigia)")
                                 Else
                                     'Si puo' Fatturare
                                     'isDaEscludere  = false
@@ -245,7 +252,9 @@ Partial Module Ordini
                                             .PercIva = Math.Round(codiciIva.FirstOrDefault(Function(tax) tax.TaxCode = .CodIva).Perc.Value, decPerc),
                                             .Parent = cOrd,
                                             .CanoniDataIn = fromLogDate,
-                                            .CanoniDataFin = toLogDate
+                                            .CanoniDataFin = toLogDate,
+                                            .PeriodoDataIn = fromLogDate,
+                                            .PeriodoDataFin = toLogDate
                                         }
                                     If cOrdRow.PercIva = 0 Then cOrdRow.PercIva = dDefPercIva
                                     'TODO: non ricordo cosa sono  righe istat
@@ -653,10 +662,23 @@ Partial Module Ordini
             '    isUpdateRows = True
             'End If
 #End Region
+            Dim alt As Boolean = False
+#Region "Controllo se tutti gli interventi sono stati analizzati"
+            Dim intNotOk = (From interv In OrdContext.IntegraInterventi _
+                            .Where(Function(wok) wok.Fatturare <> "1")).ToList
+            If intNotOk.Count <> 0 Then
+                someTrouble = True
+                msgLog = "Interventi non analizzati correttamente : " & intNotOk.Count.ToString
+                errori.AppendLine(msgLog)
+                msgLog += Environment.NewLine & "Si desidera continuare?"
+                My.Application.Log.DefaultFileLogWriter.WriteLine(msgLog)
+                FLogin.lstStatoConnessione.Items.Add(msgLog)
 
-
-
-
+                If DialogResult.No = MessageBox.Show(msgLog, GetCurrentMethod.Name, MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) Then
+                    alt = True
+                End If
+            End If
+#End Region
 
 #Region "Bulk Insert"
             'todo : forse ci sono da togliere dei bulk insert
@@ -667,7 +689,7 @@ Partial Module Ordini
             My.Application.Log.DefaultFileLogWriter.WriteLine(msgLog)
             FLogin.lstStatoConnessione.Items.Add(msgLog)
 
-            If totOrdiniConNuoveRighe > 0 OrElse totOrdiniConRigheAggiornate > 0 Then
+            If Not alt AndAlso (totOrdiniConNuoveRighe > 0 OrElse totOrdiniConRigheAggiornate > 0) Then
                 'Parametri
                 'https://github.com/borisdj/EFCore.BulkExtensions
 
@@ -689,7 +711,7 @@ Partial Module Ordini
 
                         For Each kvp As KeyValuePair(Of String, IEnumerable(Of Object)) In tablesToUpdate
                             Dim keys As String = kvp.Key
-                            Dim entityList As List(Of Object) = kvp.Value
+                            Dim entityList As List(Of Object) = kvp.Value.ToList
 
                             iStep += 1
                             EseguiBulkUpdate(OrdContext, entityList, keys, bulkMessage)
@@ -756,6 +778,7 @@ Partial Module Ordini
         My.Application.Log.DefaultFileLogWriter.WriteLine("Controllo Flusso")
 
 #Region "Variabili Selezione"
+        'todo : gestire il filtr su Associato = 0
 
         'Lancio la form con le regole di richiesta
         Using ff = New FAskFiltriOrdiniConsuntivo
@@ -768,6 +791,9 @@ Partial Module Ordini
                 fromLogDate = OnlyDate(ff.firstLogDate.Value)
                 toLogDate = OnlyDate(ff.lastLogDate.Value)
                 bAskFilter = ff.ChkNoFilter.Checked
+                If ff.RadOnlyCheck.Checked OrElse ff.RadCheckAndFatt.Checked Then
+                    bRiassegna = ff.ChkRiassegna.Checked
+                End If
                 Dim filtri As New StringBuilder()
                 filtri.AppendLine(" --- Filtri ---")
                 filtri.AppendLine("Dal " & fromLogDate.ToShortDateString & " al " & toLogDate.ToShortDateString)
@@ -780,28 +806,45 @@ Partial Module Ordini
 
         Dim someTrouble As Boolean = False
         Dim errori As New StringBuilder()
-        Dim errorList As New List(Of String)
-        Dim errorCount As Integer
+        Dim contrattoErrorList As New List(Of String)
+        Dim eventoErrorList As New List(Of String)
+        Dim fatalContrattoErrorList As New List(Of String)
+        Dim fatalEventoErrorList As New List(Of String)
         Dim totInterventi As Integer
+        Dim contrattoErrorCnt As Integer
+        Dim eventoErrorCnt As Integer
+        Dim fatalContrattoErrorCnt As Integer
+        Dim fatalEventoErrorCnt As Integer
+
 #End Region
 
         Try
 #Region "Estrazioni dati con Query LINQ"
             'https://entityframework.net/why-first-query-slow
             'Tipizzare con (Of ) solo le Tabelle singole 1-1 che NON hanno 1-n / Collection
-
+            'OrdContext.Database.SetCommandTimeout(120)
             Dim allDistinte = (From o In OrdContext.AllordCliContrattoDistinta _
                          .Include(Function(sa) sa.AllordCliContrattoDistintaServAgg) _
-                         .Where(Function(wsa) Not wsa.Servizio.Equals(TECNO_ALL1)))
+                         .Where(Function(wsa) Not wsa.Servizio.Equals(TECNO_ALL1)) _
+                         .Include(Function(o) o.AllordCliContratto) _
+                            .ThenInclude(Function(ord) ord.SaleOrd) _
+                                .ThenInclude(Function(info) info.ALLOrdCliAcc)) _
+                                .Select(Function(x) New MiniDistinta With {.CodIntegra = x.CodIntegra,
+                                                                   .DataCessazione = x.AllordCliContratto.SaleOrd.ALLOrdCliAcc.DataCessazione,
+                                                                   .DataScadenzaFissa = x.AllordCliContratto.SaleOrd.ALLOrdCliAcc.DataScadenzaFissa,
+                                                                   .AllordCliContrattoDistintaServAgg = x.AllordCliContrattoDistintaServAgg})
 
-            Dim allInterventi = (From o In OrdContext.IntegraInterventi).ToList
+
+            Dim allInterventi As List(Of IntegraInterventi) = (From o In OrdContext.IntegraInterventi).ToList
             If bAskFilter Then
-                allInterventi = allInterventi.Where(Function(oDate) oDate.InizioAllarme.Value.Date >= fromLogDate And oDate.InizioAllarme.Value.Date <= toLogDate)
+                If Not bRiassegna Then allInterventi = allInterventi.Where(Function(oAss) oAss.MAssociato.Equals("0"))
+                allInterventi = allInterventi.Where(Function(oDate) oDate.InizioAllarme.Value.Date >= fromLogDate AndAlso oDate.InizioAllarme.Value.Date <= toLogDate)
                 If bSingolaFiliale Then allInterventi = allInterventi.Where(Function(oFiliale) oFiliale.Filiale.Equals(filiale))
             Else
             End If
 #End Region
             If allInterventi.Any Then
+                Dim updIntList As New List(Of IntegraInterventi)
                 totInterventi = allInterventi.Count
                 Debug.Print("Interventi Estratti : " & totInterventi.ToString)
                 My.Application.Log.DefaultFileLogWriter.WriteLine("Interventi Estratti : " & totInterventi.ToString)
@@ -815,30 +858,114 @@ Partial Module Ordini
                 For Each i In allInterventi
                     AvanzaBarra()
                     Debug.Print("ID Intervento: " & i.ID)
+                    Dim allDistinteFiltered = allDistinte.Where(Function(x) x.CodIntegra.Equals(i.Contratto))
+                    Dim allDistintexxx = allDistinte.Where(Function(d) d.DataCessazione.Equals(Nothing) _
+                        OrElse d.DataCessazione.Equals(dataNulla) _
+                        OrElse d.DataCessazione >= toLogDate)
+                    Dim allDistinteyyy = allDistinte.Where(Function(d) d.DataScadenzaFissa.Equals(Nothing) _
+                        OrElse d.DataScadenzaFissa.Equals(dataNulla) _
+                        OrElse d.DataScadenzaFissa >= toLogDate)
+                    If allDistinteFiltered.Any Then
+                        If allDistinteFiltered.Count = 1 Then
+                            Dim distinta = allDistinteFiltered.Single
+                            Dim eventoMago As String = TrascodificaServizioAggiuntivo(i.TipoEvento)
+                            Dim allEventi = distinta.AllordCliContrattoDistintaServAgg.Where(Function(y) y.Servizio.Equals(eventoMago))
+                            'Blocco Eventi
+                            If allEventi.Any Then
+                                If allEventi.Count = 1 Then
+                                    Dim row As AllordCliContrattoDistintaServAgg = allEventi.Single()
+                                    'Aggiorno Flag
+                                    i.MAssociato = "1"
+                                    i.MIdOrdCli = row.IdOrdCli
+                                    i.MLineaContratto = row.RifRifLinea
+                                    i.MLineaDistinta = row.RifLinea
 
-                    Dim chkContratto = allDistinte.Where(Function(x) x.CodIntegra.Equals(i.Contratto))
-                    If Not chkContratto.Any Then
-                        errorCount += 1
-                        If Not errorList.Exists(Function(x) x.Equals("Contratto:" & i.Contratto)) Then
-                            errorList.Add("Contratto:" & i.Contratto)
+                                    Exit For
+
+                                    Continue For
+                                Else
+                                    fatalEventoErrorCnt += 1
+                                    Dim errorString As String = $"Contratto: {i.Contratto} Evento: {i.TipoEvento}"
+                                    If Not fatalEventoErrorList.Contains(errorString) Then
+                                        fatalEventoErrorList.Add(errorString)
+                                    End If
+                                    Continue For
+                                End If
+                            Else
+                                eventoErrorCnt += 1
+                                Dim errorString As String = $"Contratto: {i.Contratto} Evento: {i.TipoEvento}"
+                                If Not eventoErrorList.Contains(errorString) Then
+                                    eventoErrorList.Add(errorString)
+                                End If
+                                Continue For
+                            End If
+
+                        Else
+                            fatalContrattoErrorCnt += 1
+                            Dim errorString As String = i.Contratto
+                            If Not fatalContrattoErrorList.Contains(errorString) Then
+                                fatalContrattoErrorList.Add(errorString)
+                            End If
+                            Continue For
                         End If
                     Else
-                        If chkContratto.Count = 1 Then
-                            Dim contratto = chkContratto.First
-                            Dim eventoMago As String = TrascodificaServizioAggiuntivo(i.TipoEvento)
-                            Dim chkEvento = contratto.AllordCliContrattoDistintaServAgg.Where(Function(y) y.Servizio.Equals(eventoMago))
-                            If Not chkEvento.Any Then
-                                errorCount += 1
-                                If Not errorList.Exists(Function(x) x.Equals("Contratto:" & i.Contratto & " Evento: " & i.TipoEvento)) Then
-                                    errorList.Add("Contratto:" & i.Contratto & " Evento: " & i.TipoEvento)
-                                End If
-                            End If
-                        Else
-                            errorCount += 1
-                            errorList.Add("Fatal Contratto duplicato: " & i.Contratto)
+                        eventoErrorCnt += 1
+                        Dim errorString As String = i.Contratto
+                        If Not contrattoErrorList.Contains(errorString) Then
+                            contrattoErrorList.Add(errorString)
                         End If
+                        Continue For
                     End If
                 Next
+                'Scrivo le modifiche sulla tabella IntegraInterventi
+#Region "Salvataggio"
+                Using bulkTrans = OrdContext.Database.BeginTransaction
+                    Dim someBulkTrouble As Boolean = False
+                    Dim bulkMessage As New StringBuilder()
+                    Dim msgLog As String
+                    Try
+                        OrdContext.Database.ExecuteSqlRaw("DBCC TRACEON(610)")
+
+                        EditTestoBarra("Salvataggio: Aggiornamento interventi")
+                        Dim t = allInterventi.Count
+                        Dim iIntUpd As Integer = OrdContext.SaveChanges()
+                        Debug.Print("IntegraInterventi Agg:" & iIntUpd.ToString)
+                        bulkMessage.AppendLine("IntegraInterventi Agg:" & iIntUpd.ToString)
+
+                        If someBulkTrouble Then
+                            bulkTrans.Rollback()
+                            bulkMessage.AppendLine("[Aggiornamento IntegraInterventi] Sono stati riscontrati degli errori. Eseguita rollback")
+                        Else
+                            bulkTrans.Commit()
+                            FLogin.lstStatoConnessione.Items.Add(" --- Inserimento Dati ---")
+                            msgLog = "Interventi Aggiornati : " & iIntUpd.ToString
+                            Debug.Print(msgLog)
+                            bulkMessage.AppendLine("[RIASSUNTO] " & msgLog)
+                            FLogin.lstStatoConnessione.Items.Add(msgLog)
+                        End If
+                        OrdContext.Database.ExecuteSqlRaw("DBCC TRACEOFF(610)")
+
+                    Catch ex As Exception
+                        someBulkTrouble = True
+                        Dim entries = OrdContext.ChangeTracker.Entries.Where(Function(x) x.State <> EntityState.Unchanged)
+                        For Each entry In entries
+                            For Each prop In entry.CurrentValues.Properties
+                                Dim val = prop.PropertyInfo.GetValue(entry.Entity)
+                                Console.WriteLine($" {prop.PropertyInfo } {prop.ToString()} ~ ({val?.ToString().Length})({val})")
+                            Next
+                        Next
+                        Debug.Print(ex.Message)
+                        FLogin.lstStatoConnessione.Items.Add("Annullamento operazione: Riscontrati errori")
+                        bulkMessage.AppendLine("[Aggiornamento IntegraInterventi] - Sono stati riscontrati degli errori. (Vedere sezione Errori)")
+                        errori.AppendLine("[Aggiornamento IntegraInterventi] Messaggio:" & ex.Message)
+                        errori.AppendLine("[Aggiornamento IntegraInterventi] Stack:" & ex.StackTrace)
+
+                        Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                        mb.ShowDialog()
+                    End Try
+                End Using
+#End Region
+
             End If
 
         Catch ex As Exception
@@ -850,26 +977,62 @@ Partial Module Ordini
         End Try
         My.Application.Log.DefaultFileLogWriter.WriteLine("Controllo terminato" & Environment.NewLine)
         FLogin.lstStatoConnessione.Items.Add("Controllo terminato")
+
         'Scrivo i LOG
-        If errorList.Count > 0 Then
-            errorList.Sort()
-            For Each e In errorList
-                errori.AppendLine("Contratto assente: " & e)
-            Next
-            My.Application.Log.DefaultFileLogWriter.WriteLine("Interventi con Errore : " & errorCount.ToString)
-            FLogin.lstStatoConnessione.Items.Add("Interventi con Errore : " & errorCount.ToString)
+#Region "Logs"
+        If contrattoErrorCnt > 0 OrElse eventoErrorCnt > 0 OrElse fatalContrattoErrorCnt > 0 OrElse fatalEventoErrorCnt > 0 Then
+            If fatalContrattoErrorCnt > 0 Then
+                fatalContrattoErrorList.Sort()
+                errori.AppendLine(" --- ERRORI GRAVI ---")
+                errori.AppendLine("Codice Contratto duplicato, controllare su Mago l'unicità del CodIntegra")
+                For Each e In fatalContrattoErrorList
+                    errori.AppendLine(e)
+                Next
+                My.Application.Log.DefaultFileLogWriter.WriteLine("Interventi con Contratto duplicato : " & fatalContrattoErrorCnt.ToString)
+                FLogin.lstStatoConnessione.Items.Add("Interventi con Contratto duplicato : " & fatalContrattoErrorCnt.ToString)
+            End If
+            If fatalEventoErrorCnt > 0 Then
+                fatalEventoErrorList.Sort()
+                errori.AppendLine(" --- ERRORI GRAVI ---")
+                errori.AppendLine("Codice Evento duplicato, controllare su Mago l'unicità dell' Evento")
+                For Each e In fatalEventoErrorList
+                    errori.AppendLine(e)
+                Next
+                My.Application.Log.DefaultFileLogWriter.WriteLine("Interventi con Evento duplicato : " & fatalContrattoErrorCnt.ToString)
+                FLogin.lstStatoConnessione.Items.Add("Interventi con Evento duplicato : " & fatalContrattoErrorCnt.ToString)
+            End If
+            If contrattoErrorCnt > 0 Then
+                contrattoErrorList.Sort()
+                errori.AppendLine(" --- ERRORI MEDI ---")
+                errori.AppendLine("Codice Contratto assente, inserirlo in Mago")
+                For Each e In contrattoErrorList
+                    errori.AppendLine("Contratto assente: " & e)
+                Next
+                My.Application.Log.DefaultFileLogWriter.WriteLine("Interventi con Contratto assente : " & fatalContrattoErrorCnt.ToString)
+                FLogin.lstStatoConnessione.Items.Add("Interventi con Contratto assente : " & fatalContrattoErrorCnt.ToString)
+            End If
+            If eventoErrorCnt > 0 Then
+                eventoErrorList.Sort()
+                errori.AppendLine(" --- ERRORI MEDI ---")
+                errori.AppendLine("Codice Evento assente, inserirlo in Mago")
+                For Each e In contrattoErrorList
+                    errori.AppendLine(e)
+                Next
+                My.Application.Log.DefaultFileLogWriter.WriteLine("Interventi con Evento assente : " & fatalContrattoErrorCnt.ToString)
+                FLogin.lstStatoConnessione.Items.Add("Interventi con Evento assente : " & fatalContrattoErrorCnt.ToString)
+            End If
             My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Errori ---" & Environment.NewLine & errori.ToString)
             FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati errori : Controllare file di Log")
             someTrouble = True
-        Else
-            FLogin.lstStatoConnessione.Items.Add("Nessun errore")
         End If
+#End Region
         Application.DoEvents()
         Return Not someTrouble
 
     End Function
 
     Private Function TrascodificaServizioAggiuntivo(value As String) As String
+        'todo trasformare in dictionary
         Dim ret As String = ""
         If value = "ISP" Then ret = ServiziAggiuntivi.Ispezioni  '"ISPEZIONI"
         If value = "" Then ret = ServiziAggiuntivi.Ispezioni_Descri  '"Ispezioni"
@@ -888,19 +1051,19 @@ Partial Module Ordini
     End Function
     Private Sub EseguiBulkUpdate(Of T As Class)(ByVal context As OrdiniContext, ByVal entityList As List(Of T), ByVal keys As String, log As StringBuilder)
 
-        Dim operation() As String = keys.Split("|")
+        Dim operation As String() = keys.Split("|")
         Dim tablename As String = operation(0)
         Dim whatTodo As String = operation(1)
         Dim stepDescription As String = operation(2)
         Select Case whatTodo
             Case "I"
-                stepDescription = "Inserimento" & stepDescription
+                stepDescription = "Inserimento " & stepDescription
             Case "U"
-                stepDescription = "Aggiornamento" & stepDescription
+                stepDescription = "Aggiornamento " & stepDescription
             Case "IU"
-                stepDescription = "Inserimento/Aggiornamento" & stepDescription
+                stepDescription = "Inserimento/Aggiornamento " & stepDescription
         End Select
-        EditTestoBarra($"Salvataggio: {stepDescription} {tablename}")
+        EditTestoBarra($"Salvataggio: {stepDescription}  {tablename}")
         If entityList.Any() Then
             Dim c As Integer = entityList.Count
             Dim bulkConfig As New BulkConfig With {
@@ -921,15 +1084,26 @@ Partial Module Ordini
             Debug.Print($"{tablename} Ins:{bulkConfig.StatsInfo.StatsNumberInserted} Agg:{bulkConfig.StatsInfo.StatsNumberUpdated}")
             log.AppendLine($"{tablename} Ins:{bulkConfig.StatsInfo.StatsNumberInserted} Agg:{bulkConfig.StatsInfo.StatsNumberUpdated}")
         End If
+        Application.DoEvents()
     End Sub
+    Private Class MiniDistinta
+        Property CodIntegra As String
+        Property DataCessazione As Date
+        Property DataScadenzaFissa As Date
+        Property AllordCliContrattoDistintaServAgg As ICollection(Of AllordCliContrattoDistintaServAgg)
+        Property SaleDocId As Integer
+        Property LineaDistinta As Short
+        Property LineaContratto As Short
+    End Class
 End Module
+
 Module test_LINQ
     Public Sub LinqStringQuery()
         'https://entityframework.net/why-first-query-slow
         'Tipizzare con (Of ) solo le Tabelle singole 1-1 che NON hanno 1-n / Collection
         Dim l = (From o In OrdContext.IntegraInterventi)
         If 1 = 2 Then
-            l = l.Where(Function(oDate) oDate.DataInsert.Value.Date >= "20230101" And oDate.DataInsert.Value.Date <= "20231231")
+            l = l.Where(Function(oDate) oDate.DataInsert.Value.Date >= "20230101" AndAlso oDate.DataInsert.Value.Date <= "20231231")
             If 2 = 2 Then l = l.Where(Function(oFiliale) oFiliale.Filiale.Equals("filialE"))
         End If
         Dim allInterventi = l.ToList

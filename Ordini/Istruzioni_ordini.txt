@@ -55,7 +55,13 @@ una rivalutazione la riga non verrà processata
 Dopo le query ottengo una lista di ordini in cui ho le righe con interventi ( e simili) del periodo.
 	(nota) gli Interventi sono localizzati a livello di Distinta
 Ciclo quindi per ogni ordine:
-	-Cerco se esiste il relativo servizio aggiuntivo
+	-Cerco se esiste il relativo servizio aggiuntivo ( ed esiste sicuro visto che ho fatto il check prima)
+	-Conteggio la franchigia del periodo
+		-Se superano la soglia 
+		-Se non devono essere escluse per altro motivo
+			Scrivere la descrizione degli interventi supplementari e delle descrizioni di fatturazione.
+			Scritte  il dettaglio del servizio alla fattura
+
 	? devo conrollare se la riga fatturativa e' sospesa per qualche motivo ?
 	? devo conrollare se la riga fatturativa o il contratto e' cessato per qualche motivo ?
 	Svuto tabella temporanea a ricreo

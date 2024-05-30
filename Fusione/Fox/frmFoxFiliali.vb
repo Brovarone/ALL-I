@@ -6,7 +6,8 @@
         'ChkOrdNO.Checked = True
         'ChkOrdAL.Checked = True
         'ChkOrdAT.Checked = True
-        ChkOrdAO.Checked = True
+        'ChkOrdAO.Checked = True
+        ChkOrdTO.Checked = True
     End Sub
 
     Private Sub BtnOk_Click(sender As Object, e As EventArgs) Handles BtnOk.Click

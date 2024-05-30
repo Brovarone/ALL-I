@@ -946,8 +946,9 @@ Public Class FLogin
                 Dim result As DialogResult = ff.ShowDialog
                 If result = DialogResult.OK Then
                     Dim bFound As Boolean
-                    Dim contrattiFound(8) As Boolean
+                    Dim contrattiFound(9) As Boolean
                     Dim fileInFolder As String()
+                    Dim allOk As Boolean = True
 
                     Dim listaFiliali As List(Of String) = ff.okFil
                     For Each f As String In listaFiliali
@@ -965,6 +966,7 @@ Public Class FLogin
                                 End If
                             Next
                             If Not contrattiFound(i) Then
+                                allOk = False
                                 MessageBox.Show("Impossibile continuare l'elaborazione dei Contratti a causa di file mancanti: " & contratti(i))
                                 Exit For
                             End If
@@ -975,20 +977,39 @@ Public Class FLogin
                             bFound = sNomeFile.ToUpper.Equals("ACGTRPG")
                             If bFound Then
                                 contrattiFound(8) = True
-                                ReDim Preserve contratti(8)
+                                ReDim Preserve contratti(9)
                                 contratti(8) = sFile
+                                lista.Add(sFile)
+                                Exit For
+                            End If
+
+                        Next
+                        For Each sFile As String In fileInFolder
+                            Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
+
+                            bFound = sNomeFile.ToUpper.Equals("ELENCO CLIENTI SPA")
+                            If bFound Then
+                                contrattiFound(9) = True
+                                ReDim Preserve contratti(9)
+                                contratti(9) = sFile
                                 lista.Add(sFile)
                                 Exit For
                             End If
                         Next
                         If Not contrattiFound(8) Then
+                            allOk = False
                             MessageBox.Show("Impossibile continuare l'elaborazione dei Contratti a causa di file mancanti: ACGTRPG ")
                             Exit For
                         End If
+                        If Not contrattiFound(9) Then
+                            allOk = False
+                            MessageBox.Show("Impossibile continuare l'elaborazione dei Contratti a causa di file mancanti: ELENCO CLIENTI SPA ")
+                            Exit For
+                        End If
 
-                        ProcessaGruppoContratti(contratti, "Contratti")
-                        En_Dis_Controls(True, True, True)
-                    Next
+                        If allOk Then ProcessaGruppoContratti(contratti, "Contratti")
+                            En_Dis_Controls(True, True, True)
+                        Next
 
                 End If
             End Using
@@ -1034,12 +1055,12 @@ Public Class FLogin
         lstStatoConnessione.Items.Add(sFolder)
         My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  " & sFolder & "  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
         For i = 0 To UBound(lista)
-            Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(lista(i))
-            Dim sExt As String = System.IO.Path.GetExtension(lista(i))
+            Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(lista(i)).ToUpper
+            Dim sExt As String = System.IO.Path.GetExtension(lista(i).ToUpper)
             lstStatoConnessione.Items.Add(sNomeFile & sExt)
 
 
-            If sExt.ToUpper = ".CSV" OrElse sExt.ToUpper = ".XLS" OrElse sExt.ToUpper = ".XLSX" Then
+            If sExt = ".CSV" OrElse sExt = ".XLS" OrElse sExt = ".XLSX" Then
                 Dim sFullPath = lista(i)
                 EditTestoBarra("Processo file " & sNomeFile & sExt)
                 prgCopy.Minimum = 0
@@ -1051,7 +1072,7 @@ Public Class FLogin
                     'i CSV non hanno intestazione di solito ottengo il file in 
                     'dsXLS = If(ext.ToUpper = ".CSV", ProcessaCSV(spath, False), ProcessaXLS(spath, True))
                     Select Case sNomeFile
-                        Case "_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV", "ACGTRPG"
+                        Case "_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV", "ACGTRPG", "ELENCO CLIENTI SPA"
                             Try
                                 dsXLS = If(sExt.ToUpper = ".CSV", ProcessaCSV(sFullPath, False), LoadXLS(sFullPath, True, True))
                                 If sNomeFile = "_ONTRORD" AndAlso dsXLS.Tables("_ONTRORD").Columns("GRP CONTRATTO").DataType <> GetType(String) Then
@@ -1062,6 +1083,9 @@ Public Class FLogin
                                     Next
                                     dsXLS.Tables.Remove("_ONTRORD")
                                     dsXLS.Tables.Add(dummyDT)
+                                End If
+                                If sNomeFile = "ELENCO CLIENTI SPA" Then
+                                    dsXLS.Tables(0).TableName = "ELENCO CLIENTI SPA"
                                 End If
                                 bOkImport = True
                                 dsFOX.Add(dsXLS)
@@ -1077,6 +1101,7 @@ Public Class FLogin
                     lstStatoConnessione.Items.Add("Esito elaborazione " & nomegruppo & " (" & sNomeFile & "): " & If(bOkImport, "OK", "Errore"))
                 End If
             End If
+            Application.DoEvents()
         Next
         If bOkImport Then
             Return ImportaContrattiFox(dsFOX)
