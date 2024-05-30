@@ -1808,7 +1808,6 @@ Module Fatture
             'FIX ScriviDatiAggiuntiviSicuritalia, colonne da fixare
             'Colonna HK (F2132)	 	
             'Colonna ID (C_DTAL)  Data AL
-            'Colonna HM (F2134)  NumItem
 
             Dim key As Object() = {idDoc, 0, 0, "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiDDT.NumeroDDT"}
             dt.DefaultView.Sort = "DocId, DocSubID, SubLine, FieldName "
