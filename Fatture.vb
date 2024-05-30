@@ -723,10 +723,16 @@ Module Fatture
                                                                                                 'La SubLine deve aumentare di piu' solo nel caso in cui ci siano piu' righe con riferimento allo stesso ordine 
                                                                                                 'Non dovrebbe succedere
                                                                                                 iSubLinea += 1
-                                                                                                If Not ScriviDatiAggiuntiviSicuritalia(dtEI, idDoc, drXLS(irxls), iLinea, iSubLinea) Then
-                                                                                                    iLinea -= 1
-                                                                                                    iSubLinea -= 1
-                                                                                                End If
+                                                                                                Select Case ScriviDatiAggiuntiviSicuritalia(dtEI, idDoc, drXLS(irxls), iLinea, iSubLinea)
+                                                                                                    Case 0
+                                                                                                        iLinea -= 1
+                                                                                                        iSubLinea -= 1
+                                                                                                    Case 1
+                                                                                                        Exit Select
+                                                                                                    Case 2
+                                                                                                        errori.AppendLine("")
+                                                                                                        sicuritalia.AppendLine("Doc: " & drDoc("DocNo") & " riga: " & .Item("BA").ToString & " NuItem ODA / NSO errato")
+                                                                                                End Select
                                                                                             Else
                                                                                                 sicuritalia.AppendLine("Doc: " & drDoc("DocNo") & " numero ODA / NSO assente")
                                                                                                 'TAG l_Err.Add("E20", "Doc: " & drDoc("DocNo") & " numero ODA / NSO assente", LogLevel.None, "SICURITALIA")
@@ -1053,23 +1059,8 @@ Module Fatture
                                                                             'Riga di totale posso aggiungere la riga all'insieme Rows del Datatable
                                                                             dtDoc.Rows.Add(drDoc)
 
-                                                                            'Se ho un cliente tipo "Sicuritalia" creo la riga Causale per la fattura elettronica
-                                                                            If isTipoSicuritalia AndAlso Not String.IsNullOrWhiteSpace(.Item("BH").ToString) Then
-                                                                                '2.1.1.11 <Causale>
-                                                                                drEI = dtEI.NewRow
-                                                                                drEI("DocID") = idDoc
-                                                                                drEI("DocSubID") = 0
-                                                                                idCausale += 1
-                                                                                drEI("Line") = idCausale
-                                                                                drEI("SubLine") = 0
-                                                                                drEI("FieldName") = "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiGeneraliDocumento.Causale"
-                                                                                drEI("FieldValue") = .Item("BH").ToString ' = Colonna BH (DSARH)
-                                                                                drEI("TBCreatedID") = My.Settings.mLOGINID 'ID utente
-                                                                                drEI("TBModifiedID") = My.Settings.mLOGINID 'ID utente
-                                                                                dtEI.Rows.Add(drEI)
-                                                                            End If
-
                                                                             '28/06/2021 : de campo DSARH Colonna BH non e' vuoto scrivo nella Causale
+                                                                            '30/05/2024 : tolto controllo si isTipoSicuritalia ( di sopra)
                                                                             If Not String.IsNullOrWhiteSpace(.Item("BH").ToString) Then
                                                                                 '2.1.1.11 <Causale>
                                                                                 drEI = dtEI.NewRow
@@ -1653,9 +1644,9 @@ Module Fatture
     ''' 2.1.8 Dati DDT
     ''' </summary>
     ''' <param name="dt"></param>
-    ''' <param name="id"></param>
+    ''' <param name="idDoc"></param>
     ''' <param name="row"></param>
-    Private Function ScriviDatiAggiuntiviSicuritalia(ByRef dt As DataTable, id As Integer, row As DataRow, line As Integer, subLine As Integer) As Boolean
+    Private Function ScriviDatiAggiuntiviSicuritalia(ByRef dt As DataTable, idDoc As Integer, row As DataRow, line As Integer, subLine As Integer) As Integer
         Dim writeSomething As Boolean = False
         Dim dr As DataRow
         Dim newline As Integer = line
@@ -1669,27 +1660,25 @@ Module Fatture
             'Colonna BA (NRRGH) Numero Riga 2.1.2.1
             'Colonna W ( RFCLH) Riferimento Cliente - Numero Ordine d'acquisto, unico per tutte le righe della fattura ==> Obbligatorio se si specificano CIG e/o CUP
 
-            'Controllo che non esistano già  sulla stessa "Line"
-            'potrebbe averlo scritto Un altra procedura ( tolgo filtro da Line)
-            Dim key As Object() = {id, 0, 0, "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiOrdineAcquisto.IdDocumento"}
-            dt.DefaultView.Sort = "DocId, DocSubID, SubLine, FieldName "
+            'Controllo che non esistano già record sulla stessa "Line"
+            'potrebbero averlo fatto altra procedure ( tolgo quindi filtro da Line)
+            Dim key As Object() = {idDoc, 0, line - 1, 0, "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiOrdineAcquisto.IdDocumento"}
+            dt.DefaultView.Sort = "DocId, DocSubID, Line, SubLine, FieldName "
             Dim drv As DataRowView() = dt.DefaultView.FindRows(key)
             If drv.Length > 0 Then
-                'nel caso di piu' righe mi prendo la prima e pace.
-                'possibile incongruenza ma iniziamo cosi'
                 newline = drv(0).Item("Line")
                 bOrdFound = True
             Else
-                'Ho già l'incremento
-                newline = line
+                'Ho già l'incremento uso il parametro passato
+                newline = line - 1
                 '2.1.2.2 <IdDocumento> 
                 dr = dt.NewRow
-                dr("DocID") = id
+                dr("DocID") = idDoc
                 dr("DocSubID") = 0
                 dr("Line") = newline
                 dr("SubLine") = 0
                 dr("FieldName") = "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiOrdineAcquisto.IdDocumento"
-                dr("FieldValue") = row.Item("IE").ToString
+                dr("FieldValue") = row.Item("HG").ToString
                 dr("TBCreatedID") = My.Settings.mLOGINID 'ID utente
                 dr("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                 dt.Rows.Add(dr)
@@ -1697,10 +1686,10 @@ Module Fatture
 
             '2.1.2.1 <RiferimentoNumeroLinea>
             dr = dt.NewRow
-            dr("DocID") = id
+            dr("DocID") = idDoc
             dr("DocSubID") = 0
             dr("Line") = newline
-            dr("SubLine") = subLine
+            dr("SubLine") = 1 'subLine
             dr("FieldName") = "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiOrdineAcquisto.RiferimentoNumeroLinea"
             dr("FieldValue") = row.Item("BA").ToString
             dr("TBCreatedID") = My.Settings.mLOGINID 'ID utente
@@ -1711,7 +1700,7 @@ Module Fatture
             ''2.1.2.3 <Data>
             'If Not String.IsNullOrWhiteSpace(row.Item("AK").ToString) Then
             '    dr = dt.NewRow
-            '    dr("DocID") = id
+            '    dr("DocID") = idDoc
             '    dr("DocSubID") = 0
             '    dr("Line") = newline
             '    dr("SubLine") = 0
@@ -1724,65 +1713,71 @@ Module Fatture
 
             '2.1.2.4 <NumItem> 
             'In teoria il dato non ce l'ho, metto nr riga fattura
-            'Se ho già una riga conl'idDocumento aggiungo
-            Dim writeNuItem As Boolean = True
-            If bOrdFound Then
-                Dim keyNu As Object() = {id, 0, newline, 0, "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiOrdineAcquisto.NumItem"}
-                dt.DefaultView.Sort = "DocId, DocSubID, Line, SubLine, FieldName "
-                Dim drvNu As DataRowView() = dt.DefaultView.FindRows(keyNu)
-                If drvNu.Length > 0 Then
-                    drvNu(0)("FieldValue") = drvNu(0)("FieldValue") & "," & row.Item("BA").ToString
-                    'CONTROLLO DI NON ANDARE OLTE 20 CARATTERI = LIMITE TRACCIATO AdE
-                    If Len(drvNu(0)("FieldValue")) > 20 Then
-                        Dim nValue As String = drvNu(0)("FieldValue")
-                        Dim lastComa As Integer = InStrRev(nValue, ",", 20)
-                        nValue = Left(nValue, lastComa - 1)
-                        Select Case lastComa
-                            Case 16, 17, 18
-                                nValue += "..."
-                            Case 19
-                                nValue += ".."
-                            Case 20
-                                nValue += "."
-                        End Select
-                        drvNu(0)("FieldValue") = nValue
+            'Se ho già una riga con l'idDocumento aggiungo
+            '30/05/2024 : Il NumItem deve essere e' il nr di riga dell'ordine ODA e viene riportato in coda al numero ordine (HG) e messo nella colonna IE
+            Try
+                Dim writeNuItem As Boolean = True
+                Dim odaNr As String = row.Item("HG").ToString
+                Dim nuItem As String = Mid(row.Item("IE").ToString, odaNr.Length + 1).TrimStart("0")
+                If bOrdFound Then
+                    Dim keyNu As Object() = {idDoc, 0, newline, 0, "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiOrdineAcquisto.NumItem"}
+                    dt.DefaultView.Sort = "DocId, DocSubID, Line, SubLine, FieldName "
+                    Dim drvNu As DataRowView() = dt.DefaultView.FindRows(keyNu)
+                    If drvNu.Length > 0 Then
+                        drvNu(0)("FieldValue") = drvNu(0)("FieldValue") & "," & row.Item("BA").ToString
+                        'CONTROLLO DI NON ANDARE OLTE 20 CARATTERI = LIMITE TRACCIATO AdE
+                        If Len(drvNu(0)("FieldValue")) > 20 Then
+                            Dim nValue As String = drvNu(0)("FieldValue")
+                            Dim lastComa As Integer = InStrRev(nValue, ",", 20)
+                            nValue = Left(nValue, lastComa - 1)
+                            Select Case lastComa
+                                Case 16, 17, 18
+                                    nValue += "..."
+                                Case 19
+                                    nValue += ".."
+                                Case 20
+                                    nValue += "."
+                            End Select
+                            drvNu(0)("FieldValue") = nValue
+                        End If
+                        writeNuItem = False
                     End If
-                    writeNuItem = False
                 End If
-            End If
-            If writeNuItem Then
+                If writeNuItem Then
+                    dr = dt.NewRow
+                    dr("DocID") = idDoc
+                    dr("DocSubID") = 0
+                    dr("Line") = newline
+                    dr("SubLine") = 0
+                    dr("FieldName") = "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiOrdineAcquisto.NumItem"
+                    dr("FieldValue") = nuItem
+                    dr("TBCreatedID") = My.Settings.mLOGINID 'ID utente
+                    dr("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+                    dt.Rows.Add(dr)
+                End If
+            Catch ex As Exception
+                Return 2
+            End Try
+            '2.1.2.5 <CodiceCommessaConvenzione>
+            If Not bOrdFound AndAlso Not String.IsNullOrWhiteSpace(row.Item("HG").ToString) Then
                 dr = dt.NewRow
-                dr("DocID") = id
+                dr("DocID") = idDoc
                 dr("DocSubID") = 0
                 dr("Line") = newline
                 dr("SubLine") = 0
-                dr("FieldName") = "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiOrdineAcquisto.NumItem"
-                dr("FieldValue") = row.Item("BA").ToString
+                dr("FieldName") = "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiOrdineAcquisto.CodiceCommessaConvenzione"
+                dr("FieldValue") = row.Item("HG").ToString
                 dr("TBCreatedID") = My.Settings.mLOGINID 'ID utente
                 dr("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                 dt.Rows.Add(dr)
             End If
-
-            ''2.1.2.5 <CodiceCommessaConvenzione>
-            'If Not String.IsNullOrWhiteSpace(row.Item("HG").ToString) Then
-            '    dr = dt.NewRow
-            '    dr("DocID") = id
-            '    dr("DocSubID") = 0
-            '    dr("Line") = line
-            '    dr("SubLine") = 0
-            '    dr("FieldName") = "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiOrdineAcquisto.CodiceCommessaConvenzione"
-            '    dr("FieldValue") = row.Item("HG").ToString
-            '    dr("TBCreatedID") = My.Settings.mLOGINID 'ID utente
-            '    dr("TBModifiedID") = My.Settings.mLOGINID 'ID utente
-            '    dt.Rows.Add(dr)
-            'End If
             ''2.1.2.6 <CUP>
             'If Not String.IsNullOrWhiteSpace(row.Item("Y").ToString) AndAlso row.Item("Y").ToString <> "." Then
             '    isCigOrCup = True
             '    dr = dt.NewRow
-            '    dr("DocID") = id
+            '    dr("DocID") = idDoc
             '    dr("DocSubID") = 0
-            '    dr("Line") = line
+            '    dr("Line") = newline
             '    dr("SubLine") = 0
             '    dr("FieldName") = "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiOrdineAcquisto.CodiceCUP"
             '    dr("FieldValue") = row.Item("Y").ToString
@@ -1794,9 +1789,9 @@ Module Fatture
             'If Not String.IsNullOrWhiteSpace(row.Item("X").ToString) AndAlso row.Item("X").ToString <> "." Then
             '    isCigOrCup = True
             '    dr = dt.NewRow
-            '    dr("DocID") = id
+            '    dr("DocID") = idDoc
             '    dr("DocSubID") = 0
-            '    dr("Line") = line
+            '    dr("Line") = newline
             '    dr("SubLine") = 0
             '    dr("FieldName") = "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiOrdineAcquisto.CodiceCIG"
             '    dr("FieldValue") = row.Item("X").ToString
@@ -1815,7 +1810,7 @@ Module Fatture
             'Colonna ID (C_DTAL)  Data AL
             'Colonna HM (F2134)  NumItem
 
-            Dim key As Object() = {id, 0, 0, "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiDDT.NumeroDDT"}
+            Dim key As Object() = {idDoc, 0, 0, "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiDDT.NumeroDDT"}
             dt.DefaultView.Sort = "DocId, DocSubID, SubLine, FieldName "
             Dim drv As DataRowView() = dt.DefaultView.FindRows(key)
             If drv.Length > 0 Then
@@ -1827,7 +1822,7 @@ Module Fatture
                 newlineDDT = 1
                 '2.1.8.1 <NumeroDDT>
                 dr = dt.NewRow
-                dr("DocID") = id
+                dr("DocID") = idDoc
                 dr("DocSubID") = 0
                 dr("Line") = newlineDDT
                 dr("SubLine") = 0
@@ -1839,7 +1834,7 @@ Module Fatture
 
                 '2.1.8.2 <DataDDT>
                 dr = dt.NewRow
-                dr("DocID") = id
+                dr("DocID") = idDoc
                 dr("DocSubID") = 0
                 dr("Line") = newlineDDT
                 dr("SubLine") = 0
@@ -1852,7 +1847,7 @@ Module Fatture
 
             'Dim writeNuRif As Boolean = True
             'If bOrdFound Then
-            '    Dim keyNu As Object() = {id, 0, newlineDDT, 0, "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiDDT.RiferimentoNumeroLinea"}
+            '    Dim keyNu As Object() = {idDoc, 0, newlineDDT, 0, "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiDDT.RiferimentoNumeroLinea"}
             '    dt.DefaultView.Sort = "DocId, DocSubID, Line, SubLine, FieldName "
             '    Dim drvNu As DataRowView() = dt.DefaultView.FindRows(keyNu)
             '    If drvNu.Length > 0 Then
@@ -1864,7 +1859,7 @@ Module Fatture
 
             '2.1.8.3 <RiferimentoNumeroLinea>
             dr = dt.NewRow
-            dr("DocID") = id
+            dr("DocID") = idDoc
             dr("DocSubID") = 0
             dr("Line") = newlineDDT
             dr("SubLine") = subLine
@@ -1875,7 +1870,7 @@ Module Fatture
             dt.Rows.Add(dr)
 
         End If
-        Return writeSomething
+        Return writeSomething ' = 1 vero // 0 = falso
     End Function
 
     ''' <summary>
