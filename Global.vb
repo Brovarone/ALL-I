@@ -908,7 +908,7 @@ Public Module Common
         'value = value.Replace("  ", " ")
         'Dim words = value.Split(" "c)
         Dim lines = Regex.Split(Regex.Replace(Regex.Replace(value, vbCrLf, Environment.NewLine), "  ", " "), Environment.NewLine)
-        Dim sb = New StringBuilder()
+        'Dim sb = New StringBuilder()
         Dim currString = New StringBuilder()
         For Each line In lines
             If Len(line) <= charactersToWrapAt Then
@@ -918,7 +918,7 @@ Public Module Common
             Dim words = Regex.Split(line, " "c)
             For Each word In words
                 If currString.Length + word.Length + 1 < charactersToWrapAt Then
-                    sb.AppendFormat(" {0}", word)
+                    'sb.AppendFormat(" {0}", word)
                     currString.AppendFormat(" {0}", word)
                 Else
                     currString.Clear()
@@ -1241,14 +1241,14 @@ Module KeyValidation
         'chr 8 = Backspace
         Dim numbers As Windows.Forms.TextBox = sender
         If (e.KeyChar = ".") Then e.KeyChar = ","
-        If InStr("1234567890,", e.KeyChar) = 0 And Asc(e.KeyChar) <> 8 Or (e.KeyChar = "," And InStr(numbers.Text, ",") > 0) Then
+        If InStr("1234567890,", e.KeyChar) = 0 AndAlso Asc(e.KeyChar) <> 8 OrElse (e.KeyChar = "," AndAlso InStr(numbers.Text, ",") > 0) Then
             e.KeyChar = Chr(0)
             e.Handled = True
         End If
     End Sub
     Public Sub Phonenumber_Leave(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs)
         Dim numbers As Windows.Forms.TextBox = sender
-        If InStr("1234567890.()-+ ", e.KeyChar) = 0 And Asc(e.KeyChar) <> 8 Or (e.KeyChar = "." And InStr(numbers.Text, ".") > 0) Then
+        If InStr("1234567890.()-+ ", e.KeyChar) = 0 AndAlso Asc(e.KeyChar) <> 8 OrElse (e.KeyChar = "." AndAlso InStr(numbers.Text, ".") > 0) Then
             e.KeyChar = Chr(0)
             e.Handled = True
         End If
@@ -1270,13 +1270,13 @@ Module KeyValidation
         Dim Email As Windows.Forms.TextBox = sender
         If Email.Text <> "" Then
             Dim rex As Match = Regex.Match(Trim(Email.Text), "^([0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,3})$", RegexOptions.IgnoreCase)
-            If rex.Success = False Then
+            If rex.Success Then
+                Email.BackColor = Color.White
+            Else
                 MessageBox.Show("Please Enter a valid Email Address", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information)
                 Email.BackColor = Color.Red
                 Email.Focus()
                 Exit Sub
-            Else
-                Email.BackColor = Color.White
             End If
         End If
     End Sub

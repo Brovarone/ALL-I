@@ -33,7 +33,7 @@
             Case "L1"
                 esito = "XXXXX"
             Case "MA"
-                esito = "XXXXX"
+                esito = "MONALL"
             Case "NO"
                 esito = ""
             Case "O1"
