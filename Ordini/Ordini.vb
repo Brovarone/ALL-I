@@ -56,6 +56,8 @@ Partial Module Ordini
         Dim cliente As String = String.Empty
         Dim bSingolaFiliale As Boolean
         Dim filiale As String = String.Empty
+        Dim bPriorita As Boolean
+        Dim priorita As String = String.Empty
         Dim dataFattDa As Date
         Dim sDataFattDa As String = dataFattDa.ToShortDateString
         Dim dataFattA As Date
@@ -84,6 +86,9 @@ Partial Module Ordini
                 cliente = ff.TxtOrdCliente.Text
                 bSingolaFiliale = ff.ChkFiliale.Checked
                 filiale = ff.TxtOrdFiliale.Text
+                bPriorita = ff.ChkPriorita.Checked
+                'Integer.TryParse(ff.TxtordPriorita.Text, priorita)
+                priorita = ff.TxtordPriorita.Text
                 dataFattDa = OnlyDate(ff.DtaFattDa.Value) 'Data giorno di fatturazione
                 dataFattA = OnlyDate(ff.DtaFattA.Value) 'Data giorno di fatturazione
                 p_Tutti = ff.ChkP_Tutti.Checked
@@ -105,6 +110,7 @@ Partial Module Ordini
                 filtri.AppendLine("Ordine : " & If(bSingoloOrdine, nrOrd, "TUTTI"))
                 filtri.AppendLine("Cliente : " & If(bSingoloCliente, cliente, "TUTTI"))
                 filtri.AppendLine("Filiale : " & If(bSingolaFiliale, filiale, "TUTTI"))
+                filtri.AppendLine("Priorità : " & If(bSingolaFiliale, filiale, "TUTTI"))
                 filtri.AppendLine("Dalla data Fatt. :" & dataFattDa.ToShortDateString)
                 filtri.AppendLine("Alla data Fatt. :" & dataFattA.ToShortDateString)
                 If p_Tutti Then
@@ -194,9 +200,12 @@ Partial Module Ordini
             If bSingoloCliente Then q = q.Where(Function(oCli) oCli.Customer.Equals(cliente))
             If bSingoloOrdine Then q = q.Where(Function(oNrOrd) oNrOrd.InternalOrdNo.Equals(nrOrd))
             If bSingolaFiliale Then q = q.Where(Function(oFiliale) oFiliale.CostCenter.Equals(filiale))
+            If bPriorita Then q = q.Where(Function(oPriorita) oPriorita.Priority.ToString.Equals(priorita))
 
+            Dim iAllOrders As IQueryable(Of MaSaleOrd) = q
             'ESEGUO LA QUERY (ALDO 30/06 ritorna 1 invece che 2)
-            Dim allOrders = q.ToList
+            'Operazione molto lunga che non faccio in quanto non serve
+            'Dim orderList = q.ToList
 
             'Creo le entities che usero' poi con BulkInsert
             Dim efMaSaleOrd As New List(Of MaSaleOrd)
@@ -210,8 +219,8 @@ Partial Module Ordini
 
 #End Region
 
-            If allOrders.Any Then
-                totOrdini = allOrders.Count
+            If iAllOrders.Any Then
+                totOrdini = iAllOrders.Count
                 bIsSomething = True
                 Debug.Print("Ordini Estratti : " & totOrdini.ToString)
                 My.Application.Log.DefaultFileLogWriter.WriteLine("Ordini Estratti : " & totOrdini.ToString)
@@ -232,7 +241,7 @@ Partial Module Ordini
                 Dim dDefPercIva As Double = Math.Round(codiciIva.FirstOrDefault(Function(tax) tax.TaxCode = sDefCodIva).Perc.Value, decPerc)
 #End Region
                 'Ciclo su tutti gli ordini
-                For Each o In allOrders
+                For Each o In iAllOrders
                     AvanzaBarra()
                     Debug.Print("Ordine: " & o.InternalOrdNo)
                     debugging.AppendLine("Ordine: " & o.InternalOrdNo)
@@ -303,12 +312,12 @@ Partial Module Ordini
 #End Region
 #Region "Variabili Correnti"
                         Dim cOrdRow As New CurOrdRow(c) With {
-                            .CanoneFuoriRangeDate = isDaEscludere,
-                            .Contropartita = If(String.IsNullOrWhiteSpace(c.MaItems.SaleOffset), sDefContropartita, c.MaItems.SaleOffset),
-                            .CodIva = If(String.IsNullOrWhiteSpace(c.CodiceIva), sDefCodIva, c.CodiceIva),
-                            .PercIva = Math.Round(codiciIva.FirstOrDefault(Function(tax) tax.TaxCode = .CodIva).Perc.Value, decPerc),
-                            .Parent = cOrd
-                        }
+                        .CanoneFuoriRangeDate = isDaEscludere,
+                        .Contropartita = If(String.IsNullOrWhiteSpace(c.MaItems.SaleOffset), sDefContropartita, c.MaItems.SaleOffset),
+                        .CodIva = If(String.IsNullOrWhiteSpace(c.CodiceIva), sDefCodIva, c.CodiceIva),
+                        .PercIva = Math.Round(codiciIva.FirstOrDefault(Function(tax) tax.TaxCode = .CodIva).Perc.Value, decPerc),
+                        .Parent = cOrd
+                    }
                         Dim attDaRifatturare As New List(Of AllordCliAttivita)
                         Dim isISTAT As Boolean = False
                         Dim attIstat As New List(Of AllordCliAttivita)
@@ -507,45 +516,45 @@ Partial Module Ordini
                                 Dim periodoRif As String = "Periodo dal " & aDaRif.DataInizio.Value.ToString("dd/MM/yyyy") & " al " & aDaRif.DataFine.Value.ToString("dd/MM/yyyy")
                                 If aDaRif.ValUnit = 0 Then errori.AppendLine("Ordine: " & cOrd.OrdNo & " Pos.: " & (curLastPosition + iNrRigheAValore) & " Servizio: " & cOrdRow.Item & " con valore unitario di ripresa uguale a 0.00")
                                 Dim rRif As New MaSaleOrdDetails With {
-                                    .Line = cOrd.LastLine + iNewRowsCount,
-                                    .Position = curLastPosition + iNrRigheAValore,
-                                    .SubId = cOrd.LastSubId + iNewRowsCount,
-                                    .SaleOrdId = cOrd.SaleOrdId,
-                                    .LineType = LineType.Servizio,
-                                    .Item = cOrdRow.Item,
-                                    .Description = If(String.IsNullOrWhiteSpace(cOrdRow.Description), periodoRif, cOrdRow.Description & " " & periodoRif),
-                                    .UoM = cOrdRow.UoM,
-                                    .PacksUoM = cOrdRow.UoM,
-                                    .Qty = aDaRif.CanoniRipresi,
-                                    .UnitValue = Math.Round(aDaRif.ValUnit.Value, decTax), ' Pesco il valore unitario dall'attività
-                                    .NetPrice = Math.Round(aDaRif.ValUnit.Value, decTax),
-                                    .TaxableAmount = Math.Round(aDaRif.CanoniRipresi * aDaRif.ValUnit.Value, decTax),
-                                    .TaxCode = cOrdRow.CodIva,
-                                    .TotalAmount = Math.Round((aDaRif.CanoniRipresi * aDaRif.ValUnit.Value) * ((100 + cOrdRow.PercIva) / 100), decTax),
-                                    .ExpectedDeliveryDate = cOrdRow.DataPrevistaConsegna,
-                                    .ConfirmedDeliveryDate = cOrdRow.DataConfermaConsegna,
-                                    .AllNrCanoni = aDaRif.CanoniRipresi,
-                                    .AllCanoniDataI = aDaRif.DataInizio.Value,
-                                    .AllCanoniDataF = aDaRif.DataFine.Value,
-                                    .Invoiced = "0",
-                                    .Notes = Trim(Left(aDaRif.Nota.ToString, 32)),
-                                    .Job = cOrd.Commessa,
-                                    .CostCenter = cOrd.CdC,
-                                    .ContractCode = cOrd.CIG,
-                                    .ProjectCode = cOrd.CUP,
-                                    .Offset = cOrdRow.Contropartita,
-                                    .InternalOrdNo = cOrd.OrdNo,
-                                    .Customer = cOrd.Cliente,
-                                    .OrderDate = cOrd.OrdDate,
-                                    .NoOfPacks = 0,
-                                    .ProductionPlanLine = 0,
-                                    .ExternalLineReference = 0,
-                                    .InEi = 0,
-                                    .Tbcreated = Now,
-                                    .Tbmodified = Now,
-                                    .TbcreatedId = sLoginId,
-                                    .TbmodifiedId = sLoginId
-                                }
+                                .Line = cOrd.LastLine + iNewRowsCount,
+                                .Position = curLastPosition + iNrRigheAValore,
+                                .SubId = cOrd.LastSubId + iNewRowsCount,
+                                .SaleOrdId = cOrd.SaleOrdId,
+                                .LineType = LineType.Servizio,
+                                .Item = cOrdRow.Item,
+                                .Description = If(String.IsNullOrWhiteSpace(cOrdRow.Description), periodoRif, cOrdRow.Description & " " & periodoRif),
+                                .UoM = cOrdRow.UoM,
+                                .PacksUoM = cOrdRow.UoM,
+                                .Qty = aDaRif.CanoniRipresi,
+                                .UnitValue = Math.Round(aDaRif.ValUnit.Value, decTax), ' Pesco il valore unitario dall'attività
+                                .NetPrice = Math.Round(aDaRif.ValUnit.Value, decTax),
+                                .TaxableAmount = Math.Round(aDaRif.CanoniRipresi * aDaRif.ValUnit.Value, decTax),
+                                .TaxCode = cOrdRow.CodIva,
+                                .TotalAmount = Math.Round((aDaRif.CanoniRipresi * aDaRif.ValUnit.Value) * ((100 + cOrdRow.PercIva) / 100), decTax),
+                                .ExpectedDeliveryDate = cOrdRow.DataPrevistaConsegna,
+                                .ConfirmedDeliveryDate = cOrdRow.DataConfermaConsegna,
+                                .AllNrCanoni = aDaRif.CanoniRipresi,
+                                .AllCanoniDataI = aDaRif.DataInizio.Value,
+                                .AllCanoniDataF = aDaRif.DataFine.Value,
+                                .Invoiced = "0",
+                                .Notes = Trim(Left(aDaRif.Nota.ToString, 32)),
+                                .Job = cOrd.Commessa,
+                                .CostCenter = cOrd.CdC,
+                                .ContractCode = cOrd.CIG,
+                                .ProjectCode = cOrd.CUP,
+                                .Offset = cOrdRow.Contropartita,
+                                .InternalOrdNo = cOrd.OrdNo,
+                                .Customer = cOrd.Cliente,
+                                .OrderDate = cOrd.OrdDate,
+                                .NoOfPacks = 0,
+                                .ProductionPlanLine = 0,
+                                .ExternalLineReference = 0,
+                                .InEi = 0,
+                                .Tbcreated = Now,
+                                .Tbmodified = Now,
+                                .TbcreatedId = sLoginId,
+                                .TbmodifiedId = sLoginId
+                            }
                                 'Aggiungo la riga alla collection
                                 efMaSaleOrdDetails.Add(rRif)
                                 Debug.Print("### Riga da rifatt:(" & rRif.Position.ToString & ") " & aDaRif.Attivita)
@@ -559,13 +568,13 @@ Partial Module Ordini
                                 iNewRowsCount += 1
                                 iNrRigheAValore += 1
                                 Dim r As New MaSaleOrdDetails With {
-                                    .Line = cOrd.LastLine + iNewRowsCount,
-                                    .Position = curLastPosition + iNrRigheAValore,
-                                    .SubId = cOrd.LastSubId + iNewRowsCount,
-                                    .SaleOrdId = cOrd.SaleOrdId,
-                                    .LineType = LineType.Servizio,
-                                    .Item = cOrdRow.Item
-                                    }
+                                .Line = cOrd.LastLine + iNewRowsCount,
+                                .Position = curLastPosition + iNrRigheAValore,
+                                .SubId = cOrd.LastSubId + iNewRowsCount,
+                                .SaleOrdId = cOrd.SaleOrdId,
+                                .LineType = LineType.Servizio,
+                                .Item = cOrdRow.Item
+                                }
                                 Debug.Print("### R Ord:" & r.Position.ToString)
                                 debugging.AppendLine(" *R:" & r.Position.ToString)
                                 Dim periodoDataFine As String = cOrdRow.PeriodoDataFin.ToShortDateString
@@ -643,45 +652,45 @@ Partial Module Ordini
                                 iNrRigheNota += 1
                                 'bScrittoDescrizioni = True
                                 Dim rd As New MaSaleOrdDetails With {
-                                .Line = cOrd.LastLine + iNewRowsCount,
-                                .Position = 0,
-                                .SubId = cOrd.LastSubId + iNewRowsCount,
-                                .SaleOrdId = cOrd.SaleOrdId,
-                                .LineType = LineType.Nota,
-                                .Description = aIst.TestoFattura,
-                                .InEi = "1",
-                                .ExpectedDeliveryDate = cOrdRow.DataPrevistaConsegna,
-                                .ConfirmedDeliveryDate = cOrdRow.DataConfermaConsegna, ' sDataNulla
-                                .InternalOrdNo = cOrd.OrdNo,
-                                .Customer = cOrd.Cliente,
-                                .OrderDate = cOrd.OrdDate,
-                                .NoOfPacks = 0,
-                                .ProductionPlanLine = 0,
-                                .ExternalLineReference = 0,
-                                .Tbcreated = Now,
-                                .Tbmodified = Now,
-                                .TbcreatedId = sLoginId,
-                                .TbmodifiedId = sLoginId,
-                                .Item = String.Empty,
-                                .UoM = String.Empty,
-                                .Qty = 0,
-                                .UnitValue = 0,
-                                .TaxableAmount = 0,
-                                .TotalAmount = 0,
-                                .PacksUoM = String.Empty,
-                                .TaxCode = String.Empty,
-                                .Job = String.Empty,
-                                .CostCenter = String.Empty,
-                                .Offset = String.Empty,
-                                .Notes = String.Empty,
-                                .NetPrice = 0,
-                                .ContractCode = String.Empty,
-                                .ProjectCode = String.Empty,
-                                .AllNrCanoni = 0,
-                                .AllCanoniDataI = sDataNulla,
-                                .AllCanoniDataF = sDataNulla,
-                                .Invoiced = "0"
-                            }
+                            .Line = cOrd.LastLine + iNewRowsCount,
+                            .Position = 0,
+                            .SubId = cOrd.LastSubId + iNewRowsCount,
+                            .SaleOrdId = cOrd.SaleOrdId,
+                            .LineType = LineType.Nota,
+                            .Description = aIst.TestoFattura,
+                            .InEi = "1",
+                            .ExpectedDeliveryDate = cOrdRow.DataPrevistaConsegna,
+                            .ConfirmedDeliveryDate = cOrdRow.DataConfermaConsegna, ' sDataNulla
+                            .InternalOrdNo = cOrd.OrdNo,
+                            .Customer = cOrd.Cliente,
+                            .OrderDate = cOrd.OrdDate,
+                            .NoOfPacks = 0,
+                            .ProductionPlanLine = 0,
+                            .ExternalLineReference = 0,
+                            .Tbcreated = Now,
+                            .Tbmodified = Now,
+                            .TbcreatedId = sLoginId,
+                            .TbmodifiedId = sLoginId,
+                            .Item = String.Empty,
+                            .UoM = String.Empty,
+                            .Qty = 0,
+                            .UnitValue = 0,
+                            .TaxableAmount = 0,
+                            .TotalAmount = 0,
+                            .PacksUoM = String.Empty,
+                            .TaxCode = String.Empty,
+                            .Job = String.Empty,
+                            .CostCenter = String.Empty,
+                            .Offset = String.Empty,
+                            .Notes = String.Empty,
+                            .NetPrice = 0,
+                            .ContractCode = String.Empty,
+                            .ProjectCode = String.Empty,
+                            .AllNrCanoni = 0,
+                            .AllCanoniDataI = sDataNulla,
+                            .AllCanoniDataF = sDataNulla,
+                            .Invoiced = "0"
+                        }
                                 'Aggiungo la riga alla collection
                                 efMaSaleOrdDetails.Add(rd)
                                 'Aggiungo l'attività alla collection ( per aggionare il flag Fatturata)
@@ -1085,16 +1094,17 @@ Partial Module Ordini
             If bSingoloOrdine Then q = q.Where(Function(oNrOrd) oNrOrd.InternalOrdNo.Equals(nrOrd))
             If bSingolaFiliale Then q = q.Where(Function(oFiliale) oFiliale.CostCenter.Equals(filiale))
 
+            Dim iAllOrders As IQueryable(Of MaSaleOrd) = q
             'ESEGUO LA QUERY
-            Dim allOrders = q.ToList
+            'Dim orderList = q.ToList
 
             'Creo le entities che usero' poi con BulkInsert
             Dim efAllordCliAttivita As New List(Of AllordCliAttivita)
             Dim efAllordCliContratto As New List(Of AllordCliContratto)
 #End Region
 
-            If allOrders.Any Then
-                totOrdini = allOrders.Count
+            If iAllOrders.Any Then
+                totOrdini = iAllOrders.Count
                 bIsSomething = True
                 Debug.Print("Ordini Estratti : " & totOrdini.ToString)
                 My.Application.Log.DefaultFileLogWriter.WriteLine("Ordini Estratti : " & totOrdini.ToString)
@@ -1105,7 +1115,7 @@ Partial Module Ordini
                 FLogin.prgCopy.Step = 1
 
                 'Ciclo su tutti gli ordini
-                For Each o In allOrders
+                For Each o In iAllOrders
                     AvanzaBarra()
                     Debug.Print("Ordine: " & o.InternalOrdNo)
                     debugging.AppendLine("Ordine: " & o.InternalOrdNo)
