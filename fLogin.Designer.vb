@@ -90,6 +90,7 @@ Partial Class FLogin
         Me.TabCespiti = New System.Windows.Forms.TabPage()
         Me.ChkCespiti = New System.Windows.Forms.CheckBox()
         Me.TabContrattiFox = New System.Windows.Forms.TabPage()
+        Me.ChkOrdiniFox = New System.Windows.Forms.CheckBox()
         Me.txtTemp_FoxFolder = New System.Windows.Forms.TextBox()
         Me.ChkContrattiFox = New System.Windows.Forms.CheckBox()
         Me.BtnProcessa = New System.Windows.Forms.Button()
@@ -100,8 +101,9 @@ Partial Class FLogin
         Me.BtnPath = New System.Windows.Forms.Button()
         Me.lblPath = New System.Windows.Forms.Label()
         Me.PanelDB = New System.Windows.Forms.Panel()
+        Me.BtnOrdiniFox = New System.Windows.Forms.Button()
         Me.ChkEscludiControllo = New System.Windows.Forms.CheckBox()
-        Me.BtnFox = New System.Windows.Forms.Button()
+        Me.BtnImportFox = New System.Windows.Forms.Button()
         Me.CHKDBTemporaneo = New System.Windows.Forms.CheckBox()
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
@@ -109,7 +111,7 @@ Partial Class FLogin
         Me.PanelUser = New System.Windows.Forms.Panel()
         Me.BtnOrdiniISTAT = New System.Windows.Forms.Button()
         Me.BtnOrdini = New System.Windows.Forms.Button()
-        Me.Button1 = New System.Windows.Forms.Button()
+        Me.BtnXMLLog = New System.Windows.Forms.Button()
         Me.BtnAnalitica = New System.Windows.Forms.Button()
         Me.BtnLastLog = New System.Windows.Forms.Button()
         Me.BtnPaghe = New System.Windows.Forms.Button()
@@ -156,6 +158,8 @@ Partial Class FLogin
         Me.ImportaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.CancellaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ContrattiFoxToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.CheckIntegraToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.OrdiniFoxToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SettingsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripTracciatoVecchio = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItemDebugging = New System.Windows.Forms.ToolStripMenuItem()
@@ -173,7 +177,6 @@ Partial Class FLogin
         Me.SearchToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.toolStripSeparator5 = New System.Windows.Forms.ToolStripSeparator()
         Me.AboutToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.CheckIntegraToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabFusione.SuspendLayout()
@@ -897,6 +900,7 @@ Partial Class FLogin
         'TabContrattiFox
         '
         Me.TabContrattiFox.BackColor = System.Drawing.SystemColors.Control
+        Me.TabContrattiFox.Controls.Add(Me.ChkOrdiniFox)
         Me.TabContrattiFox.Controls.Add(Me.txtTemp_FoxFolder)
         Me.TabContrattiFox.Controls.Add(Me.ChkContrattiFox)
         Me.TabContrattiFox.Location = New System.Drawing.Point(4, 22)
@@ -905,6 +909,16 @@ Partial Class FLogin
         Me.TabContrattiFox.Size = New System.Drawing.Size(322, 101)
         Me.TabContrattiFox.TabIndex = 9
         Me.TabContrattiFox.Text = "Contratti"
+        '
+        'ChkOrdiniFox
+        '
+        Me.ChkOrdiniFox.AutoSize = True
+        Me.ChkOrdiniFox.Location = New System.Drawing.Point(6, 55)
+        Me.ChkOrdiniFox.Name = "ChkOrdiniFox"
+        Me.ChkOrdiniFox.Size = New System.Drawing.Size(71, 17)
+        Me.ChkOrdiniFox.TabIndex = 4
+        Me.ChkOrdiniFox.Text = "ordini Fox"
+        Me.ChkOrdiniFox.UseVisualStyleBackColor = True
         '
         'txtTemp_FoxFolder
         '
@@ -919,9 +933,9 @@ Partial Class FLogin
         Me.ChkContrattiFox.AutoSize = True
         Me.ChkContrattiFox.Location = New System.Drawing.Point(6, 6)
         Me.ChkContrattiFox.Name = "ChkContrattiFox"
-        Me.ChkContrattiFox.Size = New System.Drawing.Size(65, 17)
+        Me.ChkContrattiFox.Size = New System.Drawing.Size(85, 17)
         Me.ChkContrattiFox.TabIndex = 2
-        Me.ChkContrattiFox.Text = "Contratti"
+        Me.ChkContrattiFox.Text = "Contratti Fox"
         Me.ChkContrattiFox.UseVisualStyleBackColor = True
         '
         'BtnProcessa
@@ -986,16 +1000,27 @@ Partial Class FLogin
         '
         'PanelDB
         '
+        Me.PanelDB.Controls.Add(Me.BtnOrdiniFox)
         Me.PanelDB.Controls.Add(Me.ChkEscludiControllo)
-        Me.PanelDB.Controls.Add(Me.BtnFox)
+        Me.PanelDB.Controls.Add(Me.BtnImportFox)
         Me.PanelDB.Controls.Add(Me.CHKDBTemporaneo)
         Me.PanelDB.Controls.Add(Me.BtnSelSPA)
         Me.PanelDB.Controls.Add(Me.BtnSelUNO)
         Me.PanelDB.Controls.Add(Me.Label8)
-        Me.PanelDB.Location = New System.Drawing.Point(2, 323)
+        Me.PanelDB.Location = New System.Drawing.Point(0, 345)
         Me.PanelDB.Name = "PanelDB"
-        Me.PanelDB.Size = New System.Drawing.Size(200, 234)
+        Me.PanelDB.Size = New System.Drawing.Size(150, 234)
         Me.PanelDB.TabIndex = 47
+        '
+        'BtnOrdiniFox
+        '
+        Me.BtnOrdiniFox.BackColor = System.Drawing.Color.Tan
+        Me.BtnOrdiniFox.Location = New System.Drawing.Point(95, 40)
+        Me.BtnOrdiniFox.Name = "BtnOrdiniFox"
+        Me.BtnOrdiniFox.Size = New System.Drawing.Size(117, 68)
+        Me.BtnOrdiniFox.TabIndex = 6
+        Me.BtnOrdiniFox.Text = "Fatturazione Ordini   Su Fox"
+        Me.BtnOrdiniFox.UseVisualStyleBackColor = False
         '
         'ChkEscludiControllo
         '
@@ -1009,14 +1034,14 @@ Partial Class FLogin
         Me.ChkEscludiControllo.Text = "No Check"
         Me.ChkEscludiControllo.UseVisualStyleBackColor = True
         '
-        'BtnFox
+        'BtnImportFox
         '
-        Me.BtnFox.Location = New System.Drawing.Point(12, 16)
-        Me.BtnFox.Name = "BtnFox"
-        Me.BtnFox.Size = New System.Drawing.Size(63, 88)
-        Me.BtnFox.TabIndex = 4
-        Me.BtnFox.Text = "Fox"
-        Me.BtnFox.UseVisualStyleBackColor = True
+        Me.BtnImportFox.Location = New System.Drawing.Point(12, 16)
+        Me.BtnImportFox.Name = "BtnImportFox"
+        Me.BtnImportFox.Size = New System.Drawing.Size(63, 88)
+        Me.BtnImportFox.TabIndex = 4
+        Me.BtnImportFox.Text = "Import Excel suFox"
+        Me.BtnImportFox.UseVisualStyleBackColor = True
         '
         'CHKDBTemporaneo
         '
@@ -1039,9 +1064,9 @@ Partial Class FLogin
         '
         'BtnSelUNO
         '
-        Me.BtnSelUNO.Location = New System.Drawing.Point(90, 40)
+        Me.BtnSelUNO.Location = New System.Drawing.Point(363, 40)
         Me.BtnSelUNO.Name = "BtnSelUNO"
-        Me.BtnSelUNO.Size = New System.Drawing.Size(117, 68)
+        Me.BtnSelUNO.Size = New System.Drawing.Size(44, 22)
         Me.BtnSelUNO.TabIndex = 1
         Me.BtnSelUNO.Text = "UNO"
         Me.BtnSelUNO.UseVisualStyleBackColor = True
@@ -1059,7 +1084,7 @@ Partial Class FLogin
         '
         Me.PanelUser.Controls.Add(Me.BtnOrdiniISTAT)
         Me.PanelUser.Controls.Add(Me.BtnOrdini)
-        Me.PanelUser.Controls.Add(Me.Button1)
+        Me.PanelUser.Controls.Add(Me.BtnXMLLog)
         Me.PanelUser.Controls.Add(Me.BtnAnalitica)
         Me.PanelUser.Controls.Add(Me.BtnLastLog)
         Me.PanelUser.Controls.Add(Me.BtnPaghe)
@@ -1093,15 +1118,15 @@ Partial Class FLogin
         Me.BtnOrdini.TextAlign = System.Drawing.ContentAlignment.BottomCenter
         Me.BtnOrdini.UseVisualStyleBackColor = False
         '
-        'Button1
+        'BtnXMLLog
         '
-        Me.Button1.Location = New System.Drawing.Point(0, 4)
-        Me.Button1.Name = "Button1"
-        Me.Button1.Size = New System.Drawing.Size(75, 23)
-        Me.Button1.TabIndex = 4
-        Me.Button1.Text = "XML Log"
-        Me.Button1.UseVisualStyleBackColor = True
-        Me.Button1.Visible = False
+        Me.BtnXMLLog.Location = New System.Drawing.Point(0, 4)
+        Me.BtnXMLLog.Name = "BtnXMLLog"
+        Me.BtnXMLLog.Size = New System.Drawing.Size(75, 23)
+        Me.BtnXMLLog.TabIndex = 4
+        Me.BtnXMLLog.Text = "XML Log"
+        Me.BtnXMLLog.UseVisualStyleBackColor = True
+        Me.BtnXMLLog.Visible = False
         '
         'BtnAnalitica
         '
@@ -1384,7 +1409,7 @@ Partial Class FLogin
         '
         'ComandiToolStripMenuItem
         '
-        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.RiscontiRidottoStripMenuItem, Me.RiscontiFusioneToolStripMenuItem, Me.CespitiStripMenuItem, Me.ContrattiFoxToolStripMenuItem, Me.CheckIntegraToolStripMenuItem})
+        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.RiscontiRidottoStripMenuItem, Me.RiscontiFusioneToolStripMenuItem, Me.CespitiStripMenuItem, Me.ContrattiFoxToolStripMenuItem, Me.CheckIntegraToolStripMenuItem, Me.OrdiniFoxToolStripMenuItem})
         Me.ComandiToolStripMenuItem.Name = "ComandiToolStripMenuItem"
         Me.ComandiToolStripMenuItem.Size = New System.Drawing.Size(68, 20)
         Me.ComandiToolStripMenuItem.Text = "Comandi"
@@ -1393,14 +1418,14 @@ Partial Class FLogin
         '
         Me.RiscontiRidottoStripMenuItem.Enabled = False
         Me.RiscontiRidottoStripMenuItem.Name = "RiscontiRidottoStripMenuItem"
-        Me.RiscontiRidottoStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.RiscontiRidottoStripMenuItem.Size = New System.Drawing.Size(160, 22)
         Me.RiscontiRidottoStripMenuItem.Text = "Risconti ridotto"
         '
         'RiscontiFusioneToolStripMenuItem
         '
         Me.RiscontiFusioneToolStripMenuItem.Enabled = False
         Me.RiscontiFusioneToolStripMenuItem.Name = "RiscontiFusioneToolStripMenuItem"
-        Me.RiscontiFusioneToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.RiscontiFusioneToolStripMenuItem.Size = New System.Drawing.Size(160, 22)
         Me.RiscontiFusioneToolStripMenuItem.Text = "Risconti Fusione"
         '
         'CespitiStripMenuItem
@@ -1408,7 +1433,7 @@ Partial Class FLogin
         Me.CespitiStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ImportaToolStripMenuItem, Me.CancellaToolStripMenuItem})
         Me.CespitiStripMenuItem.Enabled = False
         Me.CespitiStripMenuItem.Name = "CespitiStripMenuItem"
-        Me.CespitiStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.CespitiStripMenuItem.Size = New System.Drawing.Size(160, 22)
         Me.CespitiStripMenuItem.Text = "Cespiti"
         '
         'ImportaToolStripMenuItem
@@ -1426,8 +1451,20 @@ Partial Class FLogin
         'ContrattiFoxToolStripMenuItem
         '
         Me.ContrattiFoxToolStripMenuItem.Name = "ContrattiFoxToolStripMenuItem"
-        Me.ContrattiFoxToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.ContrattiFoxToolStripMenuItem.Size = New System.Drawing.Size(160, 22)
         Me.ContrattiFoxToolStripMenuItem.Text = "Contratti Fox"
+        '
+        'CheckIntegraToolStripMenuItem
+        '
+        Me.CheckIntegraToolStripMenuItem.Name = "CheckIntegraToolStripMenuItem"
+        Me.CheckIntegraToolStripMenuItem.Size = New System.Drawing.Size(160, 22)
+        Me.CheckIntegraToolStripMenuItem.Text = "Check_Integra"
+        '
+        'OrdiniFoxToolStripMenuItem
+        '
+        Me.OrdiniFoxToolStripMenuItem.Name = "OrdiniFoxToolStripMenuItem"
+        Me.OrdiniFoxToolStripMenuItem.Size = New System.Drawing.Size(160, 22)
+        Me.OrdiniFoxToolStripMenuItem.Text = "Ordini Fox"
         '
         'SettingsToolStripMenuItem
         '
@@ -1543,12 +1580,6 @@ Partial Class FLogin
         Me.AboutToolStripMenuItem.Name = "AboutToolStripMenuItem"
         Me.AboutToolStripMenuItem.Size = New System.Drawing.Size(122, 22)
         Me.AboutToolStripMenuItem.Text = "&About..."
-        '
-        'CheckIntegraToolStripMenuItem
-        '
-        Me.CheckIntegraToolStripMenuItem.Name = "CheckIntegraToolStripMenuItem"
-        Me.CheckIntegraToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.CheckIntegraToolStripMenuItem.Text = "Check_Integra"
         '
         'FLogin
         '
@@ -1697,7 +1728,7 @@ Partial Class FLogin
     Friend WithEvents TxtTmpDB_UNO As TextBox
     Friend WithEvents ImportaToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents CancellaToolStripMenuItem As ToolStripMenuItem
-    Friend WithEvents Button1 As Button
+    Friend WithEvents BtnXMLLog As Button
     Friend WithEvents TabOrdini As TabPage
     Friend WithEvents BtnOrdini As Button
     Friend WithEvents BtnOrdiniISTAT As Button
@@ -1745,7 +1776,10 @@ Partial Class FLogin
     Friend WithEvents TabContrattiFox As TabPage
     Friend WithEvents ChkContrattiFox As CheckBox
     Friend WithEvents txtTemp_FoxFolder As TextBox
-    Friend WithEvents BtnFox As Button
+    Friend WithEvents BtnImportFox As Button
     Friend WithEvents ChkEscludiControllo As CheckBox
     Friend WithEvents CheckIntegraToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents BtnOrdiniFox As Button
+    Friend WithEvents OrdiniFoxToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents ChkOrdiniFox As CheckBox
 End Class

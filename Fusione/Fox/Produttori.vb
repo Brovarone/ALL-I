@@ -3,6 +3,7 @@
         Dim esito As String
         Select Case filiale.ToUpper
             Case "01" ' Torino
+                esito = "01TO_XXX"
                 Select Case codice.ToUpper
                     Case "006"
                     Case "017"
@@ -32,55 +33,61 @@
                         esito = "01TO_XXX"
                 End Select
             Case "02" ' Milano
+                esito = "02MI_XXX"
                 Select Case codice.ToUpper
                     Case "01"
+                        esito = "UFFICIO"
                     Case "012"
+                        esito = "UFFICIO"
                     Case "03"
                         esito = "UFFICIO"
                     Case "A10"
                     Case "CSV"
                         esito = "AULETTA"
                     Case "D1"
+                        esito = "RICCI"
                     Case "D2"
                     Case "D3"
+                        esito = "GIACOLET"
                     Case "FIL"
                     Case "FIL."
+                        esito = ""
                     Case "K10"
-                        esito = "SECURGEST"
+                        esito = "SECURGES"
                     Case "K70"
-                        esito = "SECURGEST"
+                        esito = "SECURGES"
                     Case "K80"
-                        esito = "SECURGEST"
+                        esito = "SECURGES"
                     Case "K90"
-                        esito = "SECURGEST"
+                        esito = "SECURGES"
                     Case "M55"
-                        esito = "SECURGEST"
+                        esito = "SECURGES"
                     Case "M56"
-                        esito = "SECURGEST"
+                        esito = "SECURGES"
                     Case "M58"
-                        esito = "SECURGEST"
+                        esito = "SECURGES"
                     Case "M66"
                         esito = "FURLAN"
                     Case "M68"
-                        esito = "SECURGEST"
+                        esito = "SECURGES"
                     Case "M75"
-                        esito = "SECURGEST"
+                        esito = "SECURGES"
                     Case "M85"
-                        esito = "SECURGEST"
+                        esito = "SECURGES"
                     Case "M90"
-                        esito = "SECURGEST"
+                        esito = "SECURGES"
                     Case "N08"
                         esito = "PAGANOTT"
                     Case "S60"
-                        esito = "SECURGEST"
+                        esito = "SECURGES"
                     Case "S65"
-                        esito = "SECURGEST"
+                        esito = "SECURGES"
                     Case "S75"
-                        esito = "SECURGEST"
+                        esito = "SECURGES"
                     Case "U35"
-                        esito = "SECURGEST"
+                        esito = "SECURGES"
                     Case "U66"
-                        esito = "SECURGEST"
+                        esito = "SECURGES"
                     Case "UFF"
                         esito = "VALLOSIO"
 
@@ -88,6 +95,7 @@
                         esito = "02MI_XXX"
                 End Select
             Case "03" 'Asti
+                esito = "03AT_XXX"
                 Select Case codice.ToUpper
                     Case "01"
                         esito = "AULETTA"
@@ -109,6 +117,7 @@
                         esito = "03AT_XXX"
                 End Select
             Case "04" 'Aosta
+                esito = "04AO_XXX"
                 Select Case codice.ToUpper
                     Case "001"
                         esito = "UFFICIO"
@@ -138,12 +147,14 @@
                         esito = "04AO_XXX"
                 End Select
             Case "05" ' Novara
+                esito = "05NO_XXX"
+                esito = "05NO_XXX"
                 Select Case codice.ToUpper
                     Case "017"
                         esito = "UFFICIO"
                     Case "C41"
                     Case "C42"
-                        esito = "SECURGEST"
+                        esito = "SECURGES"
                     Case "C44"
                         esito = "BOZZA P"
                     Case "C47"
@@ -158,6 +169,7 @@
                         esito = "05NO_XXX"
                 End Select
             Case "08" 'Biella / Vigliano
+                esito = "08BI_XXX"
                 Select Case codice.ToUpper
                     Case "017"
                         esito = "UFFICIO"
@@ -205,6 +217,7 @@
                         esito = "08BI_XXX"
                 End Select
             Case "09" ' Varese
+                esito = "09VA_XXX"
                 Select Case codice.ToUpper
                     Case "017"
                         esito = "UFFICIO"
@@ -221,9 +234,10 @@
                     Case "U30"
                         esito = "DABIZZI"
                     Case Else
-                        esito = "09VA_XXX"
+
                 End Select
             Case "10" ' Sede
+                esito = "10_XXX"
                 Select Case codice.ToUpper
                     Case "017"
                         esito = "UUUUUU"
@@ -231,6 +245,7 @@
                         esito = "10_XXX"
                 End Select
             Case "11" ' Cuneo
+                esito = "11CN_XXX"
                 Select Case codice.ToUpper
                     Case "001"
                     Case "002"
@@ -266,12 +281,11 @@
                     Case "900"
                     Case "N02"
                     Case "N10"
-
-
                     Case Else
                         esito = "11CN_XXX"
                 End Select
             Case "12" ' Alessandria
+                esito = "11AL_XXX"
                 Select Case codice.ToUpper
                     Case "01"
                         esito = "AULETTA"

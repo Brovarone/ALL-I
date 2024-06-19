@@ -953,11 +953,11 @@ Public Class FLogin
                     Dim listaFiliali As List(Of String) = ff.okFil
                     For Each f As String In listaFiliali
                         Dim contrattiALL As String() = {"_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV"} '"_CHIAVI", "_ONEOPE1","_ONTROPE"
-                        Dim contratti2024 As String() = {"_AGRFATD", "_AGRFATD.2024", "_AGRFATT", "_AGRFATT.2024", "_EWTAB", "_LIENORD", "_LIENORD.2024", "_LIFTELE", "_LIFTELE.2024", "_ONTRORD", "_RID", "_RID.2024", "_SENTIIV"} '"_CHIAVI", "_ONEOPE1","_ONTROPE"
-                        Dim contratti As String() = If(ff.ChkAlso2024.Checked, contratti2024, contrattiALL)
+                        Dim contratti2023 As String() = {"_AGRFATD", "_AGRFATD.2023", "_AGRFATT", "_AGRFATT.2023", "_EWTAB", "_LIENORD", "_LIENORD.2023", "_LIFTELE", "_LIFTELE.2023", "_ONTRORD", "_RID", "_RID.2023", "_SENTIIV"} '"_CHIAVI", "_ONEOPE1","_ONTROPE"
+                        Dim contratti As String() = If(ff.ChkAlso2023.Checked, contratti2023, contrattiALL)
                         ReDim contrattiFound(contratti.Count + 1)
                         Dim iACGTRPG As Integer = contrattiFound.Count - 2
-                        Dim iElenoClientiSpa As Integer = contrattiFound.Count - 1
+                        Dim iElencoClientiSpa As Integer = contrattiFound.Count - 1
                         fileInFolder = Directory.GetFiles(f, "*.*", SearchOption.TopDirectoryOnly)
                         For i = 0 To UBound(contratti)
                             For Each sFile As String In fileInFolder
@@ -994,8 +994,8 @@ Public Class FLogin
 
                             bFound = sNomeFile.ToUpper.Equals("ELENCO CLIENTI SPA")
                             If bFound Then
-                                contrattiFound(iElenoClientiSpa) = True
-                                contratti(iElenoClientiSpa) = sFile
+                                contrattiFound(iElencoClientiSpa) = True
+                                contratti(iElencoClientiSpa) = sFile
                                 lista.Add(sFile)
                                 Exit For
                             End If
@@ -1005,15 +1005,15 @@ Public Class FLogin
                             MessageBox.Show("Impossibile continuare l'elaborazione dei Contratti a causa di file mancanti: ACGTRPG ")
                             Exit For
                         End If
-                        If Not contrattiFound(iElenoClientiSpa) Then
+                        If Not contrattiFound(iElencoClientiSpa) Then
                             allOk = False
                             MessageBox.Show("Impossibile continuare l'elaborazione dei Contratti a causa di file mancanti: ELENCO CLIENTI SPA ")
                             Exit For
                         End If
 
                         If allOk Then ProcessaGruppoContratti(contratti, "Contratti")
-                            En_Dis_Controls(True, True, True)
-                        Next
+                        En_Dis_Controls(True, True, True)
+                    Next
 
                 End If
             End Using
@@ -1077,7 +1077,7 @@ Public Class FLogin
                     'i CSV non hanno intestazione di solito ottengo il file in 
                     'dsXLS = If(ext.ToUpper = ".CSV", ProcessaCSV(spath, False), ProcessaXLS(spath, True))
                     Select Case sNomeFile
-                        Case "_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV", "ACGTRPG", "ELENCO CLIENTI SPA", "_LIENORD.2024", "_AGRFATD.2024", "_AGRFATT.2024", "_LIFTELE.2024", "_RID.2024"
+                        Case "_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV", "ACGTRPG", "ELENCO CLIENTI SPA", "_LIENORD.2023", "_AGRFATD.2023", "_AGRFATT.2023", "_LIFTELE.2023", "_RID.2023"
                             Try
                                 dsXLS = If(sExt.ToUpper = ".CSV", ProcessaCSV(sFullPath, False), LoadXLS(sFullPath, True, True))
                                 If sNomeFile = "_ONTRORD" AndAlso dsXLS.Tables("_ONTRORD").Columns("GRP CONTRATTO").DataType <> GetType(String) Then
@@ -1092,20 +1092,20 @@ Public Class FLogin
                                 If sNomeFile = "ELENCO CLIENTI SPA" Then
                                     dsXLS.Tables(0).TableName = "ELENCO CLIENTI SPA"
                                 End If
-                                If sNomeFile = "_LIENORD.2024" Then
-                                    dsXLS.Tables(0).TableName = "_LIENORD.2024"
+                                If sNomeFile = "_LIENORD.2023" Then
+                                    dsXLS.Tables(0).TableName = "_LIENORD.2023"
                                 End If
-                                If sNomeFile = "_AGRFATD.2024" Then
-                                    dsXLS.Tables(0).TableName = "_AGRFATD.2024"
+                                If sNomeFile = "_AGRFATD.2023" Then
+                                    dsXLS.Tables(0).TableName = "_AGRFATD.2023"
                                 End If
-                                If sNomeFile = "_AGRFATT.2024" Then
-                                    dsXLS.Tables(0).TableName = "_AGRFATT.2024"
+                                If sNomeFile = "_AGRFATT.2023" Then
+                                    dsXLS.Tables(0).TableName = "_AGRFATT.2023"
                                 End If
-                                If sNomeFile = "_LIFTELE.2024" Then
-                                    dsXLS.Tables(0).TableName = "_LIFTELE.2024"
+                                If sNomeFile = "_LIFTELE.2023" Then
+                                    dsXLS.Tables(0).TableName = "_LIFTELE.2023"
                                 End If
-                                If sNomeFile = "_RID.2024" Then
-                                    dsXLS.Tables(0).TableName = "_RID.2024"
+                                If sNomeFile = "_RID.2023" Then
+                                    dsXLS.Tables(0).TableName = "_RID.2023"
                                 End If
                                 bOkImport = True
                                 dsFOX.Add(dsXLS)
@@ -1818,7 +1818,7 @@ Public Class FLogin
         Me.Cursor = Cursors.Default
     End Sub
 
-    Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
+    Private Sub BtnXMLLog_Click(sender As Object, e As EventArgs) Handles BtnXMLLog.Click
         Dim logs As New MyLogs
         'Dim l_Bulk As MyLogRegistry = New logs.Add("Bulk", "Inserimento Dati", 1)
         Dim b As New MyLogRegistry With {.Nome = " bulk", .Ordine = 1, .Descrizione = "bulk vari"}
@@ -1902,7 +1902,6 @@ Public Class FLogin
             '_readWriteLock.ExitWriteLock()
         End Try
     End Sub
-
 
     Private Sub BtnOrdini_Click(sender As Object, e As EventArgs) Handles BtnOrdini.Click
         En_Dis_Controls(False, True, True)
@@ -2211,15 +2210,28 @@ Public Class FLogin
         isDbUNO = True
         isAdmin = True
         'SUBConnetti(TxtTmpDB_SPA.Text)
-        lstStatoConnessione.Items.Add(If(DBisTMP, "Azienda test: ", "Azienda: ") & TxtTmpDB_UNO.Text & " - Database : " & DBInUse)
+        lstStatoConnessione.Items.Add(If(DBisTMP, "Azienda test: ", "Azienda: ") & TxtTmpDB_UNO.Text & " - Database : " & TxtTmpDB_UNO.Text)
         Application.DoEvents()
         SUBProcessa()
     End Sub
-
-    Private Sub BtnFox_Click(sender As Object, e As EventArgs) Handles BtnFox.Click
+    Private Sub BtnImportFox_Click(sender As Object, e As EventArgs) Handles BtnImportFox.Click
         ContrattiFoxToolStripMenuItem_Click(sender, e)
     End Sub
 
+    Private Sub OrdiniFoxToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles OrdiniFoxToolStripMenuItem.Click
+        ChkOrdiniFox.Checked = True
+        DBisTMP = True ' Usa quindi fox
+        DBInUse = TxtTmpDB_UNO.Text
+        isDbUNO = True
+        'isAdmin = True
+        lstStatoConnessione.Items.Add("Azienda: " & TxtTmpDB_UNO.Text & " - Database : " & TxtTmpDB_UNO.Text)
+        Application.DoEvents()
+        'Chiamo metodo ordini
+        BtnOrdini_Click(sender, e)
+    End Sub
+    Private Sub BtnOrdiniFox_Click(sender As Object, e As EventArgs) Handles BtnOrdiniFox.Click
+        OrdiniFoxToolStripMenuItem_Click(sender, e)
+    End Sub
     Private Sub CheckIntegraToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles CheckIntegraToolStripMenuItem.Click
         En_Dis_Controls(False, True, True)
         If LINQConnetti() Then
@@ -2258,5 +2270,6 @@ Public Class FLogin
         End If
 
     End Sub
+
 
 End Class

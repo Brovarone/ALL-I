@@ -1,9 +1,9 @@
-﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()> _
+﻿<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class FAskFiltriOrdini
     Inherits System.Windows.Forms.Form
 
     'Form overrides dispose to clean up the component list.
-    <System.Diagnostics.DebuggerNonUserCode()> _
+    <System.Diagnostics.DebuggerNonUserCode()>
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
             If disposing AndAlso components IsNot Nothing Then
@@ -20,7 +20,7 @@ Partial Class FAskFiltriOrdini
     'NOTE: The following procedure is required by the Windows Form Designer
     'It can be modified using the Windows Form Designer.  
     'Do not modify it using the code editor.
-    <System.Diagnostics.DebuggerStepThrough()> _
+    <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
         Me.TableLayoutPanel1 = New System.Windows.Forms.TableLayoutPanel()
@@ -31,6 +31,8 @@ Partial Class FAskFiltriOrdini
         Me.LblDallaData = New System.Windows.Forms.Label()
         Me.LblAlladata = New System.Windows.Forms.Label()
         Me.GroupOrdini = New System.Windows.Forms.GroupBox()
+        Me.TxtordPriorita = New System.Windows.Forms.TextBox()
+        Me.ChkPriorita = New System.Windows.Forms.CheckBox()
         Me.TxtOrdFiliale = New System.Windows.Forms.TextBox()
         Me.ChkFiliale = New System.Windows.Forms.CheckBox()
         Me.ChkCliente = New System.Windows.Forms.CheckBox()
@@ -147,6 +149,8 @@ Partial Class FAskFiltriOrdini
         '
         'GroupOrdini
         '
+        Me.GroupOrdini.Controls.Add(Me.TxtordPriorita)
+        Me.GroupOrdini.Controls.Add(Me.ChkPriorita)
         Me.GroupOrdini.Controls.Add(Me.TxtOrdFiliale)
         Me.GroupOrdini.Controls.Add(Me.ChkFiliale)
         Me.GroupOrdini.Controls.Add(Me.ChkCliente)
@@ -161,15 +165,33 @@ Partial Class FAskFiltriOrdini
         Me.GroupOrdini.Controls.Add(Me.LblDallaData)
         Me.GroupOrdini.Location = New System.Drawing.Point(6, 3)
         Me.GroupOrdini.Name = "GroupOrdini"
-        Me.GroupOrdini.Size = New System.Drawing.Size(228, 215)
+        Me.GroupOrdini.Size = New System.Drawing.Size(228, 221)
         Me.GroupOrdini.TabIndex = 7
         Me.GroupOrdini.TabStop = False
         Me.GroupOrdini.Text = "Ordini Ciente"
         '
+        'TxtordPriorita
+        '
+        Me.TxtordPriorita.Enabled = False
+        Me.TxtordPriorita.Location = New System.Drawing.Point(110, 196)
+        Me.TxtordPriorita.Name = "TxtordPriorita"
+        Me.TxtordPriorita.Size = New System.Drawing.Size(96, 20)
+        Me.TxtordPriorita.TabIndex = 12
+        '
+        'ChkPriorita
+        '
+        Me.ChkPriorita.AutoSize = True
+        Me.ChkPriorita.Location = New System.Drawing.Point(9, 196)
+        Me.ChkPriorita.Name = "ChkPriorita"
+        Me.ChkPriorita.Size = New System.Drawing.Size(58, 17)
+        Me.ChkPriorita.TabIndex = 11
+        Me.ChkPriorita.Text = "Priorità"
+        Me.ChkPriorita.UseVisualStyleBackColor = True
+        '
         'TxtOrdFiliale
         '
         Me.TxtOrdFiliale.Enabled = False
-        Me.TxtOrdFiliale.Location = New System.Drawing.Point(110, 172)
+        Me.TxtOrdFiliale.Location = New System.Drawing.Point(110, 171)
         Me.TxtOrdFiliale.Name = "TxtOrdFiliale"
         Me.TxtOrdFiliale.Size = New System.Drawing.Size(96, 20)
         Me.TxtOrdFiliale.TabIndex = 10
@@ -177,7 +199,7 @@ Partial Class FAskFiltriOrdini
         'ChkFiliale
         '
         Me.ChkFiliale.AutoSize = True
-        Me.ChkFiliale.Location = New System.Drawing.Point(9, 172)
+        Me.ChkFiliale.Location = New System.Drawing.Point(9, 171)
         Me.ChkFiliale.Name = "ChkFiliale"
         Me.ChkFiliale.Size = New System.Drawing.Size(90, 17)
         Me.ChkFiliale.TabIndex = 9
@@ -606,4 +628,6 @@ Partial Class FAskFiltriOrdini
     Friend WithEvents GroupMomento As GroupBox
     Friend WithEvents RadioTypeServAgg As RadioButton
     Friend WithEvents RadioTypeCanoni As RadioButton
+    Friend WithEvents TxtordPriorita As TextBox
+    Friend WithEvents ChkPriorita As CheckBox
 End Class

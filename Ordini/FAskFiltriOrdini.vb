@@ -36,7 +36,7 @@ Public Class FAskFiltriOrdini
         TxtOrdCliente.Enabled = ChkCliente.Checked
     End Sub
 
-    Private Sub CheckBox1_CheckedChanged(sender As Object, e As EventArgs) Handles ChkFiliale.CheckedChanged
+    Private Sub ChkFiliale_CheckedChanged(sender As Object, e As EventArgs) Handles ChkFiliale.CheckedChanged
         TxtOrdFiliale.Enabled = ChkFiliale.Checked
     End Sub
 
@@ -97,6 +97,10 @@ Public Class FAskFiltriOrdini
         Dim b As Boolean = Not RadioTypeServAgg.Checked
         GroupPeriodo.Enabled = b
         'GroupDataFatt.Enabled = b
+    End Sub
+
+    Private Sub ChkPriorita_CheckedChanged(sender As Object, e As EventArgs) Handles ChkPriorita.CheckedChanged
+        TxtordPriorita.Enabled = ChkPriorita.Checked
     End Sub
 
 
