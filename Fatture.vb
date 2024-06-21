@@ -2631,26 +2631,41 @@ Module Fatture
                 'End If
                 'In I->M ho Sede Legale, in W-->AA Sede Fiscale
                 If anag.Item("Address").ToString <> .Item("I").ToString Then
-                    avvisi.AppendLine("Indirizzo : (" & .Item("I").ToString & ") [" & anag.Item("Address") & "]")
-                    anag.Item("Address") = .Item("I").ToString
+                    warnings.AppendLine("Indirizzo : (" & .Item("I").ToString & ") [" & anag.Item("Address") & "]")
+                    '21/06/2024 Laura: Non modificare piu'
+                    If IsDeprecated Then
+                        anag.Item("Address") = .Item("I").ToString
+                    End If
                 End If
                 If anag.Item("City").ToString <> .Item("J").ToString Then
-                    avvisi.AppendLine("Città : (" & .Item("J").ToString & ") [" & anag.Item("City") & "]")
-                    anag.Item("City") = .Item("J").ToString
+                    warnings.AppendLine("Città : (" & .Item("J").ToString & ") [" & anag.Item("City") & "]")
+                    '21/06/2024 Laura: Non modificare piu'
+                    If IsDeprecated Then
+                        anag.Item("City") = .Item("J").ToString
+                    End If
                 End If
                 If UpdateProvincia AndAlso anag.Item("County").ToString <> .Item("K").ToString Then
-                    avvisi.AppendLine("Provincia : (" & .Item("K").ToString & ") [" & anag.Item("County") & "]")
-                    anag.Item("County") = .Item("K").ToString
+                    warnings.AppendLine("Provincia : (" & .Item("K").ToString & ") [" & anag.Item("County") & "]")
+                    '21/06/2024 Laura: Non modificare piu'
+                    If IsDeprecated Then
+                        anag.Item("County") = .Item("K").ToString
+                    End If
                 End If
                 Dim regione = Get_Regione(.Item("K").ToString)
                 If anag.Item("Region").ToString <> regione Then
-                    avvisi.AppendLine("Regione : (" & regione & ") [" & anag.Item("Region") & "]")
-                    anag.Item("Region") = regione
+                    warnings.AppendLine("Regione : (" & regione & ") [" & anag.Item("Region") & "]")
+                    '21/06/2024 Laura: Non modificare piu'
+                    If IsDeprecated Then
+                        anag.Item("Region") = regione
+                    End If
                 End If
                 Dim iCAP As Integer
                 If Integer.TryParse(.Item("L").ToString, iCAP) AndAlso anag.Item("ZIPCode").ToString <> iCAP.ToString("00000") Then
-                    avvisi.AppendLine("CAP : (" & iCAP.ToString("00000") & ") [" & anag.Item("ZIPCode") & "]")
-                    anag.Item("ZIPCode") = iCAP.ToString("00000")
+                    warnings.AppendLine("CAP : (" & iCAP.ToString("00000") & ") [" & anag.Item("ZIPCode") & "]")
+                    '21/06/2024 Laura: Non modificare piu'
+                    If IsDeprecated Then
+                        anag.Item("ZIPCode") = iCAP.ToString("00000")
+                    End If
                 End If
                 Dim iso As String = Left(.Item("M").ToString, 2).ToUpper
                 If iso = "IT" AndAlso anag.Item("ISOCountryCode").ToString <> iso AndAlso Not String.IsNullOrWhiteSpace(iso) Then
@@ -2682,12 +2697,18 @@ Module Fatture
                     If UpdatePIvaCodFisc Then anag.Item("TaxIdNumber") = ""
                 End If
                 If anag.Item("Telephone1").ToString <> .Item("S").ToString AndAlso Not String.IsNullOrWhiteSpace(.Item("S").ToString) Then
-                    avvisi.AppendLine("Telefono : (" & .Item("S").ToString & ") [" & anag.Item("Telephone1") & "]")
-                    anag.Item("Telephone1") = .Item("S").ToString
+                    '21/06/2024 Laura: Non modificare piu'
+                    If IsDeprecated Then
+                        warnings.AppendLine("Telefono : (" & .Item("S").ToString & ") [" & anag.Item("Telephone1") & "]")
+                        anag.Item("Telephone1") = .Item("S").ToString
+                    End If
                 End If
                 If anag.Item("Fax").ToString <> .Item("T").ToString AndAlso Not String.IsNullOrWhiteSpace(.Item("T").ToString) Then
-                    avvisi.AppendLine("Fax : (" & .Item("T").ToString & ") [" & anag.Item("Fax") & "]")
-                    anag.Item("Fax") = .Item("T").ToString
+                    warnings.AppendLine("Fax : (" & .Item("T").ToString & ") [" & anag.Item("Fax") & "]")
+                    '21/06/2024 Laura: Non modificare piu'
+                    If IsDeprecated Then
+                        anag.Item("Fax") = .Item("T").ToString
+                    End If
                 End If
                 anag.EndEdit()
 
