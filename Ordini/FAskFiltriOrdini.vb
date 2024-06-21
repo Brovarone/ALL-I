@@ -103,7 +103,6 @@ Public Class FAskFiltriOrdini
         TxtordPriorita.Enabled = ChkPriorita.Checked
     End Sub
 
-
     'Private Sub TxtPercIstat_KeyPress(sender As Object, e As KeyPressEventArgs) Handles TxtPercIstat.KeyPress
     '    If Not Char.IsNumber(e.KeyChar) AndAlso Not Char.IsControl(e.KeyChar) AndAlso Not e.KeyChar = "." AndAlso Not e.KeyChar = "," AndAlso Not e.KeyChar = "-" Then
     '        e.Handled = True

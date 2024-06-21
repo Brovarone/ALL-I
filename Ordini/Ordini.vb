@@ -147,7 +147,10 @@ Partial Module Ordini
 #End Region
 
         Try
+            'first access
+            Dim firtsAccess = (From o In OrdContext.MaSaleOrd).ToList
 #Region "Estrazioni dati con Query LINQ"
+            'OrdContext.Database.SetCommandTimeout(180) '180 sec.
             'https://entityframework.net/why-first-query-slow
             'Tipizzare con (Of ) solo le Tabelle singole 1-1 che NON hanno 1-n / Collection
             Dim q = (From o In OrdContext.MaSaleOrd _
@@ -192,7 +195,7 @@ Partial Module Ordini
             'Il filtro where che prende quelli senza data cessazione o con data successiva ( preimpostata da loro)
             ' q = q.Where(Function(facc) facc.ALLOrdCliAcc.DataCessazione = sDataNulla OrElse facc.ALLOrdCliAcc.DataCessazione.Value.Date >= dataFattA)
             If bFiltroDateOrdini Then
-                q = q.Where(Function(oDate) oDate.OrderDate.Value.Date >= fromOrdDate And oDate.OrderDate.Value.Date <= toOrdDate)
+                q = q.Where(Function(oDate) oDate.OrderDate.Value.Date >= fromOrdDate AndAlso oDate.OrderDate.Value.Date <= toOrdDate)
             Else
                 'Sostituisco la logica di "uguale" aggiungendo un giorno, in questo modo prendo anche le cose create nello stesso giorno
                 q = q.Where(Function(oDate) oDate.OrderDate <= toOrdDate)
@@ -492,7 +495,7 @@ Partial Module Ordini
                                 Next
                             End If
 
-                            'Scrivo Testo descrittivo su MaSaleOrdDetails
+                            'Scrivo Testo descrittivo di TESTATA su MaSaleOrdDetails
                             isNewRows = True
                             If Not bScrittoDescrizioni Then
                                 bScrittoDescrizioni = True
@@ -503,7 +506,7 @@ Partial Module Ordini
                                     'Aggiungo la riga alla collection
                                     efMaSaleOrdDetails.Add(rd)
                                     Debug.Print("### Riga descrittiva:(" & rd.Position.ToString & ") " & rd.Description)
-                                    debugging.AppendLine(" *D:" & rd.Position.ToString)
+                                    debugging.AppendLine(" *Dt:" & rd.Position.ToString)
                                 Next
                             End If
 
@@ -564,6 +567,21 @@ Partial Module Ordini
 #End Region
 #Region "Scrivo MaSaleOrdDetails"
                             If Not cOrdRow.CanoneFuoriRangeDate AndAlso cOrdRow.QtaCorrente > 0 Then
+                                'Scrivo Testo descrittivo del singolo CONTRATTO su MaSaleOrdDetails
+                                isNewRows = True
+                                If Not bScrittoDescrizioni Then
+                                    bScrittoDescrizioni = True
+                                    For Each d In c.AllordCliContrattoDescFatt
+                                        iNewRowsCount += 1
+                                        iNrRigheNota += 1
+                                        Dim rd As MaSaleOrdDetails = RigaDescrittiva(iNewRowsCount, cOrdRow, d.Descrizione)
+                                        'Aggiungo la riga alla collection
+                                        efMaSaleOrdDetails.Add(rd)
+                                        Debug.Print("### Riga descrittiva:(" & rd.Position.ToString & ") " & rd.Description)
+                                        debugging.AppendLine(" *Dc:" & rd.Position.ToString)
+                                    Next
+                                End If
+
                                 'Scrivo il corpo solo nel caso dei canoni ( in caso di rifatturazione potrei non averne)
                                 iNewRowsCount += 1
                                 iNrRigheAValore += 1

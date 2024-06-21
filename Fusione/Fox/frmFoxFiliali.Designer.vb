@@ -44,7 +44,7 @@ Partial Class frmFoxFiliali
         Me.ChkSpeAL = New System.Windows.Forms.CheckBox()
         Me.BtnOk = New System.Windows.Forms.Button()
         Me.BtnAnnulla = New System.Windows.Forms.Button()
-        Me.ChkAlso2024 = New System.Windows.Forms.CheckBox()
+        Me.ChkAlso2023 = New System.Windows.Forms.CheckBox()
         Me.GroupOrdinari.SuspendLayout()
         Me.GroupSpeciali.SuspendLayout()
         Me.SuspendLayout()
@@ -304,15 +304,15 @@ Partial Class frmFoxFiliali
         '
         'ChkAlso2024
         '
-        Me.ChkAlso2024.AutoSize = True
-        Me.ChkAlso2024.Checked = True
-        Me.ChkAlso2024.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.ChkAlso2024.Location = New System.Drawing.Point(19, 286)
-        Me.ChkAlso2024.Name = "ChkAlso2024"
-        Me.ChkAlso2024.Size = New System.Drawing.Size(91, 17)
-        Me.ChkAlso2024.TabIndex = 12
-        Me.ChkAlso2024.Text = "Con File 2024"
-        Me.ChkAlso2024.UseVisualStyleBackColor = True
+        Me.ChkAlso2023.AutoSize = True
+        Me.ChkAlso2023.Checked = True
+        Me.ChkAlso2023.CheckState = System.Windows.Forms.CheckState.Checked
+        Me.ChkAlso2023.Location = New System.Drawing.Point(19, 286)
+        Me.ChkAlso2023.Name = "ChkAlso2023"
+        Me.ChkAlso2023.Size = New System.Drawing.Size(91, 17)
+        Me.ChkAlso2023.TabIndex = 12
+        Me.ChkAlso2023.Text = "Con File 2023"
+        Me.ChkAlso2023.UseVisualStyleBackColor = True
         '
         'frmFoxFiliali
         '
@@ -321,7 +321,7 @@ Partial Class frmFoxFiliali
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.CancelButton = Me.BtnAnnulla
         Me.ClientSize = New System.Drawing.Size(345, 372)
-        Me.Controls.Add(Me.ChkAlso2024)
+        Me.Controls.Add(Me.ChkAlso2023)
         Me.Controls.Add(Me.BtnAnnulla)
         Me.Controls.Add(Me.BtnOk)
         Me.Controls.Add(Me.GroupSpeciali)
@@ -359,5 +359,5 @@ Partial Class frmFoxFiliali
     Friend WithEvents ChkSpeAL As CheckBox
     Friend WithEvents BtnOk As Button
     Friend WithEvents BtnAnnulla As Button
-    Friend WithEvents ChkAlso2024 As CheckBox
+    Friend WithEvents ChkAlso2023 As CheckBox
 End Class

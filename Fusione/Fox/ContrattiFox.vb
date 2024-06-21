@@ -2,6 +2,7 @@
 Imports System.Text
 Imports System.Text.RegularExpressions
 Imports System.Reflection.MethodBase
+Imports System.Reflection
 Imports System.Runtime.CompilerServices
 Imports EFMago.Models
 Imports Microsoft.EntityFrameworkCore
@@ -43,7 +44,7 @@ Module ContrattiFox
     ReadOnly sLoginId As String = My.Settings.mLOGINID
     Private ReadOnly charSpeciali As New List(Of Carattere_Speciale)
     Dim dtElencoClientiSpa As DataTable
-    Dim dVElencoClientiSpa As DataView
+    Dim dvElencoClientiSpa As DataView
 
     'Collection Globali per aggiornamento unico
     'Creo le entities che usero' poi con BulkInsert
@@ -83,8 +84,23 @@ Module ContrattiFox
         GeneraRelazionieDatatable()
         CheckColonneExcel()
         ConnettiContesto()
-        If Not FLogin.ChkEscludiControllo.Checked Then
 
+        'TODO ( elimnare) POTREI GESTIRE UNA RELAZIONE TRA ELENCO CLIENTI E ORDINI
+        'ds.Relations.Add("CodCliente", ds.Tables("ELENCO CLIENTI SPA").Columns("CliFor"), ds.Tables("_ONTRORD").Columns("ACGCOD"), False)
+        Dim avvisiList As List(Of List(Of String)) = AssociaClienti()
+        If avvisiList.Count > 0 Then
+            For i = 0 To avvisiList.Count - 1
+                My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Avvisi  ---" & Environment.NewLine)
+                Dim l As List(Of String) = avvisiList(i)
+                For n = 0 To l.Count - 1
+                    My.Application.Log.DefaultFileLogWriter.WriteLine(l(n))
+                    FLogin.lstStatoConnessione.Items.Add(l(n))
+                Next
+            Next
+            FLogin.lstStatoConnessione.Items.Add("Riscontrati Clienti non Associati. Controllare log.")
+        End If
+
+        If Not FLogin.ChkEscludiControllo.Checked Then
             Dim sb As List(Of List(Of String)) = CheckOrdini()
             If sb.Count > 0 Then
                 For i = 0 To sb.Count - 1
@@ -100,8 +116,6 @@ Module ContrattiFox
                 Return False
             End If
         End If
-        'TODO POTREI GESTIRE UNA RELAZIONE TRA ELENCO CLIENTI E ORDINI
-        ds.Relations.Add("CodCliente", ds.Tables("ELENCO CLIENTI SPA").Columns("CliFor"), ds.Tables("_ONTRORD").Columns("ACGCOD"), False)
 
         'TODO temporaneamente la sospendo ScriviClientiNuovi()
 
@@ -160,78 +174,82 @@ Module ContrattiFox
         EditTestoBarra("Genera relazioni")
         Dim istep As Integer
         Try
-            Try
-                istep = 1
-                ds.Relations.Add("Ordini Clienti", ds.Tables("_LIENORD").Columns("CLIENTE"), ds.Tables("_ONTRORD").Columns("CLIENTE"))
-            Catch ex As System.ArgumentException
-                Dim sa As List(Of String) = FindRelationTrouble(ds.Tables("_ONTRORD"), ds.Tables("_LIENORD"), "ACGCOD", "", 0)
-                ds.Relations.Remove("Ordini Clienti")
-                Dim t1 As DataTable = ds.Tables("_LIENORD")
-                Dim v2 As DataView = ds.Tables("_LIENORD.2024").AsDataView
-                For Each c In sa
-                    v2.RowFilter = "ACGCOD='" & c & "'"
-                    If v2.Count = 1 Then
-                        t1.ImportRow(v2(0).Row)
-                    Else
-                        Debug.Print("no")
-                    End If
-                Next
-                ds.Relations.Add("Ordini Clienti", ds.Tables("_LIENORD").Columns("CLIENTE"), ds.Tables("_ONTRORD").Columns("CLIENTE"))
-            End Try
+            Dim sa As List(Of String)
+            Dim t1 As DataTable
+            Dim v2 As DataView
+            'Try
+            istep = 1
+            '    ds.Relations.Add("Ordini Clienti", ds.Tables("_LIENORD").Columns("CLIENTE"), ds.Tables("_ONTRORD").Columns("CLIENTE"))
+            'Catch ex As System.ArgumentException
+            sa = FindRelationTrouble(ds.Tables("_ONTRORD"), ds.Tables("_LIENORD"), "ACGCOD", "", 0)
+            'ds.Relations.Remove("Ordini Clienti")
+            t1 = ds.Tables("_LIENORD")
+            v2 = ds.Tables("_LIENORD.2023").AsDataView
+            For Each c In sa
+                v2.RowFilter = "ACGCOD='" & c & "'"
+                If v2.Count = 1 Then
+                    t1.ImportRow(v2(0).Row)
+                Else
+                    Debug.Print("no")
+                End If
+            Next
+            ds.Relations.Add("Ordini Clienti", ds.Tables("_LIENORD").Columns("CLIENTE"), ds.Tables("_ONTRORD").Columns("CLIENTE"))
+            'End Try
             istep = 2
             ds.Relations.Add("Ordini Clienti Gruppo Testa", ds.Tables("_LIENORD").Columns("CLIENTE"), ds.Tables("_AGRFATT").Columns("CLIENTE"))
             istep = 3
             ds.Relations.Add("Ordini Clienti Gruppo Dettaglio", ds.Tables("_LIENORD").Columns("CLIENTE"), ds.Tables("_AGRFATD").Columns("CLIENTE"))
             'Viste le modifiche non creo la Constraints
-            Try
-                istep = 4
-                ds.Relations.Add("Raggruppamento_Ordine", ds.Tables("_ONTRORD").Columns("CONTRATTO"), ds.Tables("_AGRFATD").Columns("CONTRATTO"))
-            Catch ex As System.ArgumentException
-                Dim sa As List(Of String) = FindRelationTrouble(ds.Tables("_ONTRORD"), ds.Tables("_AGRFATD"), "CONTRATTO", "", 3)
-                ds.Relations.Remove("Raggruppamento_Ordine")
-                Dim t1 As DataTable = ds.Tables("_AGRFATD")
-                Dim v2 As DataView = ds.Tables("_AGRFATD.2024").AsDataView
-                For Each c In sa
-                    v2.RowFilter = "CONTRATTO='" & c & "'"
-                    For i = 0 To v2.Count - 1
-                        t1.ImportRow(v2(i).Row)
-                    Next
+            'Try
+            istep = 4
+            '    ds.Relations.Add("Raggruppamento_Ordine", ds.Tables("_ONTRORD").Columns("CONTRATTO"), ds.Tables("_AGRFATD").Columns("CONTRATTO"))
+            'Catch ex As System.ArgumentException
+            sa = FindRelationTrouble(ds.Tables("_ONTRORD"), ds.Tables("_AGRFATD"), "CONTRATTO", "", 3)
+            'ds.Relations.Remove("Raggruppamento_Ordine")
+            t1 = ds.Tables("_AGRFATD")
+            v2 = ds.Tables("_AGRFATD.2023").AsDataView
+            For Each c In sa
+                v2.RowFilter = "CONTRATTO='" & c & "'"
+                For i = 0 To v2.Count - 1
+                    t1.ImportRow(v2(i).Row)
                 Next
-                ds.Relations.Add("Raggruppamento_Ordine", ds.Tables("_ONTRORD").Columns("CONTRATTO"), ds.Tables("_AGRFATD").Columns("CONTRATTO"), False)
-            End Try
-            Try
-                istep = 5
-                ds.Relations.Add("Ordini Raggruppati", {ds.Tables("_AGRFATT").Columns("CLIENTE"), ds.Tables("_AGRFATT").Columns("RAGRFATT")}, {ds.Tables("_AGRFATD").Columns("CLIENTE"), ds.Tables("_AGRFATD").Columns("RAGRFATT")}, False)
-            Catch ex As System.ArgumentException
-                Dim sa As List(Of String) = FindRelationTrouble(ds.Tables("_AGRFATT"), ds.Tables("_AGRFATD"), "RAGRFATT", "ACGCOD", 5, 30)
-                ds.Relations.Remove("Ordini Raggruppati")
-                Dim t1 As DataTable = ds.Tables("_AGRFATT")
-                Dim v2 As DataView = ds.Tables("_AGRFATT.2024").AsDataView
-                For Each c In sa
-                    v2.RowFilter = "RAGRFATT='" & c & "' AND ACGCOD'" & "'"
-                    For i = 0 To v2.Count - 1
-                        t1.ImportRow(v2(i).Row)
-                    Next
+            Next
+            ds.Relations.Add("Raggruppamento_Ordine", ds.Tables("_ONTRORD").Columns("CONTRATTO"), ds.Tables("_AGRFATD").Columns("CONTRATTO"), False)
+            'End Try
+            'Try
+            istep = 5
+            '    ds.Relations.Add("Ordini Raggruppati", {ds.Tables("_AGRFATT").Columns("CLIENTE"), ds.Tables("_AGRFATT").Columns("RAGRFATT")}, {ds.Tables("_AGRFATD").Columns("CLIENTE"), ds.Tables("_AGRFATD").Columns("RAGRFATT")}, False)
+            'Catch ex As System.ArgumentException
+            sa = FindRelationTrouble(ds.Tables("_AGRFATD"), ds.Tables("_AGRFATT"), "RAGRFATT", "ACGCOD", 5, 30)
+            'ds.Relations.Remove("Ordini Raggruppati")
+            t1 = ds.Tables("_AGRFATT")
+            v2 = ds.Tables("_AGRFATT.2023").AsDataView
+            For Each c In sa
+                Dim arr() As String = c.Split("|")
+                v2.RowFilter = $"RAGRFATT = '{arr(0)}' AND ACGCOD = '{arr(1)}' "
+                For i = 0 To v2.Count - 1
+                    t1.ImportRow(v2(i).Row)
                 Next
-                ds.Relations.Add("Ordini Raggruppati", {ds.Tables("_AGRFATT").Columns("CLIENTE"), ds.Tables("_AGRFATT").Columns("RAGRFATT")}, {ds.Tables("_AGRFATD").Columns("CLIENTE"), ds.Tables("_AGRFATD").Columns("RAGRFATT")}, False)
+            Next
+            ds.Relations.Add("Ordini Raggruppati", {ds.Tables("_AGRFATT").Columns("CLIENTE"), ds.Tables("_AGRFATT").Columns("RAGRFATT")}, {ds.Tables("_AGRFATD").Columns("CLIENTE"), ds.Tables("_AGRFATD").Columns("RAGRFATT")}, False)
 
-            End Try
-            Try
-                istep = 6
-                ds.Relations.Add("RID", ds.Tables("_LIENORD").Columns("CLIENTE"), ds.Tables("_RID").Columns("CLIENTE"))
-            Catch ex As System.ArgumentException
-                Dim sa As List(Of String) = FindRelationTrouble(ds.Tables("_LIENORD"), ds.Tables("_RID"), "CLIENTE", "", 17)
-                ds.Relations.Remove("RID")
-                Dim t1 As DataTable = ds.Tables("_RID")
-                Dim v2 As DataView = ds.Tables("_RID.2024").AsDataView
-                For Each c In sa
-                    v2.RowFilter = "ACGCOD='" & c & "'"
-                    For i = 0 To v2.Count - 1
-                        t1.ImportRow(v2(i).Row)
-                    Next
+            'End Try
+            'Try
+            istep = 6
+            '    ds.Relations.Add("RID", ds.Tables("_LIENORD").Columns("CLIENTE"), ds.Tables("_RID").Columns("CLIENTE"))
+            'Catch ex As System.ArgumentException
+            sa = FindRelationTrouble(ds.Tables("_LIENORD"), ds.Tables("_RID"), "CLIENTE", "", 17)
+            ' ds.Relations.Remove("RID")
+            t1 = ds.Tables("_RID")
+            v2 = ds.Tables("_RID.2023").AsDataView
+            For Each c In sa
+                v2.RowFilter = "ACGCOD='" & c & "'"
+                For i = 0 To v2.Count - 1
+                    t1.ImportRow(v2(i).Row)
                 Next
-                ds.Relations.Add("RID", ds.Tables("_LIENORD").Columns("CLIENTE"), ds.Tables("_RID").Columns("CLIENTE"))
-            End Try
+            Next
+            ds.Relations.Add("RID", ds.Tables("_LIENORD").Columns("CLIENTE"), ds.Tables("_RID").Columns("CLIENTE"))
+            'End Try
             If ds.Tables("_SENTIIV").Rows.Count > 0 Then ds.Relations.Add("ESENTI", ds.Tables("_LIENORD").Columns("CLIENTE"), ds.Tables("_SENTIIV").Columns("CLIENTE"), False)
             'ds.Relations.Add("FattEle", {ds.Tables("_AGRFATT").Columns("CLIENTE"), ds.Tables("_AGRFATT").Columns("RAGRFATT")}, {ds.Tables("_LIFTELE").Columns("CLIENTE"), ds.Tables("_LIFTELE").Columns("RAGRFATT")})
             'ds.Relations.Add("Pagamenti", ds.Tables("_ONTRORD").Columns("CPAGAM"), ds.Tables("ACGTRPG").Columns("CPAGAM"))
@@ -248,7 +266,7 @@ Module ContrattiFox
         dtPagamentiFox = ds.Tables("ACGTRPG")
         dvPagamentiFox = New DataView(dtPagamentiFox)
         dtElencoClientiSpa = ds.Tables("ELENCO CLIENTI SPA")
-        dVElencoClientiSpa = New DataView(dtElencoClientiSpa, "", "CliFor", DataViewRowState.CurrentRows)
+        dvElencoClientiSpa = New DataView(dtElencoClientiSpa, "", "CliFor", DataViewRowState.CurrentRows)
     End Sub
     Private Function FindRelationTrouble(t1 As DataTable, t2 As DataTable, key As String, Optional key1 As String = "", Optional col As Integer = 0, Optional col1 As Integer = 0) As List(Of String)
         Dim log As New List(Of String)
@@ -265,7 +283,6 @@ Module ContrattiFox
             For Each r In a
                 If Not log.Contains(r.First.ToString) Then
                     log.Add(r.First.ToString)
-
                 End If
             Next
         Else
@@ -277,9 +294,8 @@ Module ContrattiFox
                           Select New With {.First = p(key), .Second = p(key1)}
             Dim a = assenti.ToList
             For Each r In a
-                If Not log.Contains(r.First.ToString) Then
-                    log.Add(r.First.ToString)
-
+                If Not log.Contains(r.First.ToString & "|" & r.Second.ToString) Then
+                    log.Add(r.First.ToString & "|" & r.Second.ToString)
                 End If
             Next
         End If
@@ -711,10 +727,37 @@ Module ContrattiFox
     ''' <param name="cliente"></param>
     ''' <returns></returns>
     Private Function CheckNuovoCliente(cliente As String) As Boolean
-        If dVElencoClientiSpa.Find(cliente) = -1 Then Return False
-        Return Not String.IsNullOrEmpty(dVElencoClientiSpa.Item(dVElencoClientiSpa.Find(cliente))("CODICE FINALE"))
+        If dvElencoClientiSpa.Find(cliente) = -1 Then Return False
+        Return Not String.IsNullOrEmpty(dvElencoClientiSpa.Item(dvElencoClientiSpa.Find(cliente))("CODICE FINALE"))
     End Function
 
+    ''' <summary>
+    ''' Esegue associazione nuovi cliente su tabella dtContratti partendo da elenco clienti spa
+    ''' </summary>
+    ''' <returns></returns>
+    Private Function AssociaClienti() As List(Of List(Of String))
+        Dim avvisi As New List(Of String)
+        EditTestoBarra("Assegnazione nuovo codice Cliente")
+        FLogin.prgCopy.Value = 1
+        FLogin.prgCopy.Maximum = dtContratti.Rows.Count
+        FLogin.prgCopy.Step = 1
+        dtContratti.Columns.Add("NEWCODCLI", GetType(String))
+        For Each r As DataRow In dtContratti.Rows
+            Dim n As String = SostituisciCliente(r("ACGCOD").ToString)
+            If n.Equals(String.Empty) Then
+                avvisi.Add("Cliente: " & r("ACGCOD").ToString & " senza transcodifica")
+                n = r("ACGCOD").ToString
+            End If
+            r("NEWCODCLI") = n
+            AvanzaBarra()
+        Next
+        Return New List(Of List(Of String)) From {avvisi}
+    End Function
+
+    Private Function SostituisciCliente(cliente As String) As String
+        If dvElencoClientiSpa.Find(cliente) = -1 Then Return String.Empty
+        Return dvElencoClientiSpa.Item(dvElencoClientiSpa.Find(cliente))("CODICE FINALE")
+    End Function
     Private Sub ScriviOrdini()
         Try
 #Region "Variabili"
@@ -753,6 +796,8 @@ Module ContrattiFox
 
             'Ordino 
             'Al 15/09/23: si raggruppa solo se GRP_CONTRATTO sono uguali
+            'Dim dvContratti As New DataView(dtContratti, "", "ACGCOD, GRP_CONTRATTO, GRP_distinta_fattura, CANONE DESC", DataViewRowState.CurrentRows)
+            'Si e' scelto di riassegnare gli ordini ad un codice cliente diverso pertanto la dv deve essere ordinta per questo nuovo campo ( aggiunto precedentemente)
             Dim dvContratti As New DataView(dtContratti, "", "ACGCOD, GRP_CONTRATTO, GRP_distinta_fattura, CANONE DESC", DataViewRowState.CurrentRows)
             '11/10/2023 E' possibile che alcuni contratti vadano assegnati ad altri e hanno codice cliente diverso ma GRP_CONTRATTO uguale
             Dim dvChkContratto_Cliente As New DataView(dtContratti, "", "CONTRATTO, ACGCOD", DataViewRowState.CurrentRows)
@@ -820,10 +865,8 @@ Module ContrattiFox
                     Dim contratto As String = r("CONTRATTO").ToString.Trim
                     Dim clienteFox As String = r("CLIENTE").ToString.Trim
                     Dim clienteACG As String = r("ACGCOD").ToString.Trim
-                    drElencoClientiSpa = r.GetParentRow("ELENCO CLIENTI SPA")
-                    Dim clienteContratto As String
-                    clienteContratto = If(drElencoClientiSpa Is Nothing, clienteACG, drElencoClientiSpa("CODICE FINALE"))
-                    Debug.Print(clienteACG & " " & contratto & " -> " & clienteContratto)
+                    Dim clienteContratto As String = r("NEWCODCLI").ToString.Trim
+                    Debug.Print(contratto & " ACGCOD: " & clienteACG & " -> NEW: " & clienteContratto)
                     Dim centro As String = dvTabelle.CercaValoreSuTabelleFox("CC", r("CCOSTO").ToString).Trim
 
                     'Check Cambio cliente -> Carico Sedi
@@ -1176,8 +1219,8 @@ Module ContrattiFox
                                     ElseIf dvFattEle.Count = 1 Then
                                         drFattEle = dvFattEle(0).Row
                                     Else
-                                        errori.AppendLine("Più righe di Fatturazione Elettronica (CLIFTELE) impossbile determinare quella corretta: " & contratto)
-                                        'Dim mb As New MessageBoxWithDetails("Più righe di Fatturazione Elettronica (CLIFTELE) impossbile determinare quella corretta: " & contratto, GetCurrentMethod.Name)
+                                        errori.AppendLine("Più righe di Fatturazione Elettronica (CLIFTELE) impossibile determinare quella corretta: " & contratto)
+                                        'Dim mb As New MessageBoxWithDetails("Più righe di Fatturazione Elettronica (CLIFTELE) impossibile determinare quella corretta: " & contratto, GetCurrentMethod.Name)
                                         'mb.ShowDialog()
                                     End If
                                 End If
@@ -1919,7 +1962,6 @@ Module ContrattiFox
                 End Try
             Next
 
-
 #Region "Righe accantonate "
             'Inserimento righe accantonate
             Dim currentCustomer As String = ""
@@ -2551,6 +2593,8 @@ Module ContrattiFox
                         bulkMessage.AppendLine("Righe distinta: " & nrDistinte.ToString)
                         Debug.Print("Righe distinta UNO " & nrDistinteUNO.ToString)
                         bulkMessage.AppendLine("Righe distinta UNO " & nrDistinteUNO.ToString)
+                        Debug.Print("Discrepanze " & cfgOrdConDist.StatsInfo.StatsNumberInserted - (nrDistinte + nrDistinteUNO).ToString)
+                        bulkMessage.AppendLine("Discrepanze " & cfgOrdConDist.StatsInfo.StatsNumberInserted - (nrDistinte + nrDistinteUNO).ToString)
                     End If
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento righe servizi aggiuntivi contratto ")
@@ -2687,6 +2731,43 @@ Module ContrattiFox
                     OrdiniCntx.Database.ExecuteSqlRaw("DBCC TRACEOFF(610)")
 
                 Catch ex As Exception
+                    If ex.Message.Contains("Il client per la copia bulk ha inviato una lunghezza di colonna non valida per il colid") Then
+                        'Milano ha dato un errore: Ciclo su ogni riga per trovarla
+                        Dim cfgOrd As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0
+                                    }
+                        Try
+                            bulkTrans.Rollback()
+                            bulkTrans.Dispose()
+
+                            Using bulkTrans1 = OrdiniCntx.Database.BeginTransaction
+
+                                For Each o In efMaSaleOrd
+                                    Dim Olist As New List(Of MaSaleOrd)
+                                    Olist.Add(o)
+                                    Debug.Print(o.InternalOrdNo & " " & o.Customer)
+                                    OrdiniCntx.BulkInsertOrUpdate(Olist, cfgOrd, Function(d) d)
+                                Next
+                            End Using
+                        Catch exxx As Exception
+
+                        End Try
+                        Dim pattern As String = "\d+"
+                        Dim match As Match = Regex.Match(ex.Message.ToString(), pattern)
+                        Dim index = Convert.ToInt32(match.Value) - 1
+
+                        Dim fi As System.Reflection.FieldInfo = GetType(SqlBulkCopy).GetField("_sortedColumnMappings", BindingFlags.NonPublic Or BindingFlags.Instance)
+                        Dim sortedColumns = fi.GetValue(OrdiniCntx)
+                        Dim items = CType(sortedColumns.[GetType]().GetField("_items", BindingFlags.NonPublic Or BindingFlags.Instance).GetValue(sortedColumns), Object())
+                        Dim itemdata As FieldInfo = items(index).[GetType]().GetField("_metadata", BindingFlags.NonPublic Or BindingFlags.Instance)
+                        Dim metadata = itemdata.GetValue(items(index))
+
+                        Dim column = metadata.[GetType]().GetField("column", BindingFlags.[Public] Or BindingFlags.NonPublic Or BindingFlags.Instance).GetValue(metadata)
+                        Dim length = metadata.[GetType]().GetField("length", BindingFlags.[Public] Or BindingFlags.NonPublic Or BindingFlags.Instance).GetValue(metadata)
+                        ' Throw New DataFormatException(String.Format("Column: {0} contains data with a length greater than: {1}", column, length));
+
+                    End If
                     someTrouble = True
 
                     Debug.Print(ex.Message)

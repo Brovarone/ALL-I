@@ -144,6 +144,9 @@ namespace EFMago.Models
         public virtual ICollection<Allcespiti> ALLCespiti { get; set; }
         public virtual ICollection<AllordCliAttivita> AllordCliAttivita { get; set; }
         public virtual ICollection<AllordCliContratto> ALLordCliContratto { get; set; }
+        /// <summary>
+        /// Descrizioni testa fattura
+        /// </summary>
         public virtual ICollection<AllordCliDescrizioni> ALLordCliDescrizioni { get; set; }
         public virtual ICollection<AllordCliTipologiaServizi> ALLordCliTipologiaServizi { get; set; }
         public virtual ICollection<AllordPadre> AllordPadre { get; set; }

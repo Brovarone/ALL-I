@@ -45,6 +45,9 @@ namespace EFMago.Models
         public virtual MaItems MaItems { get; set; }
         public virtual AlltipoRigaServizio AlltipoRigaServizio { get; set; }
         public virtual ICollection<AllordCliAttivita> AllordCliAttivita { get; set; }
+        /// <summary>
+        /// Descrizioni fattura per ogni singola riga contratto
+        /// </summary>
         public virtual ICollection<AllordCliContrattoDescFatt> AllordCliContrattoDescFatt { get; set; }
         public virtual ICollection<AllordCliContrattoDistinta> AllordCliContrattoDistinta { get; set; }
 
