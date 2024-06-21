@@ -12,7 +12,7 @@ Imports ALLSystemTools.SqlTools
 
 Module ContrattiFox
     Private ReadOnly lOk3 As String() = {"H00008", "H80157", "H00010", "H00012", "H00050", "H00074", "H00088", "H00126", "H00140", "H00172", "H00242", "H00616", "H00626", "H00650", "H01588"}
-    Private ReadOnly lOK As String() = {"A03670"}
+    Private ReadOnly lOK As String() = {"I00198"}
     Private ReadOnly uselOk As Boolean = False ' se true allora filtra solo lOk
     Private ReadOnly lOK2 As String() = {"H01662", "H01686", "H00650", "H01479", "H00605"}
     Private ReadOnly lExclude As String() = {"H00430", "H01544"}
@@ -255,7 +255,7 @@ Module ContrattiFox
             'ds.Relations.Add("Pagamenti", ds.Tables("_ONTRORD").Columns("CPAGAM"), ds.Tables("ACGTRPG").Columns("CPAGAM"))
         Catch ex As System.ArgumentException
             Debug.Print(istep.ToString & " " & ex.Message)
-            Dim sb As List(Of String)
+
         End Try
         dtContratti = ds.Tables("_ONTRORD")
         dtFattEle = ds.Tables("_LIFTELE")
@@ -808,6 +808,8 @@ Module ContrattiFox
             nrDistinte = 0
             nrDistinteUNO = 0
             Dim nextDataFatt As String = New DateTime(2024, 7, 1).ToString
+            Dim nextDataFattAnnAnt As String = New DateTime(2025, 1, 1).ToString
+            Dim nextDataFattAnnPost As String = New DateTime(2024, 12, 31).ToString
 
 #End Region
 
@@ -1085,7 +1087,7 @@ Module ContrattiFox
                             Dim newSendDoc As Boolean = False
                             Dim ragSocDatifatturaXls As String
                             Dim indirizzoDatifatturaXls As String
-                            If Not drDatiFatturaXls Is Nothing Then
+                            If drDatiFatturaXls IsNot Nothing Then
                                 ragSocDatifatturaXls = Left(String.Concat(drDatiFatturaXls("R_RSO").ToString.Trim, If(IsPrivato(cliMago.TaxIdNumber, cliMago.FiscalCode), "", " " & drDatiFatturaXls("R_PSO").ToString.Trim)).Trim, 128)
                                 indirizzoDatifatturaXls = drDatiFatturaXls("INDIRIZZO").ToString()
                             End If
@@ -1136,7 +1138,7 @@ Module ContrattiFox
                             masterOrder.SedeInvioDoc = sendDocumentTo
                             If newSendDoc Then
                                 'todo: riferimento amministrazione(vedere dove va)
-                                If Not drDatiFatturaXls Is Nothing Then
+                                If drDatiFatturaXls IsNot Nothing Then
                                     Dim rCliBr As New MaCustSuppBranches With {
                                                 .CustSuppType = CustSuppType.Cliente,
                                                 .CustSupp = clienteContratto,
@@ -1297,7 +1299,7 @@ Module ContrattiFox
                             .NonRiportaInFatt = "0",
                             .Fatturato = "0",
                             .DataFineElaborazione = sDataNulla,
-                            .DataProssimaFatt = nextDataFatt,
+                            .DataProssimaFatt = If(.TipoRigaServizio.Equals("12A"), nextDataFattAnnAnt, If(.TipoRigaServizio.Equals("12P"), nextDataFattAnnPost, nextDataFatt)),
                             .CodiceIva = codIva,
                             .Tbcreated = Now,
                             .Tbmodified = Now,
@@ -1388,7 +1390,7 @@ Module ContrattiFox
                         .TipoRigaServizio = TranscodificaFrequenza(r("FREQ").ToString),
                         .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
                         .DataFineElaborazione = sDataNulla,
-                        .DataProssimaFatt = nextDataFatt,
+                        .DataProssimaFatt = If(.TipoRigaServizio.Equals("12A"), nextDataFattAnnAnt, If(.TipoRigaServizio.Equals("12P"), nextDataFattAnnPost, nextDataFatt)),
                         .CodIntegra = contratto,
                         .CodContratto = contratto,
                         .Tbcreated = Now,
@@ -1645,7 +1647,7 @@ Module ContrattiFox
                             .TipoRigaServizio = TranscodificaFrequenza(r("FREQ").ToString),
                             .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
                             .DataFineElaborazione = sDataNulla,
-                            .DataProssimaFatt = nextDataFatt,
+                            .DataProssimaFatt = If(.TipoRigaServizio.Equals("12A"), nextDataFattAnnAnt, If(.TipoRigaServizio.Equals("12P"), nextDataFattAnnPost, nextDataFatt)),
                             .CodIntegra = "",
                             .CodContratto = contratto,
                             .Tbcreated = Now,
@@ -1738,7 +1740,7 @@ Module ContrattiFox
                             .Job = "",
                             .CostCenter = centro,
                             .PriceListValidityDate = Valid_Data(r("DTPRODUZ").ToString),
-                            .InvoicingCustomer = r("ACGCOD").ToString,
+                            .InvoicingCustomer = clienteContratto,
                             .ExpectedDeliveryDate = Valid_Data(r("DTDECORR").ToString),
                             .ConfirmedDeliveryDate = sDataNulla,
                             .CompulsoryDeliveryDate = Valid_Data(r("DTCESSFATT").ToString),
@@ -2073,7 +2075,7 @@ Module ContrattiFox
                         .TipoRigaServizio = rifDistinta.TipoRigaServizio,
                         .DataDecorrenza = Valid_Data(rA("DTDECORR").ToString),
                         .DataFineElaborazione = sDataNulla,
-                        .DataProssimaFatt = nextDataFatt,
+                        .DataProssimaFatt = If(.TipoRigaServizio.Equals("12A"), nextDataFattAnnAnt, If(.TipoRigaServizio.Equals("12P"), nextDataFattAnnPost, nextDataFatt)),
                         .CodIntegra = rA("CONTRATTO").ToString,
                         .CodContratto = rA("CONTRATTO").ToString,
                         .Tbcreated = Now,
@@ -2288,7 +2290,7 @@ Module ContrattiFox
                             .TipoRigaServizio = rifDistinta.TipoRigaServizio,
                             .DataDecorrenza = Valid_Data(rA("DTDECORR").ToString),
                             .DataFineElaborazione = sDataNulla,
-                            .DataProssimaFatt = nextDataFatt,
+                            .DataProssimaFatt = If(.TipoRigaServizio.Equals("12A"), nextDataFattAnnAnt, If(.TipoRigaServizio.Equals("12P"), nextDataFattAnnPost, nextDataFatt)),
                             .CodIntegra = "",
                             .CodContratto = rA("CONTRATTO").ToString,
                             .Tbcreated = Now,
