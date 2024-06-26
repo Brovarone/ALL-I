@@ -10,6 +10,7 @@ Public Class CurOrdRow
     Public Property ValUnit As Double
     Public Property DataDecorrenza As Date
     Public Property DataProssimaFattura As Date
+    Public Property DataProssimaFatturaCampagna As Date
     Public Property DataPrevistaConsegna As Date
     Public Property DataConfermaConsegna As Date
     Public Property QtaOrdine As Double
@@ -49,6 +50,7 @@ Public Class CurOrdRow
     Public Property IsUnaTantum As Boolean
     Public Property IsAConsumo As Boolean
     Public Property IsContinuativo As Boolean
+    Public Property IsCampagna As Boolean
     ''' <summary>
     ''' Vale per righe attività di annullamento
     ''' </summary>
@@ -89,6 +91,7 @@ Public Class CurOrdRow
         ValUnit = 0
         DataDecorrenza = d
         DataProssimaFattura = d
+        DataProssimaFatturaCampagna = d
         DataPrevistaConsegna = d
         DataConfermaConsegna = d
         QtaOrdine = 0
@@ -113,6 +116,7 @@ Public Class CurOrdRow
         IsUnaTantum = False
         IsAConsumo = False
         IsContinuativo = False
+        IsCampagna = False
         PrecendementeCessato = False
         DataCessazione = New DateTime(1799, 12, 31)
         DataScadenzaFissa = New DateTime(1799, 12, 31)
@@ -142,6 +146,7 @@ Public Class CurOrdRow
         ValUnit = Math.Round(c.ValUnitIstat.Value, decValUnit)
         DataDecorrenza = c.DataDecorrenza
         DataProssimaFattura = nextDate
+        DataProssimaFatturaCampagna = nextDate
         DataPrevistaConsegna = nextDate
         DataConfermaConsegna = nextDate
         QtaOrdine = Math.Round(c.Qta.Value, decPerc)
@@ -167,6 +172,7 @@ Public Class CurOrdRow
         IsUnaTantum = TipologiaServizio = TipologiaServizio.UnaTantum
         IsAConsumo = TipologiaServizio = TipologiaServizio.AConsumo
         IsContinuativo = TipologiaServizio = TipologiaServizio.Continuativo
+        IsCampagna = CBool(c.AlltipoRigaServizio.Campagna)
         PrecendementeCessato = False
         DataCessazione = d
         DataScadenzaFissa = d
@@ -180,9 +186,9 @@ Public Class CurOrdRow
         NrInterventiOltreFranchigia = 0
 
         Dim iNrCanoni As Integer
-        'Canoni e valori a Consumo seguono il corso delle cadenzepertanto considero i mesi
+        'Canoni e valori a Consumo seguono il corso delle cadenze pertanto considero i mesi
         If IsCanone OrElse IsAConsumo OrElse IsContinuativo Then
-            If IsContinuativo Then
+            If IsContinuativo AndAlso Not IsCampagna Then
                 If IsContinuativo Then iNrCanoni = 1
             Else
                 Select Case c.AlltipoRigaServizio.Periodicita
@@ -217,6 +223,9 @@ Public Class CurOrdRow
                 'DataProssimaFattura = nextDateAnt.AddMonths(iNrCanoni) ' CanoniDataFin.AddDays(1)
                 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
                 'Eseguo l'aggiunta dei mesi ed essendo il primo basta togliere un giorno
+                If IsCampagna Then
+                    DataProssimaFatturaCampagna = nextDateAnt.AddMonths(iNrCanoni)
+                End If
                 Dim dta As Date = CalcolaDataProssimaFattura(nextDateAnt.AddMonths(iNrCanoni), c.AlltipoRigaServizio.Periodicita)
                 DataProssimaFattura = dta
                 CanoniDataFin = dta.AddDays(-1)
@@ -245,6 +254,12 @@ Public Class CurOrdRow
                 Dim postUltimoGiorno As Date = nextDatePos.AddMonths(iNrCanoni)
                 postUltimoGiorno = New Date(postUltimoGiorno.Year, postUltimoGiorno.Month, DateTime.DaysInMonth(postUltimoGiorno.Year, postUltimoGiorno.Month))
                 DataProssimaFattura = postUltimoGiorno
+                If IsCampagna Then
+                    'CanoniDataIn = postPrimoGiorno
+                    'CanoniDataFin = nextDatePos
+                    DataProssimaFatturaCampagna = nextDatePos
+                End If
+
             End If
             'Sui continuativi avendo solo un valore imposto data fattura/ dataInizio
             If IsContinuativo Then CanoniDataFin = CanoniDataIn
@@ -259,6 +274,84 @@ Public Class CurOrdRow
         PeriodoDataFin = CanoniDataFin
 
     End Sub
+    ''' <summary>
+    ''' Popola la classe a partire da una riga di Servizio Aggiuntivo
+    ''' per ora lavora male non usare
+    ''' </summary>
+    ''' <param name="s"></param>
+    Public Sub New(ByVal s As AllordCliContrattoDistintaServAgg)
+        Dim nextDate As Date = s.DataProssimaFatt
+        Dim d As New DateTime(1799, 12, 31)
+
+        IsOk = True
+        Line = 0
+        Item = s.Servizio
+        Description = s.Descrizione
+        UoM = s.Um
+        ValUnit = Math.Round(s.ValUnitIstat.Value, decValUnit)
+        DataDecorrenza = s.DataDecorrenza
+        DataProssimaFattura = nextDate
+        DataProssimaFatturaCampagna = nextDate
+        DataPrevistaConsegna = nextDate
+        DataConfermaConsegna = nextDate
+        QtaOrdine = Math.Round(s.Qta.Value, decPerc)
+        NrCanoniIniziale = 0
+        QtaCorrente = Math.Round(s.Qta.Value, decPerc)
+        QtaFranchigia = Math.Round(s.Franchigia.Value, decPerc)
+        QtaDaRifatturare = 0
+        DaRifatturare = False
+        DataProssimaRifatturazione = d
+        CanoneFuoriRangeDate = False
+        QtaSospesa = 0
+        SospesoDaAttivita = False
+        QtaAnnullata = 0
+        HaAnnullatoDaAttivita = False
+        DataCessazioneDaAttivita = d
+        CanoniDataIn = d
+        CanoniDataFin = d
+        PeriodoDataIn = d
+        PeriodoDataFin = d
+        TipologiaServizio = s.AlltipoRigaServizio.TipologiaServizio
+        IsCanone = False
+        IsConsuntivo = False
+        IsUnaTantum = False
+        IsAConsumo = False
+        IsContinuativo = False
+        IsCampagna = False
+        PrecendementeCessato = False
+        DataCessazione = d
+        DataScadenzaFissa = d
+        Contropartita = String.Empty
+        CodIva = String.Empty
+        PercIva = 0
+        AnnoIntervento = s.AnnoIntervento.GetValueOrDefault
+        NrInterventiFranchigia = s.NrInterventiFranchigia.GetValueOrDefault
+        NrInterventiPeriodo = s.NrInterventiPeriodo.GetValueOrDefault
+        NrInterventiMese = s.NrInterventiMese.GetValueOrDefault
+        NrInterventiOltreFranchigia = s.NrInterventiOltreFranchigia.GetValueOrDefault
+
+        'Imposto l'ultimo giorno del mese
+        Dim nextDatePos = New Date(nextDate.Year, nextDate.Month, DateTime.DaysInMonth(nextDate.Year, nextDate.Month))
+        DataPrevistaConsegna = nextDatePos
+        DataConfermaConsegna = nextDatePos
+        'La data e' posticipata quindi devo sottrarre dei mesi
+        'prima aggiungo un giorno in modo da poter sottrarre correttamente
+        Dim postPrimoGiorno = nextDatePos.AddDays(1).AddMonths(-1)
+        'Poi porto al primo ( non dovrebbe essere necessario ma lo faccio)
+        postPrimoGiorno = New Date(postPrimoGiorno.Year, postPrimoGiorno.Month, 1)
+        CanoniDataIn = postPrimoGiorno
+        CanoniDataFin = nextDatePos
+        'Calcolo la data prossima fattura aggiungerdo i mesi e andando all'ultimo giorno
+        Dim postUltimoGiorno As Date = nextDatePos.AddMonths(1)
+        postUltimoGiorno = New Date(postUltimoGiorno.Year, postUltimoGiorno.Month, DateTime.DaysInMonth(postUltimoGiorno.Year, postUltimoGiorno.Month))
+        DataProssimaFattura = postUltimoGiorno
+
+        NrCanoniIniziale = 0
+        PeriodoDataIn = CanoniDataIn
+        PeriodoDataFin = CanoniDataFin
+
+    End Sub
+
     ''' <summary>
     ''' La data e' sempre il primo del mese ed e' già adeguata/nuova, occorre solo correggerla se esce dai range
     ''' </summary>
@@ -318,83 +411,6 @@ Public Class CurOrdRow
     Public Sub AnnullaDaAttività(ByVal dataAnnullamento As Date)
         HaAnnullatoDaAttivita = True
         DataCessazioneDaAttivita = dataAnnullamento
-    End Sub
-    ''' <summary>
-    ''' Popola la classe a partire da una riga di Servizio Aggiuntivo
-    ''' per ora lavora male non usare
-    ''' </summary>
-    ''' <param name="s"></param>
-    Public Sub New(ByVal s As AllordCliContrattoDistintaServAgg)
-        Dim nextDate As Date = s.DataProssimaFatt
-        Dim d As New DateTime(1799, 12, 31)
-
-        IsOk = True
-        Line = 0
-        Item = s.Servizio
-        Description = s.Descrizione
-        UoM = s.Um
-        ValUnit = Math.Round(s.ValUnitIstat.Value, decValUnit)
-        DataDecorrenza = s.DataDecorrenza
-        DataProssimaFattura = nextDate
-        DataPrevistaConsegna = nextDate
-        DataConfermaConsegna = nextDate
-        QtaOrdine = Math.Round(s.Qta.Value, decPerc)
-        NrCanoniIniziale = 0
-        QtaCorrente = Math.Round(s.Qta.Value, decPerc)
-        QtaFranchigia = Math.Round(s.Franchigia.Value, decPerc)
-        QtaDaRifatturare = 0
-        DaRifatturare = False
-        DataProssimaRifatturazione = d
-        CanoneFuoriRangeDate = False
-        QtaSospesa = 0
-        SospesoDaAttivita = False
-        QtaAnnullata = 0
-        HaAnnullatoDaAttivita = False
-        DataCessazioneDaAttivita = d
-        CanoniDataIn = d
-        CanoniDataFin = d
-        PeriodoDataIn = d
-        PeriodoDataFin = d
-        TipologiaServizio = s.AlltipoRigaServizio.TipologiaServizio
-        IsCanone = False
-        IsConsuntivo = False
-        IsUnaTantum = False
-        IsAConsumo = False
-        IsContinuativo = False
-        PrecendementeCessato = False
-        DataCessazione = d
-        DataScadenzaFissa = d
-        Contropartita = String.Empty
-        CodIva = String.Empty
-        PercIva = 0
-        AnnoIntervento = s.AnnoIntervento.GetValueOrDefault
-        NrInterventiFranchigia = s.NrInterventiFranchigia.GetValueOrDefault
-        NrInterventiPeriodo = s.NrInterventiPeriodo.GetValueOrDefault
-        NrInterventiMese = s.NrInterventiMese.GetValueOrDefault
-        NrInterventiOltreFranchigia = s.NrInterventiOltreFranchigia.GetValueOrDefault
-
-        'Imposto l'ultimo giorno del mese
-        Dim nextDatePos = New Date(nextDate.Year, nextDate.Month, DateTime.DaysInMonth(nextDate.Year, nextDate.Month))
-        DataPrevistaConsegna = nextDatePos
-        DataConfermaConsegna = nextDatePos
-        'La data e' posticipata quindi devo sottrarre dei mesi
-        'prima aggiungo un giorno in modo da poter sottrarre correttamente
-        Dim postPrimoGiorno = nextDatePos.AddDays(1).AddMonths(-1)
-        'Poi porto al primo ( non dovrebbe essere necessario ma lo faccio)
-        postPrimoGiorno = New Date(postPrimoGiorno.Year, postPrimoGiorno.Month, 1)
-        CanoniDataIn = postPrimoGiorno
-        CanoniDataFin = nextDatePos
-        'Calcolo la data prossima fattura aggiungerdo i mesi e andando all'ultimo giorno
-        Dim postUltimoGiorno As Date = nextDatePos.AddMonths(1)
-        postUltimoGiorno = New Date(postUltimoGiorno.Year, postUltimoGiorno.Month, DateTime.DaysInMonth(postUltimoGiorno.Year, postUltimoGiorno.Month))
-        DataProssimaFattura = postUltimoGiorno
-
-
-
-        NrCanoniIniziale = 0
-        PeriodoDataIn = CanoniDataIn
-        PeriodoDataFin = CanoniDataFin
-
     End Sub
 
 End Class

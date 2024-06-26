@@ -4,6 +4,8 @@
         Select Case codice.ToUpper
             Case "AC"
                 esito = "APECHIU"
+            Case "AGG"
+                esito = "AGGIUNTIVI"
             Case "B1"
                 esito = "XXXXX"
             Case "C1"

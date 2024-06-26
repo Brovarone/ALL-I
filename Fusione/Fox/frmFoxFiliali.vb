@@ -2,7 +2,7 @@
     Public okFil As List(Of String)
     Private Sub frmFoxFiliali_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         'ChkOrdBI.Checked = True
-        ChkOrdVA.Checked = True
+        'ChkOrdVA.Checked = True
         'ChkOrdNO.Checked = True
         'ChkOrdAL.Checked = True
         'ChkOrdAT.Checked = True

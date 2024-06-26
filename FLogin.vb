@@ -211,7 +211,7 @@ Public Class FLogin
     Private Sub LoadSettings()
         Dim n As String = "settings.json"
         Dim f As String = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano"
-        Dim s As String = f & "\" & n
+        Dim s As String = f & slash & n
 
         'Controllo esistenza del file 
         If System.IO.File.Exists(s) Then
@@ -234,7 +234,7 @@ Public Class FLogin
             FolderPath = txtPath.Text
             txtTemp_FoxFolder.Text = My.Settings.mFOXPATH
         Else
-            Directory.CreateDirectory(f & "\")
+            Directory.CreateDirectory(f & slash)
             'Carico dal file config
             TxtDB_UNO.Text = My.Settings.mDATABASE
             TxtDB_SPA.Text = My.Settings.mDATABASE_SPA
@@ -946,7 +946,6 @@ Public Class FLogin
                 Dim result As DialogResult = ff.ShowDialog
                 If result = DialogResult.OK Then
                     Dim bFound As Boolean
-                    Dim contrattiFound() As Boolean
                     Dim fileInFolder As String()
                     Dim allOk As Boolean = True
 
@@ -955,9 +954,7 @@ Public Class FLogin
                         Dim contrattiALL As String() = {"_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV"} '"_CHIAVI", "_ONEOPE1","_ONTROPE"
                         Dim contratti2023 As String() = {"_AGRFATD", "_AGRFATD.2023", "_AGRFATT", "_AGRFATT.2023", "_EWTAB", "_LIENORD", "_LIENORD.2023", "_LIFTELE", "_LIFTELE.2023", "_ONTRORD", "_RID", "_RID.2023", "_SENTIIV"} '"_CHIAVI", "_ONEOPE1","_ONTROPE"
                         Dim contratti As String() = If(ff.ChkAlso2023.Checked, contratti2023, contrattiALL)
-                        ReDim contrattiFound(contratti.Count + 1)
-                        Dim iACGTRPG As Integer = contrattiFound.Count - 2
-                        Dim iElencoClientiSpa As Integer = contrattiFound.Count - 1
+                        Dim contrattiFound(contratti.Length)
                         fileInFolder = Directory.GetFiles(f, "*.*", SearchOption.TopDirectoryOnly)
                         For i = 0 To UBound(contratti)
                             For Each sFile As String In fileInFolder
@@ -976,7 +973,11 @@ Public Class FLogin
                                 Exit For
                             End If
                         Next
-                        ReDim Preserve contratti(contratti.Count + 1)
+                        ReDim Preserve contratti(contratti.Length + 2) '( ACGTRPG,ElencoClienti ,EstateSicura)
+                        ReDim Preserve contrattiFound(contratti.Length - 1)
+                        Dim iACGTRPG As Integer = contrattiFound.Length - 3
+                        Dim iElencoClientiSpa As Integer = contrattiFound.Length - 2
+                        Dim iEstateSicura As Integer = contrattiFound.Length - 1
                         fileInFolder = Directory.GetFiles(If(String.IsNullOrWhiteSpace(My.Settings.mFOXPATH), FolderPath, My.Settings.mFOXPATH), "*.*", SearchOption.TopDirectoryOnly)
                         For Each sFile As String In fileInFolder
                             Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
@@ -991,11 +992,21 @@ Public Class FLogin
                         Next
                         For Each sFile As String In fileInFolder
                             Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
-
                             bFound = sNomeFile.ToUpper.Equals("ELENCO CLIENTI SPA")
                             If bFound Then
                                 contrattiFound(iElencoClientiSpa) = True
                                 contratti(iElencoClientiSpa) = sFile
+                                lista.Add(sFile)
+                                Exit For
+                            End If
+                        Next
+                        '24/06/2024 ESTATE SICURA
+                        For Each sFile As String In fileInFolder
+                            Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
+                            bFound = sNomeFile.ToUpper.Equals("ESTIVI ESTATE SICURA 2024")
+                            If bFound Then
+                                contrattiFound(iEstateSicura) = True
+                                contratti(iEstateSicura) = sFile
                                 lista.Add(sFile)
                                 Exit For
                             End If
@@ -1008,6 +1019,11 @@ Public Class FLogin
                         If Not contrattiFound(iElencoClientiSpa) Then
                             allOk = False
                             MessageBox.Show("Impossibile continuare l'elaborazione dei Contratti a causa di file mancanti: ELENCO CLIENTI SPA ")
+                            Exit For
+                        End If
+                        If Not contrattiFound(iEstateSicura) Then
+                            allOk = False
+                            MessageBox.Show("Impossibile continuare l'elaborazione dei Contratti a causa di file mancanti: ESTIVI ESTATE SICURA 2024 ")
                             Exit For
                         End If
 
@@ -1043,6 +1059,8 @@ Public Class FLogin
             lstStatoConnessione.Items.Add(sNomeFile & sExt)
             bOkImport = ProcessaFile(sNomeFile, sExt)
             lstStatoConnessione.Items.Add("Esito elaborazione " & nomegruppo & " (" & sNomeFile & "): " & If(bOkImport, "OK", "Errore"))
+            lstStatoConnessione.TopIndex = lstStatoConnessione.Items.Count - 1
+            Application.DoEvents()
         Next
 
     End Sub
@@ -1077,7 +1095,7 @@ Public Class FLogin
                     'i CSV non hanno intestazione di solito ottengo il file in 
                     'dsXLS = If(ext.ToUpper = ".CSV", ProcessaCSV(spath, False), ProcessaXLS(spath, True))
                     Select Case sNomeFile
-                        Case "_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV", "ACGTRPG", "ELENCO CLIENTI SPA", "_LIENORD.2023", "_AGRFATD.2023", "_AGRFATT.2023", "_LIFTELE.2023", "_RID.2023"
+                        Case "_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV", "ACGTRPG", "ELENCO CLIENTI SPA", "_LIENORD.2023", "_AGRFATD.2023", "_AGRFATT.2023", "_LIFTELE.2023", "_RID.2023", "ESTIVI ESTATE SICURA 2024"
                             Try
                                 dsXLS = If(sExt.ToUpper = ".CSV", ProcessaCSV(sFullPath, False), LoadXLS(sFullPath, True, True))
                                 If sNomeFile = "_ONTRORD" AndAlso dsXLS.Tables("_ONTRORD").Columns("GRP CONTRATTO").DataType <> GetType(String) Then
@@ -1107,6 +1125,9 @@ Public Class FLogin
                                 If sNomeFile = "_RID.2023" Then
                                     dsXLS.Tables(0).TableName = "_RID.2023"
                                 End If
+                                If sNomeFile = "ESTIVI ESTATE SICURA 2024" Then
+                                    dsXLS.Tables(0).TableName = "ESTIVI"
+                                End If
                                 bOkImport = True
                                 dsFOX.Add(dsXLS)
                             Catch ex As Exception
@@ -1134,7 +1155,7 @@ Public Class FLogin
         Dim esito As Boolean = False
         'Fixare a seguito del file paghe che forse e' un dat
         If ext.ToUpper = ".CSV" OrElse ext.ToUpper = ".XLS" OrElse ext.ToUpper = ".XLSX" OrElse ext.ToUpper = ".DAT" Then
-            Dim spath = FolderPath & "\" & filename & ext
+            Dim spath = FolderPath & slash & filename & ext
             EditTestoBarra("Processo file " & filename & ext)
             prgCopy.Minimum = 0
             prgCopy.Maximum = 100
@@ -1531,7 +1552,7 @@ Public Class FLogin
     End Sub
 
     Private Sub UserSettingFolderToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles UserSettingFolderToolStripMenuItem.Click
-        Process.Start(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano" & "\")
+        Process.Start(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano" & slash)
 
     End Sub
     Private Sub AppLogToolStripMenu_Click(sender As Object, e As EventArgs) Handles AppLogToolStripMenu.Click
@@ -1712,7 +1733,6 @@ Public Class FLogin
     End Sub
     Private Sub RiorganizzaCartelleToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles RiorganizzaCartelleToolStripMenuItem.Click
         If (FolderBrowserDialog1.ShowDialog() = DialogResult.OK) Then
-            Const sl As String = "\"
             Dim p As String = FolderBrowserDialog1.SelectedPath
             Dim Folders As String() = Directory.GetDirectories(p)
 
@@ -1720,7 +1740,7 @@ Public Class FLogin
                 Dim d As DateTime
                 Dim fName As String = Strings.Left(Path.GetFileName(f), 10)
                 If DateTime.TryParse(fName, d) Then
-                    Dim dest As String = p & sl & d.ToString("yyyy") & sl & d.ToString("MMMM", New Globalization.CultureInfo("it-IT")).ToUpper & sl & Path.GetFileName(f)
+                    Dim dest As String = p & slash & d.ToString("yyyy") & slash & d.ToString("MMMM", New Globalization.CultureInfo("it-IT")).ToUpper & slash & Path.GetFileName(f)
                     MoveDirectory(f, dest, True)
                 End If
             Next

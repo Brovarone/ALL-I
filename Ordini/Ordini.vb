@@ -148,18 +148,19 @@ Partial Module Ordini
 #End Region
 
         Try
-            'Precarico
+            'Precarico prima metto i dati "ultimi"
             EditTestoBarra("Precaricamento Tabelle ")
+            OrdContext.Allattivita.Load()
+            OrdContext.MaItems.Load()
+            OrdContext.AlltipoRigaServizio.Load()
+            OrdContext.Alldescrizioni.Load()
             OrdContext.MaSaleOrd.Load()
             OrdContext.AllordCliAcc.Load()
             OrdContext.AllordCliDescrizioni.Load()
-            OrdContext.MaSaleOrd.Load()
+            OrdContext.MaSaleOrdDetails.Load()
             OrdContext.AllordCliContratto.Load()
             OrdContext.AllordCliContrattoDescFatt.Load()
-            OrdContext.MaItems.Load()
             OrdContext.AllordCliAttivita.Load()
-            OrdContext.Allattivita.Load()
-            OrdContext.AlltipoRigaServizio.Load()
             OrdContext.AllordCliContrattoDistinta.Load()
             OrdContext.AllordCliContrattoDistintaServAgg.Load()
 
@@ -244,7 +245,7 @@ Partial Module Ordini
                     Dim iNrRigheAValore As Integer = 0
 #End Region
                     'STEP 1 : Ciclo le righe contratto
-                    If o.ALLordCliContratto.Any Then
+                    If o.ALLordCliContratto IsNot Nothing AndAlso o.ALLordCliContratto.Any Then
                         For Each c In o.ALLordCliContratto
                             Dim isDaEscludere As Boolean = False
 #Region "Controllo Esclusioni righe Contratto"
@@ -309,7 +310,7 @@ Partial Module Ordini
                             Dim attIstat As New List(Of AllordCliAttivita)
 #End Region
 #Region "STEP 3 Attività"
-                            If c.AllordCliAttivita.Any Then
+                            If c.AllordCliAttivita IsNot Nothing AndAlso c.AllordCliAttivita.Any Then
                                 For Each att In c.AllordCliAttivita
                                     'Determina tipologia
                                     Dim tipoAttivita As String = att.GetTipoAttivita
@@ -465,7 +466,7 @@ Partial Module Ordini
 
                             'Se ok allora creo dettaglio
                             If Not cOrdRow.PrecendementeCessato AndAlso ((cOrdRow.IsOk AndAlso Not cOrdRow.CanoneFuoriRangeDate) OrElse cOrdRow.DaRifatturare) AndAlso (cOrdRow.QtaCorrente > 0 OrElse cOrdRow.QtaDaRifatturare > 0) Then
-                                If o.MaSaleOrdDetails.Any AndAlso o.MaSaleOrdDetails.Count = 1 Then
+                                If o.MaSaleOrdDetails IsNot Nothing AndAlso o.MaSaleOrdDetails.Any AndAlso o.MaSaleOrdDetails.Count = 1 Then
                                     If CheckRigaBianca(o.MaSaleOrdDetails.First) Then
                                         cOrd.LastLine = 0
                                         curLastPosition = 0
@@ -487,7 +488,7 @@ Partial Module Ordini
                                 isNewRows = True
                                 If Not bScrittoDescrizioni Then
                                     bScrittoDescrizioni = True
-                                    If o.ALLordCliDescrizioni.Any Then
+                                    If o.ALLordCliDescrizioni IsNot Nothing AndAlso o.ALLordCliDescrizioni.Any Then
                                         For Each d In o.ALLordCliDescrizioni
                                             iNewRowsCount += 1
                                             iNrRigheNota += 1
@@ -559,7 +560,7 @@ Partial Module Ordini
                                 If Not cOrdRow.CanoneFuoriRangeDate AndAlso cOrdRow.QtaCorrente > 0 Then
                                     'Scrivo Testo descrittivo del singolo CONTRATTO su MaSaleOrdDetails
                                     isNewRows = True
-                                    If c.AllordCliContrattoDescFatt.Any Then
+                                    If c.AllordCliContrattoDescFatt IsNot Nothing AndAlso c.AllordCliContrattoDescFatt.Any Then
                                         For Each d In c.AllordCliContrattoDescFatt
                                             iNewRowsCount += 1
                                             iNrRigheNota += 1
@@ -713,7 +714,11 @@ Partial Module Ordini
 #Region "Aggiorno date prossima Fatturazione"
                             If Not cOrdRow.CanoneFuoriRangeDate AndAlso (cOrdRow.IsOk OrElse cOrdRow.DaRifatturare OrElse cOrdRow.SospesoDaAttivita) AndAlso Not cOrdRow.PrecendementeCessato Then
                                 If cOrdRow.DataProssimaFattura < dataFattA Then avvisi.AppendLine("Ordine " & cOrd.OrdNo & " Servizio " & cOrdRow.Item & " con data prossima fatturazione antecedente alla data di fine estrazione !")
-                                c.DataProssimaFatt = cOrdRow.DataProssimaFattura
+                                If cOrdRow.IsCampagna Then
+                                    c.DataProssimaFatt = cOrdRow.DataProssimaFatturaCampagna
+                                Else
+                                    c.DataProssimaFatt = cOrdRow.DataProssimaFattura
+                                End If
                                 c.DataFineElaborazione = Now
                                 c.Tbmodified = Now
                                 c.TbmodifiedId = sLoginId

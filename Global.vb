@@ -54,6 +54,7 @@ Module Variabili
     Public Const IsDeprecated As Boolean = False
     Public FolderPath As String ' percorso globale
     Public Const TECNO_ALL1 As String = "NOLEGGIO SPA"
+    Public Const slash As String = "\"
 
     'Contesto LINQ2EF Core
     'Public InitialMagoContext As MagoContext
@@ -978,11 +979,10 @@ Public Module LogTools
     End Sub
 
     Private Sub SpostaFile(lista As List(Of String))
-        Const sl As String = "\"
         'Dim newFolder As String = FolderPath & "\PROCESSATI\" & DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")
         Dim d As DateTime = DateTime.Now
-        Dim periodo As String = d.ToString("yyyy") & sl & d.ToString("MMMM", New Globalization.CultureInfo("it-IT")).ToUpper
-        Dim newFolder As String = FolderPath & sl & "PROCESSATI" & sl & periodo & sl & d.ToString("yyyy-MM-dd HH-mm-ss")
+        Dim periodo As String = d.ToString("yyyy") & slash & d.ToString("MMMM", New Globalization.CultureInfo("it-IT")).ToUpper
+        Dim newFolder As String = FolderPath & slash & "PROCESSATI" & slash & periodo & slash & d.ToString("yyyy-MM-dd HH-mm-ss")
         Try
             Directory.CreateDirectory(newFolder)
         Catch ex As Exception
@@ -993,11 +993,11 @@ Public Module LogTools
         If lista.Count > 0 Then
             For Each f As String In lista
                 Dim newFilename As String = System.IO.Path.GetFileName(f)
-                File.Move(f, newFolder & sl & newFilename)
+                File.Move(f, newFolder & slash & newFilename)
             Next
         End If
         Dim l As String = My.Application.Log.DefaultFileLogWriter.FullLogFileName
-        File.Copy(l, newFolder & sl & System.IO.Path.GetFileName(l))
+        File.Copy(l, newFolder & slash & System.IO.Path.GetFileName(l))
         My.Settings.mLastLogPath = newFolder
         My.Settings.Save()
 
