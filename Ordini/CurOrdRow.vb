@@ -72,6 +72,8 @@ Public Class CurOrdRow
     Public Property PercIva As Double
     Public Property Contropartita As String
     Public Property Parent As CurOrd
+    Public Property ContrattoFox As String
+    Public Property CodiceIntegra As String
     Friend Property TipologiaServizio As TipologiaServizio
 
     'Da qua sono per i servizi aggiuntivi
@@ -129,6 +131,8 @@ Public Class CurOrdRow
         NrInterventiPeriodo = 0
         NrInterventiMese = 0
         NrInterventiOltreFranchigia = 0
+        ContrattoFox = String.Empty
+        CodiceIntegra = String.Empty
     End Sub
     ''' <summary>
     ''' Popola la classe a partire da una riga contratto
@@ -184,6 +188,8 @@ Public Class CurOrdRow
         NrInterventiPeriodo = 0
         NrInterventiMese = 0
         NrInterventiOltreFranchigia = 0
+        ContrattoFox = c.CodContratto
+        CodiceIntegra = c.CodIntegra
 
         Dim iNrCanoni As Integer
         'Canoni e valori a Consumo seguono il corso delle cadenze pertanto considero i mesi
@@ -325,8 +331,7 @@ Public Class CurOrdRow
         CodIva = String.Empty
         PercIva = 0
         AnnoIntervento = s.AnnoIntervento.GetValueOrDefault
-        NrInterventiFranchigia = s.NrInterventiFranchigia.GetValueOrDefault
-        NrInterventiPeriodo = s.NrInterventiPeriodo.GetValueOrDefault
+        NrInterventiFranchigia = s.NrInterventiInFranchigia.GetValueOrDefault
         NrInterventiMese = s.NrInterventiMese.GetValueOrDefault
         NrInterventiOltreFranchigia = s.NrInterventiOltreFranchigia.GetValueOrDefault
 

@@ -67,8 +67,13 @@ Partial Class FAskFiltriOrdini
         Me.GroupDecorrenza = New System.Windows.Forms.GroupBox()
         Me.DtaDecorrenza = New System.Windows.Forms.DateTimePicker()
         Me.GroupMomento = New System.Windows.Forms.GroupBox()
-        Me.RadioTypeServAgg = New System.Windows.Forms.RadioButton()
-        Me.RadioTypeCanoni = New System.Windows.Forms.RadioButton()
+        Me.RadioTipoServAgg = New System.Windows.Forms.RadioButton()
+        Me.RadioTipoCanoni = New System.Windows.Forms.RadioButton()
+        Me.GroupDivisione = New System.Windows.Forms.GroupBox()
+        Me.RadioDivTecnologia = New System.Windows.Forms.RadioButton()
+        Me.RadioDivTutti = New System.Windows.Forms.RadioButton()
+        Me.RadioDivVigilanza = New System.Windows.Forms.RadioButton()
+        Me.LblAvvisiServAgg = New System.Windows.Forms.Label()
         Me.TableLayoutPanel1.SuspendLayout()
         Me.GroupOrdini.SuspendLayout()
         Me.GroupDataFatt.SuspendLayout()
@@ -76,6 +81,7 @@ Partial Class FAskFiltriOrdini
         Me.GroupIstat.SuspendLayout()
         Me.GroupDecorrenza.SuspendLayout()
         Me.GroupMomento.SuspendLayout()
+        Me.GroupDivisione.SuspendLayout()
         Me.SuspendLayout()
         '
         'TableLayoutPanel1
@@ -86,7 +92,7 @@ Partial Class FAskFiltriOrdini
         Me.TableLayoutPanel1.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
         Me.TableLayoutPanel1.Controls.Add(Me.OK_Button, 0, 0)
         Me.TableLayoutPanel1.Controls.Add(Me.Cancel_Button, 1, 0)
-        Me.TableLayoutPanel1.Location = New System.Drawing.Point(337, 510)
+        Me.TableLayoutPanel1.Location = New System.Drawing.Point(330, 467)
         Me.TableLayoutPanel1.Name = "TableLayoutPanel1"
         Me.TableLayoutPanel1.RowCount = 1
         Me.TableLayoutPanel1.RowStyles.Add(New System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50.0!))
@@ -278,7 +284,7 @@ Partial Class FAskFiltriOrdini
         Me.GroupDataFatt.Controls.Add(Me.Label7)
         Me.GroupDataFatt.Controls.Add(Me.DtaFattDa)
         Me.GroupDataFatt.Controls.Add(Me.DtaFattA)
-        Me.GroupDataFatt.Location = New System.Drawing.Point(6, 296)
+        Me.GroupDataFatt.Location = New System.Drawing.Point(249, 3)
         Me.GroupDataFatt.Name = "GroupDataFatt"
         Me.GroupDataFatt.Size = New System.Drawing.Size(228, 81)
         Me.GroupDataFatt.TabIndex = 14
@@ -320,7 +326,7 @@ Partial Class FAskFiltriOrdini
         Me.GroupPeriodo.Controls.Add(Me.ChkP_Quadrimestrali)
         Me.GroupPeriodo.Controls.Add(Me.ChkP_Semestrali)
         Me.GroupPeriodo.Controls.Add(Me.ChkP_Annuali)
-        Me.GroupPeriodo.Location = New System.Drawing.Point(6, 383)
+        Me.GroupPeriodo.Location = New System.Drawing.Point(249, 90)
         Me.GroupPeriodo.Name = "GroupPeriodo"
         Me.GroupPeriodo.Size = New System.Drawing.Size(228, 114)
         Me.GroupPeriodo.TabIndex = 15
@@ -416,7 +422,7 @@ Partial Class FAskFiltriOrdini
         Me.GroupIstat.Controls.Add(Me.Label1)
         Me.GroupIstat.Controls.Add(Me.TxtPercIstat)
         Me.GroupIstat.Enabled = False
-        Me.GroupIstat.Location = New System.Drawing.Point(249, 279)
+        Me.GroupIstat.Location = New System.Drawing.Point(44, 326)
         Me.GroupIstat.Name = "GroupIstat"
         Me.GroupIstat.Size = New System.Drawing.Size(228, 131)
         Me.GroupIstat.TabIndex = 15
@@ -500,12 +506,13 @@ Partial Class FAskFiltriOrdini
         '
         Me.GroupDecorrenza.Controls.Add(Me.DtaDecorrenza)
         Me.GroupDecorrenza.Enabled = False
-        Me.GroupDecorrenza.Location = New System.Drawing.Point(249, 224)
+        Me.GroupDecorrenza.Location = New System.Drawing.Point(6, 433)
         Me.GroupDecorrenza.Name = "GroupDecorrenza"
         Me.GroupDecorrenza.Size = New System.Drawing.Size(228, 49)
         Me.GroupDecorrenza.TabIndex = 25
         Me.GroupDecorrenza.TabStop = False
         Me.GroupDecorrenza.Text = "Decorrenza inferiore a"
+        Me.GroupDecorrenza.Visible = False
         '
         'DtaDecorrenza
         '
@@ -517,36 +524,92 @@ Partial Class FAskFiltriOrdini
         '
         'GroupMomento
         '
-        Me.GroupMomento.Controls.Add(Me.RadioTypeServAgg)
-        Me.GroupMomento.Controls.Add(Me.RadioTypeCanoni)
+        Me.GroupMomento.Controls.Add(Me.RadioTipoServAgg)
+        Me.GroupMomento.Controls.Add(Me.RadioTipoCanoni)
         Me.GroupMomento.Location = New System.Drawing.Point(6, 224)
         Me.GroupMomento.Name = "GroupMomento"
-        Me.GroupMomento.Size = New System.Drawing.Size(228, 66)
+        Me.GroupMomento.Size = New System.Drawing.Size(228, 74)
         Me.GroupMomento.TabIndex = 26
         Me.GroupMomento.TabStop = False
         Me.GroupMomento.Text = "Tipo"
         '
-        'RadioTypeServAgg
+        'RadioTipoServAgg
         '
-        Me.RadioTypeServAgg.AutoSize = True
-        Me.RadioTypeServAgg.Location = New System.Drawing.Point(7, 42)
-        Me.RadioTypeServAgg.Name = "RadioTypeServAgg"
-        Me.RadioTypeServAgg.Size = New System.Drawing.Size(105, 17)
-        Me.RadioTypeServAgg.TabIndex = 1
-        Me.RadioTypeServAgg.Text = "Servizi Aggiuntivi"
-        Me.RadioTypeServAgg.UseVisualStyleBackColor = True
+        Me.RadioTipoServAgg.AutoSize = True
+        Me.RadioTipoServAgg.Location = New System.Drawing.Point(7, 42)
+        Me.RadioTipoServAgg.Name = "RadioTipoServAgg"
+        Me.RadioTipoServAgg.Size = New System.Drawing.Size(105, 17)
+        Me.RadioTipoServAgg.TabIndex = 1
+        Me.RadioTipoServAgg.Text = "Servizi Aggiuntivi"
+        Me.RadioTipoServAgg.UseVisualStyleBackColor = True
         '
-        'RadioTypeCanoni
+        'RadioTipoCanoni
         '
-        Me.RadioTypeCanoni.AutoSize = True
-        Me.RadioTypeCanoni.Checked = True
-        Me.RadioTypeCanoni.Location = New System.Drawing.Point(7, 20)
-        Me.RadioTypeCanoni.Name = "RadioTypeCanoni"
-        Me.RadioTypeCanoni.Size = New System.Drawing.Size(58, 17)
-        Me.RadioTypeCanoni.TabIndex = 0
-        Me.RadioTypeCanoni.TabStop = True
-        Me.RadioTypeCanoni.Text = "Canoni"
-        Me.RadioTypeCanoni.UseVisualStyleBackColor = True
+        Me.RadioTipoCanoni.AutoSize = True
+        Me.RadioTipoCanoni.Checked = True
+        Me.RadioTipoCanoni.Location = New System.Drawing.Point(7, 20)
+        Me.RadioTipoCanoni.Name = "RadioTipoCanoni"
+        Me.RadioTipoCanoni.Size = New System.Drawing.Size(58, 17)
+        Me.RadioTipoCanoni.TabIndex = 0
+        Me.RadioTipoCanoni.TabStop = True
+        Me.RadioTipoCanoni.Text = "Canoni"
+        Me.RadioTipoCanoni.UseVisualStyleBackColor = True
+        '
+        'GroupDivisione
+        '
+        Me.GroupDivisione.Controls.Add(Me.RadioDivVigilanza)
+        Me.GroupDivisione.Controls.Add(Me.RadioDivTecnologia)
+        Me.GroupDivisione.Controls.Add(Me.RadioDivTutti)
+        Me.GroupDivisione.Location = New System.Drawing.Point(249, 210)
+        Me.GroupDivisione.Name = "GroupDivisione"
+        Me.GroupDivisione.Size = New System.Drawing.Size(228, 88)
+        Me.GroupDivisione.TabIndex = 27
+        Me.GroupDivisione.TabStop = False
+        Me.GroupDivisione.Text = "Divisione"
+        '
+        'RadioDivTecnologia
+        '
+        Me.RadioDivTecnologia.AutoSize = True
+        Me.RadioDivTecnologia.Location = New System.Drawing.Point(7, 42)
+        Me.RadioDivTecnologia.Name = "RadioDivTecnologia"
+        Me.RadioDivTecnologia.Size = New System.Drawing.Size(78, 17)
+        Me.RadioDivTecnologia.TabIndex = 1
+        Me.RadioDivTecnologia.Text = "Tecnologia"
+        Me.RadioDivTecnologia.UseVisualStyleBackColor = True
+        '
+        'RadioDivTutti
+        '
+        Me.RadioDivTutti.AutoSize = True
+        Me.RadioDivTutti.Checked = True
+        Me.RadioDivTutti.Location = New System.Drawing.Point(7, 20)
+        Me.RadioDivTutti.Name = "RadioDivTutti"
+        Me.RadioDivTutti.Size = New System.Drawing.Size(46, 17)
+        Me.RadioDivTutti.TabIndex = 0
+        Me.RadioDivTutti.TabStop = True
+        Me.RadioDivTutti.Text = "Tutti"
+        Me.RadioDivTutti.UseVisualStyleBackColor = True
+        '
+        'RadioDivVigilanza
+        '
+        Me.RadioDivVigilanza.AutoSize = True
+        Me.RadioDivVigilanza.Location = New System.Drawing.Point(7, 65)
+        Me.RadioDivVigilanza.Name = "RadioDivVigilanza"
+        Me.RadioDivVigilanza.Size = New System.Drawing.Size(67, 17)
+        Me.RadioDivVigilanza.TabIndex = 2
+        Me.RadioDivVigilanza.Text = "Vigilanza"
+        Me.RadioDivVigilanza.UseVisualStyleBackColor = True
+        '
+        'LblAvvisiServAgg
+        '
+        Me.LblAvvisiServAgg.ForeColor = System.Drawing.Color.Blue
+        Me.LblAvvisiServAgg.Location = New System.Drawing.Point(3, 301)
+        Me.LblAvvisiServAgg.Name = "LblAvvisiServAgg"
+        Me.LblAvvisiServAgg.Size = New System.Drawing.Size(329, 62)
+        Me.LblAvvisiServAgg.TabIndex = 28
+        Me.LblAvvisiServAgg.Text = "ATTENZIONE VERRANNO GENERATE DELLE FATTURE" & Global.Microsoft.VisualBasic.ChrW(13) & Global.Microsoft.VisualBasic.ChrW(10) & "La data di fatturazione sarà sempre f" &
+    "ine mese rispetto alla data impostata sopra."
+        Me.LblAvvisiServAgg.TextAlign = System.Drawing.ContentAlignment.TopCenter
+        Me.LblAvvisiServAgg.Visible = False
         '
         'FAskFiltriOrdini
         '
@@ -554,7 +617,9 @@ Partial Class FAskFiltriOrdini
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.CancelButton = Me.Cancel_Button
-        Me.ClientSize = New System.Drawing.Size(495, 551)
+        Me.ClientSize = New System.Drawing.Size(488, 508)
+        Me.Controls.Add(Me.LblAvvisiServAgg)
+        Me.Controls.Add(Me.GroupDivisione)
         Me.Controls.Add(Me.GroupMomento)
         Me.Controls.Add(Me.GroupDecorrenza)
         Me.Controls.Add(Me.GroupIstat)
@@ -581,6 +646,8 @@ Partial Class FAskFiltriOrdini
         Me.GroupDecorrenza.ResumeLayout(False)
         Me.GroupMomento.ResumeLayout(False)
         Me.GroupMomento.PerformLayout()
+        Me.GroupDivisione.ResumeLayout(False)
+        Me.GroupDivisione.PerformLayout()
         Me.ResumeLayout(False)
 
     End Sub
@@ -626,8 +693,13 @@ Partial Class FAskFiltriOrdini
     Friend WithEvents GroupDecorrenza As GroupBox
     Friend WithEvents DtaDecorrenza As DateTimePicker
     Friend WithEvents GroupMomento As GroupBox
-    Friend WithEvents RadioTypeServAgg As RadioButton
-    Friend WithEvents RadioTypeCanoni As RadioButton
+    Friend WithEvents RadioTipoServAgg As RadioButton
+    Friend WithEvents RadioTipoCanoni As RadioButton
     Friend WithEvents TxtordPriorita As TextBox
     Friend WithEvents ChkPriorita As CheckBox
+    Friend WithEvents GroupDivisione As GroupBox
+    Friend WithEvents RadioDivVigilanza As RadioButton
+    Friend WithEvents RadioDivTecnologia As RadioButton
+    Friend WithEvents RadioDivTutti As RadioButton
+    Friend WithEvents LblAvvisiServAgg As Label
 End Class

@@ -403,6 +403,7 @@
     <Compile Include="Fusione\FDocumentNumberDialog.vb">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Fusione\Fox\ServiziAggiuntivi.vb" />
     <Compile Include="Fusione\Fox\frmSchemaXLS.Designer.vb">
       <DependentUpon>frmSchemaXLS.vb</DependentUpon>
     </Compile>
@@ -427,6 +428,8 @@
     <Compile Include="Fusione\MovCespiti.vb" />
     <Compile Include="Fusione\TabelleDaEstrarre.vb" />
     <Compile Include="Fusione\ValidatingDataReader.vb" />
+    <Compile Include="Ordini\CurFatt.vb" />
+    <Compile Include="Ordini\CurFattRow.vb" />
     <Compile Include="Ordini\CurOrd.vb" />
     <Compile Include="Ordini\CurOrdRow.vb" />
     <Compile Include="Ordini\FAskFiltriOrdini.designer.vb">
@@ -465,6 +468,8 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Ordini\FattureDaOrdini.vb" />
+    <Compile Include="Ordini\FiltriOrdiniConsuntivo.vb" />
+    <Compile Include="Ordini\FiltriOrdini.vb" />
     <Compile Include="Ordini\frmSchemaOrdini.Designer.vb">
       <DependentUpon>frmSchemaOrdini.vb</DependentUpon>
     </Compile>

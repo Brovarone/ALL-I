@@ -32,6 +32,9 @@ Public Class FAskFiltriOrdiniConsuntivo
             CmbMonth.SelectedIndex = Date.Today.Month - 1
             CmbYear.SelectedIndex = 1
         End If
+        'todo:levare dopo aver fatto test
+        CmbMonth.SelectedIndex = 9 - 1
+        CmbYear.SelectedIndex = 0
 
         loading = False
         CalcolaDate()
@@ -74,7 +77,7 @@ Public Class FAskFiltriOrdiniConsuntivo
         RadOnlyFatt.Enabled = b
         DtaFatt.Enabled = b
         ChkFiliale.Enabled = b
-        TxtOrdFiliale.Enabled = b And ChkFiliale.Checked
+        TxtOrdFiliale.Enabled = b AndAlso ChkFiliale.Checked
 
     End Sub
 

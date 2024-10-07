@@ -129,7 +129,9 @@ namespace EFMago.Models
         public short? SubIdAttivita { get; set; }
         public short? SubIdContratto { get; set; }
         public short? SubIdDescrizione { get; set; }
-        
+        public string ACGCod { get; set; }
+        public int? Divisione { get; set; }
+
         public virtual MaSaleOrdNotes MaSaleOrdNotes { get; set; }
         public virtual MaSaleOrdShipping MaSaleOrdShipping { get; set; }
         public virtual MaSaleOrdSummary MaSaleOrdSummary { get; set; }
@@ -151,7 +153,18 @@ namespace EFMago.Models
         public virtual ICollection<AllordCliTipologiaServizi> ALLordCliTipologiaServizi { get; set; }
         public virtual ICollection<AllordPadre> AllordPadre { get; set; }
         public virtual ICollection<AllordFiglio> AllordFiglio { get; set; }
-        public virtual ICollection<IntegraInterventi> IntegraInterventi { get; set; }
+        public virtual ICollection<IntegraInterventi> IntegraInterventi { get; set; }        
+    }
+    public class SaleOrdIdComparer : IEqualityComparer<MaSaleOrd>
+    {
+        public bool Equals(MaSaleOrd x, MaSaleOrd y)
+        {
+            return x.SaleOrdId == y.SaleOrdId;
+        }
 
+        public int GetHashCode(MaSaleOrd obj)
+        {
+            return (int)obj.SaleOrdId;
+        }
     }
 }

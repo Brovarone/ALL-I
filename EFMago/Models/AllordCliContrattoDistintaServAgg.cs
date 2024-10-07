@@ -55,14 +55,26 @@ namespace EFMago.Models
         //Sezione interventi presi da Distinta (Parent) non presenti 
         [NotMapped]
         public int? AnnoIntervento { get; set; }
+        /// <summary>
+        /// Interventi da Integra estratti n base al periodo di Franchigia
+        /// </summary>
         [NotMapped]        
-        public double? NrInterventiFranchigia { get; set; }
-        [NotMapped]
-        public double? NrInterventiPeriodo { get; set; }
+        public double? NrInterventiInFranchigia { get; set; }
+ 
+        /// <summary>
+        /// Interventi da Integra
+        /// </summary>
         [NotMapped]
         public double? NrInterventiMese { get; set; }
+        /// <summary>
+        /// Interventi da Fatturare
+        /// </summary>
         [NotMapped]
-        public double? NrInterventiOltreFranchigia { get; set; }      
- 
+        public double? NrInterventiOltreFranchigia { get; set; }
+
+        //[NotMapped]     
+        //public double? NrInterventiPeriodo { get; set; }
+
+
     }
 }

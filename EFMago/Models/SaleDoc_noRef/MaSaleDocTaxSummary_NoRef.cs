@@ -7,21 +7,21 @@ using System.Collections.Generic;
 
 namespace EFMago.Models
 {
-    public partial class ImSaleDocJobs
+    public partial class MaSaleDocTaxSummaryNoRef
     {
         public int SaleDocId { get; set; }
-        public short Line { get; set; }
-        public string Job { get; set; }
-        public DateTime? JobDate { get; set; }
-        public string Notes { get; set; }
-        public double? JobTotalAmount { get; set; }
-        public string Ofs { get; set; }
         public string TaxCode { get; set; }
+        public double? TaxableAmount { get; set; }
+        public double? TaxAmount { get; set; }
+        public double? TotalAmount { get; set; }
+        public double? TaxableAmountDocCurr { get; set; }
+        public double? TaxAmountDocCurr { get; set; }
+        public double? TotalAmountDocCurr { get; set; }
         public DateTime Tbcreated { get; set; }
         public DateTime Tbmodified { get; set; }
         public int TbcreatedId { get; set; }
         public int TbmodifiedId { get; set; }
 
-        public MaSaleDoc SaleDoc { get; set; }
+        public virtual MaSaleDocNoRef SaleDocNavigation { get; set; }
     }
 }

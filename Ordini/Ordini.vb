@@ -35,7 +35,32 @@ Partial Module Ordini
         Variabile = 1094254692
         Nessuno = 1094254597
     End Enum
-
+    Friend Enum Divisione As Integer '21015
+        Nessuna = 1377239040
+        Tecnologia = 1377239041
+        Vigilanza = 1377239042
+    End Enum
+    Friend Sub PrecaricaTabelleOrdini()
+        OrdiniCntx.Allattivita.Load()
+        OrdiniCntx.MaItems.Load()
+        OrdiniCntx.AlltipoRigaServizio.Load()
+        OrdiniCntx.Alldescrizioni.Load()
+        OrdiniCntx.MaSaleOrd.Load()
+        OrdiniCntx.AllordCliAcc.Load()
+        OrdiniCntx.AllordCliFattEle.Load()
+        OrdiniCntx.AllordCliDescrizioni.Load()
+        OrdiniCntx.MaSaleOrdDetails.Load()
+        OrdiniCntx.AllordCliContratto.Load()
+        OrdiniCntx.AllordCliContrattoDescFatt.Load()
+        OrdiniCntx.AllordCliAttivita.Load()
+        OrdiniCntx.AllordCliContrattoDistinta.Load()
+        OrdiniCntx.AllordCliContrattoDistintaServAgg.Load()
+    End Sub
+    Friend Sub PrecaricaTabelleClienti()
+        OrdiniCntx.MaCustSupp.Load()
+        OrdiniCntx.MaCustSuppBranches.Load()
+        OrdiniCntx.MaCustSuppCustomerOptions.Load()
+    End Sub
     ReadOnly sLoginId As String = My.Settings.mLOGINID
 
     ''' <summary>
@@ -44,33 +69,8 @@ Partial Module Ordini
     ''' <returns></returns>
     Public Function GeneraRigheOrdine() As Boolean
 #Region "Variabili Selezione"
-        'Variabili legate alla maschera di selezione 
-        Dim bFiltroDateOrdini As Boolean
-        Dim fromOrdDate As Date
-        Dim sFromOrdDate As String = fromOrdDate.ToShortDateString
-        Dim toOrdDate As Date
-        Dim sToOrdDate As String = toOrdDate.ToShortDateString
-        Dim bSingoloOrdine As Boolean
-        Dim nrOrd As String = String.Empty
-        Dim bSingoloCliente As Boolean
-        Dim cliente As String = String.Empty
-        Dim bSingolaFiliale As Boolean
-        Dim filiale As String = String.Empty
-        Dim bPriorita As Boolean
-        Dim priorita As String = String.Empty
-        Dim dataFattDa As Date
-        Dim sDataFattDa As String = dataFattDa.ToShortDateString
-        Dim dataFattA As Date
-        Dim sDataFattA As String = dataFattA.ToShortDateString
-        Dim p_Tutti As Boolean
-        Dim p_Annuali As Boolean
-        Dim p_Semestrali As Boolean
-        Dim p_Quadrimestrali As Boolean
-        Dim p_Trimestrali As Boolean
-        Dim p_Bimestrali As Boolean
-        Dim p_Mensili As Boolean
-        Dim p_Periodi(6) As Boolean
-        Dim filtri As New StringBuilder()
+        'Classe di Variabili legate alla maschera di selezione 
+        Dim filtri As New FiltriOrdini
         'todo: prevedere periodi variabili e inserirli nel filtro
 
 #Region "Regole di richiesta "
@@ -78,54 +78,8 @@ Partial Module Ordini
         Using ff = New FAskFiltriOrdini
             Dim result As DialogResult = ff.ShowDialog
             If result = DialogResult.OK Then
-                bFiltroDateOrdini = ff.RadDalAl.Checked
-                fromOrdDate = OnlyDate(ff.DtaOrdineDA.Value)
-                toOrdDate = OnlyDate(ff.DtaOrdineA.Value)
-                bSingoloOrdine = ff.ChkNrOrdine.Checked
-                nrOrd = ff.TxtNrOrdine.Text '.PadLeft(6, "0")
-                bSingoloCliente = ff.ChkCliente.Checked
-                cliente = ff.TxtOrdCliente.Text
-                bSingolaFiliale = ff.ChkFiliale.Checked
-                filiale = ff.TxtOrdFiliale.Text
-                bPriorita = ff.ChkPriorita.Checked
-                'Integer.TryParse(ff.TxtordPriorita.Text, priorita)
-                priorita = ff.TxtordPriorita.Text
-                dataFattDa = OnlyDate(ff.DtaFattDa.Value) 'Data giorno di fatturazione
-                dataFattA = OnlyDate(ff.DtaFattA.Value) 'Data giorno di fatturazione
-                p_Tutti = ff.ChkP_Tutti.Checked
-                p_Annuali = ff.ChkP_Annuali.Checked
-                p_Semestrali = ff.ChkP_Semestrali.Checked
-                p_Quadrimestrali = ff.ChkP_Quadrimestrali.Checked
-                p_Trimestrali = ff.ChkP_Trimestrali.Checked
-                p_Bimestrali = ff.ChkP_Bimestrali.Checked
-                p_Mensili = ff.ChkP_Mensili.Checked
-                p_Periodi(0) = p_Tutti
-                p_Periodi(1) = p_Mensili
-                p_Periodi(2) = p_Bimestrali
-                p_Periodi(3) = p_Trimestrali
-                p_Periodi(4) = p_Quadrimestrali
-                p_Periodi(5) = p_Semestrali
-                p_Periodi(6) = p_Annuali
-                filtri.AppendLine(" --- Filtri ---")
-                filtri.AppendLine(If(bFiltroDateOrdini, "Dal " & fromOrdDate.ToShortDateString & " al " & toOrdDate.ToShortDateString, "Fino al " & toOrdDate.ToShortDateString))
-                filtri.AppendLine("Ordine : " & If(bSingoloOrdine, nrOrd, "TUTTI"))
-                filtri.AppendLine("Cliente : " & If(bSingoloCliente, cliente, "TUTTI"))
-                filtri.AppendLine("Filiale : " & If(bSingolaFiliale, filiale, "TUTTI"))
-                filtri.AppendLine("Priorità : " & If(bSingolaFiliale, filiale, "TUTTI"))
-                filtri.AppendLine("Dalla data Fatt. :" & dataFattDa.ToShortDateString)
-                filtri.AppendLine("Alla data Fatt. :" & dataFattA.ToShortDateString)
-                If p_Tutti Then
-                    filtri.AppendLine("Periodo : Tutti")
-                Else
-                    If p_Annuali Then filtri.AppendLine("Periodo : Annuali")
-                    If p_Semestrali Then filtri.AppendLine("Periodo : Semestrali")
-                    If p_Quadrimestrali Then filtri.AppendLine("Periodo : Quadrimestrali")
-                    If p_Trimestrali Then filtri.AppendLine("Periodo : Trimestrali")
-                    If p_Bimestrali Then filtri.AppendLine("Periodo : Bimestrali")
-                    If p_Mensili Then filtri.AppendLine("Periodo : Mensili")
-                End If
-                My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & filtri.ToString)
-
+                filtri.InizializzaDaForm(ff)
+                My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & filtri.LogFiltri.ToString)
             ElseIf result = DialogResult.Cancel Then
                 Return False
                 Exit Function
@@ -144,25 +98,12 @@ Partial Module Ordini
         Dim totOrdiniConNuoveRighe As Integer       ' Totale ordini con righe contratto che fatturate
         Dim totOrdiniConRigheAggiornate As Integer  ' Totale ordini con righe contratto che vengono aggiorate
         Dim bIsSomething As Boolean
-
 #End Region
 
         Try
             'Precarico prima metto i dati "ultimi"
             EditTestoBarra("Precaricamento Tabelle ")
-            OrdContext.Allattivita.Load()
-            OrdContext.MaItems.Load()
-            OrdContext.AlltipoRigaServizio.Load()
-            OrdContext.Alldescrizioni.Load()
-            OrdContext.MaSaleOrd.Load()
-            OrdContext.AllordCliAcc.Load()
-            OrdContext.AllordCliDescrizioni.Load()
-            OrdContext.MaSaleOrdDetails.Load()
-            OrdContext.AllordCliContratto.Load()
-            OrdContext.AllordCliContrattoDescFatt.Load()
-            OrdContext.AllordCliAttivita.Load()
-            OrdContext.AllordCliContrattoDistinta.Load()
-            OrdContext.AllordCliContrattoDistintaServAgg.Load()
+            PrecaricaTabelleOrdini()
 
 #Region "Estrazioni dati con Query LINQ"
             'Era molto lenta cambiato quidni metodo dopo aver provato ad aumentare il timeout e mettere AsNoTracking
@@ -171,22 +112,22 @@ Partial Module Ordini
             'https://www.preciofishbone.com/knowledge-hub/blog/ef-core-pt.-2---configuration/
             'Tipizzare con (Of ) solo le Tabelle singole 1-1 che NON hanno 1-n / Collection
             EditTestoBarra("Estrazione ordini ")
-            Dim q = (From o In OrdContext.MaSaleOrd)
+            Dim q = (From o In OrdiniCntx.MaSaleOrd)
 
             'AGGIUNGO  FILTRI
             'Vengono esclusi a priori gli ordini con data cessazione > di Data Competenza
             'Il filtro where che prende quelli senza data cessazione o con data successiva ( preimpostata da loro)
             ' q = q.Where(Function(facc) facc.ALLOrdCliAcc.DataCessazione = sDataNulla OrElse facc.ALLOrdCliAcc.DataCessazione.Value.Date >= dataFattA)
-            If bFiltroDateOrdini Then
-                q = q.Where(Function(oDate) oDate.OrderDate.Value.Date >= fromOrdDate AndAlso oDate.OrderDate.Value.Date <= toOrdDate)
+            If filtri.FiltroDateOrdini Then
+                q = q.Where(Function(oDate) oDate.OrderDate.Value.Date >= filtri.FromOrdDate AndAlso oDate.OrderDate.Value.Date <= filtri.ToOrdDate)
             Else
                 'Sostituisco la logica di "uguale" aggiungendo un giorno, in questo modo prendo anche le cose create nello stesso giorno
-                q = q.Where(Function(oDate) oDate.OrderDate <= toOrdDate)
+                q = q.Where(Function(oDate) oDate.OrderDate <= filtri.ToOrdDate)
             End If
-            If bSingoloCliente Then q = q.Where(Function(oCli) oCli.Customer.Equals(cliente))
-            If bSingoloOrdine Then q = q.Where(Function(oNrOrd) oNrOrd.InternalOrdNo.Equals(nrOrd))
-            If bSingolaFiliale Then q = q.Where(Function(oFiliale) oFiliale.CostCenter.Equals(filiale))
-            If bPriorita Then q = q.Where(Function(oPriorita) oPriorita.Priority.ToString.Equals(priorita))
+            If filtri.SingoloCliente Then q = q.Where(Function(oCli) oCli.Customer.Equals(filtri.Cliente))
+            If filtri.SingoloOrdine Then q = q.Where(Function(oNrOrd) oNrOrd.InternalOrdNo.Equals(filtri.NrOrd))
+            If filtri.SingolaFiliale Then q = q.Where(Function(oFiliale) oFiliale.CostCenter.Equals(filtri.Filiale))
+            If filtri.Priorita Then q = q.Where(Function(oPriorita) oPriorita.Priority.ToString.Equals(filtri.Priorita))
 
             Dim iAllOrders As IQueryable(Of MaSaleOrd) = q
             'ESEGUO LA QUERY (ALDO 30/06 ritorna 1 invece che 2)
@@ -217,10 +158,10 @@ Partial Module Ordini
                 FLogin.prgCopy.Step = 1
 #Region "Variabili Default"
 
-                Dim defVendite = (From dv In OrdContext.MaUserDefaultSales.ToList Select dv).FirstOrDefault
+                Dim defVendite = (From dv In OrdiniCntx.MaUserDefaultSales.ToList Select dv).FirstOrDefault
                 ' Dim defContabili = (From dc In OrdContext.MaAccountingDefaults.ToList Select dc).FirstOrDefault
-                Dim defIva = (From dc In OrdContext.MaTaxCodesDefaults.ToList Select dc).FirstOrDefault
-                Dim codiciIva = (From c In OrdContext.MaTaxCodes.ToList Select c)
+                Dim defIva = (From dc In OrdiniCntx.MaTaxCodesDefaults.ToList Select dc).FirstOrDefault
+                Dim codiciIva = (From c In OrdiniCntx.MaTaxCodes.ToList Select c)
 
                 Dim sDefContropartita As String = defVendite.ServicesSalesAccount
                 Dim sDefCodIva As String = defIva.TaxCode
@@ -253,7 +194,7 @@ Partial Module Ordini
                             Debug.Print(sEx)
                             debugging.AppendLine(sEx)
                             'Blocco Esclusioni Canoni dovute ai filtri di periodo
-                            If c.AlltipoRigaServizio.TipologiaServizio = TipologiaServizio.Canone AndAlso Not p_Tutti AndAlso Not IsBewteenPeriodo(c, p_Periodi) Then
+                            If c.AlltipoRigaServizio.TipologiaServizio = TipologiaServizio.Canone AndAlso Not filtri.Periodo_Tutti AndAlso Not IsBewteenPeriodo(c, filtri.Periodi) Then
                                 Debug.Print(" - [ESCLUSA] Fuori filtro periodo")
                                 debugging.AppendLine(" - [ESCLUSA] Fuori filtro periodo")
                                 Continue For
@@ -273,14 +214,14 @@ Partial Module Ordini
                                 debugging.AppendLine(" - [ESCLUSA] Decorrenza non Impostata")
                                 Continue For
                             End If
-                            If c.DataDecorrenza > dataFattA Then
+                            If c.DataDecorrenza > filtri.DataFattA Then
                                 Debug.Print(" - [ESCLUSA] Decorrenza non raggiunta")
                                 debugging.AppendLine(" - [ESCLUSA] Decorrenza non raggiunta")
                                 Continue For
                             End If
 
                             'Da qua sotto non fa "Continue For"
-                            If c.DataProssimaFatt >= dataFattDa And c.DataProssimaFatt <= dataFattA Then
+                            If c.DataProssimaFatt >= filtri.DataFattDa And c.DataProssimaFatt <= filtri.DataFattA Then
                                 Debug.Print(" + [OK]")
                             Else
                                 Debug.Print(" - [ESCLUSA] Fuori filtro data")
@@ -289,7 +230,7 @@ Partial Module Ordini
                                 '26/01/2022 Vanno comunque esaminate per cercare eventuali righe sospese da rifatturare
                                 'DEPRECATO il Continue For
                             End If
-                            If c.DataProssimaFatt > dataFattA Then
+                            If c.DataProssimaFatt > filtri.DataFattA Then
                                 Debug.Print(" - [ESCLUSA] Prossima fattura non raggiunta")
                                 debugging.AppendLine(" - [ESCLUSA] Prossima fattura non raggiunta")
                                 isDaEscludere = True
@@ -299,12 +240,12 @@ Partial Module Ordini
 #End Region
 #Region "Variabili Correnti"
                             Dim cOrdRow As New CurOrdRow(c) With {
-                        .CanoneFuoriRangeDate = isDaEscludere,
-                        .Contropartita = If(String.IsNullOrWhiteSpace(c.MaItems.SaleOffset), sDefContropartita, c.MaItems.SaleOffset),
-                        .CodIva = If(String.IsNullOrWhiteSpace(c.CodiceIva), sDefCodIva, c.CodiceIva),
-                        .PercIva = Math.Round(codiciIva.FirstOrDefault(Function(tax) tax.TaxCode = .CodIva).Perc.Value, decPerc),
-                        .Parent = cOrd
-                    }
+                                    .CanoneFuoriRangeDate = isDaEscludere,
+                                    .Contropartita = If(String.IsNullOrWhiteSpace(c.MaItems.SaleOffset), sDefContropartita, c.MaItems.SaleOffset),
+                                    .CodIva = If(String.IsNullOrWhiteSpace(c.CodiceIva), sDefCodIva, c.CodiceIva),
+                                    .PercIva = Math.Round(codiciIva.FirstOrDefault(Function(tax) tax.TaxCode = .CodIva).Perc.Value, decPerc),
+                                    .Parent = cOrd
+                                }
                             Dim attDaRifatturare As New List(Of AllordCliAttivita)
                             Dim isISTAT As Boolean = False
                             Dim attIstat As New List(Of AllordCliAttivita)
@@ -336,7 +277,7 @@ Partial Module Ordini
                                         End If
                                         'Mesi da rifatturare
                                         Dim dCanoniRipresi As Double
-                                        If CBool(att.DaFatturare) AndAlso IsBetweenRipresi(att, dataFattDa, dataFattA, dCanoniRipresi) Then
+                                        If CBool(att.DaFatturare) AndAlso IsBetweenRipresi(att, filtri.DataFattDa, filtri.DataFattA, dCanoniRipresi) Then
                                             cOrdRow.DaRifatturare = True
                                             If dCanoniRipresi > 0 Then
                                                 'Setto il valore nella proprietà  Shadow
@@ -378,7 +319,7 @@ Partial Module Ordini
                                             Continue For
                                         End If
                                         'E' nel range
-                                        If CBool(att.DaFatturare) AndAlso IsBetweenIstat(att, dataFattDa, dataFattA) Then
+                                        If CBool(att.DaFatturare) AndAlso IsBetweenIstat(att, filtri.DataFattDa, filtri.DataFattA) Then
                                             isISTAT = True
                                             cOrdRow.IsOk = True
                                             msgLog = "  - [ISTAT]: il " & att.DataRifatturazione.ToString
@@ -560,6 +501,54 @@ Partial Module Ordini
                                 If Not cOrdRow.CanoneFuoriRangeDate AndAlso cOrdRow.QtaCorrente > 0 Then
                                     'Scrivo Testo descrittivo del singolo CONTRATTO su MaSaleOrdDetails
                                     isNewRows = True
+                                    iNewRowsCount += 1
+                                    iNrRigheNota += 1
+                                    Dim descriRif As String = If(String.IsNullOrWhiteSpace(cOrdRow.ContrattoFox), String.Empty, "Codice : " & cOrdRow.ContrattoFox)
+                                    descriRif += " Rif : " & cOrdRow.Parent.OrdNo
+                                    Dim rRif As New MaSaleOrdDetails With {
+                                        .Line = cOrd.LastLine + iNewRowsCount,
+                                        .Position = curLastPosition + iNrRigheAValore,
+                                        .SubId = cOrd.LastSubId + iNewRowsCount,
+                                        .SaleOrdId = cOrd.SaleOrdId,
+                                        .LineType = LineType.Riferimento,
+                                        .Description = descriRif.TrimStart,
+                                        .InEi = "1",
+                                        .ExpectedDeliveryDate = cOrdRow.DataPrevistaConsegna,
+                                        .ConfirmedDeliveryDate = cOrdRow.DataConfermaConsegna, ' sDataNulla
+                                        .InternalOrdNo = cOrdRow.Parent.OrdNo,
+                                        .Customer = cOrdRow.Parent.Cliente,
+                                        .OrderDate = cOrdRow.Parent.OrdDate,
+                                        .NoOfPacks = 0,
+                                        .ProductionPlanLine = 0,
+                                        .ExternalLineReference = 0,
+                                        .Tbcreated = Now,
+                                        .Tbmodified = Now,
+                                        .TbcreatedId = sLoginId,
+                                        .TbmodifiedId = sLoginId,
+                                        .Item = String.Empty,
+                                        .UoM = String.Empty,
+                                        .Qty = 0,
+                                        .UnitValue = 0,
+                                        .TaxableAmount = 0,
+                                        .TotalAmount = 0,
+                                        .PacksUoM = String.Empty,
+                                        .TaxCode = String.Empty,
+                                        .Job = String.Empty,
+                                        .CostCenter = String.Empty,
+                                        .Offset = String.Empty,
+                                        .Notes = String.Empty,
+                                        .NetPrice = 0,
+                                        .ContractCode = String.Empty,
+                                        .ProjectCode = String.Empty,
+                                        .AllNrCanoni = 0,
+                                        .AllCanoniDataI = sDataNulla,
+                                        .AllCanoniDataF = sDataNulla,
+                                        .Invoiced = "0"
+                                        }
+                                    efMaSaleOrdDetails.Add(rRif)
+                                    Debug.Print("### Riga descrittiva:(" & rRif.Position.ToString & ") " & rRif.Description)
+                                    debugging.AppendLine(" *Dc:" & rRif.Position.ToString)
+
                                     If c.AllordCliContrattoDescFatt IsNot Nothing AndAlso c.AllordCliContrattoDescFatt.Any Then
                                         For Each d In c.AllordCliContrattoDescFatt
                                             iNewRowsCount += 1
@@ -713,7 +702,7 @@ Partial Module Ordini
                             End If
 #Region "Aggiorno date prossima Fatturazione"
                             If Not cOrdRow.CanoneFuoriRangeDate AndAlso (cOrdRow.IsOk OrElse cOrdRow.DaRifatturare OrElse cOrdRow.SospesoDaAttivita) AndAlso Not cOrdRow.PrecendementeCessato Then
-                                If cOrdRow.DataProssimaFattura < dataFattA Then avvisi.AppendLine("Ordine " & cOrd.OrdNo & " Servizio " & cOrdRow.Item & " con data prossima fatturazione antecedente alla data di fine estrazione !")
+                                If cOrdRow.DataProssimaFattura < filtri.DataFattA Then avvisi.AppendLine("Ordine " & cOrd.OrdNo & " Servizio " & cOrdRow.Item & " con data prossima fatturazione antecedente alla data di fine estrazione !")
                                 If cOrdRow.IsCampagna Then
                                     c.DataProssimaFatt = cOrdRow.DataProssimaFatturaCampagna
                                 Else
@@ -760,131 +749,28 @@ Partial Module Ordini
                     'Parametri
                     'https://github.com/borisdj/EFCore.BulkExtensions
 
-                    Using bulkTrans = OrdContext.Database.BeginTransaction
+                    Using bulkTrans = OrdiniCntx.Database.BeginTransaction
                         Dim iStep As Integer
                         Try
-                            OrdContext.Database.ExecuteSqlRaw("DBCC TRACEON(610)")
+                            OrdiniCntx.Database.ExecuteSqlRaw("DBCC TRACEON(610)")
+                            Dim tablesToUpdate As New Dictionary(Of String, IEnumerable(Of Object)) From {
+                                {"MaSaleOrd|U|teste ordini", efMaSaleOrd},
+                                {"MaSaleOrdDetails|IU|righe ordini", efMaSaleOrdDetails},
+                                {"MaSaleOrdSummary|IU|totali ordini", efMaSaleOrdSummary},
+                                {"AllordCliAcc|IU|dati accessori ordini", efAllordCliAcc},
+                                {"AllordCliAttivita|U|righe attività", efAllordCliAttivita},
+                                {"AllordCliContratto|U|righe contratto", efAllordCliContratto},
+                                {"AllordCliContrattoDistinta|U|righe distinta", efAllordCliContrattoDistinta},
+                                {"AllordCliContrattoDistintaServAgg|U|righe servizi aggiuntivi", efAllordCliContrattoDistintaServAgg}
+                                }
 
-                            iStep += 1
-                            EditTestoBarra("Salvataggio: Aggiornamento teste ordini")
-                            If efMaSaleOrd.Any Then
-                                Dim t = efMaSaleOrd.Count
-                                Dim cfgOrd As New BulkConfig With {
-                                        .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                        .BulkCopyTimeout = 0,
-                                        .CalculateStats = True,
-                                        .BatchSize = If(t < 5000, 0, t / 10),
-                                        .NotifyAfter = t / 10
-                                        }
-                                OrdContext.BulkUpdate(efMaSaleOrd, cfgOrd, Function(d) d)
-                                Debug.Print("MaSaleOrd Ins:" & cfgOrd.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrd.StatsInfo.StatsNumberUpdated.ToString)
-                                bulkMessage.AppendLine("MaSaleOrd Ins:" & cfgOrd.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrd.StatsInfo.StatsNumberUpdated.ToString)
-                            End If
-                            iStep += 1
-                            EditTestoBarra("Salvataggio: Inserimento/Aggiornamento righe ordini")
-                            If efMaSaleOrdDetails.Any Then
-                                Dim t = efMaSaleOrdDetails.Count
-                                Dim cfgOrdDet As New BulkConfig With {
-                                        .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                        .BulkCopyTimeout = 0,
-                                        .CalculateStats = True,
-                                        .BatchSize = If(t < 5000, 0, t / 10),
-                                        .NotifyAfter = t / 10
-                                        }
-                                OrdContext.BulkInsertOrUpdate(efMaSaleOrdDetails, cfgOrdDet, Function(d) d)
-                                Debug.Print("MaSaleOrdDetails Ins:" & cfgOrdDet.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdDet.StatsInfo.StatsNumberUpdated.ToString) '& " Canc:" & cfgOrdDet.StatsInfo.StatsNumberDeleted.ToString)
-                                bulkMessage.AppendLine("MaSaleOrdDetails Ins:" & cfgOrdDet.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdDet.StatsInfo.StatsNumberUpdated.ToString) ' & " Canc:" & cfgOrdDet.StatsInfo.StatsNumberDeleted.ToString)
-                            End If
-                            iStep += 1
-                            EditTestoBarra("Salvataggio: Inserimento/Aggiornamento totali ordini")
-                            If efMaSaleOrdSummary.Any Then
-                                Dim t = efMaSaleOrdSummary.Count
-                                Dim cfgOrdTot As New BulkConfig With {
-                                        .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                        .BulkCopyTimeout = 0,
-                                        .CalculateStats = True,
-                                        .BatchSize = If(t < 5000, 0, t / 10),
-                                        .NotifyAfter = t / 10
-                                        }
-                                OrdContext.BulkInsertOrUpdate(efMaSaleOrdSummary, cfgOrdTot, Function(d) d)
-                                Debug.Print("MaSaleOrdSummary Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
-                                bulkMessage.AppendLine("MaSaleOrdSummary Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
-                            End If
-                            iStep += 1
-                            EditTestoBarra("Salvataggio: Inserimento/Aggiornamento dati accessori ordini")
-                            If efAllordCliAcc.Any Then
-                                Dim t = efAllordCliAcc.Count
-                                Dim cfgOrdAcc As New BulkConfig With {
-                                        .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                        .BulkCopyTimeout = 0,
-                                        .CalculateStats = True,
-                                        .BatchSize = If(t < 5000, 0, t / 10),
-                                        .NotifyAfter = t / 10
-                                        }
-                                OrdContext.BulkInsertOrUpdate(efAllordCliAcc, cfgOrdAcc, Function(d) d)
-                                Debug.Print("ALLOrdCliAcc Ins:" & cfgOrdAcc.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdAcc.StatsInfo.StatsNumberUpdated.ToString)
-                                bulkMessage.AppendLine("ALLOrdCliAcc Ins:" & cfgOrdAcc.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdAcc.StatsInfo.StatsNumberUpdated.ToString)
-                            End If
-                            iStep += 1
-                            EditTestoBarra("Salvataggio: Aggiornamento righe attività ")
-                            If efAllordCliAttivita.Any Then
-                                Dim t = efAllordCliAttivita.Count
-                                Dim cfgOrdAtt As New BulkConfig With {
-                                        .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                        .BulkCopyTimeout = 0,
-                                        .CalculateStats = True,
-                                        .BatchSize = If(t < 5000, 0, t / 10),
-                                        .NotifyAfter = t / 10
-                                        }
-                                OrdContext.BulkUpdate(efAllordCliAttivita, cfgOrdAtt, Function(d) d)
-                                Debug.Print("AllordCliAttivita Ins:" & cfgOrdAtt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdAtt.StatsInfo.StatsNumberUpdated.ToString)
-                                bulkMessage.AppendLine("AllordCliAttivita Ins:" & cfgOrdAtt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdAtt.StatsInfo.StatsNumberUpdated.ToString)
-                            End If
-                            iStep += 1
-                            EditTestoBarra("Salvataggio: Aggiornamento righe contratto ")
-                            If efAllordCliContratto.Any Then
-                                Dim t = efAllordCliContratto.Count
-                                Dim cfgOrdCon As New BulkConfig With {
-                                        .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                        .BulkCopyTimeout = 0,
-                                        .CalculateStats = True,
-                                        .BatchSize = If(t < 5000, 0, t / 10),
-                                        .NotifyAfter = t / 10
-                                        }
-                                OrdContext.BulkUpdate(efAllordCliContratto, cfgOrdCon, Function(d) d)
-                                Debug.Print("AllordCliContratto Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                                bulkMessage.AppendLine("AllordCliContratto Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                            End If
-                            iStep += 1
-                            EditTestoBarra("Salvataggio: Aggiornamento righe distinta ")
-                            If efAllordCliContrattoDistinta.Any Then
-                                Dim t = efAllordCliContrattoDistinta.Count
-                                Dim cfgOrdConDis As New BulkConfig With {
-                                        .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                        .BulkCopyTimeout = 0,
-                                        .CalculateStats = True,
-                                        .BatchSize = If(t < 5000, 0, t / 10),
-                                        .NotifyAfter = t / 10
-                                        }
-                                OrdContext.BulkUpdate(efAllordCliContrattoDistinta, cfgOrdConDis, Function(d) d)
-                                Debug.Print("AllordCliContrattoDistinta Ins:" & cfgOrdConDis.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDis.StatsInfo.StatsNumberUpdated.ToString)
-                                bulkMessage.AppendLine("AllordCliContrattoDistinta Ins:" & cfgOrdConDis.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDis.StatsInfo.StatsNumberUpdated.ToString)
-                            End If
-                            iStep += 1
-                            EditTestoBarra("Salvataggio: Aggiornamento righe Servizi Aggiuntivi ")
-                            If efAllordCliContrattoDistintaServAgg.Any Then
-                                Dim t = efAllordCliContrattoDistintaServAgg.Count
-                                Dim cfgOrdConDisServAgg As New BulkConfig With {
-                                        .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                        .BulkCopyTimeout = 0,
-                                        .CalculateStats = True,
-                                        .BatchSize = If(t < 5000, 0, t / 10),
-                                        .NotifyAfter = t / 10
-                                        }
-                                OrdContext.BulkUpdate(efAllordCliContrattoDistintaServAgg, cfgOrdConDisServAgg, Function(d) d)
-                                Debug.Print("AllordCliContrattoDistintaServAgg Ins:" & cfgOrdConDisServAgg.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDisServAgg.StatsInfo.StatsNumberUpdated.ToString)
-                                bulkMessage.AppendLine("AllordCliContrattoDistintaServAgg Ins:" & cfgOrdConDisServAgg.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDisServAgg.StatsInfo.StatsNumberUpdated.ToString)
-                            End If
+                            For Each kvp As KeyValuePair(Of String, IEnumerable(Of Object)) In tablesToUpdate
+                                Dim keys As String = kvp.Key
+                                Dim entityList As List(Of Object) = kvp.Value.ToList
+
+                                iStep += 1
+                                EseguiBulkUpdate(OrdiniCntx, entityList, keys, bulkMessage)
+                            Next
 
                             If someTrouble Then
                                 bulkTrans.Rollback()
@@ -897,7 +783,7 @@ Partial Module Ordini
                                 bulkMessage.AppendLine("[RIASSUNTO] " & msgLog)
                                 FLogin.lstStatoConnessione.Items.Add(msgLog)
                             End If
-                            OrdContext.Database.ExecuteSqlRaw("DBCC TRACEOFF(610)")
+                            OrdiniCntx.Database.ExecuteSqlRaw("DBCC TRACEOFF(610)")
 
                         Catch ex As Exception
                             someTrouble = True
@@ -923,7 +809,7 @@ Partial Module Ordini
             mb.ShowDialog()
         End Try
 
-        OrdContext.Dispose()
+        OrdiniCntx.Dispose()
 
         'Scrivo i LOG
         If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Inserimento Dati ---" & Environment.NewLine & bulkMessage.ToString)
@@ -1002,22 +888,7 @@ Partial Module Ordini
 
 #Region "Variabili Selezione"
         'Variabili legate alla maschera di selezione 
-        Dim bFiltroDateOrdini As Boolean
-        Dim fromOrdDate As Date
-        Dim toOrdDate As Date
-        Dim bSingoloOrdine As Boolean
-        Dim nrOrd As String = String.Empty
-        Dim bSingoloCliente As Boolean
-        Dim cliente As String = String.Empty
-        Dim bSingolaFiliale As Boolean
-        Dim filiale As String = String.Empty
-        Dim dataDecorrenza As Date
-        Dim percIstat As Double = 0
-        Dim cauAttivita As String = String.Empty
-        Dim annoAdeguamento As Integer = 0
-        Dim testoFattura As String = String.Empty
-
-        Dim filtri As New StringBuilder()
+        Dim filtri As New FiltriOrdini
 
 #Region "Regole di richiesta "
         'Lancio la form con le regole di richiesta
@@ -1025,41 +896,18 @@ Partial Module Ordini
             ff.IsIstat = True
             Dim result As DialogResult = ff.ShowDialog
             If result = DialogResult.OK Then
-                If Not Double.TryParse(ff.TxtPercIstat.Text, percIstat) Then
+                If Not Double.TryParse(ff.TxtPercIstat.Text, filtri.PercIstat) Then
                     MessageBox.Show("Elaborazione Interrotta" & Environment.NewLine & "Percentuale Adeguamento ISTAT nulla.")
                     Return False
                     Exit Function
                 End If
-                If percIstat = 0 Then
+                If filtri.PercIstat = 0 Then
                     MessageBox.Show("Elaborazione Interrotta" & Environment.NewLine & "Percentuale Adeguamento ISTAT pari a Zero.")
                     Return False
                     Exit Function
                 End If
-                bFiltroDateOrdini = ff.RadDalAl.Checked
-                fromOrdDate = OnlyDate(ff.DtaOrdineDA.Value)
-                toOrdDate = OnlyDate(ff.DtaOrdineA.Value)
-                bSingoloOrdine = ff.ChkNrOrdine.Checked
-                nrOrd = ff.TxtNrOrdine.Text '.PadLeft(6, "0")
-                bSingoloCliente = ff.ChkCliente.Checked
-                cliente = ff.TxtOrdCliente.Text
-                bSingolaFiliale = ff.ChkFiliale.Checked
-                filiale = ff.TxtOrdFiliale.Text
-                dataDecorrenza = OnlyDate(ff.DtaDecorrenza.Value) 'Data giorno di fatturazione
-                cauAttivita = ff.TxtIstatAttivita.Text
-                annoAdeguamento = CInt(ff.TxtAnnoAdeguamento.Text)
-                testoFattura = ff.TxtIstatTesto.Text
-                filtri.AppendLine(" --- Filtri ---")
-                filtri.AppendLine(If(bFiltroDateOrdini, "Dal: " & fromOrdDate.ToShortDateString & " al: " & toOrdDate.ToShortDateString, "Fino al: " & toOrdDate.ToShortDateString))
-                filtri.AppendLine("Ordine: " & If(bSingoloOrdine, nrOrd, "TUTTI"))
-                filtri.AppendLine("Cliente: " & If(bSingoloCliente, cliente, "TUTTI"))
-                filtri.AppendLine("Filiale: " & If(bSingolaFiliale, filiale, "TUTTI"))
-                filtri.AppendLine("Data Decorrenza: " & dataDecorrenza.ToShortDateString)
-                filtri.AppendLine("Percentuale ISTAT: " & percIstat.ToString)
-                filtri.AppendLine("Attività: " & cauAttivita)
-                'filtri.AppendLine("Data rifatturazione : " & dataRifatturazione.ToShortDateString)
-                filtri.AppendLine("Anno adeguamento: " & annoAdeguamento)
-                filtri.AppendLine("Testo: " & testoFattura)
-                My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & filtri.ToString)
+                filtri.InizializzaDaForm(ff)
+                My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & filtri.LogFiltri.ToString)
 
             ElseIf result = DialogResult.Cancel Then
                 Return False
@@ -1085,7 +933,7 @@ Partial Module Ordini
         Try
 #Region "Estrazioni dati con Query LINQ"
             'https://entityframework.net/why-first-query-slow
-            Dim q = (From o In OrdContext.MaSaleOrd _
+            Dim q = (From o In OrdiniCntx.MaSaleOrd _
                             .Include(Function(acc) acc.ALLOrdCliAcc) _
                             .Include(Function(con) con.ALLordCliContratto) _
                                 .ThenInclude(Of MaItems)(Function(it) it.MaItems) _
@@ -1097,15 +945,15 @@ Partial Module Ordini
                             .Include(Function(att) att.AllordCliAttivita) _
                                 .ThenInclude(Of Allattivita)(Function(at) at.Allattivita)) ' _
             'AGGIUNGO  FILTRI
-            q = q.Where(Function(facc) CBool(facc.ALLOrdCliAcc.ApplicoIstat) AndAlso (facc.ALLOrdCliAcc.DataCessazione = sDataNulla OrElse facc.ALLOrdCliAcc.DataCessazione > dataDecorrenza))
-            If bFiltroDateOrdini Then
-                q = q.Where(Function(oDate) oDate.OrderDate >= fromOrdDate And oDate.OrderDate <= toOrdDate)
+            q = q.Where(Function(facc) CBool(facc.ALLOrdCliAcc.ApplicoIstat) AndAlso (facc.ALLOrdCliAcc.DataCessazione = sDataNulla OrElse facc.ALLOrdCliAcc.DataCessazione > filtri.DataDecorrenza))
+            If filtri.FiltroDateOrdini Then
+                q = q.Where(Function(oDate) oDate.OrderDate >= filtri.FromOrdDate And oDate.OrderDate <= filtri.ToOrdDate)
             Else
-                q = q.Where(Function(oDate) oDate.OrderDate <= toOrdDate)
+                q = q.Where(Function(oDate) oDate.OrderDate <= filtri.ToOrdDate)
             End If
-            If bSingoloCliente Then q = q.Where(Function(oCli) oCli.Customer.Equals(cliente))
-            If bSingoloOrdine Then q = q.Where(Function(oNrOrd) oNrOrd.InternalOrdNo.Equals(nrOrd))
-            If bSingolaFiliale Then q = q.Where(Function(oFiliale) oFiliale.CostCenter.Equals(filiale))
+            If filtri.SingoloCliente Then q = q.Where(Function(oCli) oCli.Customer.Equals(filtri.Cliente))
+            If filtri.SingoloOrdine Then q = q.Where(Function(oNrOrd) oNrOrd.InternalOrdNo.Equals(filtri.NrOrd))
+            If filtri.SingolaFiliale Then q = q.Where(Function(oFiliale) oFiliale.CostCenter.Equals(filtri.Filiale))
 
             Dim iAllOrders As IQueryable(Of MaSaleOrd) = q
             'ESEGUO LA QUERY
@@ -1166,7 +1014,7 @@ Partial Module Ordini
                             Continue For
                         End If
                         'Questo e' il principale motivo di esclusione legato alla data!
-                        If c.DataDecorrenza > dataDecorrenza Then
+                        If c.DataDecorrenza > filtri.DataDecorrenza Then
                             Debug.Print("# [ESCLUSA] (Decorrenza non raggiunta) R.:(" & sEx)
                             debugging.AppendLine("# [ESCLUSA] (Decorrenza non raggiunta) R.:(" & sEx)
                             Continue For
@@ -1203,7 +1051,7 @@ Partial Module Ordini
                                     Continue For
                                 End If
                                 'Mesi sospesi
-                                If att.DataInizio.Value.Year = annoAdeguamento OrElse att.DataFine.Value.Year = annoAdeguamento Then
+                                If att.DataInizio.Value.Year = filtri.AnnoAdeguamento OrElse att.DataFine.Value.Year = filtri.AnnoAdeguamento Then
                                     cOrdRow.SospesoDaAttivita = True
                                     msgLog = "## [Sospensione] ## : dal " & att.DataInizio.Value.ToShortDateString & " al " & att.DataFine.Value.ToShortDateString
                                     Debug.Print(msgLog)
@@ -1244,10 +1092,10 @@ Partial Module Ordini
                                 '--- Controllo Esclusioni di ISTAT---
 
                                 'E' nel range
-                                If CBool(att.DaFatturare) AndAlso att.DataRifatturazione.Value.Year = annoAdeguamento Then
+                                If CBool(att.DaFatturare) AndAlso att.DataRifatturazione.Value.Year = filtri.AnnoAdeguamento Then
                                     isIstat = True
                                     'TODO: Valutare se usare avvisi o debugging
-                                    avvisi.AppendLine("Ordine: " & cOrd.OrdNo & " con riga di adeguamento Istat già presente per l'anno: " & annoAdeguamento.ToString)
+                                    avvisi.AppendLine("Ordine: " & cOrd.OrdNo & " con riga di adeguamento Istat già presente per l'anno: " & filtri.AnnoAdeguamento.ToString)
                                     cOrdRow.IsOk = False
                                 End If
                             End If
@@ -1275,7 +1123,7 @@ Partial Module Ordini
                             isNewRowsAtt = True
                             Debug.Print("### Riga contratto:(" & c.Line.ToString & ") " & c.Servizio)
                             debugging.AppendLine("### Riga contratto:(" & c.Line.ToString & ") " & c.Servizio)
-                            Dim newValUnit As Double = Math.Round(cOrdRow.ValUnit * (1 + (percIstat / 100)), decTax)
+                            Dim newValUnit As Double = Math.Round(cOrdRow.ValUnit * (1 + (filtri.PercIstat / 100)), decTax)
                             c.ValUnitIstat = newValUnit
                             c.DataUltRivIstat = Now
                             c.DataFineElaborazione = Now
@@ -1288,13 +1136,13 @@ Partial Module Ordini
                                 .IdOrdCli = cOrd.SaleOrdId,
                                 .Line = curLastLineAtt + iNewRowsAttCount,
                                 .Attivita = "ISTAT",
-                                .DataInizio = dataDecorrenza,
+                                .DataInizio = filtri.DataDecorrenza,
                                 .DataFine = sDataNulla,
                                 .DaFatturare = "1",
                                 .DataRifatturazione = cOrdRow.DataPrevistaConsegna,
                                 .Fatturata = "0",
-                                .Nota = "Adeguamento ISTAT (" & percIstat.ToString & "%). Precedente: " & cOrdRow.ValUnit.ToString,
-                                .TestoFattura = testoFattura,
+                                .Nota = "Adeguamento ISTAT (" & filtri.PercIstat.ToString & "%). Precedente: " & cOrdRow.ValUnit.ToString,
+                                .TestoFattura = filtri.TestoFattura,
                                 .RifServizio = cOrdRow.Item,
                                 .RifLinea = cOrdRow.Line,
                                 .ValUnit = newValUnit,
@@ -1332,10 +1180,10 @@ Partial Module Ordini
                     'https://github.com/borisdj/EFCore.BulkExtensions
                     Debug.Print("[RIASSUNTO] Ordini Estratti : " & totOrdini.ToString & " Ordini con Righe: " & totOrdiniok.ToString)
 
-                    Using bulkTrans = OrdContext.Database.BeginTransaction
+                    Using bulkTrans = OrdiniCntx.Database.BeginTransaction
                         Dim iStep As Integer
                         Try
-                            OrdContext.Database.ExecuteSqlRaw("DBCC TRACEON(610)")
+                            OrdiniCntx.Database.ExecuteSqlRaw("DBCC TRACEON(610)")
 
                             iStep += 1
                             EditTestoBarra("Salvataggio: Inserimento righe attività ")
@@ -1348,7 +1196,7 @@ Partial Module Ordini
                                         .BatchSize = If(t < 5000, 0, t / 10),
                                         .NotifyAfter = t / 10
                                         }
-                                OrdContext.BulkInsertOrUpdate(efAllordCliAttivita, cfgOrdAtt, Function(d) d)
+                                OrdiniCntx.BulkInsertOrUpdate(efAllordCliAttivita, cfgOrdAtt, Function(d) d)
                                 Debug.Print("AllordCliAttivita Ins:" & cfgOrdAtt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdAtt.StatsInfo.StatsNumberUpdated.ToString)
                                 bulkMessage.AppendLine("AllordCliAttivita Ins:" & cfgOrdAtt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdAtt.StatsInfo.StatsNumberUpdated.ToString)
                             End If
@@ -1363,7 +1211,7 @@ Partial Module Ordini
                                         .BatchSize = If(t < 5000, 0, t / 10),
                                         .NotifyAfter = t / 10
                                         }
-                                OrdContext.BulkUpdate(efAllordCliContratto, cfgOrdCon, Function(d) d)
+                                OrdiniCntx.BulkUpdate(efAllordCliContratto, cfgOrdCon, Function(d) d)
                                 Debug.Print("AllordCliContratto Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                                 bulkMessage.AppendLine("AllordCliContratto Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                             End If
@@ -1376,7 +1224,7 @@ Partial Module Ordini
                                 bulkMessage.AppendLine("Processati: " & totOrdiniok.ToString & " ordini")
                                 FLogin.lstStatoConnessione.Items.Add("Processati: " & totOrdiniok.ToString & " ordini")
                             End If
-                            OrdContext.Database.ExecuteSqlRaw("DBCC TRACEOFF(610)")
+                            OrdiniCntx.Database.ExecuteSqlRaw("DBCC TRACEOFF(610)")
 
                         Catch ex As Exception
                             someTrouble = True
@@ -1403,7 +1251,7 @@ Partial Module Ordini
             someTrouble = True
         End Try
 
-        OrdContext.Dispose()
+        OrdiniCntx.Dispose()
 
         'Scrivo i LOG
         If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Inserimento Dati ---" & Environment.NewLine & bulkMessage.ToString)

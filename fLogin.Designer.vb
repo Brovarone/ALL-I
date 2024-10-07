@@ -338,11 +338,12 @@ Partial Class FLogin
         'Label1
         '
         Me.Label1.AutoSize = True
-        Me.Label1.Location = New System.Drawing.Point(196, 58)
+        Me.Label1.Location = New System.Drawing.Point(177, 58)
+        Me.Label1.Margin = New System.Windows.Forms.Padding(2, 0, 2, 0)
         Me.Label1.Name = "Label1"
-        Me.Label1.Size = New System.Drawing.Size(49, 13)
+        Me.Label1.Size = New System.Drawing.Size(71, 13)
         Me.Label1.TabIndex = 44
-        Me.Label1.Text = "TmpDB1"
+        Me.Label1.Text = "TmpDB1/Fox"
         '
         'TxtTmpDB_UNO
         '

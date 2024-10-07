@@ -4,8 +4,14 @@
 	  <TargetFrameworks>net472</TargetFrameworks>
 	  <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
       <SatelliteResourceLanguages>it,it-IT</SatelliteResourceLanguages>
-         
+      <Nullable>enable</Nullable>
+      <LangVersion>8.0</LangVersion>   
   </PropertyGroup>
+  
+<!-- Only enable nullable feature for the supported frameworks -->
+<PropertyGroup Condition=" '$(TargetFramework)' != 'netstandard2.0' ">
+    <Nullable>disable</Nullable>
+</PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="Models\MagoOrdineContext.cs" />

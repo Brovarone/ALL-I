@@ -209,9 +209,9 @@ Partial Class FAskFiltriOrdiniConsuntivo
         Me.LblYear.AutoSize = True
         Me.LblYear.Location = New System.Drawing.Point(12, 65)
         Me.LblYear.Name = "LblYear"
-        Me.LblYear.Size = New System.Drawing.Size(33, 13)
+        Me.LblYear.Size = New System.Drawing.Size(32, 13)
         Me.LblYear.TabIndex = 16
-        Me.LblYear.Text = "Mese"
+        Me.LblYear.Text = "Anno"
         '
         'ChkRiassegna
         '

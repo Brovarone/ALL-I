@@ -70,6 +70,7 @@ namespace EFMago.Models
         public virtual DbSet<ImSuppliersDiscounts> ImSuppliersDiscounts { get; set; }
         public virtual DbSet<MaCreditCustomer> MaCreditCustomer { get; set; }
         public virtual DbSet<MaCreditCustomerDocument> MaCreditCustomerDocument { get; set; }
+        public virtual DbSet<AllcustSuppFox> AllcustSuppFox { get; set; }
         #endregion
         #region Blocco Articoli
         public virtual DbSet<MaItems> MaItems { get; set; }
@@ -106,6 +107,8 @@ namespace EFMago.Models
         public virtual DbSet<MaSaleOrdShipping> MaSaleOrdShipping { get; set; }
         public virtual DbSet<MaSaleOrdSummary> MaSaleOrdSummary { get; set; }
         public virtual DbSet<MaSaleOrdTaxSummary> MaSaleOrdTaxSummary { get; set; }
+        public virtual DbSet<MaSalesOrdParameters> MaSalesOrdParameters { get; set; }
+        public virtual DbSet<MaSalesOrdsDefaults> MaSalesOrdsDefaults { get; set; }
         #endregion
         #region Blocco Default
         public virtual DbSet<MaUserDefaultSaleOrders> MaUserDefaultSaleOrders { get; set; }
@@ -511,8 +514,8 @@ namespace EFMago.Models
                   .HasColumnName("CodContratto")
                   .HasMaxLength(15)
                   .IsUnicode(false)
-                  .HasDefaultValueSql("('')"); 
-                
+                  .HasDefaultValueSql("('')");
+
                 entity.Property(e => e.CodIntegra)
                      .HasColumnName("CodIntegra")
                      .HasMaxLength(15)
@@ -544,7 +547,7 @@ namespace EFMago.Models
                     .HasMaxLength(128)
                     .IsUnicode(false)
                     .HasDefaultValueSql("('')");
-                                
+
                 entity.Property(e => e.Fatturato)
                     .HasColumnName("Fatturato")
                     .HasMaxLength(1)
@@ -567,7 +570,7 @@ namespace EFMago.Models
                     .IsUnicode(false)
                     .IsFixedLength()
                     .HasDefaultValueSql("('0')");
-                  
+
                 entity.Property(e => e.NonRiportaInFatt)
                     .HasColumnName("NonRiportaInFatt")
                     .HasMaxLength(1)
@@ -627,8 +630,8 @@ namespace EFMago.Models
 
                 entity.Property(e => e.SubLineAttivita)
                     .HasColumnName("SubLineAttivita")
-                    .HasDefaultValueSql("((0))"); 
-                
+                    .HasDefaultValueSql("((0))");
+
                 entity.Property(e => e.SubLineDescFatt)
                     .HasColumnName("SubLineDescFatt")
                     .HasDefaultValueSql("((0))");
@@ -636,7 +639,7 @@ namespace EFMago.Models
                 entity.Property(e => e.SubLineDistinta)
                     .HasColumnName("SubLineDistinta")
                     .HasDefaultValueSql("((0))");
-                               
+
                 // AGGIUNTO DA ME
                 entity.HasOne(d => d.SaleOrd)
                     .WithMany(p => p.ALLordCliContratto)
@@ -685,7 +688,7 @@ namespace EFMago.Models
                     .IsClustered(false);
 
                 entity.ToTable("ALLOrdCliContratto_Distinta");
-                
+
                 entity.Property(e => e.CdC)
                     .HasColumnName("CdC")
                     .HasMaxLength(8)
@@ -881,9 +884,9 @@ namespace EFMago.Models
                 // AGGIUNTO DA ME
                 entity.HasOne(d => d.AllordCliContrattoDistinta)
                     .WithMany(p => p.AllordCliContrattoDistintaServAgg)
-                    .HasForeignKey(d => new { d.IdOrdCli, d.RifLinea , d.RifRifLinea })
+                    .HasForeignKey(d => new { d.IdOrdCli, d.RifLinea, d.RifRifLinea })
                     .OnDelete(DeleteBehavior.ClientSetNull);
-                                
+
             });
 
             modelBuilder.Entity<IntegraInterventi>(entity =>
@@ -950,7 +953,7 @@ namespace EFMago.Models
                     .HasColumnName("FineEvento")
                     .HasColumnType("datetime")
                     .HasDefaultValueSql("('17991231')");
-               
+
                 entity.Property(e => e.Qta)
                     .HasColumnName("Qta")
                     .HasDefaultValueSql("((0))");
@@ -991,7 +994,7 @@ namespace EFMago.Models
 
                 entity.Property(e => e.TBCreatedID)
                     .HasColumnName("TBCreatedID")
-                    .HasDefaultValueSql("((0))"); 
+                    .HasDefaultValueSql("((0))");
 
                 entity.Property(e => e.TBModified)
                     .HasColumnName("TBModified")
@@ -1046,7 +1049,7 @@ namespace EFMago.Models
                    .IsRequired(false)
                    .OnDelete(DeleteBehavior.ClientSetNull);
             });
-                        
+
             modelBuilder.Entity<AllordCliContrattoDistCesp>(entity =>
             {
                 entity.HasKey(e => new { e.IdOrdCli, e.Cespite, e.RifLinea, e.RifRifLinea })
@@ -1160,7 +1163,7 @@ namespace EFMago.Models
                     .HasMaxLength(100)
                     .IsUnicode(false)
                     .HasDefaultValueSql("('')");
-                
+
                 entity.Property(e => e.F2_1_2_6)
                     .HasColumnName("F2_1_2_6")
                     .HasMaxLength(15)
@@ -1307,7 +1310,7 @@ namespace EFMago.Models
 
                 entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
 
-              
+
                 entity.HasOne(d => d.SaleOrd)
                     .WithOne(p => p.ALLOrdCliFattEle)
                     .HasForeignKey<AllordCliFattEle>(d => d.IdOrdCli)
@@ -4801,7 +4804,46 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_MA_CreditCustomerDoc_00");
             });
+            modelBuilder.Entity<AllcustSuppFox>(entity =>
+            {
+                entity.HasKey(e => new { e.CustSupp, e.CustSuppType , e.ChildCustSupp, e.ChildCustSuppType});
 
+                entity.ToTable("ALLCustSuppFox");
+
+                entity.Property(e => e.CustSupp)
+                    .HasMaxLength(12)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.CustSuppType).HasDefaultValueSql("((3211264))");
+
+                entity.Property(e => e.ChildCustSupp)
+                    .HasMaxLength(12)
+                    .IsUnicode(false);
+
+                entity.Property(e => e.ChildCustSuppType).HasDefaultValueSql("((3211264))");
+
+
+                entity.Property(e => e.Tbcreated)
+                    .HasColumnName("TBCreated")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.TbcreatedId).HasColumnName("TBCreatedID");
+
+                entity.Property(e => e.Tbmodified)
+                    .HasColumnName("TBModified")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
+
+                /* entity.HasOne(d => d.cust)
+                     .WithMany(p => p.MaCreditCustomerDocument)
+                     .HasForeignKey(d => new { d.CustSuppType, d.Customer })
+                     .OnDelete(DeleteBehavior.ClientSetNull)
+                     .HasConstraintName("FK_MA_CreditCustomerDoc_00");
+                */
+            });
             #endregion
             #region MaSaleOrd
             modelBuilder.Entity<MaSaleOrd>(entity =>
@@ -4848,6 +4890,11 @@ namespace EFMago.Models
                 entity.Property(e => e.AccrualPercAtInvoiceDate).HasDefaultValueSql("((0.00))");
 
                 entity.Property(e => e.AccrualType).HasDefaultValueSql("((3473408))");
+
+                entity.Property(e => e.ACGCod)
+                    .HasMaxLength(6)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
 
                 entity.Property(e => e.ActiveSubcontracting)
                     .HasMaxLength(1)
@@ -4987,6 +5034,9 @@ namespace EFMago.Models
                     .IsUnicode(false)
                     .IsFixedLength()
                     .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.Divisione)
+                     .HasDefaultValueSql("((1377239040))");
 
                 entity.Property(e => e.ExpectedDeliveryDate)
                     .HasColumnType("datetime")
@@ -6267,6 +6317,203 @@ namespace EFMago.Models
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_SaleOrdTax_SaleOrd_00");
             });
+            modelBuilder.Entity<MaSalesOrdParameters>(entity =>
+            {
+                entity.HasKey(e => e.SaleOrdParametersId)
+                    .HasName("PK_SalesOrdParameters")
+                    .IsClustered(false);
+
+                entity.ToTable("MA_SalesOrdParameters");
+
+                entity.Property(e => e.SaleOrdParametersId).ValueGeneratedNever();
+
+                entity.Property(e => e.AllocationManage)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.CheckAllocatedQtyType).HasDefaultValueSql("((25100288))");
+
+                entity.Property(e => e.CheckPreShippedQtyType).HasDefaultValueSql("((25100288))");
+
+                entity.Property(e => e.CustQuotaExpiringDays).HasDefaultValueSql("((0))");
+
+                entity.Property(e => e.DefaultEmptyConfDelivDate)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.DisplayFirstSaleOrder)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.FulfillmentBreakByArea)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.FulfillmentBreakByCarrier)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.FulfillmentBreakByCig)
+                    .HasColumnName("FulfillmentBreakByCIG")
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.FulfillmentBreakByDocBranch)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.FulfillmentBreakByGoodBranch)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.FulfillmentBreakByInvRsn)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.FulfillmentBreakByJob)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.FulfillmentBreakByPackage)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.FulfillmentBreakByPort)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.FulfillmentBreakByShippRsn)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.FulfillmentBreakByTcg)
+                    .HasColumnName("FulfillmentBreakByTCG")
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.FulfillmentBreakByTransport)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.PercSaleOrdAllocation).HasDefaultValueSql("((0.00))");
+
+                entity.Property(e => e.SalesOrdersShortageCheckType).HasDefaultValueSql("((25100288))");
+
+                entity.Property(e => e.SortOpenOrders)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.Tbcreated)
+                    .HasColumnName("TBCreated")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.TbcreatedId).HasColumnName("TBCreatedID");
+
+                entity.Property(e => e.Tbmodified)
+                    .HasColumnName("TBModified")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
+
+                entity.Property(e => e.UpdateDnrowsValue)
+                    .HasColumnName("UpdateDNRowsValue")
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+
+                entity.Property(e => e.ValidPrices)
+                    .HasMaxLength(1)
+                    .IsUnicode(false)
+                    .IsFixedLength()
+                    .HasDefaultValueSql("('0')");
+            });
+            modelBuilder.Entity<MaSalesOrdsDefaults>(entity =>
+            {
+                entity.HasKey(e => e.SaleOrdsDefaulstId)
+                    .HasName("PK_SalesOrdsDefaults")
+                    .IsClustered(false);
+
+                entity.ToTable("MA_SalesOrdsDefaults");
+
+                entity.Property(e => e.SaleOrdsDefaulstId).ValueGeneratedNever();
+
+                entity.Property(e => e.EusaleOrderAccTpl)
+                    .HasColumnName("EUSaleOrderAccTpl")
+                    .HasMaxLength(8)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.ExtraEusaleOrderAccTpl)
+                    .HasColumnName("ExtraEUSaleOrderAccTpl")
+                    .HasMaxLength(8)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.SaleOrderAccTpl)
+                    .HasMaxLength(8)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.SaleOrderInvRsn)
+                    .HasMaxLength(8)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.SuspTaxSaleOrderAccTpl)
+                    .HasMaxLength(8)
+                    .IsUnicode(false)
+                    .HasDefaultValueSql("('')");
+
+                entity.Property(e => e.Tbcreated)
+                    .HasColumnName("TBCreated")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.TbcreatedId).HasColumnName("TBCreatedID");
+
+                entity.Property(e => e.Tbmodified)
+                    .HasColumnName("TBModified")
+                    .HasColumnType("datetime")
+                    .HasDefaultValueSql("(getdate())");
+
+                entity.Property(e => e.TbmodifiedId).HasColumnName("TBModifiedID");
+            });
+
             #endregion
             #region Item
             modelBuilder.Entity<MaItems>(entity =>

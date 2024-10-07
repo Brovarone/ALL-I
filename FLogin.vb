@@ -160,13 +160,13 @@ Public Class FLogin
         Dim dbcb As New DbContextOptionsBuilder(Of OrdiniContext)
         dbcb.UseSqlServer(cs)
         lstStatoConnessione.Items.Add("Connessione al database: " & DB)
-        OrdContext = New OrdiniContext(dbcb.Options)
-        Debug.Print("Connessione a Context EF: " & OrdContext.Database.CanConnect.ToString & " Su DB:" & DB)
+        OrdiniCntx = New OrdiniContext(dbcb.Options)
+        Debug.Print("Connessione a Context EF: " & OrdiniCntx.Database.CanConnect.ToString & " Su DB:" & DB)
 
         'BtnConnetti.Text = OrdContext.Database.ToString()
-        If OrdContext.Database.CanConnect Then ' connection ok
+        If OrdiniCntx.Database.CanConnect Then ' connection ok
             lstStatoConnessione.Items.Add("Connessione riuscita")
-            OrdContext.Database.ExecuteSqlRaw("SET ARITHABORT ON")
+            OrdiniCntx.Database.ExecuteSqlRaw("SET ARITHABORT ON")
             DisabilitaTxt(True)
             BtnProcessa.BackColor = BtnConnetti.BackColor
             BtnConnetti.BackColor = BtnPath.BackColor
@@ -1938,7 +1938,7 @@ Public Class FLogin
             'ESEGUO LA PROCEDURA
             Dim esito As Boolean
             esito = GeneraRigheOrdine()
-            OrdContext.Dispose()
+            OrdiniCntx.Dispose()
             lstStatoConnessione.Items.Add("Esito Generazione Righe Ordine " & If(esito, "OK", "Errore"))
             lstStatoConnessione.Items.Add("   ---   Elaborazione completata   ---")
             prgCopy.Value = 0
@@ -1967,7 +1967,7 @@ Public Class FLogin
             'ESEGUO LA PROCEDURA
             Dim esito As Boolean
             esito = AdeguaIstatOrdine()
-            OrdContext.Dispose()
+            OrdiniCntx.Dispose()
             lstStatoConnessione.Items.Add("Esito Adeguamento ISTAT su Ordini " & If(esito, "OK", "Errore"))
             lstStatoConnessione.Items.Add("   ---   Elaborazione completata   ---")
             prgCopy.Value = 0
@@ -2253,9 +2253,9 @@ Public Class FLogin
         OrdiniFoxToolStripMenuItem_Click(sender, e)
     End Sub
     Private Sub CheckIntegraToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles CheckIntegraToolStripMenuItem.Click
+        BtnSelSPA_Click(sender, e)
         En_Dis_Controls(False, True, True)
         If LINQConnetti() Then
-
             Me.Cursor = Cursors.WaitCursor
             lstStatoConnessione.Items.Add("Attendere... il processo potrebbe durare qualche minuto")
             lstStatoConnessione.Items.Add("   ---   Controllo Flusso Integra   ---")
@@ -2265,17 +2265,38 @@ Public Class FLogin
             My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Consuntivazione Flusso Integra  ---  " & DateTime.Now.ToString("ddMMyyy-HHmmss"))
 
             Dim esito As Boolean
-            'ESEGUO IL TEST  
-            esito = ControllaFlussoIntegra()
-            lstStatoConnessione.Items.Add("Esito Controllo Flusso Integra : " & If(esito, "OK", "Errore"))
-            If esito Then
-                'ESEGUO LA PROCEDURA
-                lstStatoConnessione.Items.Add("   ---   Generazione righe Ordine   ---")
-                esito = GeneraRigheOrdineConsuntivo()
-                OrdContext.Dispose()
-                lstStatoConnessione.Items.Add("Esito Generazione righe Ordine : " & If(esito, "OK", "Errore"))
+            'Genero la classe filtro
+            'todo : gestire il filtro su Associato = 0
+            Dim filtri As New FiltriOrdiniConsuntivo
 
-            End If
+            'Lancio la form con le regole di richiesta
+            Using ff = New FAskFiltriOrdiniConsuntivo
+                Dim result As DialogResult = ff.ShowDialog
+                If result = DialogResult.OK Then
+                    filtri.InizializzaFiltriDaForm(ff)
+                    My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & filtri.LogFiltri.ToString)
+                ElseIf result = DialogResult.Cancel Then
+                    Exit Sub
+                End If
+
+                'ESEGUO IL TEST  
+                'bypasso
+                esito = True
+                If 1 = 2 Then esito = ControllaFlussoIntegra(filtri)
+                lstStatoConnessione.Items.Add("Esito Controllo Flusso Integra : " & If(esito, "OK", "Errore"))
+                If esito Then
+                    'ESEGUO LA PROCEDURA
+                    lstStatoConnessione.Items.Add("   ---   Generazione righe in fattura   ---")
+                    'todo: test in corso del fatture context
+                    GeneraFattureConsuntivo(filtri)
+                    'todo fine
+
+                    'esito = GeneraRigheOrdineConsuntivo(filtri)
+                    OrdiniCntx.Dispose()
+                    lstStatoConnessione.Items.Add("Esito Generazione righe in fattura : " & If(esito, "OK", "Errore"))
+
+                End If
+            End Using
 
             lstStatoConnessione.Items.Add("   ---   Elaborazione completata   ---")
             prgCopy.Value = 0

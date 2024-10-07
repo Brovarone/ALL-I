@@ -50,16 +50,22 @@ Public Class FAskFiltriOrdini
     End Sub
 
     Private Sub FAskFiltriOrdini_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        Me.Size = New Size(262, 590) ' Misura standard
+        Me.Size = New Size(504, 400) ' Misura doppia
         ToolTip1 = New ToolTip()
+
         If IsIstat Then
-            Me.Size = New Size(262, 498)
+            Me.Text = "Filtri adeguamento ISTAT"
+            'Me.Size = New Size(262, 498)
+            'nascondo quelli non utili
             GroupDataFatt.Visible = False
             GroupPeriodo.Visible = False
+            GroupMomento.Visible = False
+            'mostro gli altri
             GroupDecorrenza.Enabled = True
-            GroupDecorrenza.Location = GroupDataFatt.Location
+            GroupDecorrenza.Location = New Point(6, 224)
+            GroupDecorrenza.Visible = True
             GroupIstat.Enabled = True
-            GroupIstat.Location = New Point(6, 279)
+            GroupIstat.Location = GroupDataFatt.Location ' New Point(6, 279)
             GroupIstat.Visible = True
             AssignValidation(Me.TxtPercIstat, ValidationType.Only_Numbers)
             'AssignValidation(Me.TextBox2, ValidationType.Only_Characters)
@@ -93,10 +99,18 @@ Public Class FAskFiltriOrdini
         DtaFattA.Value = DtaFattDa.Value
     End Sub
 
-    Private Sub RadioTypeServAgg_CheckedChanged(sender As Object, e As EventArgs) Handles RadioTypeServAgg.CheckedChanged
-        Dim b As Boolean = Not RadioTypeServAgg.Checked
-        GroupPeriodo.Enabled = b
-        'GroupDataFatt.Enabled = b
+    Private Sub RadioTipoServAgg_CheckedChanged(sender As Object, e As EventArgs) Handles RadioTipoServAgg.CheckedChanged
+        Dim b As Boolean = RadioTipoServAgg.Checked
+        'GroupDivisione.Enabled = Not b
+        GroupDataFatt.Enabled = Not b
+        LblAvvisiServAgg.Visible = b
+        RadioDivTutti.Enabled = Not b
+        RadioDivTecnologia.Enabled = Not b
+        'RadioDivVigilanza.Enabled = b
+        RadioDivTecnologia.Checked = Not b
+        RadioDivVigilanza.Checked = b
+        RadioDivTutti.Checked = Not b
+
     End Sub
 
     Private Sub ChkPriorita_CheckedChanged(sender As Object, e As EventArgs) Handles ChkPriorita.CheckedChanged
