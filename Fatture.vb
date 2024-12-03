@@ -2816,7 +2816,37 @@ Module MovimentiAnaliticiDaFatture
         Dim iRefNo As Integer
         Dim Annualita As Short
         Try
-            ' Inizializzo una query tra MA_SaleDoc e le righe con le informazioni che mi servono delle sole merci e servizi
+            '29/11/2024
+            'Aggiungo preselezione per righe con CdC nullo 
+            Dim qryOrfani As String = "SELECT MA_SaleDoc.DocNo, MA_SaleDoc.JournalEntryId, MA_SaleDoc.PostedToCostAccounting, MA_ChartOfAccounts.PostableInCostAcc,
+                                                            MA_SaleDocDetail.Line FROM MA_SaleDoc LEFT JOIN MA_SaleDocDetail ON MA_SaleDoc.SaleDocId = MA_SaleDocDetail.SaleDocId 
+                                                            JOIN MA_ChartOfAccounts ON MA_SaleDocDetail.Offset =  MA_ChartOfAccounts.Account 
+                                                            WHERE (MA_SaleDocDetail.LineType = " & LineType.Merce & " OR MA_SaleDocDetail.LineType = " & LineType.Servizio & ") 
+                                                            AND ( MA_SaleDoc.DocumentDate >=@FromDate  AND MA_SaleDoc.DocumentDate <=@ToDate ) 
+                                                            AND (@AllNumbers = 1 Or (@AllNumbers = 0 and MA_SaleDoc.DocNo >=@NrFirst AND MA_SaleDoc.DocNo <=@NrLast )) 
+                                                            AND MA_SaleDoc.PostedToCostAccounting = @GiaRegistrate 
+                                                            AND MA_SaleDoc.PostedToAccounting = '1'
+                                                            AND MA_ChartOfAccounts.PostableInCostAcc = @MovInAnalitica 
+                                                            AND MA_SaleDoc.DocumentType IN (" & DocumentType.Fattura & " , " & DocumentType.FatturaAccompagnatoria & " , " & DocumentType.NotaCredito & " , " & DocumentType.AutoFattura & " , " & DocumentType.AutoNotaCredito & ")
+                                                            AND MA_SaleDocDetail.CostCenter = ''
+                                                            ORDER BY MA_SaleDoc.DocNo, MA_SaleDocDetail.Offset"
+            Using command As New SqlCommand(qryOrfani, Connection)
+                command.Parameters.AddWithValue("@FromDate", sFromDate)
+                command.Parameters.AddWithValue("@ToDate", sToDate)
+                command.Parameters.AddWithValue("@AllNumbers", If(allNumbers, 1, 0))
+                command.Parameters.AddWithValue("@NrFirst", nrFirst)
+                command.Parameters.AddWithValue("@NrLast", nrLast)
+                command.Parameters.AddWithValue("@GiaRegistrate", If(giaRegistrate, "1", "0"))
+                command.Parameters.AddWithValue("@MovInAnalitica", If(soloMovimentabili, "1", "0"))
+                
+                Using reader As SqlDataReader = command.ExecuteReader()
+                    While reader.Read()
+                        errori.AppendLine("E50: Doc: " & reader.Item("DocNo") & " riga : " & reader.Item("Line") & " - Centro di Costo assente!")
+                    End While
+                End Using
+            End Using
+            'Inizializzo una query tra MA_SaleDoc e le righe con le informazioni che mi servono delle sole merci e servizi
+            'Si noti la Query di IN per gestire solo i documenti con centro di costo su tutte le righe !
             Using da As New SqlDataAdapter("SELECT MA_SaleDoc.DocNo, MA_SaleDoc.JournalEntryId, MA_SaleDoc.PostedToCostAccounting, MA_ChartOfAccounts.PostableInCostAcc,
                                                             MA_SaleDocDetail.* FROM MA_SaleDoc LEFT JOIN MA_SaleDocDetail
                                                             ON MA_SaleDoc.SaleDocId = MA_SaleDocDetail.SaleDocId JOIN MA_ChartOfAccounts ON MA_SaleDocDetail.Offset =  MA_ChartOfAccounts.Account 
@@ -2827,6 +2857,8 @@ Module MovimentiAnaliticiDaFatture
                                                             AND MA_SaleDoc.PostedToAccounting = '1'
                                                             AND MA_ChartOfAccounts.PostableInCostAcc = @MovInAnalitica 
                                                             AND MA_SaleDoc.DocumentType IN (" & DocumentType.Fattura & " , " & DocumentType.FatturaAccompagnatoria & " , " & DocumentType.NotaCredito & " , " & DocumentType.AutoFattura & " , " & DocumentType.AutoNotaCredito & ")
+                                                            AND MA_SaleDoc.SaleDocId IN ( SELECT SaleDocId FROM MA_SaleDocDetail 
+                                                              GROUP BY SaleDocId HAVING MIN(COALESCE(LEN(CostCenter), 0)) > 0 )
                                                             ORDER BY MA_SaleDoc.DocNo, MA_SaleDocDetail.Offset", Connection)
                 da.SelectCommand.Parameters.AddWithValue("@FromDate", sFromDate)
                 da.SelectCommand.Parameters.AddWithValue("@ToDate", sToDate)
@@ -2890,6 +2922,7 @@ Module MovimentiAnaliticiDaFatture
                                                 Using adpMovAnaSaldi As New SqlDataAdapter(qrySaldi, Connection)
                                                     Dim cbMar = New SqlCommandBuilder(adpMovAnaSaldi)
                                                     adpMovAnaSaldi.UpdateCommand = cbMar.GetUpdateCommand(True)
+                                                    adpMovAnaSaldi.InsertCommand = cbMar.GetInsertCommand(True)
                                                     Dim dtMovAnaSaldi As New DataTable("MA_CostCentersBalances")
                                                     adpMovAnaSaldi.Fill(dtMovAnaSaldi)
                                                     Dim dvMovAnaSaldi As New DataView(dtMovAnaSaldi, "", "CostCenter,Account,BalanceYear,BalanceMonth", DataViewRowState.CurrentRows)
@@ -3494,10 +3527,12 @@ Module MovimentiAnaliticiDaFatture
                                                             End If
                                                         End Using
                                                         If Not someTrouble Then
+                                                            Debug.Print(adpMovAnaSaldi.InsertCommand.CommandText)
+                                                            Debug.Print(adpMovAnaSaldi.UpdateCommand.CommandText)
                                                             'Aggiornamento/inserimento Saldi Centri i Costo
                                                             irows = adpMovAnaSaldi.Update(dtMovAnaSaldi)
                                                             'Result.AppendLine("Aggiornamento Saldi analitici: " & irows.ToString & " record")
-                                                            Debug.Print("Aggiornamento Saldi analitici: " & irows.ToString & " record")
+                                                            Debug.Print("Inserimento/Aggiornamento Saldi analitici: " & irows.ToString & " record")
                                                             'Aggiornamento flag su MA_SaleDoc
                                                             irows = daSaleDoc.Update(dtDoc)
                                                             Debug.Print("Aggiornamento FLAG documenti vendita: " & irows.ToString & " record")
