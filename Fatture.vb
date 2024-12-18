@@ -2816,6 +2816,17 @@ Module MovimentiAnaliticiDaFatture
         Dim iRefNo As Integer
         Dim Annualita As Short
         Try
+            'Scrivo i filtri sul log
+#Region "Filtri"
+            Dim sbfiltri As New StringBuilder
+            sbfiltri.AppendLine(" --- Filtri ---")
+            sbfiltri.AppendLine("Data - Dal: " & fromDate.ToShortDateString & " al: " & todate.ToShortDateString)
+            sbfiltri.AppendLine("Numero: - Dal: " & nrFirst & " al: " & nrLast)
+            sbfiltri.AppendLine("Già Registrati: " & giaRegistrate.ToString)
+            sbfiltri.AppendLine("Movimentabili in analitica: " & soloMovimentabili.ToString)
+            sbfiltri.AppendLine("Adeua canone e date ordine: " & filtri.AdeguaCanoniDate.ToString)
+            My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & sbfiltri.ToString)
+#End Region
             '29/11/2024
             'Aggiungo preselezione per righe con CdC nullo 
             Dim qryOrfani As String = "SELECT MA_SaleDoc.DocNo, MA_SaleDoc.JournalEntryId, MA_SaleDoc.PostedToCostAccounting, MA_ChartOfAccounts.PostableInCostAcc,
@@ -2838,7 +2849,7 @@ Module MovimentiAnaliticiDaFatture
                 command.Parameters.AddWithValue("@NrLast", nrLast)
                 command.Parameters.AddWithValue("@GiaRegistrate", If(giaRegistrate, "1", "0"))
                 command.Parameters.AddWithValue("@MovInAnalitica", If(soloMovimentabili, "1", "0"))
-                
+
                 Using reader As SqlDataReader = command.ExecuteReader()
                     While reader.Read()
                         errori.AppendLine("E50: Doc: " & reader.Item("DocNo") & " riga : " & reader.Item("Line") & " - Centro di Costo assente!")
@@ -2846,7 +2857,6 @@ Module MovimentiAnaliticiDaFatture
                 End Using
             End Using
             'Inizializzo una query tra MA_SaleDoc e le righe con le informazioni che mi servono delle sole merci e servizi
-            'Si noti la Query di IN per gestire solo i documenti con centro di costo su tutte le righe !
             Using da As New SqlDataAdapter("SELECT MA_SaleDoc.DocNo, MA_SaleDoc.JournalEntryId, MA_SaleDoc.PostedToCostAccounting, MA_ChartOfAccounts.PostableInCostAcc,
                                                             MA_SaleDocDetail.* FROM MA_SaleDoc LEFT JOIN MA_SaleDocDetail
                                                             ON MA_SaleDoc.SaleDocId = MA_SaleDocDetail.SaleDocId JOIN MA_ChartOfAccounts ON MA_SaleDocDetail.Offset =  MA_ChartOfAccounts.Account 
@@ -2856,10 +2866,13 @@ Module MovimentiAnaliticiDaFatture
                                                             AND MA_SaleDoc.PostedToCostAccounting = @GiaRegistrate 
                                                             AND MA_SaleDoc.PostedToAccounting = '1'
                                                             AND MA_ChartOfAccounts.PostableInCostAcc = @MovInAnalitica 
-                                                            AND MA_SaleDoc.DocumentType IN (" & DocumentType.Fattura & " , " & DocumentType.FatturaAccompagnatoria & " , " & DocumentType.NotaCredito & " , " & DocumentType.AutoFattura & " , " & DocumentType.AutoNotaCredito & ")
-                                                            AND MA_SaleDoc.SaleDocId IN ( SELECT SaleDocId FROM MA_SaleDocDetail 
-                                                              GROUP BY SaleDocId HAVING MIN(COALESCE(LEN(CostCenter), 0)) > 0 )
+                                                            AND MA_SaleDoc.DocumentType IN (" & DocumentType.Fattura & " , " & DocumentType.FatturaAccompagnatoria & " , " & DocumentType.NotaCredito & " , " & DocumentType.AutoFattura & " , " & DocumentType.AutoNotaCredito & ")                            
                                                             ORDER BY MA_SaleDoc.DocNo, MA_SaleDocDetail.Offset", Connection)
+                'Si noti la Query di IN per gestire solo i documenti con centro di costo su tutte le righe !
+                'Riga temporaneamente rimossa:
+                'la clausola MAX che controlla che almeno una riga sia valida
+                'la clausola MIN controlla che tutte le righe siano valide
+                'AND MA_SaleDoc.SaleDocId IN ( SELECT SaleDocId FROM MA_SaleDocDetail GROUP BY SaleDocId HAVING Max(COALESCE(LEN(CostCenter), 0)) > 0 )
                 da.SelectCommand.Parameters.AddWithValue("@FromDate", sFromDate)
                 da.SelectCommand.Parameters.AddWithValue("@ToDate", sToDate)
                 da.SelectCommand.Parameters.AddWithValue("@AllNumbers", If(allNumbers, 1, 0))
