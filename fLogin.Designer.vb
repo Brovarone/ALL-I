@@ -82,6 +82,8 @@ Partial Class FLogin
         Me.ChkPartiteFornitori = New System.Windows.Forms.CheckBox()
         Me.ChkPartiteCliente = New System.Windows.Forms.CheckBox()
         Me.TabPagePnota = New System.Windows.Forms.TabPage()
+        Me.chkFattureDaEmettere = New System.Windows.Forms.CheckBox()
+        Me.ChkRiscontiFusione = New System.Windows.Forms.CheckBox()
         Me.ChkRiscontiRidotto = New System.Windows.Forms.CheckBox()
         Me.ChkRisconti = New System.Windows.Forms.CheckBox()
         Me.ChkPNotaForDaPartitario = New System.Windows.Forms.CheckBox()
@@ -138,14 +140,15 @@ Partial Class FLogin
         Me.ExitToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.FusioneToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.EseguiStep = New System.Windows.Forms.ToolStripMenuItem()
-        Me.SettingsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ToolStripTracciatoVecchio = New System.Windows.Forms.ToolStripMenuItem()
-        Me.ToolStripMenuItemDebugging = New System.Windows.Forms.ToolStripMenuItem()
         Me.ComandiToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.RiscontiRidottoStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.RiscontiFusioneToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.CespitiStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ImportaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.CancellaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.SettingsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ToolStripTracciatoVecchio = New System.Windows.Forms.ToolStripMenuItem()
+        Me.ToolStripMenuItemDebugging = New System.Windows.Forms.ToolStripMenuItem()
         Me.AdminCmdToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.IDToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.CaricaSchemaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
@@ -166,8 +169,7 @@ Partial Class FLogin
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
-        Me.ChkRiscontiFusione = New System.Windows.Forms.CheckBox()
-        Me.RiscontiFusioneToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.FattureDaEmettereToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabFusione.SuspendLayout()
@@ -802,6 +804,7 @@ Partial Class FLogin
         'TabPagePnota
         '
         Me.TabPagePnota.BackColor = System.Drawing.SystemColors.Control
+        Me.TabPagePnota.Controls.Add(Me.chkFattureDaEmettere)
         Me.TabPagePnota.Controls.Add(Me.ChkRiscontiFusione)
         Me.TabPagePnota.Controls.Add(Me.ChkRiscontiRidotto)
         Me.TabPagePnota.Controls.Add(Me.ChkRisconti)
@@ -813,6 +816,27 @@ Partial Class FLogin
         Me.TabPagePnota.Size = New System.Drawing.Size(322, 101)
         Me.TabPagePnota.TabIndex = 4
         Me.TabPagePnota.Text = "Prima Nota"
+        '
+        'chkFattureDaEmettere
+        '
+        Me.chkFattureDaEmettere.AutoSize = True
+        Me.chkFattureDaEmettere.Location = New System.Drawing.Point(173, 72)
+        Me.chkFattureDaEmettere.Name = "chkFattureDaEmettere"
+        Me.chkFattureDaEmettere.Size = New System.Drawing.Size(118, 17)
+        Me.chkFattureDaEmettere.TabIndex = 28
+        Me.chkFattureDaEmettere.Text = "Fatture da emettere"
+        Me.chkFattureDaEmettere.UseVisualStyleBackColor = True
+        '
+        'ChkRiscontiFusione
+        '
+        Me.ChkRiscontiFusione.AutoSize = True
+        Me.ChkRiscontiFusione.BackColor = System.Drawing.Color.Plum
+        Me.ChkRiscontiFusione.Location = New System.Drawing.Point(173, 49)
+        Me.ChkRiscontiFusione.Name = "ChkRiscontiFusione"
+        Me.ChkRiscontiFusione.Size = New System.Drawing.Size(104, 17)
+        Me.ChkRiscontiFusione.TabIndex = 27
+        Me.ChkRiscontiFusione.Text = "Risconti Fusione"
+        Me.ChkRiscontiFusione.UseVisualStyleBackColor = False
         '
         'ChkRiscontiRidotto
         '
@@ -1047,7 +1071,7 @@ Partial Class FLogin
         '
         'MenuStrip1
         '
-        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolsToolStripMenuItem, Me.FileToolStripMenuItem, Me.FusioneToolStripMenuItem, Me.SettingsToolStripMenuItem, Me.ComandiToolStripMenuItem, Me.AdminCmdToolStripMenuItem, Me.HelpToolStripMenuItem})
+        Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolsToolStripMenuItem, Me.FileToolStripMenuItem, Me.FusioneToolStripMenuItem, Me.ComandiToolStripMenuItem, Me.SettingsToolStripMenuItem, Me.AdminCmdToolStripMenuItem, Me.HelpToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip1.Name = "MenuStrip1"
         Me.MenuStrip1.Size = New System.Drawing.Size(456, 24)
@@ -1262,6 +1286,47 @@ Partial Class FLogin
         Me.EseguiStep.Size = New System.Drawing.Size(99, 22)
         Me.EseguiStep.Text = "STEP"
         '
+        'ComandiToolStripMenuItem
+        '
+        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.RiscontiRidottoStripMenuItem, Me.RiscontiFusioneToolStripMenuItem, Me.CespitiStripMenuItem, Me.FattureDaEmettereToolStripMenuItem})
+        Me.ComandiToolStripMenuItem.Name = "ComandiToolStripMenuItem"
+        Me.ComandiToolStripMenuItem.Size = New System.Drawing.Size(68, 20)
+        Me.ComandiToolStripMenuItem.Text = "Comandi"
+        '
+        'RiscontiRidottoStripMenuItem
+        '
+        Me.RiscontiRidottoStripMenuItem.Enabled = False
+        Me.RiscontiRidottoStripMenuItem.Name = "RiscontiRidottoStripMenuItem"
+        Me.RiscontiRidottoStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.RiscontiRidottoStripMenuItem.Text = "Risconti ridotto"
+        '
+        'RiscontiFusioneToolStripMenuItem
+        '
+        Me.RiscontiFusioneToolStripMenuItem.Enabled = False
+        Me.RiscontiFusioneToolStripMenuItem.Name = "RiscontiFusioneToolStripMenuItem"
+        Me.RiscontiFusioneToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.RiscontiFusioneToolStripMenuItem.Text = "Risconti Fusione"
+        '
+        'CespitiStripMenuItem
+        '
+        Me.CespitiStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ImportaToolStripMenuItem, Me.CancellaToolStripMenuItem})
+        Me.CespitiStripMenuItem.Enabled = False
+        Me.CespitiStripMenuItem.Name = "CespitiStripMenuItem"
+        Me.CespitiStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.CespitiStripMenuItem.Text = "Cespiti"
+        '
+        'ImportaToolStripMenuItem
+        '
+        Me.ImportaToolStripMenuItem.Name = "ImportaToolStripMenuItem"
+        Me.ImportaToolStripMenuItem.Size = New System.Drawing.Size(119, 22)
+        Me.ImportaToolStripMenuItem.Text = "Importa"
+        '
+        'CancellaToolStripMenuItem
+        '
+        Me.CancellaToolStripMenuItem.Name = "CancellaToolStripMenuItem"
+        Me.CancellaToolStripMenuItem.Size = New System.Drawing.Size(119, 22)
+        Me.CancellaToolStripMenuItem.Text = "Cancella"
+        '
         'SettingsToolStripMenuItem
         '
         Me.SettingsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripTracciatoVecchio, Me.ToolStripMenuItemDebugging})
@@ -1284,40 +1349,6 @@ Partial Class FLogin
         Me.ToolStripMenuItemDebugging.Name = "ToolStripMenuItemDebugging"
         Me.ToolStripMenuItemDebugging.Size = New System.Drawing.Size(180, 22)
         Me.ToolStripMenuItemDebugging.Text = "Debugging"
-        '
-        'ComandiToolStripMenuItem
-        '
-        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.RiscontiRidottoStripMenuItem, Me.RiscontiFusioneToolStripMenuItem, Me.CespitiStripMenuItem})
-        Me.ComandiToolStripMenuItem.Name = "ComandiToolStripMenuItem"
-        Me.ComandiToolStripMenuItem.Size = New System.Drawing.Size(68, 20)
-        Me.ComandiToolStripMenuItem.Text = "Comandi"
-        '
-        'RiscontiRidottoStripMenuItem
-        '
-        Me.RiscontiRidottoStripMenuItem.Enabled = False
-        Me.RiscontiRidottoStripMenuItem.Name = "RiscontiRidottoStripMenuItem"
-        Me.RiscontiRidottoStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.RiscontiRidottoStripMenuItem.Text = "Risconti ridotto"
-        '
-        'CespitiStripMenuItem
-        '
-        Me.CespitiStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ImportaToolStripMenuItem, Me.CancellaToolStripMenuItem})
-        Me.CespitiStripMenuItem.Enabled = False
-        Me.CespitiStripMenuItem.Name = "CespitiStripMenuItem"
-        Me.CespitiStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.CespitiStripMenuItem.Text = "Cespiti"
-        '
-        'ImportaToolStripMenuItem
-        '
-        Me.ImportaToolStripMenuItem.Name = "ImportaToolStripMenuItem"
-        Me.ImportaToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.ImportaToolStripMenuItem.Text = "Importa"
-        '
-        'CancellaToolStripMenuItem
-        '
-        Me.CancellaToolStripMenuItem.Name = "CancellaToolStripMenuItem"
-        Me.CancellaToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.CancellaToolStripMenuItem.Text = "Cancella"
         '
         'AdminCmdToolStripMenuItem
         '
@@ -1465,23 +1496,11 @@ Partial Class FLogin
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
         '
-        'ChkRiscontiFusione
+        'FattureDaEmettereToolStripMenuItem
         '
-        Me.ChkRiscontiFusione.AutoSize = True
-        Me.ChkRiscontiFusione.BackColor = System.Drawing.Color.Plum
-        Me.ChkRiscontiFusione.Location = New System.Drawing.Point(173, 49)
-        Me.ChkRiscontiFusione.Name = "ChkRiscontiFusione"
-        Me.ChkRiscontiFusione.Size = New System.Drawing.Size(104, 17)
-        Me.ChkRiscontiFusione.TabIndex = 27
-        Me.ChkRiscontiFusione.Text = "Risconti Fusione"
-        Me.ChkRiscontiFusione.UseVisualStyleBackColor = False
-        '
-        'RiscontiFusioneToolStripMenuItem
-        '
-        Me.RiscontiFusioneToolStripMenuItem.Enabled = False
-        Me.RiscontiFusioneToolStripMenuItem.Name = "RiscontiFusioneToolStripMenuItem"
-        Me.RiscontiFusioneToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.RiscontiFusioneToolStripMenuItem.Text = "Risconti Fusione"
+        Me.FattureDaEmettereToolStripMenuItem.Name = "FattureDaEmettereToolStripMenuItem"
+        Me.FattureDaEmettereToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.FattureDaEmettereToolStripMenuItem.Text = "Fatture da Emettere"
         '
         'FLogin
         '
@@ -1673,4 +1692,6 @@ Partial Class FLogin
     Friend WithEvents CespitiStripMenuItem As ToolStripMenuItem
     Friend WithEvents ChkRiscontiFusione As CheckBox
     Friend WithEvents RiscontiFusioneToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents chkFattureDaEmettere As CheckBox
+    Friend WithEvents FattureDaEmettereToolStripMenuItem As ToolStripMenuItem
 End Class

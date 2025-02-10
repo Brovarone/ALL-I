@@ -822,6 +822,32 @@ Public Class FLogin
             Next
         End If
 
+        If chkFattureDaEmettere.Checked Then
+            Dim bFound As Boolean
+            Dim ftDaEme As String() = {"FATTURE_DA_EMETTERE"}
+            Dim ftDaEmeFound As Boolean() = {False}
+            Dim FileInFolder As String() = Directory.GetFiles(FolderPath, "*.*", SearchOption.TopDirectoryOnly)
+
+            For i = 0 To UBound(ftDaEme)
+                For Each sFile As String In FileInFolder
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
+                    bFound = sNomeFile.Equals(ftDaEme(i))
+                    If bFound Then
+                        ftDaEmeFound(i) = True
+                        ftDaEme(i) = sFile
+                        lista.Add(sFile)
+                        Exit For
+                    End If
+                Next
+                If Not ftDaEmeFound(i) Then
+                    MessageBox.Show("Impossibile continuare l'elaborazione degli assestamenti file FATTURE_DA_EMETTERE.XLSX")
+                    Exit For
+                End If
+            Next
+            nomeLog = "Fatture da emettere"
+            ProcessaGruppo(ftDaEme, nomeLog)
+        End If
+
         If ChkRisconti.Checked Then
             Dim bFound As Boolean
             Dim risc As String() = {"RISCONTI"}
@@ -1039,6 +1065,11 @@ Public Class FLogin
                         lstStatoConnessione.Items.Add("Note Clienti da Foxpro")
                         dsXLS = LoadXLS(spath, True, False)
                         esito = NoteClientiFoxproXLS(dsXLS, False)
+                    Case "FATTURE_DA_EMETTERE"
+                        'Risconti Xlsx  (con riga di Intestazione)
+                        lstStatoConnessione.Items.Add("Fatture da enettere")
+                        dsXLS = LoadXLS(spath, True, False)
+                        esito = CreaFattureDaEmettere2024(dsXLS.Tables(0), True)
                     Case "RISCONTI"
                         'Risconti Xlsx  (con riga di Intestazione)
                         lstStatoConnessione.Items.Add("Risconti")
@@ -2052,6 +2083,12 @@ Public Class FLogin
 
     Private Sub RiscontiFusioneToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles RiscontiFusioneToolStripMenuItem.Click
         ChkRiscontiFusione.Checked = True
+        SUBConnetti()
+        SUBProcessa()
+    End Sub
+
+    Private Sub FattureDaEmettereToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles FattureDaEmettereToolStripMenuItem.Click
+        chkFattureDaEmettere.Checked = True
         SUBConnetti()
         SUBProcessa()
     End Sub
