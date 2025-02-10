@@ -196,7 +196,7 @@ Module Contab2024
                                                                             drAna("DocNo") = drPn.Item("DocNo")
                                                                             drAna("RefDocNo") = drPn.Item("RefNo")
                                                                             drAna("TotalAmount") = .Item("Amount")
-                                                                            drAna("Notes") = .Item("Notes")
+                                                                            drAna("Notes") = Left(.Item("Notes"), 64)
                                                                             drAna("EntryId") = idMovAna
                                                                             drAna("JournalEntryId") = .Item("JournalEntryId")
                                                                             drAna("CustSuppType") = CustSuppType.ClienteIgnora
