@@ -177,6 +177,7 @@ Partial Class FLogin
         Me.SearchToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.toolStripSeparator5 = New System.Windows.Forms.ToolStripSeparator()
         Me.AboutToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.DividiContextToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabFusione.SuspendLayout()
@@ -1405,12 +1406,12 @@ Partial Class FLogin
         'EseguiStep
         '
         Me.EseguiStep.Name = "EseguiStep"
-        Me.EseguiStep.Size = New System.Drawing.Size(99, 22)
+        Me.EseguiStep.Size = New System.Drawing.Size(180, 22)
         Me.EseguiStep.Text = "STEP"
         '
         'ComandiToolStripMenuItem
         '
-        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.RiscontiRidottoStripMenuItem, Me.RiscontiFusioneToolStripMenuItem, Me.CespitiStripMenuItem, Me.ContrattiFoxToolStripMenuItem, Me.CheckIntegraToolStripMenuItem, Me.OrdiniFoxToolStripMenuItem})
+        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.RiscontiRidottoStripMenuItem, Me.RiscontiFusioneToolStripMenuItem, Me.CespitiStripMenuItem, Me.ContrattiFoxToolStripMenuItem, Me.CheckIntegraToolStripMenuItem, Me.OrdiniFoxToolStripMenuItem, Me.DividiContextToolStripMenuItem})
         Me.ComandiToolStripMenuItem.Name = "ComandiToolStripMenuItem"
         Me.ComandiToolStripMenuItem.Size = New System.Drawing.Size(68, 20)
         Me.ComandiToolStripMenuItem.Text = "Comandi"
@@ -1419,14 +1420,14 @@ Partial Class FLogin
         '
         Me.RiscontiRidottoStripMenuItem.Enabled = False
         Me.RiscontiRidottoStripMenuItem.Name = "RiscontiRidottoStripMenuItem"
-        Me.RiscontiRidottoStripMenuItem.Size = New System.Drawing.Size(160, 22)
+        Me.RiscontiRidottoStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.RiscontiRidottoStripMenuItem.Text = "Risconti ridotto"
         '
         'RiscontiFusioneToolStripMenuItem
         '
         Me.RiscontiFusioneToolStripMenuItem.Enabled = False
         Me.RiscontiFusioneToolStripMenuItem.Name = "RiscontiFusioneToolStripMenuItem"
-        Me.RiscontiFusioneToolStripMenuItem.Size = New System.Drawing.Size(160, 22)
+        Me.RiscontiFusioneToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.RiscontiFusioneToolStripMenuItem.Text = "Risconti Fusione"
         '
         'CespitiStripMenuItem
@@ -1434,7 +1435,7 @@ Partial Class FLogin
         Me.CespitiStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ImportaToolStripMenuItem, Me.CancellaToolStripMenuItem})
         Me.CespitiStripMenuItem.Enabled = False
         Me.CespitiStripMenuItem.Name = "CespitiStripMenuItem"
-        Me.CespitiStripMenuItem.Size = New System.Drawing.Size(160, 22)
+        Me.CespitiStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.CespitiStripMenuItem.Text = "Cespiti"
         '
         'ImportaToolStripMenuItem
@@ -1452,19 +1453,19 @@ Partial Class FLogin
         'ContrattiFoxToolStripMenuItem
         '
         Me.ContrattiFoxToolStripMenuItem.Name = "ContrattiFoxToolStripMenuItem"
-        Me.ContrattiFoxToolStripMenuItem.Size = New System.Drawing.Size(160, 22)
+        Me.ContrattiFoxToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.ContrattiFoxToolStripMenuItem.Text = "Contratti Fox"
         '
         'CheckIntegraToolStripMenuItem
         '
         Me.CheckIntegraToolStripMenuItem.Name = "CheckIntegraToolStripMenuItem"
-        Me.CheckIntegraToolStripMenuItem.Size = New System.Drawing.Size(160, 22)
+        Me.CheckIntegraToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.CheckIntegraToolStripMenuItem.Text = "Check_Integra"
         '
         'OrdiniFoxToolStripMenuItem
         '
         Me.OrdiniFoxToolStripMenuItem.Name = "OrdiniFoxToolStripMenuItem"
-        Me.OrdiniFoxToolStripMenuItem.Size = New System.Drawing.Size(160, 22)
+        Me.OrdiniFoxToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
         Me.OrdiniFoxToolStripMenuItem.Text = "Ordini Fox"
         '
         'SettingsToolStripMenuItem
@@ -1581,6 +1582,12 @@ Partial Class FLogin
         Me.AboutToolStripMenuItem.Name = "AboutToolStripMenuItem"
         Me.AboutToolStripMenuItem.Size = New System.Drawing.Size(122, 22)
         Me.AboutToolStripMenuItem.Text = "&About..."
+        '
+        'DividiContextToolStripMenuItem
+        '
+        Me.DividiContextToolStripMenuItem.Name = "DividiContextToolStripMenuItem"
+        Me.DividiContextToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.DividiContextToolStripMenuItem.Text = "DividiContext"
         '
         'FLogin
         '
@@ -1783,4 +1790,5 @@ Partial Class FLogin
     Friend WithEvents BtnOrdiniFox As Button
     Friend WithEvents OrdiniFoxToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ChkOrdiniFox As CheckBox
+    Friend WithEvents DividiContextToolStripMenuItem As ToolStripMenuItem
 End Class

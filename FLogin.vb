@@ -2312,5 +2312,7 @@ Public Class FLogin
 
     End Sub
 
-
+    Private Sub DividiContextToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles DividiContextToolStripMenuItem.Click
+        DbContextSplitter.Dividi()
+    End Sub
 End Class

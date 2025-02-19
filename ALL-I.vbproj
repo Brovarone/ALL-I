@@ -395,6 +395,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Contabilita\Paghe.vb" />
+    <Compile Include="DbContextSplitter.vb" />
     <Compile Include="Fusione\Fox\ContrattiFox.vb" />
     <Compile Include="Fusione\CR.vb" />
     <Compile Include="Fusione\FDocumentNumberDialog.Designer.vb">

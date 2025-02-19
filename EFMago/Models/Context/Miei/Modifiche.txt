@@ -75,3 +75,6 @@ Aggiungere in testa
   MASaleord
   MaGoodsItemxxx 
   e togliere nel onCreated del context i riferimenti
+
+13/02/2025
+Inizio la definizione di Context diversi per gestione piu' semplice degli aggiornamenti.
