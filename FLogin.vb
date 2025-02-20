@@ -981,6 +981,32 @@ Public Class FLogin
             isAdmin = True
         End If
 
+        If chkElimCespiti2024.Checked Then
+            Dim bFound As Boolean
+            Dim movCesp As String() = {"MOVCESP"}
+            Dim movCespFound As Boolean() = {False}
+            Dim FileInFolder As String() = Directory.GetFiles(FolderPath, "*.*", SearchOption.TopDirectoryOnly)
+
+            For i = 0 To UBound(movCesp)
+                For Each sFile As String In FileInFolder
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
+                    bFound = sNomeFile.Equals(movCesp(i))
+                    If bFound Then
+                        movCespFound(i) = True
+                        movCesp(i) = sFile
+                        lista.Add(sFile)
+                        Exit For
+                    End If
+                Next
+                If Not movCespFound(i) Then
+                    MessageBox.Show("Impossibile continuare l'elaborazione degli assestamenti file MOVCESP.XLSX")
+                    Exit For
+                End If
+            Next
+            nomeLog = "Movimento contabile da Movimento cespite"
+            ProcessaGruppo(movCesp, nomeLog)
+        End If
+
         'Scrivo informazioni di Chiusura
         lstStatoConnessione.Items.Add("   ---   Elaborazione completata   ---")
         prgCopy.Value = 0
@@ -1177,7 +1203,6 @@ Public Class FLogin
                         lstStatoConnessione.Items.Add("Cespiti - Movimenti Fiscali")
                         dsXLS = LoadXLS(spath, True, False)
                         esito = CespitiXLS(dsXLS, True)
-
                     Case "IDS_MIGRAZIONE"
                         Dim bok As Boolean
                         My.Application.Log.WriteEntry("Esegui Commit : " & (Not IsDebugging).ToString)
@@ -1194,6 +1219,11 @@ Public Class FLogin
                             bok = EseguiFusioneSQL(dsXLS)
                         End If
                         esito = bok
+                    Case "MOVCESP"
+                        'Movimenti eliminazione cespiti Xlsx  (con riga di Intestazione)
+                        lstStatoConnessione.Items.Add("Movimenti contabili da movimenti cespite")
+                        dsXLS = LoadXLS(spath, True, False)
+                        esito = CreaMovimentoContabileDaMovimentoCespite2024(dsXLS.Tables("Foglio1"), True)
 
                     Case Else
                         Select Case True 'Controllo in Like il nome file
@@ -2089,6 +2119,12 @@ Public Class FLogin
 
     Private Sub FattureDaEmettereToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles FattureDaEmettereToolStripMenuItem.Click
         chkFattureDaEmettere.Checked = True
+        SUBConnetti()
+        SUBProcessa()
+    End Sub
+
+    Private Sub EliminazioneCespiti2024ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles EliminazioneCespiti2024ToolStripMenuItem.Click
+        chkElimCespiti2024.Checked = True
         SUBConnetti()
         SUBProcessa()
     End Sub

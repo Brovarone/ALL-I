@@ -387,6 +387,7 @@
     <Compile Include="Cespiti.vb" />
     <Compile Include="Contabilita\Analitica.vb" />
     <Compile Include="Contabilita\Contab2024.vb" />
+    <Compile Include="Contabilita\ContabMovCesp2024.vb" />
     <Compile Include="Contabilita\FAskFiltriRisconti.Designer.vb">
       <DependentUpon>FAskFiltriRisconti.vb</DependentUpon>
     </Compile>

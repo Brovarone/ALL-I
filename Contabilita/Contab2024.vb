@@ -1,8 +1,6 @@
 ﻿Imports System.Data.SqlClient
 Imports System.Text
 Imports System.Reflection.MethodBase
-Imports ALLSYSTEMTOOLS.TOOLS
-
 Module Contab2024
 
     Private Const ModCont = "ASSESTAM"
@@ -49,9 +47,9 @@ Module Contab2024
             Dim iRefNoAna As Integer = LeggiNonFiscalNumber(CodeType.MovAna, Year(DataRiga))
 
             Try
-                Dim quadratura As Double
-                Dim totDare As Double
-                Dim totAvere As Double
+                Dim quadratura As Decimal
+                Dim totDare As Decimal
+                Dim totAvere As Decimal
                 Dim isNewReg As Boolean = True
                 Dim irow As Integer = 0
                 Dim i As Byte = 0
@@ -153,7 +151,7 @@ Module Contab2024
                                                             End If
 
                                                             drPnD("DebitCreditSign") = If(isDare, 4980736, 4980737)
-                                                            Dim imp As Double = .Item("G")
+                                                            Dim imp As Decimal = .Item("G")
                                                             drPnD("Amount") = imp
                                                             drPnD("FiscalAmount") = imp
                                                             quadratura += If(isDare, imp, -imp)
@@ -227,15 +225,14 @@ Module Contab2024
                                                                             'Righe MA_CostAccEntriesDetail
                                                                             ''''''''''''''''''''''
                                                                             'Creo sempre solo 1 riga
-                                                                            Dim importo As Double = .Item("Amount")
+                                                                            Dim importo As Decimal = .Item("Amount")
                                                                             Dim iLineMovAna As Integer = 0
-                                                                            Dim iCanoni = 1
                                                                             Dim nomeMese As String = r.Rows(irow).Item("F")
                                                                             Dim dataTemp As Date = Date.Parse(nomeMese & " 1, 2024")
                                                                             Dim dataDecorrenza As Date = New Date(2024, dataTemp.Month, Date.DaysInMonth(dataTemp.Year, dataTemp.Month))
                                                                             Dim isDareAna = drAna("DebitCreditSign") = 8192000
-                                                                            Dim CdC As String = r.Rows(irow).Item("C")
 
+                                                                            Dim CdC As String = r.Rows(irow).Item("C")
                                                                             Dim iCdcFound As Integer = dvCdC.Find(CdC)
                                                                             If iCdcFound = -1 Then
                                                                                 Debug.Print("Centro di Costo senza corrispondenza: " & CdC)
@@ -384,3 +381,4 @@ Module Contab2024
     End Function
 
 End Module
+

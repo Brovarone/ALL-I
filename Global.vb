@@ -404,6 +404,7 @@ Module MagoNet
         PnotaPuro = 27066418
         PnotaEmesso = 27066419
         MovimentoAnalitico = 27066424
+        MovimentoCespite = 27066428
     End Enum
     Friend Enum LineType As Integer
         Nota = 3538944
@@ -755,8 +756,6 @@ Module MagoNet
         Dim ITCult As New CultureInfo("it-IT")
 
         Try
-
-
             Select Case Tipo
                 Case GetType(DateTime)
                     'PASSARE SE POSSIBILE LA DATA CON yyyyMMdd

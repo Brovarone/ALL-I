@@ -146,6 +146,8 @@ Partial Class FLogin
         Me.CespitiStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ImportaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.CancellaToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.FattureDaEmettereToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.EliminazioneCespiti2024ToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.SettingsToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripTracciatoVecchio = New System.Windows.Forms.ToolStripMenuItem()
         Me.ToolStripMenuItemDebugging = New System.Windows.Forms.ToolStripMenuItem()
@@ -169,7 +171,7 @@ Partial Class FLogin
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
-        Me.FattureDaEmettereToolStripMenuItem = New System.Windows.Forms.ToolStripMenuItem()
+        Me.chkElimCespiti2024 = New System.Windows.Forms.CheckBox()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabFusione.SuspendLayout()
@@ -881,6 +883,7 @@ Partial Class FLogin
         'TabCespiti
         '
         Me.TabCespiti.BackColor = System.Drawing.SystemColors.Control
+        Me.TabCespiti.Controls.Add(Me.chkElimCespiti2024)
         Me.TabCespiti.Controls.Add(Me.ChkCespiti)
         Me.TabCespiti.Location = New System.Drawing.Point(4, 22)
         Me.TabCespiti.Name = "TabCespiti"
@@ -1288,7 +1291,7 @@ Partial Class FLogin
         '
         'ComandiToolStripMenuItem
         '
-        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.RiscontiRidottoStripMenuItem, Me.RiscontiFusioneToolStripMenuItem, Me.CespitiStripMenuItem, Me.FattureDaEmettereToolStripMenuItem})
+        Me.ComandiToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.RiscontiRidottoStripMenuItem, Me.RiscontiFusioneToolStripMenuItem, Me.CespitiStripMenuItem, Me.FattureDaEmettereToolStripMenuItem, Me.EliminazioneCespiti2024ToolStripMenuItem})
         Me.ComandiToolStripMenuItem.Name = "ComandiToolStripMenuItem"
         Me.ComandiToolStripMenuItem.Size = New System.Drawing.Size(68, 20)
         Me.ComandiToolStripMenuItem.Text = "Comandi"
@@ -1297,14 +1300,14 @@ Partial Class FLogin
         '
         Me.RiscontiRidottoStripMenuItem.Enabled = False
         Me.RiscontiRidottoStripMenuItem.Name = "RiscontiRidottoStripMenuItem"
-        Me.RiscontiRidottoStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.RiscontiRidottoStripMenuItem.Size = New System.Drawing.Size(207, 22)
         Me.RiscontiRidottoStripMenuItem.Text = "Risconti ridotto"
         '
         'RiscontiFusioneToolStripMenuItem
         '
         Me.RiscontiFusioneToolStripMenuItem.Enabled = False
         Me.RiscontiFusioneToolStripMenuItem.Name = "RiscontiFusioneToolStripMenuItem"
-        Me.RiscontiFusioneToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.RiscontiFusioneToolStripMenuItem.Size = New System.Drawing.Size(207, 22)
         Me.RiscontiFusioneToolStripMenuItem.Text = "Risconti Fusione"
         '
         'CespitiStripMenuItem
@@ -1312,7 +1315,7 @@ Partial Class FLogin
         Me.CespitiStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ImportaToolStripMenuItem, Me.CancellaToolStripMenuItem})
         Me.CespitiStripMenuItem.Enabled = False
         Me.CespitiStripMenuItem.Name = "CespitiStripMenuItem"
-        Me.CespitiStripMenuItem.Size = New System.Drawing.Size(180, 22)
+        Me.CespitiStripMenuItem.Size = New System.Drawing.Size(207, 22)
         Me.CespitiStripMenuItem.Text = "Cespiti"
         '
         'ImportaToolStripMenuItem
@@ -1327,6 +1330,18 @@ Partial Class FLogin
         Me.CancellaToolStripMenuItem.Size = New System.Drawing.Size(119, 22)
         Me.CancellaToolStripMenuItem.Text = "Cancella"
         '
+        'FattureDaEmettereToolStripMenuItem
+        '
+        Me.FattureDaEmettereToolStripMenuItem.Name = "FattureDaEmettereToolStripMenuItem"
+        Me.FattureDaEmettereToolStripMenuItem.Size = New System.Drawing.Size(207, 22)
+        Me.FattureDaEmettereToolStripMenuItem.Text = "Fatture da Emettere"
+        '
+        'EliminazioneCespiti2024ToolStripMenuItem
+        '
+        Me.EliminazioneCespiti2024ToolStripMenuItem.Name = "EliminazioneCespiti2024ToolStripMenuItem"
+        Me.EliminazioneCespiti2024ToolStripMenuItem.Size = New System.Drawing.Size(207, 22)
+        Me.EliminazioneCespiti2024ToolStripMenuItem.Text = "Eliminazione Cespiti 2024"
+        '
         'SettingsToolStripMenuItem
         '
         Me.SettingsToolStripMenuItem.DropDownItems.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolStripTracciatoVecchio, Me.ToolStripMenuItemDebugging})
@@ -1338,7 +1353,7 @@ Partial Class FLogin
         '
         Me.ToolStripTracciatoVecchio.CheckOnClick = True
         Me.ToolStripTracciatoVecchio.Name = "ToolStripTracciatoVecchio"
-        Me.ToolStripTracciatoVecchio.Size = New System.Drawing.Size(180, 22)
+        Me.ToolStripTracciatoVecchio.Size = New System.Drawing.Size(151, 22)
         Me.ToolStripTracciatoVecchio.Text = "Vecchio Flusso"
         Me.ToolStripTracciatoVecchio.ToolTipText = "Il flusso NON presenta le nuove colonne  ( dalla IB) dedicate alla contabilità an" &
     "alitica ( NrCanoni e Data decorrenza)"
@@ -1347,7 +1362,7 @@ Partial Class FLogin
         '
         Me.ToolStripMenuItemDebugging.CheckOnClick = True
         Me.ToolStripMenuItemDebugging.Name = "ToolStripMenuItemDebugging"
-        Me.ToolStripMenuItemDebugging.Size = New System.Drawing.Size(180, 22)
+        Me.ToolStripMenuItemDebugging.Size = New System.Drawing.Size(151, 22)
         Me.ToolStripMenuItemDebugging.Text = "Debugging"
         '
         'AdminCmdToolStripMenuItem
@@ -1496,11 +1511,15 @@ Partial Class FLogin
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
         '
-        'FattureDaEmettereToolStripMenuItem
+        'chkElimCespiti2024
         '
-        Me.FattureDaEmettereToolStripMenuItem.Name = "FattureDaEmettereToolStripMenuItem"
-        Me.FattureDaEmettereToolStripMenuItem.Size = New System.Drawing.Size(180, 22)
-        Me.FattureDaEmettereToolStripMenuItem.Text = "Fatture da Emettere"
+        Me.chkElimCespiti2024.AutoSize = True
+        Me.chkElimCespiti2024.Location = New System.Drawing.Point(7, 26)
+        Me.chkElimCespiti2024.Name = "chkElimCespiti2024"
+        Me.chkElimCespiti2024.Size = New System.Drawing.Size(187, 17)
+        Me.chkElimCespiti2024.TabIndex = 29
+        Me.chkElimCespiti2024.Text = "Eliminazione Cespiti 2024 (contab)"
+        Me.chkElimCespiti2024.UseVisualStyleBackColor = True
         '
         'FLogin
         '
@@ -1694,4 +1713,6 @@ Partial Class FLogin
     Friend WithEvents RiscontiFusioneToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents chkFattureDaEmettere As CheckBox
     Friend WithEvents FattureDaEmettereToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents EliminazioneCespiti2024ToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents chkElimCespiti2024 As CheckBox
 End Class
