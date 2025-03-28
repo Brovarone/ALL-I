@@ -147,6 +147,7 @@ Module Ordini
 
         Try
 #Region "Estrazioni dati con Query LINQ"
+            OrdContext.Database.SetCommandTimeout(TimeSpan.FromSeconds(120))
             'https://entityframework.net/why-first-query-slow
             Dim q = (From o In OrdContext.MaSaleOrd _
                             .Include(Function(r) r.MaSaleOrdDetails) _
