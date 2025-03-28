@@ -1231,10 +1231,12 @@ Public Class FLogin
                             Case Len(filename) = 7 AndAlso filename.ToUpper Like "ALL????"
                                 lstStatoConnessione.Items.Add("Importazione Paghe")
                                 esito = CaricaFlussoPaghe(spath, False)
+                                'esito = CaricaFlussoPagheClassi(spath, False)
                             'Paghe Flusso Zucchetti
                             Case filename.ToUpper Like "FILE_CONTABILE_PN_######_##-##-####"
                                 lstStatoConnessione.Items.Add("Importazione Paghe Zucchetti")
                                 esito = CaricaFlussoPaghe(spath, True)
+                                'esito = CaricaFlussoPagheClassi(spath, true)
                         End Select
 
                 End Select

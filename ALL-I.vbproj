@@ -41,7 +41,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>49</ApplicationRevision>
+    <ApplicationRevision>50</ApplicationRevision>
     <ApplicationVersion>3.1.1.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -394,7 +394,10 @@
     <Compile Include="Contabilita\FAskFiltriRisconti.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Contabilita\Paghe.vb" />
+    <Compile Include="Contabilita\Paghe\Paghe.vb" />
+    <Compile Include="Contabilita\Paghe\Paghe_Classi.vb" />
+    <Compile Include="Contabilita\Paghe\RigaPaghe.vb" />
+    <Compile Include="Contabilita\Paghe\TestaPaghe.vb" />
     <Compile Include="Fusione\ContrattiFox.vb" />
     <Compile Include="Fusione\CR.vb" />
     <Compile Include="Fusione\FDocumentNumberDialog.Designer.vb">

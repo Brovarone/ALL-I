@@ -202,17 +202,22 @@ Module Ordini
                 FLogin.prgCopy.Maximum = totOrdini
                 FLogin.prgCopy.Step = 1
 #Region "Variabili Default"
-
+                debugging.AppendLine("Estrazione dati di default")
                 Dim defVendite = (From dv In OrdContext.MaUserDefaultSales.ToList Select dv).FirstOrDefault
+                debugging.AppendLine(" - Vendite")
                 ' Dim defContabili = (From dc In OrdContext.MaAccountingDefaults.ToList Select dc).FirstOrDefault
+                debugging.AppendLine(" - Contabili")
                 Dim defIva = (From dc In OrdContext.MaTaxCodesDefaults.ToList Select dc).FirstOrDefault
+                debugging.AppendLine(" - Iva")
                 Dim codiciIva = (From c In OrdContext.MaTaxCodes.ToList Select c)
+                debugging.AppendLine(" - Codici Iva")
 
                 Dim sDefContropartita As String = defVendite.ServicesSalesAccount
                 Dim sDefCodIva As String = defIva.TaxCode
                 Dim dDefPercIva As Double = Math.Round(codiciIva.FirstOrDefault(Function(tax) tax.TaxCode = sDefCodIva).Perc.Value, decPerc)
 #End Region
                 'Ciclo su tutti gli ordini
+                debugging.AppendLine("Inizio Ciclo Ordini")
                 For Each o In iAllOrders
                     AvanzaBarra()
                     Debug.Print("Ordine: " & o.InternalOrdNo)
