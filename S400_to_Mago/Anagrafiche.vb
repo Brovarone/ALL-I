@@ -2,6 +2,7 @@
 Imports System.Text
 Imports System.Reflection.MethodBase
 Imports System.Web.UI.WebControls
+
 Module Anagrafiche
     Public Function ClentiXLS(ByVal dts As DataSet, Optional ByVal bConIntestazione As Boolean = True) As Boolean
         'Clienti - MA_CustSupp
@@ -486,7 +487,7 @@ Module Anagrafiche
                                     drInt = dtInt.NewRow
                                     With drXLS(irxls) ' accorcio per comodità di scrittura
                                         drInt("DeclId") = idDich
-                                        Debug.Print("Cliente: " & drXLS(irxls).Item("A").ToString)
+                                        Debug.Print("Cliente: " & custsupp)
                                         drInt("CustSuppType") = CustSuppType.Cliente
                                         drInt("CustSupp") = .Item("A").ToString
                                         Dim iTipo As Integer
@@ -556,12 +557,14 @@ Module Anagrafiche
                                     AvanzaBarra
                                 End If
                                 'Aggiorno il flag sull'anagrafica cliente
-                                Dim iCliopt As Integer = dvCliOpt.Find(drXLS(irxls).Item("A").ToString)
+                                Dim iCliopt As Integer = dvCliOpt.Find(custsupp)
                                 If iCliopt <> -1 AndAlso dvCliOpt(iCliopt)("ExemptFromTax") = "0" Then
                                     dvCliOpt(iCliopt).BeginEdit()
                                     dvCliOpt(iCliopt)("ExemptFromTax") = "1"
                                     dvCliOpt(iCliopt).EndEdit()
                                 End If
+                                result.AppendLine("Cliente " & custsupp & " nuova Dichiarazione d'intento")
+                                FLogin.lstStatoConnessione.Items.Add("Cliente " & custsupp & " nuova Dichiarazione d'intento")
                             End If
                         Next
                         Debug.Print("Elaborazione Dich. Intento: " & dtInt.Rows.Count.ToString & " in " & stopwatch1.Elapsed.ToString())

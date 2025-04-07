@@ -41,7 +41,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>51</ApplicationRevision>
+    <ApplicationRevision>52</ApplicationRevision>
     <ApplicationVersion>3.1.1.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <CreateDesktopShortcut>true</CreateDesktopShortcut>
@@ -120,6 +120,9 @@
     </Reference>
     <Reference Include="ExcelDataReader.DataSet, Version=3.6.0.0, Culture=neutral, PublicKeyToken=93517dbe6a4012fa, processorArchitecture=MSIL">
       <HintPath>packages\ExcelDataReader.DataSet.3.6.0\lib\net35\ExcelDataReader.DataSet.dll</HintPath>
+    </Reference>
+    <Reference Include="Fastenshtein, Version=1.0.10.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Fastenshtein.1.0.10\lib\net452\Fastenshtein.dll</HintPath>
     </Reference>
     <Reference Include="FileHelpers, Version=3.5.1.0, Culture=neutral, PublicKeyToken=3e0c08d59cc3d657, processorArchitecture=MSIL">
       <HintPath>packages\FileHelpers.3.5.1\lib\net45\FileHelpers.dll</HintPath>
@@ -398,6 +401,7 @@
     <Compile Include="Contabilita\Paghe\Paghe_Classi.vb" />
     <Compile Include="Contabilita\Paghe\RigaPaghe.vb" />
     <Compile Include="Contabilita\Paghe\TestaPaghe.vb" />
+    <Compile Include="Fatture\Indirizzi.vb" />
     <Compile Include="Fusione\ContrattiFox.vb" />
     <Compile Include="Fusione\CR.vb" />
     <Compile Include="Fusione\FDocumentNumberDialog.Designer.vb">
@@ -433,7 +437,7 @@
     <Compile Include="MessageBoxWithDetails.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Fatture.vb" />
+    <Compile Include="Fatture\Fatture.vb" />
     <Compile Include="FPasswordDialog.Designer.vb">
       <DependentUpon>FPasswordDialog.vb</DependentUpon>
     </Compile>

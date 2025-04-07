@@ -89,6 +89,7 @@ Partial Class FLogin
         Me.ChkPNotaForDaPartitario = New System.Windows.Forms.CheckBox()
         Me.ChkPNotaCliDaPartitario = New System.Windows.Forms.CheckBox()
         Me.TabCespiti = New System.Windows.Forms.TabPage()
+        Me.chkElimCespiti2024 = New System.Windows.Forms.CheckBox()
         Me.ChkCespiti = New System.Windows.Forms.CheckBox()
         Me.BtnProcessa = New System.Windows.Forms.Button()
         Me.lblDataInizio = New System.Windows.Forms.Label()
@@ -171,7 +172,6 @@ Partial Class FLogin
         Me.BtnSelSPA = New System.Windows.Forms.Button()
         Me.BtnSelUNO = New System.Windows.Forms.Button()
         Me.Label8 = New System.Windows.Forms.Label()
-        Me.chkElimCespiti2024 = New System.Windows.Forms.CheckBox()
         Me.PanelAdmin.SuspendLayout()
         Me.TabControl1.SuspendLayout()
         Me.TabFusione.SuspendLayout()
@@ -892,6 +892,16 @@ Partial Class FLogin
         Me.TabCespiti.TabIndex = 6
         Me.TabCespiti.Text = "Cespiti"
         '
+        'chkElimCespiti2024
+        '
+        Me.chkElimCespiti2024.AutoSize = True
+        Me.chkElimCespiti2024.Location = New System.Drawing.Point(7, 26)
+        Me.chkElimCespiti2024.Name = "chkElimCespiti2024"
+        Me.chkElimCespiti2024.Size = New System.Drawing.Size(187, 17)
+        Me.chkElimCespiti2024.TabIndex = 29
+        Me.chkElimCespiti2024.Text = "Eliminazione Cespiti 2024 (contab)"
+        Me.chkElimCespiti2024.UseVisualStyleBackColor = True
+        '
         'ChkCespiti
         '
         Me.ChkCespiti.AutoSize = True
@@ -1510,16 +1520,6 @@ Partial Class FLogin
         Me.Label8.Size = New System.Drawing.Size(271, 13)
         Me.Label8.TabIndex = 0
         Me.Label8.Text = "SELEZIONARE L'AZIENDA SULLA QUALE OPERARE"
-        '
-        'chkElimCespiti2024
-        '
-        Me.chkElimCespiti2024.AutoSize = True
-        Me.chkElimCespiti2024.Location = New System.Drawing.Point(7, 26)
-        Me.chkElimCespiti2024.Name = "chkElimCespiti2024"
-        Me.chkElimCespiti2024.Size = New System.Drawing.Size(187, 17)
-        Me.chkElimCespiti2024.TabIndex = 29
-        Me.chkElimCespiti2024.Text = "Eliminazione Cespiti 2024 (contab)"
-        Me.chkElimCespiti2024.UseVisualStyleBackColor = True
         '
         'FLogin
         '

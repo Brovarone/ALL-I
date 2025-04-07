@@ -37,6 +37,9 @@ Imports Microsoft.EntityFrameworkCore
 '
 'Gestore Log: Serilog
 '
+' 
+'Normalizzatore indirizzi: https://github.com/DanHarltey/Fastenshtein
+'
 Public Class FLogin
     'Ma_Saledoc  / Doc
     Public AdpDoc As SqlDataAdapter
@@ -2130,4 +2133,6 @@ Public Class FLogin
         SUBConnetti()
         SUBProcessa()
     End Sub
+
+
 End Class

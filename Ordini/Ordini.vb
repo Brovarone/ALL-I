@@ -154,14 +154,14 @@ Module Ordini
                             .Include(Function(acc) acc.ALLOrdCliAcc) _
                             .Include(Function(des) des.ALLordCliDescrizioni) _
                             .Include(Function(con) con.ALLordCliContratto) _
-                                .ThenInclude(Of MaItems)(Function(it) it.MaItems) _
+                                .ThenInclude(Of MaItems)(Function(it) it.MaItems).AsNoTracking _
                             .Include(Function(con) con.ALLordCliContratto) _
                                 .ThenInclude(Of AlltipoRigaServizio)(Function(trs) trs.AlltipoRigaServizio) _
                             .Include(Function(con) con.ALLordCliContratto) _
                                  .ThenInclude(Function(att) att.AllordCliAttivita) _
-                                        .ThenInclude(Of Allattivita)(Function(at) at.Allattivita) _
+                                        .ThenInclude(Of Allattivita)(Function(at) at.Allattivita).AsNoTracking _
                             .Include(Function(att) att.AllordCliAttivita) _
-                                .ThenInclude(Of Allattivita)(Function(at) at.Allattivita)) ' _
+                                .ThenInclude(Of Allattivita)(Function(at) at.Allattivita).AsNoTracking) ' _
             'q = q.Where(Function(i) i.MaSaleOrdDetails..)
             'AGGIUNGO  FILTRI
             'Vengono esclusi a priori gli ordini con data cessazione > di Data Competenza
