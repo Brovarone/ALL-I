@@ -2650,7 +2650,7 @@ Module Fatture
                 '    anag.Item("NaturalPerson") = sNatP
                 'End If
                 'In I->M ho Sede Legale, in W-->AA Sede Fiscale
-                If Levenshtein.Distance(anag.Item("Address").ToString, .Item("I").ToString) >= 4 Then
+                If Levenshtein.Distance(NormalizzaIndirizzo(anag.Item("Address").ToString), NormalizzaIndirizzo(.Item("I").ToString)) >= 4 Then
                     'If anag.Item("Address").ToString <> .Item("I").ToString Then
                     warnings.AppendLine("Indirizzo : (" & .Item("I").ToString & ") [" & anag.Item("Address") & "]")
                     '21/06/2024 Laura: Non modificare piu'
