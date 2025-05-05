@@ -82,9 +82,9 @@ Module Fatture
         Dim bNoBanca As Boolean
         '09/02/2021
         '(Deprecato) Dim listOfSEPA as New List(Of String)
-        Dim listOfNewClienti As New List(Of String)
-        Dim listOfNewSedi As New List(Of String)
-        Dim listOfNewBancheCli As New List(Of String)
+        Dim listOfNewClienti As New StringBuilder
+        Dim listOfNewSedi As New StringBuilder()
+        Dim listOfNewBancheCli As New StringBuilder()
         'Inizializzo un datatable al file xls e un datarow con tutte le righe
         Dim irxls As Integer = 0
         Dim i As Integer = 0
@@ -253,7 +253,7 @@ Module Fatture
                                                                                 'Creo nuovo cliente passando informazioni dalla fattura ed dal CLIENORD
                                                                                 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
                                                                                 Debug.Print("Nuovo cliente: " & .Item("AA").ToString)
-                                                                                listOfNewClienti.Add(.Item("AA").ToString & ": " & .Item("AB").ToString)
+                                                                                listOfNewClienti.AppendLine(.Item("AA").ToString & ": " & .Item("AB").ToString)
                                                                                 'TAG l_NewCli.Add("N01", .Item("AA").ToString & ": " & .Item("AB").ToString, LogLevel.None, .Item("AA").ToString)
                                                                                 l_NewCli.Add("N01", .Item("AA").ToString & ": " & .Item("AB").ToString)
                                                                                 drCli = dtClientiNew.NewRow
@@ -452,7 +452,7 @@ Module Fatture
                                                                                                 dtSediNew.Rows.Add(drSedi)
                                                                                                 drSedi.AcceptChanges()
                                                                                                 dvSedi.Table.ImportRow(drSedi)
-                                                                                                listOfNewSedi.Add(sNewSede)
+                                                                                                listOfNewSedi.AppendLine(sNewSede)
                                                                                                 l_NewSedi.Add("N01", sNewSede)
                                                                                             Catch ex As Exception
                                                                                                 Debug.Print("E16: Sede già presente: " & sNewSede)
@@ -475,7 +475,7 @@ Module Fatture
                                                                                                 dtSediNew.Rows.Add(drSedi)
                                                                                                 drSedi.AcceptChanges()
                                                                                                 dvSedi.Table.ImportRow(drSedi)
-                                                                                                listOfNewSedi.Add(sNewSede)
+                                                                                                listOfNewSedi.AppendLine(sNewSede)
                                                                                                 l_NewSedi.Add("N01", sNewSede)
                                                                                             Catch ex As Exception
                                                                                                 Debug.Print("E16: Sede già presente: " & sNewSede)
@@ -883,7 +883,7 @@ Module Fatture
                                                                                 Dim iBankFound As Integer = dvBancheCli.Find(bancaCli)
                                                                                 If iBankFound = -1 Then
                                                                                     Debug.Print("Nuova Banca cliente: " & bancaCli)
-                                                                                    listOfNewBancheCli.Add(bancaCli)
+                                                                                    listOfNewBancheCli.AppendLine(bancaCli)
                                                                                     l_NewBankCli.Add("N01", bancaCli)
                                                                                     Dim drBankCli = dtBancheCliNew.NewRow
                                                                                     drBankCli("Bank") = bancaCli
@@ -927,14 +927,16 @@ Module Fatture
                                                                                     drSSD("CustomerCA") = aIBAN(5)
                                                                                     drSSD("CustomerIBAN") = .Item("FM").ToString
                                                                                     drSSD("CustomerIBANIsManual") = "1"
-                                                                                    'Dim data As String = "20" & If(String.IsNullOrWhiteSpace(.Item("E").ToString), .Item("F").ToString, .Item("E").ToString)
-                                                                                    'drSSD("MandateFirstDate") = MagoFormatta(data, GetType(DateTime)).DataTempo
+                                                                                    '05/05/2025 imposto data primo mandato = data documento
+                                                                                    drSSD("MandateFirstDate") = drDoc("DocumentDate")
                                                                                     drSSD("MandateType") = 2686989
                                                                                     drSSD("TBCreatedID") = My.Settings.mLOGINID 'ID utente
                                                                                     drSSD("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                                                                                     dtSSDNew.Rows.Add(drSSD)
                                                                                     drSSD.AcceptChanges()
                                                                                     dvSSD.Table.ImportRow(drSSD)
+                                                                                    'Scrivo il log sui messaggi importanti
+                                                                                    logsList(0).AppendLine("Cliente: " & .Item("AA").ToString & " Nuovo Mandato: " & drSSD("MandateCode"))
                                                                                     'Aggiorno anagrafica Cliente
                                                                                     Dim iCliFound As Integer = dvClienti.Find(.Item("AA").ToString)
                                                                                     If iCliFound <> -1 Then
@@ -954,6 +956,7 @@ Module Fatture
                                                                                         l_Err.Add("E14", "Doc: " & drDoc("DocNo") & " con UMRCode/Codice Mandato non univoco. Cliente: " & .Item("AA").ToString & " Controllare IBAN.")
                                                                                     End If
                                                                                 End If
+
                                                                                 'Dopo averne creato oppure no disattivo quelli piu' vecchi con lo stesso IBAN
                                                                                 'Mi segno gli eventuali RID vecchi con stesso IBAN da disattivare/chiudere
                                                                                 'FORSE ANDREBBE MESSO UN ALTRO FILTRO PER ESTRARRE SOLO QUELLI CON UMRCODE DIVERSO
@@ -1309,48 +1312,53 @@ Module Fatture
             End If
             'Scrivo i Log
             'TODO: riorganizzare, magari crearne 2 uno compatto con errori e avvisi e uno di dettaglio. vedi sotto NUOVI LOG
-            If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Inserimento Dati ---" & Environment.NewLine & bulkMessage.ToString)
+            If bulkMessage.Length > 0 Then
+                bulkMessage.Insert(0, " --- Inserimento Dati ---")
+                logsList.Add(bulkMessage)
+            End If
             If errori.Length > 0 Then
-                My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Errori ---" & Environment.NewLine & errori.ToString)
+                errori.Insert(0, " --- Errori ---")
                 FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati errori : Controllare file di Log")
                 Debug.Print(errori.ToString)
+                logsList.Add(errori)
             End If
-            If sicuritalia.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Sicuritalia ---" & Environment.NewLine & sicuritalia.ToString)
-            Debug.Print(sicuritalia.ToString)
-            If listOfNewBancheCli.Count > 0 Then
-                My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Nuove Banche Clienti (completare le informazioni su Mago) ---")
-                For l = 0 To listOfNewBancheCli.Count - 1
-                    My.Application.Log.DefaultFileLogWriter.WriteLine(listOfNewBancheCli(l).ToString)
-                Next
-                My.Application.Log.DefaultFileLogWriter.Write(vbLf)
+            If sicuritalia.Length > 0 Then
+                sicuritalia.Insert(0, " --- Sicuritalia ---")
+                Debug.Print(sicuritalia.ToString)
+                logsList.Add(sicuritalia)
+            End If
+            If listOfNewBancheCli.Length > 0 Then
+                listOfNewBancheCli.Insert(0, " --- Nuove Banche Clienti (completare le informazioni su Mago) ---")
+                logsList.Add(listOfNewBancheCli)
             End If
             If warnings.Length > 0 Then
-                My.Application.Log.DefaultFileLogWriter.WriteLine(" ------------ Riassunto Warnings ------------")
-                My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Queste modifiche non vengono salvate ---")
                 'Riassunto Warning
-                My.Application.Log.DefaultFileLogWriter.WriteLine(RiassuntoWarning(warnings).ToString)
-                My.Application.Log.DefaultFileLogWriter.WriteLine(" - Dettaglio Warnings - " & Environment.NewLine & warnings.ToString)
+                warnings.Insert(0, RiassuntoWarning(warnings).ToString)
                 Debug.Print(warnings.ToString)
+                logsList.Add(warnings)
             End If
-            If avvisi.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Avvisi ---" & Environment.NewLine & avvisi.ToString)
-            Debug.Print(avvisi.ToString)
-            If listOfNewClienti.Count > 0 Then
-                My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Nuovi clienti ---")
-                For l = 0 To listOfNewClienti.Count - 1
-                    My.Application.Log.DefaultFileLogWriter.WriteLine(listOfNewClienti(l).ToString)
-                Next
-                My.Application.Log.DefaultFileLogWriter.Write(vbLf)
+            If avvisi.Length > 0 Then
+                avvisi.Insert(0, " --- Avvisi ---")
+                logsList.Add(avvisi)
+                Debug.Print(avvisi.ToString)
             End If
-            If listOfNewSedi.Count > 0 Then
-                My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Nuove Sedi --- ")
-                For l = 0 To listOfNewSedi.Count - 1
-                    My.Application.Log.DefaultFileLogWriter.WriteLine(listOfNewSedi(l).ToString)
-                Next
-                My.Application.Log.DefaultFileLogWriter.Write(vbLf)
+            If listOfNewClienti.Length > 0 Then
+                listOfNewClienti.Insert(0, " --- Nuovi clienti ---")
+                logsList.Add(listOfNewClienti)
             End If
-            If aggiornamenti.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Aggiornamenti anagrafici (NUOVO VALORE ) [VECCHIO VALORE] ---" & Environment.NewLine & aggiornamenti.ToString)
-            If idAndNumber.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(" --- Id e Numeratori ---" & Environment.NewLine & idAndNumber.ToString)
-            Debug.Print(idAndNumber.ToString)
+            If listOfNewSedi.Length > 0 Then
+                listOfNewSedi.Insert(0, " --- Nuove Sedi --- ")
+                logsList.Add(listOfNewSedi)
+            End If
+            If aggiornamenti.Length > 0 Then
+                aggiornamenti.Insert(0, " --- Aggiornamenti anagrafici (NUOVO VALORE ) [VECCHIO VALORE] ---")
+                logsList.Add(aggiornamenti)
+            End If
+            If idAndNumber.Length > 0 Then
+                idAndNumber.Insert(0, " --- Id e Numeratori ---")
+                logsList.Add(idAndNumber)
+                Debug.Print(idAndNumber.ToString)
+            End If
 
             Debug.Print("Gestione MA_SaleDoc" & " " & stopwatch.Elapsed.ToString)
 
@@ -2258,6 +2266,8 @@ Module Fatture
         Dim t As String = log.ToString
         Dim ac As String = Environment.NewLine
         Dim ret As New StringBuilder
+        ret.AppendLine(" ------------ Riassunto Warnings ------------")
+        ret.AppendLine(" --- Queste modifiche non vengono salvate ---")
 
         For i = 1 To 14
             Dim nr As Integer
@@ -2312,6 +2322,7 @@ Module Fatture
 
             End Select
         Next
+        ret.AppendLine(" - Dettaglio Warnings - ")
         Return ret
     End Function
     Private Function ContaOccurrenze(cosa As String, dove As String) As Integer

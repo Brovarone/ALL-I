@@ -48,6 +48,7 @@ Public Class FLogin
     Public prgCopy As New CustomProgress
     Public prgFusion As New CustomProgress
 
+
     Const adminPsw = "123456"
 
     Private isDbUNO As Boolean = True ' mi serve per comandare i filtrianalitici in periodo transitorio per adeguamento fatture da ordini
@@ -554,8 +555,8 @@ Public Class FLogin
         My.Application.Log.DefaultFileLogWriter.BaseFileName += "-" & DateTime.Now.ToString("dd-MM-yyyy--HH-mm-ss")
         My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Azienda: " & DBInUse & "  ---  ")
 
-        Dim lista As New List(Of String)
-
+        Dim listaFiles As New List(Of String)
+        logsList = New List(Of StringBuilder)
         If ChkClienti.Checked Then
             Dim bFound As Boolean
             Dim Cli As String() = {"ANCL200F", "ANFC200F", "FTEU400F", "ACGSEP00F"}
@@ -569,7 +570,7 @@ Public Class FLogin
                     If bFound Then
                         CliFound(i) = True
                         Cli(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -594,7 +595,7 @@ Public Class FLogin
                     If bFound Then
                         ForFound(i) = True
                         Forn(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -619,7 +620,7 @@ Public Class FLogin
                     If bFound Then
                         fatFound(i) = True
                         fat(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -635,6 +636,8 @@ Public Class FLogin
                 ReDim Preserve fat(0)
             End If
             'lista.RemoveAt(lista.Count)
+            Dim msg_importanti As New StringBuilder()
+            logsList.Insert(0, msg_importanti)
             nomeLog = "Fatture"
             ProcessaGruppo(fat, nomeLog)
         End If
@@ -652,7 +655,7 @@ Public Class FLogin
                     If bFound Then
                         fatFound(i) = True
                         fatSe(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -682,7 +685,7 @@ Public Class FLogin
                     If bFound Then
                         fatFound(i) = True
                         fatSe(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -715,7 +718,7 @@ Public Class FLogin
                     If bFound Then
                         pagheFound(i) = True
                         paghe(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -742,7 +745,7 @@ Public Class FLogin
                     If bFound Then
                         ParCFound(i) = True
                         ParC(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -771,7 +774,7 @@ Public Class FLogin
                     If bFound Then
                         ParFFound(i) = True
                         ParF(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -799,7 +802,7 @@ Public Class FLogin
                     If bFound Then
                         NoteCFound(i) = True
                         NoteC(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -838,7 +841,7 @@ Public Class FLogin
                     If bFound Then
                         ftDaEmeFound(i) = True
                         ftDaEme(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -864,7 +867,7 @@ Public Class FLogin
                     If bFound Then
                         riscFound(i) = True
                         risc(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -890,7 +893,7 @@ Public Class FLogin
                     If bFound Then
                         riscFound(i) = True
                         risc(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -916,7 +919,7 @@ Public Class FLogin
                     If bFound Then
                         riscFound(i) = True
                         risc(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -942,7 +945,7 @@ Public Class FLogin
                     If bFound Then
                         cespitiFound(i) = True
                         cespiti(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -969,7 +972,7 @@ Public Class FLogin
                     If bFound Then
                         fusioneFound(i) = True
                         fusione(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -997,7 +1000,7 @@ Public Class FLogin
                     If bFound Then
                         movCespFound(i) = True
                         movCesp(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -1020,7 +1023,7 @@ Public Class FLogin
         Me.Cursor = Cursors.Default
         Me.Refresh()
         'Salvo il log
-        ScriviLogESposta(lista, nomeLog)
+        ScriviLogESpostaFiles(listaFiles, nomeLog)
 
     End Sub
     Private Sub ProcessaGruppo(ByVal lista As String(), ByVal nomegruppo As String)

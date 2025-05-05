@@ -1098,20 +1098,25 @@ Public Module Common
     End Sub
     Public Sub ScriviLogESposta(nome As String)
         Dim s As New List(Of String)
-        ScriviLogESposta(s, nome)
+        ScriviLogESpostaFiles(s, nome)
     End Sub
-    Public Sub ScriviLogESposta(lista As List(Of String), nome As String)
+    Public Sub ScriviLogESpostaFiles(listaFiles As List(Of String), nome As String)
+        If logsList.Count > 0 Then
+            For Each logEntry As StringBuilder In logsList
+                My.Application.Log.WriteEntry(Environment.NewLine & logEntry.ToString())
+            Next
+        End If
         My.Application.Log.DefaultFileLogWriter.Flush()
         My.Application.Log.DefaultFileLogWriter.Close()
 
         'Sposto i file e il log
         Dim b As DialogResult = If(isAdmin, MessageBox.Show("Elaborazione terminata" & vbCrLf & "Si vogliono storicizzare i file?", My.Application.Info.Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question), DialogResult.Yes)
         If b = DialogResult.Yes Then
-            SpostaFile(lista, nome)
+            SpostaFile(listaFiles, nome)
         End If
     End Sub
 
-    Private Sub SpostaFile(lista As List(Of String), nome As String)
+    Private Sub SpostaFile(listaFiles As List(Of String), nome As String)
         Const sl As String = "\"
         Dim d As DateTime = DateTime.Now
         Dim periodo As String = d.ToString("yyyy") & sl & d.ToString("MMMM", New Globalization.CultureInfo("it-IT")).ToUpper
@@ -1123,8 +1128,8 @@ Public Module Common
             mb.ShowDialog()
         End Try
 
-        If lista.Count > 0 Then
-            For Each f As String In lista
+        If listaFiles.Count > 0 Then
+            For Each f As String In listaFiles
                 Dim newFilename As String = System.IO.Path.GetFileName(f)
                 File.Move(f, newFolder & sl & newFilename)
             Next
@@ -1148,6 +1153,7 @@ Public Module Common
     End Function
 End Module
 Public Module LogTools
+    Public logsList As New List(Of StringBuilder)
     Public Sub ScriviLog(ByVal message As String, Optional flush As Boolean = True)
         My.Application.Log.DefaultFileLogWriter.WriteLine(message)
         If flush Then

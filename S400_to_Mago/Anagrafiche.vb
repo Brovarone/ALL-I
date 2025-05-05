@@ -489,7 +489,7 @@ Module Anagrafiche
                                         drInt("DeclId") = idDich
                                         Debug.Print("Cliente: " & custsupp)
                                         drInt("CustSuppType") = CustSuppType.Cliente
-                                        drInt("CustSupp") = .Item("A").ToString
+                                        drInt("CustSupp") = custsupp
                                         Dim iTipo As Integer
                                         Select Case .Item("H").ToString
                                             Case "1"
@@ -553,8 +553,10 @@ Module Anagrafiche
 
                                     End With
                                     dtInt.Rows.Add(drInt)
+                                    'Scrivo il log sui messaggi importanti
+                                    logsList(0).AppendLine("Cliente: " & custsupp & " Nuovo Dichiarazione d'Intento")
 
-                                    AvanzaBarra
+                                    AvanzaBarra()
                                 End If
                                 'Aggiorno il flag sull'anagrafica cliente
                                 Dim iCliopt As Integer = dvCliOpt.Find(custsupp)
