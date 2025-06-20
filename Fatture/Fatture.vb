@@ -21,6 +21,10 @@ Module Fatture
     ''' 12/01/2023 Numero minimo colonne previste dal CSV
     ''' </summary>
     Private Const NrColonneCsv As Integer = 241
+    ''' <summary>
+    ''' 18/06/2025 Usato per determinare se segnalare o meno modifiche a dati anafrafici base
+    ''' </summary>
+    Private Const TraceUpdateDatiAnagrafici As Boolean = False
 
     Public Function FattEleCSV(dts As DataSet, Optional bConIntestazione As Boolean = False) As Boolean
         'QUESTO CSV HA I VALORI MONETARI CON IL PUNTO
@@ -1828,73 +1832,76 @@ Module Fatture
             'End If
         End If
 
-        If Not String.IsNullOrWhiteSpace(row.Item("ID").ToString) Then
-            writeSomething = True
-            Dim newlineDDT As Integer
-            'Id documento 2.1.8 DatiDDT
-            'FIX ScriviDatiAggiuntiviSicuritalia, colonne da fixare
-            'Colonna HK (F2132)	 	
-            'Colonna ID (C_DTAL)  Data AL
+        '18/06/2025 tolgo per non necessità
+        If IsDeprecated Then
+            If Not String.IsNullOrWhiteSpace(row.Item("ID").ToString) Then
+                writeSomething = True
+                Dim newlineDDT As Integer
+                'Id documento 2.1.8 DatiDDT
+                'FIX ScriviDatiAggiuntiviSicuritalia, colonne da fixare
+                'Colonna HK (F2132)	 	
+                'Colonna ID (C_DTAL)  Data AL
 
-            Dim key As Object() = {idDoc, 0, 0, "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiDDT.NumeroDDT"}
-            dt.DefaultView.Sort = "DocId, DocSubID, SubLine, FieldName "
-            Dim drv As DataRowView() = dt.DefaultView.FindRows(key)
-            If drv.Length > 0 Then
-                'nel caso di piu' righe mi prendo la prima e pace.
-                'possibile incongruenza ma iniziamo cosi'
-                newlineDDT = drv(0).Item("Line")
-                bDDTFound = True
-            Else
-                newlineDDT = 1
-                '2.1.8.1 <NumeroDDT>
+                Dim key As Object() = {idDoc, 0, 0, "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiDDT.NumeroDDT"}
+                dt.DefaultView.Sort = "DocId, DocSubID, SubLine, FieldName "
+                Dim drv As DataRowView() = dt.DefaultView.FindRows(key)
+                If drv.Length > 0 Then
+                    'nel caso di piu' righe mi prendo la prima e pace.
+                    'possibile incongruenza ma iniziamo cosi'
+                    newlineDDT = drv(0).Item("Line")
+                    bDDTFound = True
+                Else
+                    newlineDDT = 1
+                    '2.1.8.1 <NumeroDDT>
+                    dr = dt.NewRow
+                    dr("DocID") = idDoc
+                    dr("DocSubID") = 0
+                    dr("Line") = newlineDDT
+                    dr("SubLine") = 0
+                    dr("FieldName") = "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiDDT.NumeroDDT"
+                    dr("FieldValue") = "xxx" '"nrDDT"
+                    dr("TBCreatedID") = My.Settings.mLOGINID 'ID utente
+                    dr("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+                    dt.Rows.Add(dr)
+
+                    '2.1.8.2 <DataDDT>
+                    dr = dt.NewRow
+                    dr("DocID") = idDoc
+                    dr("DocSubID") = 0
+                    dr("Line") = newlineDDT
+                    dr("SubLine") = 0
+                    dr("FieldName") = "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiDDT.DataDDT"
+                    dr("FieldValue") = MagoFormatta(row.Item("ID").ToString, GetType(DateTime)).sDataSlash
+                    dr("TBCreatedID") = My.Settings.mLOGINID 'ID utente
+                    dr("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+                    dt.Rows.Add(dr)
+                End If
+
+                'Dim writeNuRif As Boolean = True
+                'If bOrdFound Then
+                '    Dim keyNu As Object() = {idDoc, 0, newlineDDT, 0, "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiDDT.RiferimentoNumeroLinea"}
+                '    dt.DefaultView.Sort = "DocId, DocSubID, Line, SubLine, FieldName "
+                '    Dim drvNu As DataRowView() = dt.DefaultView.FindRows(keyNu)
+                '    If drvNu.Length > 0 Then
+                '        drvNu(0)("FieldValue") = drvNu(0)("FieldValue") & "," & row.Item("BA").ToString
+                '        writeNuRif = False
+                '    End If
+                'End If
+
+
+                '2.1.8.3 <RiferimentoNumeroLinea>
                 dr = dt.NewRow
                 dr("DocID") = idDoc
                 dr("DocSubID") = 0
                 dr("Line") = newlineDDT
-                dr("SubLine") = 0
-                dr("FieldName") = "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiDDT.NumeroDDT"
-                dr("FieldValue") = "xxx" '"nrDDT"
+                dr("SubLine") = subLine
+                dr("FieldName") = "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiDDT.RiferimentoNumeroLinea"
+                dr("FieldValue") = row.Item("BA").ToString
                 dr("TBCreatedID") = My.Settings.mLOGINID 'ID utente
                 dr("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                 dt.Rows.Add(dr)
 
-                '2.1.8.2 <DataDDT>
-                dr = dt.NewRow
-                dr("DocID") = idDoc
-                dr("DocSubID") = 0
-                dr("Line") = newlineDDT
-                dr("SubLine") = 0
-                dr("FieldName") = "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiDDT.DataDDT"
-                dr("FieldValue") = MagoFormatta(row.Item("ID").ToString, GetType(DateTime)).sDataSlash
-                dr("TBCreatedID") = My.Settings.mLOGINID 'ID utente
-                dr("TBModifiedID") = My.Settings.mLOGINID 'ID utente
-                dt.Rows.Add(dr)
             End If
-
-            'Dim writeNuRif As Boolean = True
-            'If bOrdFound Then
-            '    Dim keyNu As Object() = {idDoc, 0, newlineDDT, 0, "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiDDT.RiferimentoNumeroLinea"}
-            '    dt.DefaultView.Sort = "DocId, DocSubID, Line, SubLine, FieldName "
-            '    Dim drvNu As DataRowView() = dt.DefaultView.FindRows(keyNu)
-            '    If drvNu.Length > 0 Then
-            '        drvNu(0)("FieldValue") = drvNu(0)("FieldValue") & "," & row.Item("BA").ToString
-            '        writeNuRif = False
-            '    End If
-            'End If
-
-
-            '2.1.8.3 <RiferimentoNumeroLinea>
-            dr = dt.NewRow
-            dr("DocID") = idDoc
-            dr("DocSubID") = 0
-            dr("Line") = newlineDDT
-            dr("SubLine") = subLine
-            dr("FieldName") = "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiDDT.RiferimentoNumeroLinea"
-            dr("FieldValue") = row.Item("BA").ToString
-            dr("TBCreatedID") = My.Settings.mLOGINID 'ID utente
-            dr("TBModifiedID") = My.Settings.mLOGINID 'ID utente
-            dt.Rows.Add(dr)
-
         End If
         Return writeSomething ' = 1 vero // 0 = falso
     End Function
@@ -2555,7 +2562,7 @@ Module Fatture
                             avvisi.AppendLine("mail : (" & Trim(Left(sEmail, 128).ToLower) & ") [" & anag.Item("EMail") & "]")
                             anag.Item("EMail") = Trim(Left(sEmail, 128).ToLower)
                         Else
-                            warnings.AppendLine("WA1: mail : (" & Trim(Left(sEmail, 128).ToLower) & ") [" & anag.Item("EMail") & "]")
+                            If TraceUpdateDatiAnagrafici Then warnings.AppendLine("WA1: mail : (" & Trim(Left(sEmail, 128).ToLower) & ") [" & anag.Item("EMail") & "]")
                         End If
                     End If
                 End If
