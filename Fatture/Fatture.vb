@@ -2438,9 +2438,11 @@ Module Fatture
                     avvisi.AppendLine("Telefono : (" & clienord.Item("S").ToString & ") [" & anagBranch.Item("Telephone1") & "]")
                     anagBranch.Item("Telephone1") = clienord.Item("S").ToString
                 End If
-                If anagBranch.Item("Fax").ToString <> clienord.Item("T").ToString AndAlso Not String.IsNullOrWhiteSpace(clienord.Item("T").ToString) Then
-                    avvisi.AppendLine("Fax : (" & clienord.Item("T").ToString & ") [" & anagBranch.Item("Fax") & "]")
-                    anagBranch.Item("Fax") = clienord.Item("T").ToString
+                If TraceUpdateDatiAnagrafici Then
+                    If anagBranch.Item("Fax").ToString <> clienord.Item("T").ToString AndAlso Not String.IsNullOrWhiteSpace(clienord.Item("T").ToString) Then
+                        avvisi.AppendLine("Fax : (" & clienord.Item("T").ToString & ") [" & anagBranch.Item("Fax") & "]")
+                        anagBranch.Item("Fax") = clienord.Item("T").ToString
+                    End If
                 End If
 
                 'Da qui' sono tutti dati comuni esclusivi presenti solo su FTPA300
@@ -2448,16 +2450,18 @@ Module Fatture
                 If Len(sEmail) > 128 Then
                     avvisi.AppendLine("Email/pec troppo lunga !")
                 Else
-                    If anagBranch.Item("EMail").ToString <> Trim(Left(sEmail, 128).ToLower) Then
-                        avvisi.AppendLine("mail : (" & Trim(Left(sEmail, 128).ToLower) & ") [" & anagBranch.Item("EMail") & "]")
-                        anagBranch.Item("EMail") = Trim(Left(sEmail, 128).ToLower)
+                    If TraceUpdateDatiAnagrafici Then
+                        If anagBranch.Item("EMail").ToString <> Trim(Left(sEmail, 128).ToLower) Then
+                            avvisi.AppendLine("mail : (" & Trim(Left(sEmail, 128).ToLower) & ") [" & anagBranch.Item("EMail") & "]")
+                            anagBranch.Item("EMail") = Trim(Left(sEmail, 128).ToLower)
+                        End If
                     End If
                 End If
 
-                'Se ho un codice ipa in "Z"
-                'AggiornaAnagraficaCliente controllo ipa in Z
-                'Se ho un IPA nel FTPA e in anagrafica e' nulla
-                If String.IsNullOrWhiteSpace(anagBranch.Item("IPACode").ToString.Trim("0")) AndAlso Not String.IsNullOrWhiteSpace(.Item("Z").ToString.Trim("0")) Then
+                    'Se ho un codice ipa in "Z"
+                    'AggiornaAnagraficaCliente controllo ipa in Z
+                    'Se ho un IPA nel FTPA e in anagrafica e' nulla
+                    If String.IsNullOrWhiteSpace(anagBranch.Item("IPACode").ToString.Trim("0")) AndAlso Not String.IsNullOrWhiteSpace(.Item("Z").ToString.Trim("0")) Then
                     If anagBranch.Item("IPACode").ToString <> .Item("Z").ToString Then
                         avvisi.AppendLine("Codice IPA : (" & .Item("Z").ToString & ") [" & anagBranch.Item("IPACode") & "]")
                         anagBranch.Item("IPACode") = .Item("Z").ToString

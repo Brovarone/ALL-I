@@ -1313,7 +1313,7 @@ Module Ordini
                                 FLogin.lstStatoConnessione.Items.Add("Processati: " & totOrdiniok.ToString & " ordini")
                                 'Adeguo Query di aggiornamento Subid su tabella Ma_Saleord
                                 'todo: sarà da adeguare alla nuova tabella
-                                Dim sb As StringBuilder
+                                Dim sb As New StringBuilder
                                 sb.AppendLine("WITH MaxLine AS (SELECT IdOrdCli, MAX(line) AS MaxLine FROM ALLOrdCliAttivita GROUP BY IdOrdCli) ")
                                 sb.AppendLine("UPDATE MA_SaleOrd SET SubIdAttivita = MaxLine.MaxLine FROM MaxLine WHERE MA_SaleOrd.SaleOrdid = MaxLine.IdOrdCli;")
                                 OrdContext.Database.ExecuteSqlRaw(sb.ToString)
