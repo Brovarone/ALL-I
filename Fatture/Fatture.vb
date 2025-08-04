@@ -2747,9 +2747,9 @@ Module Fatture
                     End If
                 End If
                 If anag.Item("Fax").ToString <> .Item("T").ToString AndAlso Not String.IsNullOrWhiteSpace(.Item("T").ToString) Then
-                    warnings.AppendLine("Fax : (" & .Item("T").ToString & ") [" & anag.Item("Fax") & "]")
                     '21/06/2024 Laura: Non modificare piu'
                     If IsDeprecated Then
+                        warnings.AppendLine("Fax : (" & .Item("T").ToString & ") [" & anag.Item("Fax") & "]")
                         anag.Item("Fax") = .Item("T").ToString
                     End If
                 End If
