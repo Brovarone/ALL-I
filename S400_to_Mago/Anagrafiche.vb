@@ -2,6 +2,7 @@
 Imports System.Text
 Imports System.Reflection.MethodBase
 Imports System.Web.UI.WebControls
+Imports System.Text.RegularExpressions
 
 Module Anagrafiche
     Public Function ClentiXLS(ByVal dts As DataSet, Optional ByVal bConIntestazione As Boolean = True) As Boolean
@@ -453,21 +454,22 @@ Module Anagrafiche
                         Dim drInt As DataRow
 
                         For irxls = i To drXLS.Length - 1
-                            'lavoro solo sulla prima riga
-                            If drXLS(irxls).Item("J").ToString = 1 Then
+                            '03/02/2026 lavoro solo sulla riga 5 non scrivono piu' sulla prima
+                            If drXLS(irxls).Item("J").ToString = 5 Then
                                 Dim dichFound As Integer
                                 'A seconda che esista il protocollo telematico faccio ricerche diverse
                                 Dim custsupp = drXLS(irxls).Item("A").ToString
-                                If Not String.IsNullOrWhiteSpace(drXLS(irxls).Item("L").ToString) Then
-                                    'Aggiungo nuova logica di controllo in quanto se cambiano testo si crea una possibile incongruenza.
-                                    'cambio logica usando Substring che e' svincolato da VB
-                                    'Nota: In VB6 il carattere di partenza era in base 1
-                                    'in .NET il carattere di partenza è a base 0
-                                    Dim t As String = drXLS(irxls).Item("L").ToString.TrimEnd
+                                'Si esamina la colonna K
+                                Dim t As String = drXLS(irxls).Item("K").ToString().Trim()
+                                Dim telProtocol As String = ""
+                                Dim docProtocol As String = ""
+
+                                If Not String.IsNullOrWhiteSpace(t) Then
                                     Dim telProtFromRight As String = Strings.Left(t.Substring(t.Length - 7 - 17), 17)
-                                    'Dim docProtFromRight As String = Right(drXLS(irxls).Item("L").ToString.TrimEnd, 6)
-                                    Dim telProtocol As String = Mid(drXLS(irxls).Item("L").ToString, 42, 17)
-                                    Dim docProtocol As String = Right(drXLS(irxls).Item("L").ToString.TrimEnd, 6)
+                                    ' Pattern: cerca 17 cifre, un trattino, e poi 6 cifre
+                                    Dim match As Match = Regex.Match(t, "(\d{17})-(\d{6})")
+                                    If match.Success Then telProtocol = match.Groups(1).Value
+                                    docProtocol = Right(t, 6)
                                     If Not telProtFromRight.Equals(telProtocol) Then
                                         result.AppendLine("Cliente " & custsupp & " controllare Dichiarazione d'intento")
                                         Dim mb As New MessageBoxWithDetails("Cliente " & custsupp & " controllare Dichiarazione d'intento", GetCurrentMethod.Name)
@@ -475,8 +477,8 @@ Module Anagrafiche
                                     End If
                                     dvInt.RowFilter = "CustSupp='" & custsupp & "' AND TelProtocol='" & telProtFromRight & "' AND DocProtocol='" & docProtocol & "'"
                                     dichFound = dvInt.Count
-                                    Else
-                                        Dim fromdate As DateTime = MagoFormatta("20" & drXLS(irxls).Item("D").ToString, GetType(DateTime)).DataTempo
+                                Else
+                                    Dim fromdate As DateTime = MagoFormatta("20" & drXLS(irxls).Item("D").ToString, GetType(DateTime)).DataTempo
                                     Dim todate As DateTime = MagoFormatta("20" & drXLS(irxls).Item("E").ToString, GetType(DateTime)).DataTempo
                                     dvInt.RowFilter = "CustSupp='" & custsupp & "' AND FromDate='" & fromdate & "' AND ToDate='" & todate & "'"
                                     dichFound = dvInt.Count
@@ -535,19 +537,16 @@ Module Anagrafiche
                                             drNR("TBCreatedID") = My.Settings.mLOGINID 'ID utente
                                             drNR("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                                             dtIntNr.Rows.Add(drNR)
-
                                         End If
 
                                         drInt("CustomerNo") = .Item("G").ToString ' a volte e' il numero ,a volte e' incompleto.
                                         drInt("CustomerDate") = MagoFormatta("20" & .Item("C").ToString, GetType(DateTime)).DataTempo
                                         drInt("FromDate") = MagoFormatta("20" & .Item("D").ToString, GetType(DateTime)).DataTempo
                                         drInt("ToDate") = MagoFormatta("20" & .Item("E").ToString, GetType(DateTime)).DataTempo
-                                        If Not String.IsNullOrWhiteSpace(.Item("L").ToString) Then
-                                            drInt("TelProtocol") = Mid(.Item("L").ToString, 42, 17)
-                                            drInt("DocProtocol") = Right(.Item("L").ToString, 6)
-                                            '08/04/2022 : Aggiornamento Mago 3.14.21 Data Protocollo Telematico
-                                            drInt("DateProtocol") = MagoFormatta("20" & .Item("C").ToString, GetType(DateTime)).DataTempo
-                                        End If
+                                        drInt("TelProtocol") = telProtocol
+                                        drInt("DocProtocol") = docProtocol
+                                        '08/04/202☻2 : Aggiornamento Mago 3.14.21 Data Protocollo Telematico
+                                        drInt("Date☻Protocol") = MagoFormatta("20" & .Item("C").ToString, GetType(DateTime)).DataTempo
                                         drInt("TBCreatedID") = My.Settings.mLOGINID 'ID utente
                                         drInt("TBModifiedID") = My.Settings.mLOGINID 'ID utente
 
@@ -555,8 +554,9 @@ Module Anagrafiche
                                     dtInt.Rows.Add(drInt)
                                     'Scrivo il log sui messaggi importanti
                                     logsList(0).AppendLine("Cliente: " & custsupp & " Nuovo Dichiarazione d'Intento")
+                                    result.AppendLine("Cliente " & custsupp & " nuova Dichiarazione d'intento")
+                                    FLogin.lstStatoConnessione.Items.Add("Cliente " & custsupp & " nuova Dichiarazione d'intento")
 
-                                    AvanzaBarra()
                                 End If
                                 'Aggiorno il flag sull'anagrafica cliente
                                 Dim iCliopt As Integer = dvCliOpt.Find(custsupp)
@@ -565,9 +565,9 @@ Module Anagrafiche
                                     dvCliOpt(iCliopt)("ExemptFromTax") = "1"
                                     dvCliOpt(iCliopt).EndEdit()
                                 End If
-                                result.AppendLine("Cliente " & custsupp & " nuova Dichiarazione d'intento")
-                                FLogin.lstStatoConnessione.Items.Add("Cliente " & custsupp & " nuova Dichiarazione d'intento")
+
                             End If
+                            AvanzaBarra()
                         Next
                         Debug.Print("Elaborazione Dich. Intento: " & dtInt.Rows.Count.ToString & " in " & stopwatch1.Elapsed.ToString())
                         EditTestoBarra("Salvataggio ")
