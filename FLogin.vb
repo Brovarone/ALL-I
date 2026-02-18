@@ -1098,8 +1098,8 @@ Public Class FLogin
                         dsXLS = LoadXLS(spath, True, False)
                         esito = NoteClientiFoxproXLS(dsXLS, False)
                     Case "FATTURE_DA_EMETTERE"
-                        'Risconti Xlsx  (con riga di Intestazione)
-                        lstStatoConnessione.Items.Add("Fatture da enettere")
+                        'Fatture da emettere Xlsx  (con riga di Intestazione)
+                        lstStatoConnessione.Items.Add("Fatture da emettere")
                         Dim s As String = InputBox("Indicare la data del movimento nel formato AAAAMMGG" & vbCrLf & " Se lasciato AAAMMGG verrà impostata 31/12/2024", "", "AAAAMMGG")
                         dsXLS = LoadXLS(spath, True, False)
                         Dim dataMovimento As Date
@@ -1108,11 +1108,11 @@ Public Class FLogin
                         If s = "AAAAMMGG" OrElse String.IsNullOrWhiteSpace(s) Then
                             ' Imposto la data di default esplicita
                             dataMovimento = New Date(2024, 12, 31)
-                            esito = CreaFattureDaEmettere2024(dsXLS.Tables(0), True, dataMovimento)
+                            esito = CreaFattureDaEmettere(dsXLS.Tables(0), True, dataMovimento)
                         Else
                             ' 2. Tentativo di parsing con formato OBBLIGATORIO AAAAMMGG
                             If Date.TryParseExact(s, "yyyyMMdd", Nothing, Globalization.DateTimeStyles.None, dataMovimento) Then
-                                esito = CreaFattureDaEmettere2024(dsXLS.Tables(0), True, dataMovimento)
+                                esito = CreaFattureDaEmettere(dsXLS.Tables(0), True, dataMovimento)
                             Else
                                 ' 3. Gestione errore: l'utente ha inserito qualcosa di non valido
                                 MsgBox("Formato data non valido. Inserire la data come AAAAMMGG (es. 20241231).", MsgBoxStyle.Critical)
@@ -1986,12 +1986,28 @@ Public Class FLogin
     End Sub
     Private Sub RiparaMaschereMagoToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles RiparaMaschereMagoToolStripMenuItem.Click
         Try
-            FileIO.FileSystem.RenameFile("\\SV-AP-MAGO\Magonet_Custom\Companies\AllCompanies\Applications\ERP\SaleOrders\ModuleObjects\SaleOrd\SPA_SaleOrd.disabled", "SPA_SaleOrd.dll")
+            Dim rootPath As String = "\\SV-AP-MAGO\Magonet_Custom\Companies\AllCompanies\Applications\"
+
+            ' 1. Ottengo la lista di tutti i file che finiscono con .disabled in tutte le sottocartelle
+            Dim files = My.Computer.FileSystem.GetFiles(rootPath,
+                                                    FileIO.SearchOption.SearchAllSubDirectories,
+                                                    "*.disabled")
+
+            For Each foundFile As String In files
+                ' 2. Determino il nuovo nome (sostituendo .disabled con .dll)
+                ' Esempio: SPA_SaleOrd.disabled -> SPA_SaleOrd.dll
+                Dim newName As String = My.Computer.FileSystem.GetName(foundFile).Replace(".disabled", ".dll")
+
+                ' 3. Rinomino il file
+                My.Computer.FileSystem.RenameFile(foundFile, newName)
+            Next
+
+            MessageBox.Show("Ripristino completato con successo!", "Informazione", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
         Catch ex As Exception
-            ' Debug.Print(ex.Message)
+            MessageBox.Show("Errore durante il ripristino: " & ex.Message, "Errore", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
-
 
     Private Sub RegioneDaProvinciaToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles RegioneDaProvinciaToolStripMenuItem.Click
         'Adeguo il campo Regione leggendolo dalla Provincia
