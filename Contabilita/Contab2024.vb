@@ -1,5 +1,5 @@
 ﻿Imports System.Data.SqlClient
-Imports System.Text
+Imports System.Globalization
 Imports System.Reflection.MethodBase
 Module Contab2024
 
@@ -10,7 +10,7 @@ Module Contab2024
     ''' <summary>
     ''' Creo la scrittura dei risconti in contabilità. Il file si deve chiamare FATTURE_DA_EMETTERE
     ''' </summary>
-    Public Function CreaFattureDaEmettere2024(ByVal r As DataTable, ByVal withAnalitica As Boolean, Optional ByVal data As Date = Nothing) As Boolean
+    Public Function CreaFattureDaEmettere2024(ByVal r As DataTable, ByVal withAnalitica As Boolean, ByVal data As Date) As Boolean
         'Movimenti Contabili PURI - MA_JournalEntries
         'Righe - MA_JournalEntriesGLDetail
         'I vari conti che leggo vanno matchati con quelli nuovi
@@ -28,12 +28,10 @@ Module Contab2024
 
         Dim okBulk As Boolean
         Dim someTrouble As Boolean
-        Dim DataRiga As Date
-        If data = Nothing Then
-            DataRiga = MagoFormatta("20241231", GetType(DateTime)).DataTempo
-        Else
-            DataRiga = data
-        End If
+        Dim DataRiga As Date = data
+        Dim culture As CultureInfo = CultureInfo.GetCultureInfo("it-IT")
+        Dim warningPrinted As Boolean
+
         FLogin.prgCopy.Value = 1
 
         If r.Rows.Count > 0 Then
@@ -103,6 +101,7 @@ Module Contab2024
                                                         With r.Rows(irow)
                                                             iLine += 1
 
+                                                            If String.IsNullOrWhiteSpace(.Item("E").ToString) Then Continue For
                                                             If isNewReg Then
                                                                 'Creo la testa della registrazione Contabile
                                                                 drPn = dtPN.NewRow
@@ -134,19 +133,27 @@ Module Contab2024
                                                             drPnD("PostingDate") = DataRiga
                                                             drPnD("AccrualDate") = DataRiga
                                                             drPnD("AccRsn") = CauRiga
-                                                            Dim nota As String = .Item("H")
-                                                            drPnD("Notes") = nota
+                                                            Dim nota As String = .Item("H").ToString
+                                                            If nota.Length > 64 Then
+                                                                'MessageBox.Show("Nota troppo lunga verrà troncata a 64 caratteri:" & Environment.NewLine & nota)
+                                                                If Not warningPrinted Then
+                                                                    My.Application.Log.WriteEntry("Le seguenti note verranno troncate a 64 caratteri:")
+                                                                    warningPrinted = True
+                                                                End If
+                                                                My.Application.Log.WriteEntry(nota)
+                                                            End If
+                                                            drPnD("Notes") = Left(nota, 64).Trim
                                                             'drPnD ("CodeType")= 5177344 ' Normale / Apertura / Assestamento
                                                             Dim isDare As Boolean = False
                                                             Dim sConto As String = ""
 
-                                                            Dim c As String = .Item("E")
+                                                            Dim c As String = .Item("E").ToString
                                                             If TryTrovaContropartita(c, dvCntrp, sConto) Then
                                                                 drPnD("Account") = sConto
                                                             Else
                                                                 Debug.Print("Conto senza corrispondenza: " & c)
                                                                 My.Application.Log.WriteEntry("Conto senza corrispondenza:" & c)
-                                                                MessageBox.Show("Impossibile continuare, conto senza corrispondenza:" & c)
+                                                                MessageBox.Show("Impossibile continuare, riga: " & irow.ToString & " conto senza corrispondenza:" & c)
                                                                 End
                                                             End If
 
@@ -194,7 +201,7 @@ Module Contab2024
                                                                             drAna("DocNo") = drPn.Item("DocNo")
                                                                             drAna("RefDocNo") = drPn.Item("RefNo")
                                                                             drAna("TotalAmount") = .Item("Amount")
-                                                                            drAna("Notes") = Left(.Item("Notes"), 64)
+                                                                            drAna("Notes") = .Item("Notes")  'Già troncata prima
                                                                             drAna("EntryId") = idMovAna
                                                                             drAna("JournalEntryId") = .Item("JournalEntryId")
                                                                             drAna("CustSuppType") = CustSuppType.ClienteIgnora
@@ -227,9 +234,20 @@ Module Contab2024
                                                                             'Creo sempre solo 1 riga
                                                                             Dim importo As Decimal = .Item("Amount")
                                                                             Dim iLineMovAna As Integer = 0
-                                                                            Dim nomeMese As String = r.Rows(irow).Item("F")
-                                                                            Dim dataTemp As Date = Date.Parse(nomeMese & " 1, 2024")
-                                                                            Dim dataDecorrenza As Date = New Date(2024, dataTemp.Month, Date.DaysInMonth(dataTemp.Year, dataTemp.Month))
+                                                                            Dim cellValue As String = r.Rows(irow).Item("F").ToString().ToUpper().Trim()
+                                                                            Dim nomeMese As String
+                                                                            Dim parti As String() = cellValue.Split({"-"c, "."c, "/"c}, StringSplitOptions.RemoveEmptyEntries)
+
+                                                                            If parti.Length > 0 Then
+                                                                                nomeMese = parti(0).Trim()
+                                                                            Else
+                                                                                ' Gestione caso stringa vuota o solo separatori
+                                                                                nomeMese = cellValue
+                                                                            End If
+
+                                                                            Dim dataTemp As Date
+                                                                            DateTime.TryParse(nomeMese & " 1, 2024", culture, DateTimeStyles.None, dataTemp)
+                                                                            Dim dataDecorrenza As New Date(2024, dataTemp.Month, Date.DaysInMonth(dataTemp.Year, dataTemp.Month))
                                                                             Dim isDareAna = drAna("DebitCreditSign") = 8192000
 
                                                                             Dim CdC As String = r.Rows(irow).Item("C")

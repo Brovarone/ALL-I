@@ -756,7 +756,6 @@ Module Cespiti
             If found = -1 Then
                 MessageBox.Show("Errore che non dovrebbe succedere -  Cespite non trovato: " & what.Cespite & " " & what.Anno.ToString)
                 Return False
-                Exit Function
             End If
             With vista(found)
                 'Inizio calcoli a seconda del tipo Causale

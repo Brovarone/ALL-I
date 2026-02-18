@@ -12,7 +12,6 @@ Partial Public Module Paghe
     Private list_RighePaghe As New List(Of RigaPaghe)()
     Private transcodeDictCdc As New Dictionary(Of String, String)
     Public Function CaricaFlussoPagheClassi(ByVal refPath As String, ByVal IsMago As Boolean) As Boolean
-        Dim result As Boolean
 
         InitializeTranscodeDict()
         Using rdr As New StreamReader(refPath)
@@ -20,14 +19,14 @@ Partial Public Module Paghe
             While currentLine IsNot Nothing
                 If Not String.IsNullOrWhiteSpace(currentLine) Then
                     If String.IsNullOrWhiteSpace(Left(currentLine, 6)) Then
-                        Dim testataRecord As TestaPaghe = testataRecord.Parse(currentLine)
+                        Dim testataRecord As TestaPaghe = TestaPaghe.Parse(currentLine)
                         If testataRecord IsNot Nothing Then
                             ' TranscodeCdc da sistemare
                             ' testataRecord.CdCMago = TranscodeCdc(testataRecord.CdC)
                             list_TestaPaghe.Add(testataRecord)
                         End If
                     Else
-                        Dim rigaRecord As RigaPaghe = rigaRecord.Parse(currentLine)
+                        Dim rigaRecord As RigaPaghe = RigaPaghe.Parse(currentLine)
                         If rigaRecord IsNot Nothing Then
                             ' TranscodeCdc da sistemare
                             ' rigaRecord.CdCMago = TranscodeCdc(rigaRecord.CdC)

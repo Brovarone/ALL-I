@@ -751,7 +751,7 @@ Module Fatture
                                                                                                         iLinea -= 1
                                                                                                         iSubLinea -= 1
                                                                                                     Case 1
-                                                                                                        Exit Select
+                                                                                                        'Exit Select
                                                                                                     Case 2
                                                                                                         errori.AppendLine("")
                                                                                                         sicuritalia.AppendLine("Doc: " & drDoc("DocNo") & " riga: " & .Item("BA").ToString & " NuItem ODA / NSO errato")

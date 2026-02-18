@@ -126,7 +126,6 @@ Module Ordini
 
             ElseIf result = DialogResult.Cancel Then
                 Return False
-                Exit Function
             End If
         End Using
 #End Region
@@ -168,7 +167,7 @@ Module Ordini
             'Il filtro where che prende quelli senza data cessazione o con data successiva ( preimpostata da loro)
             ' q = q.Where(Function(facc) facc.ALLOrdCliAcc.DataCessazione = sDataNulla OrElse facc.ALLOrdCliAcc.DataCessazione.Value.Date >= dataFattA)
             If bFiltroDateOrdini Then
-                q = q.Where(Function(oDate) oDate.OrderDate.Value.Date >= fromOrdDate And oDate.OrderDate.Value.Date <= toOrdDate)
+                q = q.Where(Function(oDate) oDate.OrderDate.Value.Date >= fromOrdDate AndAlso oDate.OrderDate.Value.Date <= toOrdDate)
             Else
                 'Sostituisco la logica di "uguale" aggiungendo un giorno, in questo modo prendo anche le cose create nello stesso giorno
                 q = q.Where(Function(oDate) oDate.OrderDate <= toOrdDate)
@@ -964,12 +963,10 @@ Module Ordini
                 If Not Double.TryParse(ff.TxtPercIstat.Text, percIstat) Then
                     MessageBox.Show("Elaborazione Interrotta" & Environment.NewLine & "Percentuale Adeguamento ISTAT nulla.")
                     Return False
-                    Exit Function
                 End If
                 If percIstat = 0 Then
                     MessageBox.Show("Elaborazione Interrotta" & Environment.NewLine & "Percentuale Adeguamento ISTAT pari a Zero.")
                     Return False
-                    Exit Function
                 End If
                 bFiltroDateOrdini = ff.RadDalAl.Checked
                 fromOrdDate = OnlyDate(ff.DtaOrdineDA.Value)
@@ -999,7 +996,6 @@ Module Ordini
 
             ElseIf result = DialogResult.Cancel Then
                 Return False
-                Exit Function
             End If
         End Using
 #End Region

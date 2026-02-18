@@ -215,14 +215,14 @@ Public Class FLogin
     Private Sub LoadSettings()
         Dim n As String = "settings.json"
         'Dim s As String = My.Application.Info.DirectoryPath + "\" + n
-        Dim s As String = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\Brovarone Cristiano" + "\" + n
+        Dim s As String = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano" & "\" & n
 
         'Controllo esistenza del file 
         If System.IO.File.Exists(s) Then
             'Carico dal file Json
             'Parametri Config dal nuovo gestore
             PortableJsonSettingsProvider.SettingsFileName = n
-            PortableJsonSettingsProvider.SettingsDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\Brovarone Cristiano"   '"Some\custom\location"
+            PortableJsonSettingsProvider.SettingsDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano"   '"Some\custom\location"
             PortableJsonSettingsProvider.ApplyProvider(My.MySettings.[Default])
 
             'Carico dal file config
@@ -237,7 +237,7 @@ Public Class FLogin
             TxtTmpDB_SPA.Text = My.Settings.mDBTEMPSPA
             FolderPath = txtPath.Text
         Else
-            Directory.CreateDirectory(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\Brovarone Cristiano" + "\")
+            Directory.CreateDirectory(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano" & "\")
             'Carico dal file config
             TxtDB_UNO.Text = My.Settings.mDATABASE
             TxtDB_SPA.Text = My.Settings.mDATABASE_SPA
@@ -251,7 +251,7 @@ Public Class FLogin
             FolderPath = txtPath.Text
             'Imposto nuovo gestore
             PortableJsonSettingsProvider.SettingsFileName = n
-            PortableJsonSettingsProvider.SettingsDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\Brovarone Cristiano"   '"Some\custom\location"
+            PortableJsonSettingsProvider.SettingsDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano"   '"Some\custom\location"
             PortableJsonSettingsProvider.ApplyProvider(My.MySettings.[Default])
             'Salvo sul nuovo file
             My.Settings.mDATABASE = TxtDB_UNO.Text
@@ -1100,8 +1100,25 @@ Public Class FLogin
                     Case "FATTURE_DA_EMETTERE"
                         'Risconti Xlsx  (con riga di Intestazione)
                         lstStatoConnessione.Items.Add("Fatture da enettere")
+                        Dim s As String = InputBox("Indicare la data del movimento nel formato AAAAMMGG" & vbCrLf & " Se lasciato AAAMMGG verrà impostata 31/12/2024", "", "AAAAMMGG")
                         dsXLS = LoadXLS(spath, True, False)
-                        esito = CreaFattureDaEmettere2024(dsXLS.Tables(0), True)
+                        Dim dataMovimento As Date
+
+                        ' 1. Controllo se l'utente ha lasciato il default o annullato
+                        If s = "AAAAMMGG" OrElse String.IsNullOrWhiteSpace(s) Then
+                            ' Imposto la data di default esplicita
+                            dataMovimento = New Date(2024, 12, 31)
+                            esito = CreaFattureDaEmettere2024(dsXLS.Tables(0), True, dataMovimento)
+                        Else
+                            ' 2. Tentativo di parsing con formato OBBLIGATORIO AAAAMMGG
+                            If Date.TryParseExact(s, "yyyyMMdd", Nothing, Globalization.DateTimeStyles.None, dataMovimento) Then
+                                esito = CreaFattureDaEmettere2024(dsXLS.Tables(0), True, dataMovimento)
+                            Else
+                                ' 3. Gestione errore: l'utente ha inserito qualcosa di non valido
+                                MsgBox("Formato data non valido. Inserire la data come AAAAMMGG (es. 20241231).", MsgBoxStyle.Critical)
+                                esito = False ' O gestisci l'uscita
+                            End If
+                        End If
                     Case "RISCONTI"
                         'Risconti Xlsx  (con riga di Intestazione)
                         lstStatoConnessione.Items.Add("Risconti")
@@ -1452,7 +1469,7 @@ Public Class FLogin
     End Sub
 
     Private Sub UserSettingFolderToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles UserSettingFolderToolStripMenuItem.Click
-        Process.Start(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\Brovarone Cristiano" + "\")
+        Process.Start(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano" & "\")
 
     End Sub
     Private Sub AppLogToolStripMenu_Click(sender As Object, e As EventArgs) Handles AppLogToolStripMenu.Click

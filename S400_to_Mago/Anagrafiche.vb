@@ -512,7 +512,7 @@ Module Anagrafiche
                                                 If nrProt(0, n) = drInt("DeclYear").ToString Then
                                                     codeFound = True
                                                     'Scrivo il nuovo Nr Protocollo
-                                                    Dim newProt As Integer = Integer.Parse(nrProt(1, n) + 1)
+                                                    Dim newProt As Integer = Integer.Parse(nrProt(1, n)) + 1
                                                     drInt("LogNo") = newProt.ToString("000000")
                                                     nrProt(1, n) = newProt.ToString
                                                     nrProt(2, n) = sOggi
@@ -1751,7 +1751,7 @@ Module ProcessaAnagrafiche
                             AddF(Of String)(cmdOpt, sInsertOpt, "Currency", If(.Item("O").ToString = "EURO", "EUR", .Item("O").ToString))
                             AddF(Of Double)(cmdOpt, sInsertOpt, "FiscalAmount", .Item("K").ToString)
                             AddF(Of DateTime)(cmdOpt, sInsertOpt, "ValueDate", MagoFormatta(.Item("AC").ToString, GetType(DateTime)).DataTempo)
-                            AddF(Of Integer)(cmdOpt, sInsertOpt, "SubId", .Item("K").ToString) ' 
+                            AddF(Of Integer)(cmdOpt, sInsertOpt, "SubId", .Item("K").ToString)
                         End With
                         'Forse conviene creare prima le righe e poi la testa (per last sub id e totoal amout)
                         'va fatta prima
@@ -1795,7 +1795,7 @@ Module ProcessaAnagrafiche
     Private Sub AddF(Of T)(cmd As SqlCommand, ByRef qry As String, field As String, value As T)
         'se viene passata una stringa vuota esco
         'If (value.GetType = GetType(String) And String.IsNullOrEmpty(value.ToString)) Then Exit Sub
-        If String.IsNullOrEmpty(value.ToString) Then Exit Sub
+        If String.IsNullOrEmpty(value.ToString) Then Return
         Dim pName As String = "@" & field
         qry = qry & field & ", "
         Dim p As New SqlParameter With {
@@ -1809,7 +1809,7 @@ Module ProcessaAnagrafiche
 
     Private Sub AddFUpdate(Of T)(cmd As SqlCommand, ByRef qry As String, field As String, value As T)
         'se viene passata una stringa vuota esco
-        If String.IsNullOrEmpty(value.ToString) Then Exit Sub
+        If String.IsNullOrEmpty(value.ToString) Then Return
         Dim pName As String = "@" & field
         'creo la stringa della query con il parametro
         qry = qry & field & "= " & pName & ","

@@ -1243,9 +1243,9 @@ Public Module LogTools
         myXML.Save(path)
     End Sub
     Private Sub SetAsFirstChild(node As XmlNode, Optional parent As XmlNode = Nothing)
-        If node Is Nothing Then Exit Sub
+        If node Is Nothing Then Return
         If parent Is Nothing Then parent = node.ParentNode
-        If parent Is Nothing Then Exit Sub
+        If parent Is Nothing Then Return
         parent.InsertBefore(node, parent.FirstChild)
     End Sub
     Private Sub RemoveEmptyNodes2(ByVal elem As XElement)
@@ -1393,14 +1393,14 @@ Module KeyValidation
         'chr 8 = Backspace
         Dim numbers As Windows.Forms.TextBox = sender
         If (e.KeyChar = ".") Then e.KeyChar = ","
-        If InStr("1234567890,", e.KeyChar) = 0 And Asc(e.KeyChar) <> 8 Or (e.KeyChar = "," And InStr(numbers.Text, ",") > 0) Then
+        If InStr("1234567890,", e.KeyChar) = 0 AndAlso Asc(e.KeyChar) <> 8 OrElse (e.KeyChar = "," AndAlso InStr(numbers.Text, ",") > 0) Then
             e.KeyChar = Chr(0)
             e.Handled = True
         End If
     End Sub
     Public Sub Phonenumber_Leave(ByVal sender As Object, ByVal e As System.Windows.Forms.KeyPressEventArgs)
         Dim numbers As Windows.Forms.TextBox = sender
-        If InStr("1234567890.()-+ ", e.KeyChar) = 0 And Asc(e.KeyChar) <> 8 Or (e.KeyChar = "." And InStr(numbers.Text, ".") > 0) Then
+        If InStr("1234567890.()-+ ", e.KeyChar) = 0 AndAlso Asc(e.KeyChar) <> 8 OrElse (e.KeyChar = "." AndAlso InStr(numbers.Text, ".") > 0) Then
             e.KeyChar = Chr(0)
             e.Handled = True
         End If
@@ -1422,14 +1422,15 @@ Module KeyValidation
         Dim Email As Windows.Forms.TextBox = sender
         If Email.Text <> "" Then
             Dim rex As Match = Regex.Match(Trim(Email.Text), "^([0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,3})$", RegexOptions.IgnoreCase)
-            If rex.Success = False Then
+            If Not rex.Success Then
                 MessageBox.Show("Please Enter a valid Email Address", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information)
                 Email.BackColor = Color.Red
                 Email.Focus()
-                Exit Sub
-            Else
-                Email.BackColor = Color.White
+                Return ' Esce subito, il codice sotto non viene eseguito
             End If
+
+            ' 2. Logica "Successo": se arrivo qui, la mail è valida
+            Email.BackColor = Color.White
         End If
     End Sub
 End Module
