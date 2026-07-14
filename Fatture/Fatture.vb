@@ -2107,8 +2107,8 @@ Module Fatture
                 dr("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                 dt.Rows.Add(dr)
             End If
+            '2.1.3.7 <CIG> 
             If Not String.IsNullOrWhiteSpace(row.Item("HP").ToString) Then
-                '2.1.3.7 <CIG> 
                 dr = dt.NewRow
                 dr("DocID") = id
                 dr("DocSubID") = 0
@@ -2156,7 +2156,7 @@ Module Fatture
                 dt.Rows.Add(dr)
             End If
 
-            '2.1.3.3 <Data>
+            '2.1.5.3 <Data>
             If Not String.IsNullOrWhiteSpace(row.Item("HS").ToString) Then
                 dr = dt.NewRow
                 dr("DocID") = id
@@ -2169,7 +2169,7 @@ Module Fatture
                 dr("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                 dt.Rows.Add(dr)
             End If
-            '2.1.3.4 <NumItem> 
+            '2.1.5.4 <NumItem> 
             If Not String.IsNullOrWhiteSpace(row.Item("HT").ToString) Then
                 dr = dt.NewRow
                 dr("DocID") = id
@@ -2182,7 +2182,7 @@ Module Fatture
                 dr("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                 dt.Rows.Add(dr)
             End If
-            '2.1.3.5 <CodiceCommessaConvenzione> 
+            '2.1.5.5 <CodiceCommessaConvenzione> 
             If Not String.IsNullOrWhiteSpace(row.Item("HU").ToString) Then
                 dr = dt.NewRow
                 dr("DocID") = id
@@ -2195,7 +2195,7 @@ Module Fatture
                 dr("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                 dt.Rows.Add(dr)
             End If
-            '2.1.3.6 <CUP> 
+            '2.1.5.6 <CUP> 
             If Not String.IsNullOrWhiteSpace(row.Item("Hv").ToString) Then
                 dr = dt.NewRow
                 dr("DocID") = id
@@ -2208,8 +2208,8 @@ Module Fatture
                 dr("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                 dt.Rows.Add(dr)
             End If
+            '2.1.5.7 <CIG> 
             If Not String.IsNullOrWhiteSpace(row.Item("HW").ToString) Then
-                '2.1.5.7 <CIG> 
                 dr = dt.NewRow
                 dr("DocID") = id
                 dr("DocSubID") = 0
@@ -2217,6 +2217,41 @@ Module Fatture
                 dr("SubLine") = 0
                 dr("FieldName") = "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiRicezione.CodiceCIG"
                 dr("FieldValue") = row.Item("HW").ToString
+                dr("TBCreatedID") = My.Settings.mLOGINID 'ID utente
+                dr("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+                dt.Rows.Add(dr)
+            End If
+        End If
+
+        If Not String.IsNullOrWhiteSpace(row.Item("FH").ToString) Then
+            'Id documento 2.1.6 Dati Fatture Collegate
+            'Colonna FH  NUmero	
+            'Colonna FG  Estrarre la data documento
+
+            '2.1.5.2 <IdDocumento>
+            If Not String.IsNullOrWhiteSpace(row.Item("FH").ToString) Then
+                dr = dt.NewRow
+                dr("DocID") = id
+                dr("DocSubID") = 0
+                dr("Line") = line
+                dr("SubLine") = 0
+                dr("FieldName") = "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiFattureCollegate.IdDocumento"
+                dr("FieldValue") = row.Item("FH").ToString
+                dr("TBCreatedID") = My.Settings.mLOGINID 'ID utente
+                dr("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+                dt.Rows.Add(dr)
+            End If
+
+            '2.1.5.3 <Data>
+            If Not String.IsNullOrWhiteSpace(row.Item("FG").ToString) Then
+                Dim d As String = Right(row.Item("FG").ToString, 10)
+                dr = dt.NewRow
+                dr("DocID") = id
+                dr("DocSubID") = 0
+                dr("Line") = line
+                dr("SubLine") = 0
+                dr("FieldName") = "FatturaElettronica.FatturaElettronicaBody.DatiGenerali.DatiFattureCollegate.Data"
+                dr("FieldValue") = MagoFormatta(d, GetType(String)).sDataSlash
                 dr("TBCreatedID") = My.Settings.mLOGINID 'ID utente
                 dr("TBModifiedID") = My.Settings.mLOGINID 'ID utente
                 dt.Rows.Add(dr)
