@@ -350,7 +350,7 @@ Module Ordini
 
 
                             'Da qua sotto non fa "Continue For"
-                            If c.DataProssimaFatt >= dataFattDa And c.DataProssimaFatt <= dataFattA Then
+                            If c.DataProssimaFatt >= dataFattDa AndAlso c.DataProssimaFatt <= dataFattA Then
                                 Debug.Print(" + [OK]")
                             Else
                                 Debug.Print(" - [ESCLUSA] Fuori filtro data")
@@ -539,11 +539,9 @@ Module Ordini
 
                             'Se ok allora creo dettaglio
                             If Not cOrdRow.PrecendementeCessato AndAlso ((cOrdRow.IsOk AndAlso Not cOrdRow.CanoneFuoriRangeDate) OrElse cOrdRow.DaRifatturare) AndAlso (cOrdRow.QtaCorrente > 0 OrElse cOrdRow.QtaDaRifatturare > 0) Then
-                                If o.MaSaleOrdDetails.Any AndAlso o.MaSaleOrdDetails.Count = 1 Then
-                                    If CheckRigaBianca(o.MaSaleOrdDetails.First) Then
-                                        cOrd.LastLine = 0
-                                        curLastPosition = 0
-                                    End If
+                                If o.MaSaleOrdDetails.Any AndAlso o.MaSaleOrdDetails.Count = 1 AndAlso CheckRigaBianca(o.MaSaleOrdDetails.First) Then
+                                    cOrd.LastLine = 0
+                                    curLastPosition = 0
                                 End If
 
                                 'Controllo e imposto data prevista consegna con la piu' vecchia ( serve nel caso di rifatturazione)
@@ -559,8 +557,10 @@ Module Ordini
 
                                 'Scrivo Testo descrittivo su MaSaleOrdDetails
                                 isNewRows = True
-                                If Not bScrittoDescrizioni And o.ALLordCliDescrizioni IsNot Nothing Then
-                                    For Each d In o.ALLordCliDescrizioni
+                                If Not bScrittoDescrizioni AndAlso o.ALLordCliDescrizioni IsNot Nothing Then
+                                    Dim descrizioniOrdinate = o.ALLordCliDescrizioni.OrderBy(Function(x) x.Line)
+                                    ' Esegui il ciclo sulla collezione appena ordinata
+                                    For Each d In descrizioniOrdinate
                                         iNewRowsCount += 1
                                         iNrRigheNota += 1
                                         bScrittoDescrizioni = True
