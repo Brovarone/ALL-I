@@ -25,6 +25,10 @@ Module Fatture
     ''' 18/06/2025 Usato per determinare se segnalare o meno modifiche a dati anafrafici base
     ''' </summary>
     Private Const TraceUpdateDatiAnagrafici As Boolean = False
+    ''' <summary>
+    ''' 18/06/2025 Usato per determinare se segnalare o meno modifiche a dati anafrafici base
+    ''' </summary>
+    Private Const ClienteNoSplit As String = "A21451" '(REGGIA DI VENARIA)
 
     Public Function FattEleCSV(dts As DataSet, Optional bConIntestazione As Boolean = False) As Boolean
         'QUESTO CSV HA I VALORI MONETARI CON IL PUNTO
@@ -322,7 +326,7 @@ Module Fatture
                                                                                 Dim isPA As Boolean = .Item("Z").ToString.Length = 6
                                                                                 If isPA Then
                                                                                     drCliOpt("PublicAuthority") = "1"
-                                                                                    drCliOpt("PASplitPayment") = "1"
+                                                                                    If .Item("AA").ToString <> ClienteNoSplit Then drCliOpt("PASplitPayment") = "1"
                                                                                 End If
                                                                                 If IsDeprecated AndAlso dvClienOrd(iClienOrdFound).Item("P").ToString() = "A" Then 'CLPAR
                                                                                     '05/10/2021 : era stata aggiunta il 14/07/2021, ma non era cosi' vero che la lettera fosse giusta
@@ -1069,7 +1073,7 @@ Module Fatture
                                                                             'Se e' un CODICE IVA SPLIT PAYMENT (32)
                                                                             Dim iCliopt As Integer = dvCliOpt.Find(.Item("AA").ToString)
                                                                             If .Item("DU").ToString = ACGIVASplit Then
-                                                                                If iCliopt <> -1 AndAlso dvCliOpt(iCliopt)("PASplitPayment") <> "1" Then
+                                                                                If iCliopt <> -1 AndAlso dvCliOpt(iCliopt)("PASplitPayment") <> "1" AndAlso .Item("AA").ToString <> ClienteNoSplit Then
                                                                                     avvisi.AppendLine("A07: doc: " & .Item("O").ToString & " in SPLIT payment ma Cliente: " & .Item("AA").ToString & " non in SPLIT. Aggiornato il Cliente.")
                                                                                     dvCliOpt(iCliopt).BeginEdit()
                                                                                     dvCliOpt(iCliopt)("PASplitPayment") = "1"
@@ -1077,7 +1081,7 @@ Module Fatture
                                                                                 End If
                                                                             Else
                                                                                 'Controllo solo che la fattura non sia strana tipo che abbia iva su cliente in SPLIT
-                                                                                If iCliopt <> -1 AndAlso dvCliOpt(iCliopt)("PASplitPayment") = "1" Then
+                                                                                If iCliopt <> -1 AndAlso dvCliOpt(iCliopt)("PASplitPayment") = "1" AndAlso .Item("AA").ToString <> ClienteNoSplit Then
                                                                                     errori.AppendLine("E15: Doc: " & .Item("O").ToString & " con IVA ma Cliente: " & .Item("AA").ToString & " in SPLIT")
                                                                                     l_Err.Add("E15", "Doc: " & .Item("O").ToString & " con IVA ma Cliente: " & .Item("AA").ToString & " in SPLIT")
                                                                                 End If
@@ -2544,7 +2548,7 @@ Module Fatture
                         avvisi.AppendLine("Pubblica amministrazione : (SI) [" & opt.Item("PublicAuthority") & "]")
                         opt.Item("PublicAuthority") = "1"
                     End If
-                    If opt.Item("PASplitPayment").ToString <> "1" Then
+                    If opt.Item("PASplitPayment").ToString <> "1" AndAlso .Item("AA").ToString <> ClienteNoSplit Then
                         avvisi.AppendLine("Split Payment : (SI) [" & opt.Item("PASplitPayment") & "]")
                         opt.Item("PASplitPayment") = "1"
                     End If
@@ -2651,7 +2655,7 @@ Module Fatture
                         avvisi.AppendLine("Pubblica amministrazione : (SI) [" & opt.Item("PublicAuthority") & "]")
                         opt.Item("PublicAuthority") = "1"
                     End If
-                    If opt.Item("PASplitPayment").ToString <> "1" Then
+                    If opt.Item("PASplitPayment").ToString <> "1" AndAlso .Item("AA").ToString <> ClienteNoSplit Then
                         avvisi.AppendLine("Split Payment : (SI) [" & opt.Item("PASplitPayment") & "]")
                         opt.Item("PASplitPayment") = "1"
                     End If
@@ -2804,7 +2808,7 @@ Module Fatture
                     o.Item("PublicAuthority") = "1"
                     o.EndEdit()
                     If anag.Item("IPACode").ToString.Length <> 6 Then warnings.AppendLine("WAC8: Codice IPA Pubblica Amministrazione con lunghezza diversa da 6: [" & anag.Item("IPACode").ToString & "]")
-                    If o.Item("PASplitPayment").ToString <> "1" Then
+                    If o.Item("PASplitPayment").ToString <> "1" AndAlso .Item("AA").ToString <> ClienteNoSplit Then
                         o.BeginEdit()
                         avvisi.AppendLine("Split Payment : (1) [" & o.Item("PASplitPayment") & "]")
                         o.Item("PASplitPayment") = "1"
@@ -2913,7 +2917,7 @@ Module MovimentiAnaliticiDaFatture
                                                             WHERE (MA_SaleDocDetail.LineType = " & LineType.Merce & " OR MA_SaleDocDetail.LineType = " & LineType.Servizio & ") 
                                                             AND ( MA_SaleDoc.DocumentDate >=@FromDate  AND MA_SaleDoc.DocumentDate <=@ToDate ) 
                                                             AND (@AllNumbers = 1 Or (@AllNumbers = 0 and MA_SaleDoc.DocNo >=@NrFirst AND MA_SaleDoc.DocNo <=@NrLast )) 
-                                                            AND MA_SaleDoc.PostedToCostAccounting = @GiaRegistrate 
+                                                            And MA_SaleDoc.PostedToCostAccounting = @GiaRegistrate 
                                                             AND MA_SaleDoc.PostedToAccounting = '1'
                                                             AND MA_ChartOfAccounts.PostableInCostAcc = @MovInAnalitica 
                                                             AND MA_SaleDoc.DocumentType IN (" & DocumentType.Fattura & " , " & DocumentType.FatturaAccompagnatoria & " , " & DocumentType.NotaCredito & " , " & DocumentType.AutoFattura & " , " & DocumentType.AutoNotaCredito & ")
