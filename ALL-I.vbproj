@@ -399,17 +399,12 @@
     <Compile Include="Contabilita\FAskFiltriRisconti.vb">
       <SubType>Form</SubType>
     </Compile>
-<<<<<<< HEAD
-    <Compile Include="Contabilita\Paghe.vb" />
-    <Compile Include="Fusione\Fox\ContrattiFox.vb" />
-=======
     <Compile Include="Contabilita\Paghe\Paghe.vb" />
+    <Compile Include="Fusione\Fox\ContrattiFox.vb" />
     <Compile Include="Contabilita\Paghe\Paghe_Classi.vb" />
     <Compile Include="Contabilita\Paghe\RigaPaghe.vb" />
     <Compile Include="Contabilita\Paghe\TestaPaghe.vb" />
     <Compile Include="Fatture\Indirizzi.vb" />
-    <Compile Include="Fusione\ContrattiFox.vb" />
->>>>>>> origin/master
     <Compile Include="Fusione\CR.vb" />
     <Compile Include="Fusione\FDocumentNumberDialog.Designer.vb">
       <DependentUpon>FDocumentNumberDialog.vb</DependentUpon>

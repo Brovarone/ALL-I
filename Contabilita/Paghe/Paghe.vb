@@ -2,16 +2,12 @@
 Imports System.IO
 Imports System.Data.SqlClient
 Imports System.Reflection.MethodBase
-<<<<<<< HEAD:Contabilita/Paghe.vb
 Imports ALLSystemTools.SqlTools.Bulk
-Public Module Paghe
-=======
-
-''' <summary>
-''' Il tracciato ( quello che uso) si puo' leggere nei metodi InitializeTestata e Initializerighe
-''' </summary>
 Partial Public Module Paghe
->>>>>>> origin/master:Contabilita/Paghe/Paghe.vb
+
+    ''' <summary>
+    ''' Il tracciato ( quello che uso) si puo' leggere nei metodi InitializeTestata e Initializerighe
+    ''' </summary>
     Private dtTeste As DataTable
     Private dtRighe As DataTable
     Private dtTranscode As DataTable

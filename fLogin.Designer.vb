@@ -82,12 +82,14 @@ Partial Class FLogin
         Me.ChkPartiteFornitori = New System.Windows.Forms.CheckBox()
         Me.ChkPartiteCliente = New System.Windows.Forms.CheckBox()
         Me.TabPagePnota = New System.Windows.Forms.TabPage()
+        Me.chkFattureDaEmettere = New System.Windows.Forms.CheckBox()
         Me.ChkRiscontiFusione = New System.Windows.Forms.CheckBox()
         Me.ChkRiscontiRidotto = New System.Windows.Forms.CheckBox()
         Me.ChkRisconti = New System.Windows.Forms.CheckBox()
         Me.ChkPNotaForDaPartitario = New System.Windows.Forms.CheckBox()
         Me.ChkPNotaCliDaPartitario = New System.Windows.Forms.CheckBox()
         Me.TabCespiti = New System.Windows.Forms.TabPage()
+        Me.chkElimCespiti2024 = New System.Windows.Forms.CheckBox()
         Me.ChkCespiti = New System.Windows.Forms.CheckBox()
         Me.TabContrattiFox = New System.Windows.Forms.TabPage()
         Me.ChkOrdiniFox = New System.Windows.Forms.CheckBox()
@@ -814,6 +816,7 @@ Partial Class FLogin
         'TabPagePnota
         '
         Me.TabPagePnota.BackColor = System.Drawing.SystemColors.Control
+        Me.TabPagePnota.Controls.Add(Me.chkFattureDaEmettere)
         Me.TabPagePnota.Controls.Add(Me.ChkRiscontiFusione)
         Me.TabPagePnota.Controls.Add(Me.ChkRiscontiRidotto)
         Me.TabPagePnota.Controls.Add(Me.ChkRisconti)
@@ -887,6 +890,26 @@ Partial Class FLogin
         Me.TabCespiti.Size = New System.Drawing.Size(322, 101)
         Me.TabCespiti.TabIndex = 6
         Me.TabCespiti.Text = "Cespiti"
+        '
+        'chkElimCespiti2024
+        '
+        Me.chkElimCespiti2024.AutoSize = True
+        Me.chkElimCespiti2024.Location = New System.Drawing.Point(7, 26)
+        Me.chkElimCespiti2024.Name = "chkElimCespiti2024"
+        Me.chkElimCespiti2024.Size = New System.Drawing.Size(187, 17)
+        Me.chkElimCespiti2024.TabIndex = 29
+        Me.chkElimCespiti2024.Text = "Eliminazione Cespiti 2024 (contab)"
+        Me.chkElimCespiti2024.UseVisualStyleBackColor = True
+        '
+        'chkFattureDaEmettere
+        '
+        Me.chkFattureDaEmettere.AutoSize = True
+        Me.chkFattureDaEmettere.Location = New System.Drawing.Point(173, 72)
+        Me.chkFattureDaEmettere.Name = "chkFattureDaEmettere"
+        Me.chkFattureDaEmettere.Size = New System.Drawing.Size(118, 17)
+        Me.chkFattureDaEmettere.TabIndex = 28
+        Me.chkFattureDaEmettere.Text = "Fatture da emettere"
+        Me.chkFattureDaEmettere.UseVisualStyleBackColor = True
         '
         'ChkCespiti
         '
@@ -1783,4 +1806,8 @@ Partial Class FLogin
     Friend WithEvents BtnOrdiniFox As Button
     Friend WithEvents OrdiniFoxToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents ChkOrdiniFox As CheckBox
+    Friend WithEvents chkFattureDaEmettere As CheckBox
+    Friend WithEvents FattureDaEmettereToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents EliminazioneCespiti2024ToolStripMenuItem As ToolStripMenuItem
+    Friend WithEvents chkElimCespiti2024 As CheckBox
 End Class

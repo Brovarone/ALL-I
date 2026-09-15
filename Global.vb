@@ -414,11 +414,8 @@ Module MagoNet
         PnotaPuro = 27066418
         PnotaEmesso = 27066419
         MovimentoAnalitico = 27066424
-<<<<<<< HEAD
         OrdineCliente = 27066372
-=======
         MovimentoCespite = 27066428
->>>>>>> origin/master
     End Enum
     Friend Enum LineType As Integer
         Nota = 3538944
@@ -1000,14 +997,15 @@ Public Module Common
     End Function
 End Module
 Public Module LogTools
+    Public logsList As New List(Of StringBuilder)
+
     Public Sub ScriviLogESposta()
         Dim s As New List(Of String)
-<<<<<<< HEAD
         ScriviLogESposta(s)
     End Sub
     Public Sub ScriviLogESposta(lista As List(Of String))
-=======
-        ScriviLogESpostaFiles(s, nome)
+        Dim nome As String = ""
+        ScriviLogESpostaFiles(lista, nome)
     End Sub
     Public Sub ScriviLogESpostaFiles(listaFiles As List(Of String), nome As String)
         If logsList.Count > 0 Then
@@ -1015,31 +1013,22 @@ Public Module LogTools
                 My.Application.Log.WriteEntry(Environment.NewLine & logEntry.ToString())
             Next
         End If
->>>>>>> origin/master
+
         My.Application.Log.DefaultFileLogWriter.Flush()
         My.Application.Log.DefaultFileLogWriter.Close()
 
         'Sposto i file e il log
         Dim b As DialogResult = If(isAdmin, MessageBox.Show("Elaborazione terminata" & vbCrLf & "Si vogliono storicizzare i file?", My.Application.Info.Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question), DialogResult.Yes)
         If b = DialogResult.Yes Then
-<<<<<<< HEAD
-            SpostaFile(lista)
-        End If
-    End Sub
 
-    Private Sub SpostaFile(lista As List(Of String))
-        'Dim newFolder As String = FolderPath & "\PROCESSATI\" & DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")
-=======
-            SpostaFile(listaFiles, nome)
         End If
     End Sub
 
     Private Sub SpostaFile(listaFiles As List(Of String), nome As String)
         Const sl As String = "\"
->>>>>>> origin/master
         Dim d As DateTime = DateTime.Now
-        Dim periodo As String = d.ToString("yyyy") & slash & d.ToString("MMMM", New Globalization.CultureInfo("it-IT")).ToUpper
-        Dim newFolder As String = FolderPath & slash & "PROCESSATI" & slash & periodo & slash & d.ToString("yyyy-MM-dd HH-mm-ss")
+        Dim periodo As String = d.ToString("yyyy") & sl & d.ToString("MMMM", New Globalization.CultureInfo("it-IT")).ToUpper
+        Dim newFolder As String = FolderPath & sl & "PROCESSATI" & sl & periodo & sl & d.ToString("yyyy-MM-dd HH-mm-ss")
         Try
             Directory.CreateDirectory(newFolder)
         Catch ex As Exception
@@ -1050,26 +1039,22 @@ Public Module LogTools
         If listaFiles.Count > 0 Then
             For Each f As String In listaFiles
                 Dim newFilename As String = System.IO.Path.GetFileName(f)
-                File.Move(f, newFolder & slash & newFilename)
+                File.Move(f, newFolder & sl & newFilename)
             Next
         End If
         Dim l As String = My.Application.Log.DefaultFileLogWriter.FullLogFileName
-        File.Copy(l, newFolder & slash & System.IO.Path.GetFileName(l))
+        Dim dest As String = newFolder & sl & System.IO.Path.GetFileName(l)
+        File.Copy(l, dest)
+        'Aggiungo desccrittore file
+        If Not String.IsNullOrWhiteSpace(nome) Then
+            Dim newLogFilename As String = nome & " " & System.IO.Path.GetFileName(dest)
+            File.Move(dest, newFolder & sl & newLogFilename)
+        End If
         My.Settings.mLastLogPath = newFolder
         My.Settings.Save()
 
     End Sub
-<<<<<<< HEAD
-=======
 
-    Public Function OnlyDate(ByVal d As Date) As Date
-        Dim nd As New Date(d.Year, d.Month, d.Day)
-        Return nd
-    End Function
-End Module
-Public Module LogTools
-    Public logsList As New List(Of StringBuilder)
->>>>>>> origin/master
     Public Sub ScriviLog(ByVal message As String, Optional flush As Boolean = True)
         My.Application.Log.DefaultFileLogWriter.WriteLine(message)
         If flush Then
@@ -1338,21 +1323,11 @@ Module KeyValidation
         Dim Email As Windows.Forms.TextBox = sender
         If Email.Text <> "" Then
             Dim rex As Match = Regex.Match(Trim(Email.Text), "^([0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,3})$", RegexOptions.IgnoreCase)
-<<<<<<< HEAD
-            If rex.Success Then
-                Email.BackColor = Color.White
-            Else
-                MessageBox.Show("Please Enter a valid Email Address", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information)
-                Email.BackColor = Color.Red
-                Email.Focus()
-                Exit Sub
-=======
             If Not rex.Success Then
                 MessageBox.Show("Please Enter a valid Email Address", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information)
                 Email.BackColor = Color.Red
                 Email.Focus()
                 Return ' Esce subito, il codice sotto non viene eseguito
->>>>>>> origin/master
             End If
 
             ' 2. Logica "Successo": se arrivo qui, la mail è valida

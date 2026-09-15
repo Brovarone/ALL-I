@@ -1,6 +1,7 @@
 ﻿Imports System.Data.SqlClient
 Imports System.Globalization
 Imports System.Reflection.MethodBase
+Imports ALLSystemTools.SqlTools.Bulk
 Module Contab_addon
 
     Private Const ModCont = "ASSESTAM"

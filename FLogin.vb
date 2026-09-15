@@ -214,24 +214,15 @@ Public Class FLogin
     End Sub
     Private Sub LoadSettings()
         Dim n As String = "settings.json"
-<<<<<<< HEAD
         Dim f As String = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano"
         Dim s As String = f & slash & n
-=======
-        'Dim s As String = My.Application.Info.DirectoryPath + "\" + n
-        Dim s As String = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano" & "\" & n
->>>>>>> origin/master
 
         'Controllo esistenza del file 
         If System.IO.File.Exists(s) Then
             'Carico dal file Json
             'Parametri Config dal nuovo gestore
             PortableJsonSettingsProvider.SettingsFileName = n
-<<<<<<< HEAD
             PortableJsonSettingsProvider.SettingsDirectory = f   '"Some\custom\location"
-=======
-            PortableJsonSettingsProvider.SettingsDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano"   '"Some\custom\location"
->>>>>>> origin/master
             PortableJsonSettingsProvider.ApplyProvider(My.MySettings.[Default])
 
             'Carico dal file config
@@ -247,11 +238,7 @@ Public Class FLogin
             FolderPath = txtPath.Text
             txtTemp_FoxFolder.Text = My.Settings.mFOXPATH
         Else
-<<<<<<< HEAD
             Directory.CreateDirectory(f & slash)
-=======
-            Directory.CreateDirectory(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano" & "\")
->>>>>>> origin/master
             'Carico dal file config
             TxtDB_UNO.Text = My.Settings.mDATABASE
             TxtDB_SPA.Text = My.Settings.mDATABASE_SPA
@@ -266,11 +253,7 @@ Public Class FLogin
             txtTemp_FoxFolder.Text = My.Settings.mFOXPATH
             'Imposto nuovo gestore
             PortableJsonSettingsProvider.SettingsFileName = n
-<<<<<<< HEAD
             PortableJsonSettingsProvider.SettingsDirectory = f  '"Some\custom\location"
-=======
-            PortableJsonSettingsProvider.SettingsDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano"   '"Some\custom\location"
->>>>>>> origin/master
             PortableJsonSettingsProvider.ApplyProvider(My.MySettings.[Default])
             'Salvo sul nuovo file
             My.Settings.mDATABASE = TxtDB_UNO.Text
@@ -555,6 +538,7 @@ Public Class FLogin
         SUBProcessa()
     End Sub
     Private Sub SUBProcessa(Optional ByVal pag As Boolean = False, Optional ByVal fatture As Boolean = False)
+        Dim nomeLog As String = ""
         If String.IsNullOrEmpty(FolderPath) Then
             MessageBox.Show("Inserire un percorso valido", My.Application.Info.ProductName)
             Return
@@ -647,15 +631,8 @@ Public Class FLogin
                 Array.Reverse(fat)
                 ReDim Preserve fat(0)
             End If
-            'lista.RemoveAt(lista.Count)
-<<<<<<< HEAD
             ProcessaGruppo(fat, "Fatture")
-=======
-            Dim msg_importanti As New StringBuilder()
-            logsList.Insert(0, msg_importanti)
-            nomeLog = "Fatture"
-            ProcessaGruppo(fat, nomeLog)
->>>>>>> origin/master
+
         End If
 
         If ChkInsertSepaOnBankAuth.Checked Then
@@ -1017,7 +994,7 @@ Public Class FLogin
                                 If bFound Then
                                     contrattiFound(i) = True
                                     contratti(i) = sFile
-                                    lista.Add(sFile)
+                                    listaFiles.Add(sFile)
                                     Exit For
                                 End If
                             Next
@@ -1039,7 +1016,7 @@ Public Class FLogin
                             If bFound Then
                                 contrattiFound(iACGTRPG) = True
                                 contratti(iACGTRPG) = sFile
-                                lista.Add(sFile)
+                                listaFiles.Add(sFile)
                                 Exit For
                             End If
 
@@ -1050,7 +1027,7 @@ Public Class FLogin
                             If bFound Then
                                 contrattiFound(iElencoClientiSpa) = True
                                 contratti(iElencoClientiSpa) = sFile
-                                lista.Add(sFile)
+                                listaFiles.Add(sFile)
                                 Exit For
                             End If
                         Next
@@ -1061,7 +1038,7 @@ Public Class FLogin
                             If bFound Then
                                 contrattiFound(iEstateSicura) = True
                                 contratti(iEstateSicura) = sFile
-                                lista.Add(sFile)
+                                listaFiles.Add(sFile)
                                 Exit For
                             End If
                         Next
@@ -1127,11 +1104,7 @@ Public Class FLogin
         Me.Cursor = Cursors.Default
         Me.Refresh()
         'Salvo il log
-<<<<<<< HEAD
-        ScriviLogESposta(lista)
-=======
         ScriviLogESpostaFiles(listaFiles, nomeLog)
->>>>>>> origin/master
 
     End Sub
     Private Sub ProcessaGruppo(ByVal lista As String(), ByVal nomegruppo As String)
@@ -1664,12 +1637,7 @@ Public Class FLogin
     End Sub
 
     Private Sub UserSettingFolderToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles UserSettingFolderToolStripMenuItem.Click
-<<<<<<< HEAD
         Process.Start(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano" & slash)
-=======
-        Process.Start(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano" & "\")
->>>>>>> origin/master
-
     End Sub
     Private Sub AppLogToolStripMenu_Click(sender As Object, e As EventArgs) Handles AppLogToolStripMenu.Click
         Process.Start(My.Application.Log.DefaultFileLogWriter.CustomLocation)
@@ -2355,7 +2323,6 @@ Public Class FLogin
         SUBProcessa()
     End Sub
 
-<<<<<<< HEAD
     Private Sub ContrattiFoxToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles ContrattiFoxToolStripMenuItem.Click
 
         ChkContrattiFox.Checked = True
@@ -2442,8 +2409,8 @@ Public Class FLogin
             'Salvo il log
             ScriviLogESposta()
         End If
+    End Sub
 
-=======
     Private Sub FattureDaEmettereToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles FattureDaEmettereToolStripMenuItem.Click
         chkFattureDaEmettere.Checked = True
         SUBConnetti()
@@ -2454,7 +2421,7 @@ Public Class FLogin
         chkElimCespiti2024.Checked = True
         SUBConnetti()
         SUBProcessa()
->>>>>>> origin/master
+
     End Sub
 
 
