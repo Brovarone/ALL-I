@@ -38,24 +38,26 @@ namespace EFMago.Models
 
         public string GetTipoAttivita()
         {
-            string tipoAttivita;
+            // Se la relazione Allattivita non è stata caricata o è corrotta
+            if (Allattivita == null)
+            {
+                return "X"; // O un codice che indichi "Errore/Sconosciuto"
+            }
+
             if (FormatHelper.StringToBoolean(Allattivita.Sospensione))
             {
-                tipoAttivita = "S";
+                return "S";
             }
-            else if (FormatHelper.StringToBoolean(Allattivita.Annullamento))
+            if (FormatHelper.StringToBoolean(Allattivita.Annullamento))
             {
-                tipoAttivita = "A";
+                return "A";
             }
-            else if (FormatHelper.StringToBoolean(Allattivita.Istat))
+            if (FormatHelper.StringToBoolean(Allattivita.Istat))
             {
-                tipoAttivita = "I";
+                return "I";
             }
-            else
-            {
-                tipoAttivita = "X";
-            }
-            return tipoAttivita;
+
+            return "X";
         }
 
     }

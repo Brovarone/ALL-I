@@ -38,6 +38,9 @@ Imports Microsoft.EntityFrameworkCore
 '
 'Gestore Log: Serilog
 '
+' 
+'Normalizzatore indirizzi: https://github.com/DanHarltey/Fastenshtein
+'
 Public Class FLogin
     'Ma_Saledoc  / Doc
     Public AdpDoc As SqlDataAdapter
@@ -45,6 +48,7 @@ Public Class FLogin
     Public iIdCounter As Integer = 0 ' contatore degli id/fatture estratte
     Public prgCopy As New CustomProgress
     Public prgFusion As New CustomProgress
+
 
     Const adminPsw = "123456"
 
@@ -210,15 +214,24 @@ Public Class FLogin
     End Sub
     Private Sub LoadSettings()
         Dim n As String = "settings.json"
+<<<<<<< HEAD
         Dim f As String = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano"
         Dim s As String = f & slash & n
+=======
+        'Dim s As String = My.Application.Info.DirectoryPath + "\" + n
+        Dim s As String = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano" & "\" & n
+>>>>>>> origin/master
 
         'Controllo esistenza del file 
         If System.IO.File.Exists(s) Then
             'Carico dal file Json
             'Parametri Config dal nuovo gestore
             PortableJsonSettingsProvider.SettingsFileName = n
+<<<<<<< HEAD
             PortableJsonSettingsProvider.SettingsDirectory = f   '"Some\custom\location"
+=======
+            PortableJsonSettingsProvider.SettingsDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano"   '"Some\custom\location"
+>>>>>>> origin/master
             PortableJsonSettingsProvider.ApplyProvider(My.MySettings.[Default])
 
             'Carico dal file config
@@ -234,7 +247,11 @@ Public Class FLogin
             FolderPath = txtPath.Text
             txtTemp_FoxFolder.Text = My.Settings.mFOXPATH
         Else
+<<<<<<< HEAD
             Directory.CreateDirectory(f & slash)
+=======
+            Directory.CreateDirectory(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano" & "\")
+>>>>>>> origin/master
             'Carico dal file config
             TxtDB_UNO.Text = My.Settings.mDATABASE
             TxtDB_SPA.Text = My.Settings.mDATABASE_SPA
@@ -249,7 +266,11 @@ Public Class FLogin
             txtTemp_FoxFolder.Text = My.Settings.mFOXPATH
             'Imposto nuovo gestore
             PortableJsonSettingsProvider.SettingsFileName = n
+<<<<<<< HEAD
             PortableJsonSettingsProvider.SettingsDirectory = f  '"Some\custom\location"
+=======
+            PortableJsonSettingsProvider.SettingsDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano"   '"Some\custom\location"
+>>>>>>> origin/master
             PortableJsonSettingsProvider.ApplyProvider(My.MySettings.[Default])
             'Salvo sul nuovo file
             My.Settings.mDATABASE = TxtDB_UNO.Text
@@ -546,8 +567,8 @@ Public Class FLogin
         My.Application.Log.DefaultFileLogWriter.BaseFileName += "-" & DateTime.Now.ToString("dd-MM-yyyy--HH-mm-ss")
         My.Application.Log.DefaultFileLogWriter.WriteLine("  ---  Azienda: " & DBInUse & "  ---  ")
 
-        Dim lista As New List(Of String)
-
+        Dim listaFiles As New List(Of String)
+        logsList = New List(Of StringBuilder)
         If ChkClienti.Checked Then
             Dim bFound As Boolean
             Dim Cli As String() = {"ANCL200F", "ANFC200F", "FTEU400F", "ACGSEP00F"}
@@ -561,7 +582,7 @@ Public Class FLogin
                     If bFound Then
                         CliFound(i) = True
                         Cli(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -586,7 +607,7 @@ Public Class FLogin
                     If bFound Then
                         ForFound(i) = True
                         Forn(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -611,7 +632,7 @@ Public Class FLogin
                     If bFound Then
                         fatFound(i) = True
                         fat(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -627,7 +648,14 @@ Public Class FLogin
                 ReDim Preserve fat(0)
             End If
             'lista.RemoveAt(lista.Count)
+<<<<<<< HEAD
             ProcessaGruppo(fat, "Fatture")
+=======
+            Dim msg_importanti As New StringBuilder()
+            logsList.Insert(0, msg_importanti)
+            nomeLog = "Fatture"
+            ProcessaGruppo(fat, nomeLog)
+>>>>>>> origin/master
         End If
 
         If ChkInsertSepaOnBankAuth.Checked Then
@@ -643,7 +671,7 @@ Public Class FLogin
                     If bFound Then
                         fatFound(i) = True
                         fatSe(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -673,7 +701,7 @@ Public Class FLogin
                     If bFound Then
                         fatFound(i) = True
                         fatSe(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -706,7 +734,7 @@ Public Class FLogin
                     If bFound Then
                         pagheFound(i) = True
                         paghe(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -732,7 +760,7 @@ Public Class FLogin
                     If bFound Then
                         ParCFound(i) = True
                         ParC(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -760,7 +788,7 @@ Public Class FLogin
                     If bFound Then
                         ParFFound(i) = True
                         ParF(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -787,7 +815,7 @@ Public Class FLogin
                     If bFound Then
                         NoteCFound(i) = True
                         NoteC(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -812,6 +840,32 @@ Public Class FLogin
             Next
         End If
 
+        If chkFattureDaEmettere.Checked Then
+            Dim bFound As Boolean
+            Dim ftDaEme As String() = {"FATTURE_DA_EMETTERE"}
+            Dim ftDaEmeFound As Boolean() = {False}
+            Dim FileInFolder As String() = Directory.GetFiles(FolderPath, "*.*", SearchOption.TopDirectoryOnly)
+
+            For i = 0 To UBound(ftDaEme)
+                For Each sFile As String In FileInFolder
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
+                    bFound = sNomeFile.Equals(ftDaEme(i))
+                    If bFound Then
+                        ftDaEmeFound(i) = True
+                        ftDaEme(i) = sFile
+                        listaFiles.Add(sFile)
+                        Exit For
+                    End If
+                Next
+                If Not ftDaEmeFound(i) Then
+                    MessageBox.Show("Impossibile continuare l'elaborazione degli assestamenti file FATTURE_DA_EMETTERE.XLSX")
+                    Exit For
+                End If
+            Next
+            nomeLog = "Fatture da emettere"
+            ProcessaGruppo(ftDaEme, nomeLog)
+        End If
+
         If ChkRisconti.Checked Then
             Dim bFound As Boolean
             Dim risc As String() = {"RISCONTI"}
@@ -825,7 +879,7 @@ Public Class FLogin
                     If bFound Then
                         riscFound(i) = True
                         risc(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -850,7 +904,7 @@ Public Class FLogin
                     If bFound Then
                         riscFound(i) = True
                         risc(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -875,7 +929,7 @@ Public Class FLogin
                     If bFound Then
                         riscFound(i) = True
                         risc(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -900,7 +954,7 @@ Public Class FLogin
                     If bFound Then
                         cespitiFound(i) = True
                         cespiti(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -926,7 +980,7 @@ Public Class FLogin
                     If bFound Then
                         fusioneFound(i) = True
                         fusione(i) = sFile
-                        lista.Add(sFile)
+                        listaFiles.Add(sFile)
                         Exit For
                     End If
                 Next
@@ -1037,6 +1091,32 @@ Public Class FLogin
             isAdmin = True
         End If
 
+        If chkElimCespiti2024.Checked Then
+            Dim bFound As Boolean
+            Dim movCesp As String() = {"MOVCESP"}
+            Dim movCespFound As Boolean() = {False}
+            Dim FileInFolder As String() = Directory.GetFiles(FolderPath, "*.*", SearchOption.TopDirectoryOnly)
+
+            For i = 0 To UBound(movCesp)
+                For Each sFile As String In FileInFolder
+                    Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
+                    bFound = sNomeFile.Equals(movCesp(i))
+                    If bFound Then
+                        movCespFound(i) = True
+                        movCesp(i) = sFile
+                        listaFiles.Add(sFile)
+                        Exit For
+                    End If
+                Next
+                If Not movCespFound(i) Then
+                    MessageBox.Show("Impossibile continuare l'elaborazione degli assestamenti file MOVCESP.XLSX")
+                    Exit For
+                End If
+            Next
+            nomeLog = "Movimento contabile da Movimento cespite"
+            ProcessaGruppo(movCesp, nomeLog)
+        End If
+
         'Scrivo informazioni di Chiusura
         lstStatoConnessione.Items.Add("   ---   Elaborazione completata   ---")
         prgCopy.Value = 0
@@ -1047,7 +1127,11 @@ Public Class FLogin
         Me.Cursor = Cursors.Default
         Me.Refresh()
         'Salvo il log
+<<<<<<< HEAD
         ScriviLogESposta(lista)
+=======
+        ScriviLogESpostaFiles(listaFiles, nomeLog)
+>>>>>>> origin/master
 
     End Sub
     Private Sub ProcessaGruppo(ByVal lista As String(), ByVal nomegruppo As String)
@@ -1208,6 +1292,28 @@ Public Class FLogin
                         lstStatoConnessione.Items.Add("Note Clienti da Foxpro")
                         dsXLS = LoadXLS(spath, True, False)
                         esito = NoteClientiFoxproXLS(dsXLS, False)
+                    Case "FATTURE_DA_EMETTERE"
+                        'Fatture da emettere Xlsx  (con riga di Intestazione)
+                        lstStatoConnessione.Items.Add("Fatture da emettere")
+                        Dim s As String = InputBox("Indicare la data del movimento nel formato AAAAMMGG" & vbCrLf & " Se lasciato AAAMMGG verrà impostata 31/12/2024", "", "AAAAMMGG")
+                        dsXLS = LoadXLS(spath, True, False)
+                        Dim dataMovimento As Date
+
+                        ' 1. Controllo se l'utente ha lasciato il default o annullato
+                        If s = "AAAAMMGG" OrElse String.IsNullOrWhiteSpace(s) Then
+                            ' Imposto la data di default esplicita
+                            dataMovimento = New Date(2024, 12, 31)
+                            esito = CreaFattureDaEmettere(dsXLS.Tables(0), True, dataMovimento)
+                        Else
+                            ' 2. Tentativo di parsing con formato OBBLIGATORIO AAAAMMGG
+                            If Date.TryParseExact(s, "yyyyMMdd", Nothing, Globalization.DateTimeStyles.None, dataMovimento) Then
+                                esito = CreaFattureDaEmettere(dsXLS.Tables(0), True, dataMovimento)
+                            Else
+                                ' 3. Gestione errore: l'utente ha inserito qualcosa di non valido
+                                MsgBox("Formato data non valido. Inserire la data come AAAAMMGG (es. 20241231).", MsgBoxStyle.Critical)
+                                esito = False ' O gestisci l'uscita
+                            End If
+                        End If
                     Case "RISCONTI"
                         'Risconti Xlsx  (con riga di Intestazione)
                         lstStatoConnessione.Items.Add("Risconti")
@@ -1315,7 +1421,6 @@ Public Class FLogin
                         lstStatoConnessione.Items.Add("Cespiti - Movimenti Fiscali")
                         dsXLS = LoadXLS(spath, True, False)
                         esito = CespitiXLS(dsXLS, True)
-
                     Case "IDS_MIGRAZIONE"
                         Dim bok As Boolean
                         My.Application.Log.WriteEntry("Esegui Commit : " & (Not IsDebugging).ToString)
@@ -1332,6 +1437,11 @@ Public Class FLogin
                             bok = EseguiFusioneSQL(dsXLS)
                         End If
                         esito = bok
+                    Case "MOVCESP"
+                        'Movimenti eliminazione cespiti Xlsx  (con riga di Intestazione)
+                        lstStatoConnessione.Items.Add("Movimenti contabili da movimenti cespite")
+                        dsXLS = LoadXLS(spath, True, False)
+                        esito = CreaMovimentoContabileDaMovimentoCespite2024(dsXLS.Tables("Foglio1"), True)
 
                     Case Else
                         Select Case True 'Controllo in Like il nome file
@@ -1339,10 +1449,12 @@ Public Class FLogin
                             Case Len(filename) = 7 AndAlso filename.ToUpper Like "ALL????"
                                 lstStatoConnessione.Items.Add("Importazione Paghe")
                                 esito = CaricaFlussoPaghe(spath, False)
+                                'esito = CaricaFlussoPagheClassi(spath, False)
                             'Paghe Flusso Zucchetti
                             Case filename.ToUpper Like "FILE_CONTABILE_PN_######_##-##-####"
                                 lstStatoConnessione.Items.Add("Importazione Paghe Zucchetti")
                                 esito = CaricaFlussoPaghe(spath, True)
+                                'esito = CaricaFlussoPagheClassi(spath, true)
                         End Select
 
                 End Select
@@ -1552,7 +1664,11 @@ Public Class FLogin
     End Sub
 
     Private Sub UserSettingFolderToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles UserSettingFolderToolStripMenuItem.Click
+<<<<<<< HEAD
         Process.Start(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano" & slash)
+=======
+        Process.Start(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) & "\Brovarone Cristiano" & "\")
+>>>>>>> origin/master
 
     End Sub
     Private Sub AppLogToolStripMenu_Click(sender As Object, e As EventArgs) Handles AppLogToolStripMenu.Click
@@ -2067,12 +2183,28 @@ Public Class FLogin
     End Sub
     Private Sub RiparaMaschereMagoToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles RiparaMaschereMagoToolStripMenuItem.Click
         Try
-            FileIO.FileSystem.RenameFile("\\SV-AP-MAGO\Magonet_Custom\Companies\AllCompanies\Applications\ERP\SaleOrders\ModuleObjects\SaleOrd\SPA_SaleOrd.disabled", "SPA_SaleOrd.dll")
+            Dim rootPath As String = "\\SV-AP-MAGO\Magonet_Custom\Companies\AllCompanies\Applications\"
+
+            ' 1. Ottengo la lista di tutti i file che finiscono con .disabled in tutte le sottocartelle
+            Dim files = My.Computer.FileSystem.GetFiles(rootPath,
+                                                    FileIO.SearchOption.SearchAllSubDirectories,
+                                                    "*.disabled")
+
+            For Each foundFile As String In files
+                ' 2. Determino il nuovo nome (sostituendo .disabled con .dll)
+                ' Esempio: SPA_SaleOrd.disabled -> SPA_SaleOrd.dll
+                Dim newName As String = My.Computer.FileSystem.GetName(foundFile).Replace(".disabled", ".dll")
+
+                ' 3. Rinomino il file
+                My.Computer.FileSystem.RenameFile(foundFile, newName)
+            Next
+
+            MessageBox.Show("Ripristino completato con successo!", "Informazione", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
         Catch ex As Exception
-            ' Debug.Print(ex.Message)
+            MessageBox.Show("Errore durante il ripristino: " & ex.Message, "Errore", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
-
 
     Private Sub RegioneDaProvinciaToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles RegioneDaProvinciaToolStripMenuItem.Click
         'Adeguo il campo Regione leggendolo dalla Provincia
@@ -2223,6 +2355,7 @@ Public Class FLogin
         SUBProcessa()
     End Sub
 
+<<<<<<< HEAD
     Private Sub ContrattiFoxToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles ContrattiFoxToolStripMenuItem.Click
 
         ChkContrattiFox.Checked = True
@@ -2310,6 +2443,18 @@ Public Class FLogin
             ScriviLogESposta()
         End If
 
+=======
+    Private Sub FattureDaEmettereToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles FattureDaEmettereToolStripMenuItem.Click
+        chkFattureDaEmettere.Checked = True
+        SUBConnetti()
+        SUBProcessa()
+    End Sub
+
+    Private Sub EliminazioneCespiti2024ToolStripMenuItem_Click(sender As Object, e As EventArgs) Handles EliminazioneCespiti2024ToolStripMenuItem.Click
+        chkElimCespiti2024.Checked = True
+        SUBConnetti()
+        SUBProcessa()
+>>>>>>> origin/master
     End Sub
 
 

@@ -414,7 +414,11 @@ Module MagoNet
         PnotaPuro = 27066418
         PnotaEmesso = 27066419
         MovimentoAnalitico = 27066424
+<<<<<<< HEAD
         OrdineCliente = 27066372
+=======
+        MovimentoCespite = 27066428
+>>>>>>> origin/master
     End Enum
     Friend Enum LineType As Integer
         Nota = 3538944
@@ -801,8 +805,6 @@ Module MagoNet
         Dim ITCult As New CultureInfo("it-IT")
 
         Try
-
-
             Select Case Tipo
                 Case GetType(DateTime)
                     'PASSARE SE POSSIBILE LA DATA CON yyyyMMdd
@@ -1000,21 +1002,41 @@ End Module
 Public Module LogTools
     Public Sub ScriviLogESposta()
         Dim s As New List(Of String)
+<<<<<<< HEAD
         ScriviLogESposta(s)
     End Sub
     Public Sub ScriviLogESposta(lista As List(Of String))
+=======
+        ScriviLogESpostaFiles(s, nome)
+    End Sub
+    Public Sub ScriviLogESpostaFiles(listaFiles As List(Of String), nome As String)
+        If logsList.Count > 0 Then
+            For Each logEntry As StringBuilder In logsList
+                My.Application.Log.WriteEntry(Environment.NewLine & logEntry.ToString())
+            Next
+        End If
+>>>>>>> origin/master
         My.Application.Log.DefaultFileLogWriter.Flush()
         My.Application.Log.DefaultFileLogWriter.Close()
 
         'Sposto i file e il log
         Dim b As DialogResult = If(isAdmin, MessageBox.Show("Elaborazione terminata" & vbCrLf & "Si vogliono storicizzare i file?", My.Application.Info.Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question), DialogResult.Yes)
         If b = DialogResult.Yes Then
+<<<<<<< HEAD
             SpostaFile(lista)
         End If
     End Sub
 
     Private Sub SpostaFile(lista As List(Of String))
         'Dim newFolder As String = FolderPath & "\PROCESSATI\" & DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")
+=======
+            SpostaFile(listaFiles, nome)
+        End If
+    End Sub
+
+    Private Sub SpostaFile(listaFiles As List(Of String), nome As String)
+        Const sl As String = "\"
+>>>>>>> origin/master
         Dim d As DateTime = DateTime.Now
         Dim periodo As String = d.ToString("yyyy") & slash & d.ToString("MMMM", New Globalization.CultureInfo("it-IT")).ToUpper
         Dim newFolder As String = FolderPath & slash & "PROCESSATI" & slash & periodo & slash & d.ToString("yyyy-MM-dd HH-mm-ss")
@@ -1025,8 +1047,8 @@ Public Module LogTools
             mb.ShowDialog()
         End Try
 
-        If lista.Count > 0 Then
-            For Each f As String In lista
+        If listaFiles.Count > 0 Then
+            For Each f As String In listaFiles
                 Dim newFilename As String = System.IO.Path.GetFileName(f)
                 File.Move(f, newFolder & slash & newFilename)
             Next
@@ -1037,6 +1059,17 @@ Public Module LogTools
         My.Settings.Save()
 
     End Sub
+<<<<<<< HEAD
+=======
+
+    Public Function OnlyDate(ByVal d As Date) As Date
+        Dim nd As New Date(d.Year, d.Month, d.Day)
+        Return nd
+    End Function
+End Module
+Public Module LogTools
+    Public logsList As New List(Of StringBuilder)
+>>>>>>> origin/master
     Public Sub ScriviLog(ByVal message As String, Optional flush As Boolean = True)
         My.Application.Log.DefaultFileLogWriter.WriteLine(message)
         If flush Then
@@ -1126,9 +1159,9 @@ Public Module LogTools
         myXML.Save(path)
     End Sub
     Private Sub SetAsFirstChild(node As XmlNode, Optional parent As XmlNode = Nothing)
-        If node Is Nothing Then Exit Sub
+        If node Is Nothing Then Return
         If parent Is Nothing Then parent = node.ParentNode
-        If parent Is Nothing Then Exit Sub
+        If parent Is Nothing Then Return
         parent.InsertBefore(node, parent.FirstChild)
     End Sub
     Private Sub RemoveEmptyNodes2(ByVal elem As XElement)
@@ -1305,6 +1338,7 @@ Module KeyValidation
         Dim Email As Windows.Forms.TextBox = sender
         If Email.Text <> "" Then
             Dim rex As Match = Regex.Match(Trim(Email.Text), "^([0-9a-zA-Z]([-.\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\w]*[0-9a-zA-Z]\.)+[a-zA-Z]{2,3})$", RegexOptions.IgnoreCase)
+<<<<<<< HEAD
             If rex.Success Then
                 Email.BackColor = Color.White
             Else
@@ -1312,7 +1346,17 @@ Module KeyValidation
                 Email.BackColor = Color.Red
                 Email.Focus()
                 Exit Sub
+=======
+            If Not rex.Success Then
+                MessageBox.Show("Please Enter a valid Email Address", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                Email.BackColor = Color.Red
+                Email.Focus()
+                Return ' Esce subito, il codice sotto non viene eseguito
+>>>>>>> origin/master
             End If
+
+            ' 2. Logica "Successo": se arrivo qui, la mail è valida
+            Email.BackColor = Color.White
         End If
     End Sub
 End Module
