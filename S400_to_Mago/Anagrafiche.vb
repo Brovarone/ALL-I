@@ -1,7 +1,9 @@
 ﻿Imports System.Data.SqlClient
-Imports System.Web.UI.WebControls
 Imports System.Text
 Imports System.Reflection.MethodBase
+Imports System.Web.UI.WebControls
+Imports System.Text.RegularExpressions
+
 Imports ALLSystemTools.SqlTools.Bulk
 Module Anagrafiche
     Public Function ClentiXLS(ByVal dts As DataSet, Optional ByVal bConIntestazione As Boolean = True) As Boolean
@@ -453,21 +455,22 @@ Module Anagrafiche
                         Dim drInt As DataRow
 
                         For irxls = i To drXLS.Length - 1
-                            'lavoro solo sulla prima riga
-                            If drXLS(irxls).Item("J").ToString = 1 Then
+                            '03/02/2026 lavoro solo sulla riga 5 non scrivono piu' sulla prima
+                            If drXLS(irxls).Item("J").ToString = 5 Then
                                 Dim dichFound As Integer
                                 'A seconda che esista il protocollo telematico faccio ricerche diverse
                                 Dim custsupp = drXLS(irxls).Item("A").ToString
-                                If Not String.IsNullOrWhiteSpace(drXLS(irxls).Item("L").ToString) Then
-                                    'Aggiungo nuova logica di controllo in quanto se cambiano testo si crea una possibile incongruenza.
-                                    'cambio logica usando Substring che e' svincolato da VB
-                                    'Nota: In VB6 il carattere di partenza era in base 1
-                                    'in .NET il carattere di partenza è a base 0
-                                    Dim t As String = drXLS(irxls).Item("L").ToString.TrimEnd
+                                'Si esamina la colonna K
+                                Dim t As String = drXLS(irxls).Item("K").ToString().Trim()
+                                Dim telProtocol As String = ""
+                                Dim docProtocol As String = ""
+
+                                If Not String.IsNullOrWhiteSpace(t) Then
                                     Dim telProtFromRight As String = Strings.Left(t.Substring(t.Length - 7 - 17), 17)
-                                    'Dim docProtFromRight As String = Right(drXLS(irxls).Item("L").ToString.TrimEnd, 6)
-                                    Dim telProtocol As String = Mid(drXLS(irxls).Item("L").ToString, 42, 17)
-                                    Dim docProtocol As String = Right(drXLS(irxls).Item("L").ToString.TrimEnd, 6)
+                                    ' Pattern: cerca 17 cifre, un trattino, e poi 6 cifre
+                                    Dim match As Match = Regex.Match(t, "(\d{17})-(\d{6})")
+                                    If match.Success Then telProtocol = match.Groups(1).Value
+                                    docProtocol = Right(t, 6)
                                     If Not telProtFromRight.Equals(telProtocol) Then
                                         result.AppendLine("Cliente " & custsupp & " controllare Dichiarazione d'intento")
                                         Dim mb As New MessageBoxWithDetails("Cliente " & custsupp & " controllare Dichiarazione d'intento", GetCurrentMethod.Name)
@@ -475,8 +478,8 @@ Module Anagrafiche
                                     End If
                                     dvInt.RowFilter = "CustSupp='" & custsupp & "' AND TelProtocol='" & telProtFromRight & "' AND DocProtocol='" & docProtocol & "'"
                                     dichFound = dvInt.Count
-                                    Else
-                                        Dim fromdate As DateTime = MagoFormatta("20" & drXLS(irxls).Item("D").ToString, GetType(DateTime)).DataTempo
+                                Else
+                                    Dim fromdate As DateTime = MagoFormatta("20" & drXLS(irxls).Item("D").ToString, GetType(DateTime)).DataTempo
                                     Dim todate As DateTime = MagoFormatta("20" & drXLS(irxls).Item("E").ToString, GetType(DateTime)).DataTempo
                                     dvInt.RowFilter = "CustSupp='" & custsupp & "' AND FromDate='" & fromdate & "' AND ToDate='" & todate & "'"
                                     dichFound = dvInt.Count
@@ -487,9 +490,9 @@ Module Anagrafiche
                                     drInt = dtInt.NewRow
                                     With drXLS(irxls) ' accorcio per comodità di scrittura
                                         drInt("DeclId") = idDich
-                                        Debug.Print("Cliente: " & drXLS(irxls).Item("A").ToString)
+                                        Debug.Print("Cliente: " & custsupp)
                                         drInt("CustSuppType") = CustSuppType.Cliente
-                                        drInt("CustSupp") = .Item("A").ToString
+                                        drInt("CustSupp") = custsupp
                                         Dim iTipo As Integer
                                         Select Case .Item("H").ToString
                                             Case "1"
@@ -510,7 +513,7 @@ Module Anagrafiche
                                                 If nrProt(0, n) = drInt("DeclYear").ToString Then
                                                     codeFound = True
                                                     'Scrivo il nuovo Nr Protocollo
-                                                    Dim newProt As Integer = Integer.Parse(nrProt(1, n) + 1)
+                                                    Dim newProt As Integer = Integer.Parse(nrProt(1, n)) + 1
                                                     drInt("LogNo") = newProt.ToString("000000")
                                                     nrProt(1, n) = newProt.ToString
                                                     nrProt(2, n) = sOggi
@@ -542,28 +545,31 @@ Module Anagrafiche
                                         drInt("CustomerDate") = MagoFormatta("20" & .Item("C").ToString, GetType(DateTime)).DataTempo
                                         drInt("FromDate") = MagoFormatta("20" & .Item("D").ToString, GetType(DateTime)).DataTempo
                                         drInt("ToDate") = MagoFormatta("20" & .Item("E").ToString, GetType(DateTime)).DataTempo
-                                        If Not String.IsNullOrWhiteSpace(.Item("L").ToString) Then
-                                            drInt("TelProtocol") = Mid(.Item("L").ToString, 42, 17)
-                                            drInt("DocProtocol") = Right(.Item("L").ToString, 6)
-                                            '08/04/2022 : Aggiornamento Mago 3.14.21 Data Protocollo Telematico
-                                            drInt("DateProtocol") = MagoFormatta("20" & .Item("C").ToString, GetType(DateTime)).DataTempo
-                                        End If
+                                        drInt("TelProtocol") = telProtocol
+                                        drInt("DocProtocol") = docProtocol
+                                        '08/04/202☻2 : Aggiornamento Mago 3.14.21 Data Protocollo Telematico
+                                        drInt("Date☻Protocol") = MagoFormatta("20" & .Item("C").ToString, GetType(DateTime)).DataTempo
                                         drInt("TBCreatedID") = My.Settings.mLOGINID 'ID utente
                                         drInt("TBModifiedID") = My.Settings.mLOGINID 'ID utente
 
                                     End With
                                     dtInt.Rows.Add(drInt)
+                                    'Scrivo il log sui messaggi importanti
+                                    logsList(0).AppendLine("Cliente: " & custsupp & " Nuovo Dichiarazione d'Intento")
+                                    result.AppendLine("Cliente " & custsupp & " nuova Dichiarazione d'intento")
+                                    FLogin.lstStatoConnessione.Items.Add("Cliente " & custsupp & " nuova Dichiarazione d'intento")
 
-                                    AvanzaBarra
                                 End If
                                 'Aggiorno il flag sull'anagrafica cliente
-                                Dim iCliopt As Integer = dvCliOpt.Find(drXLS(irxls).Item("A").ToString)
+                                Dim iCliopt As Integer = dvCliOpt.Find(custsupp)
                                 If iCliopt <> -1 AndAlso dvCliOpt(iCliopt)("ExemptFromTax") = "0" Then
                                     dvCliOpt(iCliopt).BeginEdit()
                                     dvCliOpt(iCliopt)("ExemptFromTax") = "1"
                                     dvCliOpt(iCliopt).EndEdit()
                                 End If
+
                             End If
+                            AvanzaBarra()
                         Next
                         Debug.Print("Elaborazione Dich. Intento: " & dtInt.Rows.Count.ToString & " in " & stopwatch1.Elapsed.ToString())
                         EditTestoBarra("Salvataggio ")
@@ -1747,7 +1753,7 @@ Module ProcessaAnagrafiche
                             AddF(Of String)(cmdOpt, sInsertOpt, "Currency", If(.Item("O").ToString = "EURO", "EUR", .Item("O").ToString))
                             AddF(Of Double)(cmdOpt, sInsertOpt, "FiscalAmount", .Item("K").ToString)
                             AddF(Of DateTime)(cmdOpt, sInsertOpt, "ValueDate", MagoFormatta(.Item("AC").ToString, GetType(DateTime)).DataTempo)
-                            AddF(Of Integer)(cmdOpt, sInsertOpt, "SubId", .Item("K").ToString) ' 
+                            AddF(Of Integer)(cmdOpt, sInsertOpt, "SubId", .Item("K").ToString)
                         End With
                         'Forse conviene creare prima le righe e poi la testa (per last sub id e totoal amout)
                         'va fatta prima
@@ -1791,13 +1797,13 @@ Module ProcessaAnagrafiche
     Private Sub AddF(Of T)(cmd As SqlCommand, ByRef qry As String, field As String, value As T)
         'se viene passata una stringa vuota esco
         'If (value.GetType = GetType(String) And String.IsNullOrEmpty(value.ToString)) Then Exit Sub
-        If String.IsNullOrEmpty(value.ToString) Then Exit Sub
+        If String.IsNullOrEmpty(value.ToString) Then Return
         Dim pName As String = "@" & field
         qry = qry & field & ", "
         Dim p As New SqlParameter With {
             .DbType = Parameter.ConvertTypeCodeToDbType(Type.GetTypeCode(value.GetType)),
             .ParameterName = pName,
-            .Value = value
+            .value = value
             }
         'p.Size = Len(value)
         cmd.Parameters.Add(p)
@@ -1805,7 +1811,7 @@ Module ProcessaAnagrafiche
 
     Private Sub AddFUpdate(Of T)(cmd As SqlCommand, ByRef qry As String, field As String, value As T)
         'se viene passata una stringa vuota esco
-        If String.IsNullOrEmpty(value.ToString) Then Exit Sub
+        If String.IsNullOrEmpty(value.ToString) Then Return
         Dim pName As String = "@" & field
         'creo la stringa della query con il parametro
         qry = qry & field & "= " & pName & ","
@@ -1813,7 +1819,7 @@ Module ProcessaAnagrafiche
         Dim p As New SqlParameter With {
             .DbType = Parameter.ConvertTypeCodeToDbType(Type.GetTypeCode(value.GetType)),
             .ParameterName = pName,
-            .Value = value
+            .value = value
         }
         cmd.Parameters.Add(p)
     End Sub
