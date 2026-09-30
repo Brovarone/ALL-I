@@ -302,11 +302,9 @@ Partial Class frmFoxFiliali
         Me.BtnAnnulla.Text = "Annulla"
         Me.BtnAnnulla.UseVisualStyleBackColor = True
         '
-        'ChkAlso2024
+        'ChkAlso2023
         '
         Me.ChkAlso2023.AutoSize = True
-        Me.ChkAlso2023.Checked = True
-        Me.ChkAlso2023.CheckState = System.Windows.Forms.CheckState.Checked
         Me.ChkAlso2023.Location = New System.Drawing.Point(19, 286)
         Me.ChkAlso2023.Name = "ChkAlso2023"
         Me.ChkAlso2023.Size = New System.Drawing.Size(91, 17)

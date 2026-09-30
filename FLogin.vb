@@ -1010,6 +1010,7 @@ Public Class FLogin
                         Dim iElencoClientiSpa As Integer = contrattiFound.Length - 2
                         Dim iEstateSicura As Integer = contrattiFound.Length - 1
                         fileInFolder = Directory.GetFiles(If(String.IsNullOrWhiteSpace(My.Settings.mFOXPATH), FolderPath, My.Settings.mFOXPATH), "*.*", SearchOption.TopDirectoryOnly)
+                        'Condizioni pagamento
                         For Each sFile As String In fileInFolder
                             Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
                             bFound = sNomeFile.ToUpper.Equals("ACGTRPG")
@@ -1155,14 +1156,17 @@ Public Class FLogin
                         Case "_AGRFATD", "_AGRFATT", "_EWTAB", "_LIENORD", "_LIFTELE", "_ONTRORD", "_RID", "_SENTIIV", "ACGTRPG", "ELENCO CLIENTI SPA", "_LIENORD.2023", "_AGRFATD.2023", "_AGRFATT.2023", "_LIFTELE.2023", "_RID.2023", "ESTIVI ESTATE SICURA 2024"
                             Try
                                 dsXLS = If(sExt.ToUpper = ".CSV", ProcessaCSV(sFullPath, False), LoadXLS(sFullPath, True, True))
-                                If sNomeFile = "_ONTRORD" AndAlso dsXLS.Tables("_ONTRORD").Columns("GRP CONTRATTO").DataType <> GetType(String) Then
-                                    Dim dummyDT As DataTable = dsXLS.Tables("_ONTRORD").Clone
-                                    dummyDT.Columns("GRP CONTRATTO").DataType = GetType(String)
-                                    For Each row As DataRow In dsXLS.Tables("_ONTRORD").Rows
-                                        dummyDT.ImportRow(row)
-                                    Next
-                                    dsXLS.Tables.Remove("_ONTRORD")
-                                    dsXLS.Tables.Add(dummyDT)
+                                If sNomeFile = "_ONTRORD" Then
+                                    dsXLS.Tables(0).TableName = "_ONTRORD"
+                                    If dsXLS.Tables("_ONTRORD").Columns("GRP CONTRATTO").DataType <> GetType(String) Then
+                                        Dim dummyDT As DataTable = dsXLS.Tables("_ONTRORD").Clone
+                                        dummyDT.Columns("GRP CONTRATTO").DataType = GetType(String)
+                                        For Each row As DataRow In dsXLS.Tables("_ONTRORD").Rows
+                                            dummyDT.ImportRow(row)
+                                        Next
+                                        dsXLS.Tables.Remove("_ONTRORD")
+                                        dsXLS.Tables.Add(dummyDT)
+                                    End If
                                 End If
                                 If sNomeFile = "ELENCO CLIENTI SPA" Then
                                     dsXLS.Tables(0).TableName = "ELENCO CLIENTI SPA"
@@ -2423,6 +2427,5 @@ Public Class FLogin
         SUBProcessa()
 
     End Sub
-
 
 End Class

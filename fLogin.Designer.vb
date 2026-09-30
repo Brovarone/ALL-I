@@ -89,7 +89,6 @@ Partial Class FLogin
         Me.ChkPNotaForDaPartitario = New System.Windows.Forms.CheckBox()
         Me.ChkPNotaCliDaPartitario = New System.Windows.Forms.CheckBox()
         Me.TabCespiti = New System.Windows.Forms.TabPage()
-        Me.chkElimCespiti2024 = New System.Windows.Forms.CheckBox()
         Me.ChkCespiti = New System.Windows.Forms.CheckBox()
         Me.TabContrattiFox = New System.Windows.Forms.TabPage()
         Me.ChkOrdiniFox = New System.Windows.Forms.CheckBox()
@@ -102,9 +101,11 @@ Partial Class FLogin
         Me.txtLoginId = New System.Windows.Forms.TextBox()
         Me.BtnPath = New System.Windows.Forms.Button()
         Me.lblPath = New System.Windows.Forms.Label()
+        Me.chkElimCespiti2024 = New System.Windows.Forms.CheckBox()
         Me.PanelDB = New System.Windows.Forms.Panel()
+        Me.chkAssociaClienteUno = New System.Windows.Forms.CheckBox()
         Me.BtnOrdiniFox = New System.Windows.Forms.Button()
-        Me.ChkEscludiControllo = New System.Windows.Forms.CheckBox()
+        Me.ChkEffettuaControllo = New System.Windows.Forms.CheckBox()
         Me.BtnImportFox = New System.Windows.Forms.Button()
         Me.CHKDBTemporaneo = New System.Windows.Forms.CheckBox()
         Me.BtnSelSPA = New System.Windows.Forms.Button()
@@ -829,6 +830,16 @@ Partial Class FLogin
         Me.TabPagePnota.TabIndex = 4
         Me.TabPagePnota.Text = "Prima Nota"
         '
+        'chkFattureDaEmettere
+        '
+        Me.chkFattureDaEmettere.AutoSize = True
+        Me.chkFattureDaEmettere.Location = New System.Drawing.Point(173, 72)
+        Me.chkFattureDaEmettere.Name = "chkFattureDaEmettere"
+        Me.chkFattureDaEmettere.Size = New System.Drawing.Size(118, 17)
+        Me.chkFattureDaEmettere.TabIndex = 28
+        Me.chkFattureDaEmettere.Text = "Fatture da emettere"
+        Me.chkFattureDaEmettere.UseVisualStyleBackColor = True
+        '
         'ChkRiscontiFusione
         '
         Me.ChkRiscontiFusione.AutoSize = True
@@ -890,26 +901,6 @@ Partial Class FLogin
         Me.TabCespiti.Size = New System.Drawing.Size(322, 101)
         Me.TabCespiti.TabIndex = 6
         Me.TabCespiti.Text = "Cespiti"
-        '
-        'chkElimCespiti2024
-        '
-        Me.chkElimCespiti2024.AutoSize = True
-        Me.chkElimCespiti2024.Location = New System.Drawing.Point(7, 26)
-        Me.chkElimCespiti2024.Name = "chkElimCespiti2024"
-        Me.chkElimCespiti2024.Size = New System.Drawing.Size(187, 17)
-        Me.chkElimCespiti2024.TabIndex = 29
-        Me.chkElimCespiti2024.Text = "Eliminazione Cespiti 2024 (contab)"
-        Me.chkElimCespiti2024.UseVisualStyleBackColor = True
-        '
-        'chkFattureDaEmettere
-        '
-        Me.chkFattureDaEmettere.AutoSize = True
-        Me.chkFattureDaEmettere.Location = New System.Drawing.Point(173, 72)
-        Me.chkFattureDaEmettere.Name = "chkFattureDaEmettere"
-        Me.chkFattureDaEmettere.Size = New System.Drawing.Size(118, 17)
-        Me.chkFattureDaEmettere.TabIndex = 28
-        Me.chkFattureDaEmettere.Text = "Fatture da emettere"
-        Me.chkFattureDaEmettere.UseVisualStyleBackColor = True
         '
         'ChkCespiti
         '
@@ -1022,19 +1013,40 @@ Partial Class FLogin
         Me.lblPath.TabIndex = 33
         Me.lblPath.Text = "Path"
         '
+        'chkElimCespiti2024
+        '
+        Me.chkElimCespiti2024.AutoSize = True
+        Me.chkElimCespiti2024.Location = New System.Drawing.Point(7, 26)
+        Me.chkElimCespiti2024.Name = "chkElimCespiti2024"
+        Me.chkElimCespiti2024.Size = New System.Drawing.Size(187, 17)
+        Me.chkElimCespiti2024.TabIndex = 29
+        Me.chkElimCespiti2024.Text = "Eliminazione Cespiti 2024 (contab)"
+        Me.chkElimCespiti2024.UseVisualStyleBackColor = True
+        '
         'PanelDB
         '
+        Me.PanelDB.Controls.Add(Me.chkAssociaClienteUno)
         Me.PanelDB.Controls.Add(Me.BtnOrdiniFox)
-        Me.PanelDB.Controls.Add(Me.ChkEscludiControllo)
+        Me.PanelDB.Controls.Add(Me.ChkEffettuaControllo)
         Me.PanelDB.Controls.Add(Me.BtnImportFox)
         Me.PanelDB.Controls.Add(Me.CHKDBTemporaneo)
         Me.PanelDB.Controls.Add(Me.BtnSelSPA)
         Me.PanelDB.Controls.Add(Me.BtnSelUNO)
         Me.PanelDB.Controls.Add(Me.Label8)
-        Me.PanelDB.Location = New System.Drawing.Point(0, 345)
+        Me.PanelDB.Location = New System.Drawing.Point(8, 296)
         Me.PanelDB.Name = "PanelDB"
-        Me.PanelDB.Size = New System.Drawing.Size(150, 234)
+        Me.PanelDB.Size = New System.Drawing.Size(263, 152)
         Me.PanelDB.TabIndex = 47
+        '
+        'chkAssociaClienteUno
+        '
+        Me.chkAssociaClienteUno.AutoSize = True
+        Me.chkAssociaClienteUno.Location = New System.Drawing.Point(10, 12)
+        Me.chkAssociaClienteUno.Name = "chkAssociaClienteUno"
+        Me.chkAssociaClienteUno.Size = New System.Drawing.Size(86, 17)
+        Me.chkAssociaClienteUno.TabIndex = 7
+        Me.chkAssociaClienteUno.Text = "Cambia clifor"
+        Me.chkAssociaClienteUno.UseVisualStyleBackColor = True
         '
         'BtnOrdiniFox
         '
@@ -1046,23 +1058,21 @@ Partial Class FLogin
         Me.BtnOrdiniFox.Text = "Fatturazione Ordini   Su Fox"
         Me.BtnOrdiniFox.UseVisualStyleBackColor = False
         '
-        'ChkEscludiControllo
+        'ChkEffettuaControllo
         '
-        Me.ChkEscludiControllo.AutoSize = True
-        Me.ChkEscludiControllo.Checked = True
-        Me.ChkEscludiControllo.CheckState = System.Windows.Forms.CheckState.Checked
-        Me.ChkEscludiControllo.Location = New System.Drawing.Point(12, 114)
-        Me.ChkEscludiControllo.Name = "ChkEscludiControllo"
-        Me.ChkEscludiControllo.Size = New System.Drawing.Size(74, 17)
-        Me.ChkEscludiControllo.TabIndex = 5
-        Me.ChkEscludiControllo.Text = "No Check"
-        Me.ChkEscludiControllo.UseVisualStyleBackColor = True
+        Me.ChkEffettuaControllo.AutoSize = True
+        Me.ChkEffettuaControllo.Location = New System.Drawing.Point(12, 114)
+        Me.ChkEffettuaControllo.Name = "ChkEffettuaControllo"
+        Me.ChkEffettuaControllo.Size = New System.Drawing.Size(92, 17)
+        Me.ChkEffettuaControllo.TabIndex = 5
+        Me.ChkEffettuaControllo.Text = "Esegui Check"
+        Me.ChkEffettuaControllo.UseVisualStyleBackColor = True
         '
         'BtnImportFox
         '
-        Me.BtnImportFox.Location = New System.Drawing.Point(12, 16)
+        Me.BtnImportFox.Location = New System.Drawing.Point(12, 40)
         Me.BtnImportFox.Name = "BtnImportFox"
-        Me.BtnImportFox.Size = New System.Drawing.Size(63, 88)
+        Me.BtnImportFox.Size = New System.Drawing.Size(63, 64)
         Me.BtnImportFox.TabIndex = 4
         Me.BtnImportFox.Text = "Import Excel suFox"
         Me.BtnImportFox.UseVisualStyleBackColor = True
@@ -1219,7 +1229,7 @@ Partial Class FLogin
         Me.MenuStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.ToolsToolStripMenuItem, Me.FileToolStripMenuItem, Me.FusioneToolStripMenuItem, Me.ComandiToolStripMenuItem, Me.SettingsToolStripMenuItem, Me.AdminCmdToolStripMenuItem, Me.HelpToolStripMenuItem})
         Me.MenuStrip1.Location = New System.Drawing.Point(0, 0)
         Me.MenuStrip1.Name = "MenuStrip1"
-        Me.MenuStrip1.Size = New System.Drawing.Size(456, 24)
+        Me.MenuStrip1.Size = New System.Drawing.Size(459, 24)
         Me.MenuStrip1.TabIndex = 45
         Me.MenuStrip1.Text = "MenuStrip1"
         '
@@ -1609,7 +1619,7 @@ Partial Class FLogin
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(456, 371)
+        Me.ClientSize = New System.Drawing.Size(459, 456)
         Me.Controls.Add(Me.PanelDB)
         Me.Controls.Add(Me.PanelUser)
         Me.Controls.Add(Me.DataGridView1)
@@ -1801,7 +1811,7 @@ Partial Class FLogin
     Friend WithEvents ChkContrattiFox As CheckBox
     Friend WithEvents txtTemp_FoxFolder As TextBox
     Friend WithEvents BtnImportFox As Button
-    Friend WithEvents ChkEscludiControllo As CheckBox
+    Friend WithEvents ChkEffettuaControllo As CheckBox
     Friend WithEvents CheckIntegraToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents BtnOrdiniFox As Button
     Friend WithEvents OrdiniFoxToolStripMenuItem As ToolStripMenuItem
@@ -1810,4 +1820,5 @@ Partial Class FLogin
     Friend WithEvents FattureDaEmettereToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents EliminazioneCespiti2024ToolStripMenuItem As ToolStripMenuItem
     Friend WithEvents chkElimCespiti2024 As CheckBox
+    Friend WithEvents chkAssociaClienteUno As CheckBox
 End Class

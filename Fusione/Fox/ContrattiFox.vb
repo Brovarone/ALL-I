@@ -1,4 +1,5 @@
-﻿Imports System.Data.SqlClient
+﻿Imports System.Data
+Imports System.Data.SqlClient
 Imports System.Text
 Imports System.Text.RegularExpressions
 Imports System.Reflection.MethodBase
@@ -12,7 +13,7 @@ Imports ALLSystemTools.SqlTools
 
 Module ContrattiFox
     Private ReadOnly lOk3 As String() = {"H00008", "H80157", "H00010", "H00012", "H00050", "H00074", "H00088", "H00126", "H00140", "H00172", "H00242", "H00616", "H00626", "H00650", "H01588"}
-    Private ReadOnly lOK As String() = {"I00148"}
+    Private ReadOnly lOK As String() = {"E00427"}
     Private ReadOnly uselOk As Boolean = False ' se true allora filtra solo lOk
     Private ReadOnly lOK2 As String() = {"H01662", "H01686", "H00650", "H01479", "H00605"}
     Private ReadOnly lExclude As String() = {"H00430", "H01544"}
@@ -29,8 +30,8 @@ Module ContrattiFox
     '650 distinta di 3 contratti con 2 a conone a zero
     '1588 canoni a zero fattura qualcuno altro (FILFATT 94)
 
-    Private Const Esegui As Boolean = False 'usato solo per la prima importazione contratti
-    Private Const ScriviEntrambeAnagrafiche As Boolean = True 'usato solo per la prima importazione sede e scrive sia su fox chesu equivalente 
+    'Private Const Esegui As Boolean = False 'usato solo per la prima importazione contratti
+    Private Const ScriviEntrambeAnagrafiche As Boolean = True 'usato solo per la prima importazione sede e scrive sia su fox che su equivalente 
 
     'Gestisce l'import dei contratti da FoxPro a Mago
     Private ds As DataSet
@@ -120,9 +121,9 @@ Module ContrattiFox
         End If
 
         'Esco sempre senza salvare nulla !!! per ora
-        If Esegui Then Return False
+        'If Esegui Then Return False
 
-        If Not FLogin.ChkEscludiControllo.Checked Then
+        If FLogin.ChkEffettuaControllo.Checked Then
             Dim sb As List(Of List(Of String)) = CheckOrdini()
             If sb.Count > 0 Then
                 For i = 0 To sb.Count - 1
@@ -146,7 +147,9 @@ Module ContrattiFox
         'LeggiOrdiniEsistenti()
 
         ScriviOrdini()
-        If Esegui Then SalvaClienti()
+        'If Esegui Then
+        SalvaClienti()
+        'End If
         SalvaOrdini()
         Return True
     End Function
@@ -191,10 +194,149 @@ Module ContrattiFox
         efMaIdnumbers = New List(Of MaIdnumbers)
         efMaNonFiscalNumbers = New List(Of MaNonFiscalNumbers)
     End Sub
+    Private Sub GeneraRelazionieDatatable()
+        EditTestoBarra("Genera relazioni")
+        Dim istep As Integer
+        Dim sa As List(Of String)
+        Dim t1 As DataTable
+        Dim v2 As DataView
+
+        ' --- STEP 1: Ordini Clienti ---
+        Try
+            istep = 1
+            sa = FindRelationTrouble(ds.Tables("_ONTRORD"), ds.Tables("_LIENORD"), "ACGCOD", "", 0)
+
+            If ALSO2023 AndAlso ds.Tables.Contains("_LIENORD.2023") Then
+                t1 = ds.Tables("_LIENORD")
+                v2 = ds.Tables("_LIENORD.2023").AsDataView
+                For Each c In sa
+                    v2.RowFilter = "ACGCOD='" & c & "'" ' <-- Assicurati che ACGCOD sia coerente con CLIENTE
+                    If v2.Count = 1 Then
+                        t1.ImportRow(v2(0).Row)
+                    End If
+                Next
+            End If
+
+            ' Nota: Se _LIENORD è il Padre (Unique) e _ONTRORD è il figlio, l'ordine è corretto.
+            ' Aggiunto parametro False per evitare la creazione del vincolo Unique/ForeignKey rigido
+            ds.Relations.Add("Ordini Clienti", ds.Tables("_LIENORD").Columns("CLIENTE"), ds.Tables("_ONTRORD").Columns("CLIENTE"), False)
+        Catch ex As Exception
+            Debug.Print($"Errore allo Step {istep}: {ex.Message}")
+        End Try
+
+        ' --- STEP 2 & 3: Gruppo Testa e Dettaglio ---
+        Try
+            istep = 2
+            ds.Relations.Add("Ordini Clienti Gruppo Testa", ds.Tables("_LIENORD").Columns("CLIENTE"), ds.Tables("_AGRFATT").Columns("CLIENTE"), False)
+
+            istep = 3
+            ds.Relations.Add("Ordini Clienti Gruppo Dettaglio", ds.Tables("_LIENORD").Columns("CLIENTE"), ds.Tables("_AGRFATD").Columns("CLIENTE"), False)
+        Catch ex As Exception
+            Debug.Print($"Errore allo Step {istep}: {ex.Message}")
+        End Try
+
+        ' --- STEP 4: Raggruppamento Ordine ---
+        Try
+            istep = 4
+            sa = FindRelationTrouble(ds.Tables("_ONTRORD"), ds.Tables("_AGRFATD"), "CONTRATTO", "", 3)
+
+            If ALSO2023 AndAlso ds.Tables.Contains("_AGRFATD.2023") Then
+                t1 = ds.Tables("_AGRFATD")
+                v2 = ds.Tables("_AGRFATD.2023").AsDataView
+                For Each c In sa
+                    v2.RowFilter = "CONTRATTO='" & c & "'"
+                    For i As Integer = 0 To v2.Count - 1
+                        t1.ImportRow(v2(i).Row)
+                    Next
+                Next
+            End If
+            ds.Relations.Add("Raggruppamento_Ordine", ds.Tables("_ONTRORD").Columns("CONTRATTO"), ds.Tables("_AGRFATD").Columns("CONTRATTO"), False)
+        Catch ex As Exception
+            Debug.Print($"Errore allo Step {istep}: {ex.Message}")
+        End Try
+
+        ' --- STEP 5: Ordini Raggruppati (Chiave Multipla) ---
+        Try
+            istep = 5
+            sa = FindRelationTrouble(ds.Tables("_AGRFATD"), ds.Tables("_AGRFATT"), "RAGRFATT", "ACGCOD", 5, 30)
+
+            If ALSO2023 AndAlso ds.Tables.Contains("_AGRFATT.2023") Then
+                t1 = ds.Tables("_AGRFATT")
+                v2 = ds.Tables("_AGRFATT.2023").AsDataView
+                For Each c In sa
+                    Dim arr As String() = c.Split("|")
+                    If arr.Length >= 2 Then
+                        v2.RowFilter = $"RAGRFATT = '{arr(0)}' AND ACGCOD = '{arr(1)}' "
+                        For i As Integer = 0 To v2.Count - 1
+                            t1.ImportRow(v2(i).Row)
+                        Next
+                    End If
+                Next
+            End If
+
+            Dim parentCols() As DataColumn = {ds.Tables("_AGRFATT").Columns("CLIENTE"), ds.Tables("_AGRFATT").Columns("RAGRFATT")}
+            Dim childCols() As DataColumn = {ds.Tables("_AGRFATD").Columns("CLIENTE"), ds.Tables("_AGRFATD").Columns("RAGRFATT")}
+            ds.Relations.Add("Ordini Raggruppati", parentCols, childCols, False)
+        Catch ex As Exception
+            Debug.Print($"Errore allo Step {istep}: {ex.Message}")
+        End Try
+
+        ' --- STEP 6: RID ---
+        Try
+            istep = 6
+            sa = FindRelationTrouble(ds.Tables("_LIENORD"), ds.Tables("_RID"), "CLIENTE", "", 17)
+
+            If ALSO2023 AndAlso ds.Tables.Contains("_RID.2023") Then
+                t1 = ds.Tables("_RID")
+                v2 = ds.Tables("_RID.2023").AsDataView
+                For Each c In sa
+                    v2.RowFilter = "ACGCOD='" & c & "'" ' <-- Attenzione: cerchi ACGCOD ma la relazione usa CLIENTE
+                    For i As Integer = 0 To v2.Count - 1
+                        t1.ImportRow(v2(i).Row)
+                    Next
+                Next
+            End If
+            ds.Relations.Add("RID", ds.Tables("_LIENORD").Columns("CLIENTE"), ds.Tables("_RID").Columns("CLIENTE"), False)
+        Catch ex As Exception
+            Debug.Print($"Errore allo Step {istep}: {ex.Message}")
+        End Try
+
+        ' --- STEP 7: Esenti ---
+        Try
+            If ds.Tables.Contains("_SENTIIV") AndAlso ds.Tables("_SENTIIV").Rows.Count > 0 Then
+                ds.Relations.Add("ESENTI", ds.Tables("_LIENORD").Columns("CLIENTE"), ds.Tables("_SENTIIV").Columns("CLIENTE"), False)
+            End If
+        Catch ex As Exception
+            Debug.Print($"Errore allo Step ESENTI: {ex.Message}")
+        End Try
+
+        ' --- Assegnazione DataView e Tabelle Globali ---
+        AssignGlobalViews()
+    End Sub
+
+    Private Sub AssignGlobalViews()
+        ' Isolate per sicurezza nel caso in cui una tabella manchi nel DataSet
+        Try
+            dtContratti = ds.Tables("_ONTRORD")
+            dtFattEle = ds.Tables("_LIFTELE")
+            dtRaggTeste = ds.Tables("_AGRFATT")
+            dtRaggDett = ds.Tables("_AGRFATD")
+            dtTabelle = ds.Tables("_EWTAB")
+            dvTabelle = New DataView(dtTabelle)
+            dtPagamentiFox = ds.Tables("ACGTRPG")
+            dvPagamentiFox = New DataView(dtPagamentiFox)
+            dtElencoClientiSpa = ds.Tables("ELENCO CLIENTI SPA")
+            dvElencoClientiSpa = New DataView(dtElencoClientiSpa, "", "CliFor", DataViewRowState.CurrentRows)
+            dtEstivi = ds.Tables("ESTIVI")
+            dvEstivi = New DataView(dtEstivi, "", "CONTRATTO", DataViewRowState.CurrentRows)
+        Catch ex As Exception
+            Debug.Print("Errore nell'inizializzazione delle View globali: " & ex.Message)
+        End Try
+    End Sub
     ''' <summary>
     ''' Crea solo le relazioni 1-n
     ''' </summary>
-    Private Sub GeneraRelazionieDatatable()
+    Private Sub GeneraRelazionieDatatable_ori()
         EditTestoBarra("Genera relazioni")
         Dim istep As Integer
         Try
@@ -338,6 +480,50 @@ Module ContrattiFox
         Return log
     End Function
 
+    ''' <summary>
+    ''' Normalizza la Ragione Sociale rimuovendo spazi doppi, a capo, punteggiatura e sigle societarie.
+    ''' </summary>
+    Private Function NormalizzaRagSoc(ragSoc As String) As String
+        If String.IsNullOrWhiteSpace(ragSoc) Then Return String.Empty
+
+        Dim tmp As String = ragSoc.Replace(Environment.NewLine, " ").Replace(vbCr, " ").Replace(vbLf, " ")
+
+        ' Rimuove la punteggiatura comune (punti, virgole) per sanare "S.P.A." in "SPA"
+        tmp = Regex.Replace(tmp, "[\.\,]", "")
+
+        ' Uniforma spazi multipli in uno spazio singolo e pulisci i bordi
+        tmp = Regex.Replace(tmp, "\s+", " ").Trim()
+
+        Return tmp.ToUpper()
+    End Function
+
+    ''' <summary>
+    ''' Normalizza l'indirizzo uniformando i prefissi stradali e gli spazi, 
+    ''' lasciando intatti i civici doppi (es. 12/14) e i barrati (es. 2/A).
+    ''' </summary>
+    Private Function NormalizzaIndirizzo(indirizzo As String) As String
+        If String.IsNullOrWhiteSpace(indirizzo) Then Return String.Empty
+
+        Dim tmp As String = indirizzo.Replace(Environment.NewLine, " ").Replace(vbCr, " ").Replace(vbLf, " ")
+
+        ' 1. Uniforma le parentesi se l'indirizzo è scritto in formati strani
+        tmp = Regex.Replace(tmp, "\((V[IAEL]?\s+)(.*?)\s+(\d+[A-Z]?(\/\d+[A-Z]?)?)\)", "Via $2, $3", RegexOptions.IgnoreCase)
+
+        ' 2. Uniforma i prefissi stradali comuni (usando \b per evitare di cambiare parole che contengono quelle lettere)
+        tmp = Regex.Replace(tmp, "\b(V|VIA|V\.IA)\b", "VIA", RegexOptions.IgnoreCase)
+        tmp = Regex.Replace(tmp, "\b(VIALE|V\.LE)\b", "VIALE", RegexOptions.IgnoreCase)
+        tmp = Regex.Replace(tmp, "\b(P\.ZA|PZA|PIAZZA)\b", "PIAZZA", RegexOptions.IgnoreCase)
+        tmp = Regex.Replace(tmp, "\b(C\.SO|CSO|CORSO)\b", "CORSO", RegexOptions.IgnoreCase)
+
+        ' 3. Pulisce la punteggiatura superflua, MA esclude la barra "/" e il trattino "-" 
+        ' per mantenere intatti sia "2/A" sia i civici multipli come "12/14" o "12-14"
+        tmp = Regex.Replace(tmp, "[\.\,\(\)]", "")
+
+        ' 4. Spazi multipli e maiuscolo
+        tmp = Regex.Replace(tmp, "\s+", " ").Trim()
+
+        Return tmp.ToUpper()
+    End Function
     Private Sub DisposeTables()
         dtContratti.Dispose()
         dtFattEle.Dispose()
@@ -374,276 +560,7 @@ Module ContrattiFox
             OrdiniCntx.Database.ExecuteSqlRaw("SET ARITHABORT ON")
         End If
     End Sub
-    ''' <summary>
-    ''' ! INCOMPLETA  ! Aggiungo Clienti Nuovi ( MaCustSupp,Options, Branches,NatualPerson)
-    ''' </summary>
-    Private Sub ScriviClientiNuovi()
-        Dim dtCli As DataTable = ds.Tables("_LIENORD")
-        Dim dtCliEle As DataTable = ds.Tables("_LIFTELE")
-        Dim dtCliRid As DataTable = ds.Tables("_RID")
-        Dim dtCliEse As DataTable = ds.Tables("_SENTIIV")
-        Dim dvCliEle = New DataView(dtCliEle)
-        Dim dvCliRid = New DataView(dtCliRid)
-        Dim dvCliEse = New DataView(dtCliEse)
 
-        For Each r As DataRow In dtCli.Rows
-            Dim codice As String = r.Item("ACGCOD").ToString
-            Dim c = OrdiniCntx.MaCustSupp.Find(CustSuppType.Cliente, codice)
-            'Dim w = OrdiniCntx.MaCustSupp.AsNoTracking.Where(Function(k) k.CustSuppType.Equals(CustSuppType.Cliente) AndAlso k.CustSupp.Equals(codice)).First
-            If c Is Nothing Then
-                Debug.Print("Nuovo Cliente:(" & codice & ") ")
-                dvCliEle.RowFilter = $"ACGCOD = '{codice}'"
-                dvCliRid.RowFilter = $"ACGCOD = '{codice}'"
-                dvCliEse.RowFilter = $"ACGCOD = '{codice}'"
-                'TrovaFiliale()
-
-#Region "clienord da Fatture"
-                '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-                'Creo nuovo cliente passando informazioni dalla fattura ed dal CLIENORD
-                '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-                'Debug.Print("Nuovo cliente: " & .Item("AA").ToString)
-                'listOfNewClienti.Add(.Item("AA").ToString & ": " & .Item("AB").ToString)
-                ''TAG l_NewCli.Add("N01", .Item("AA").ToString & ": " & .Item("AB").ToString, LogLevel.None, .Item("AA").ToString)
-                'l_NewCli.Add("N01", .Item("AA").ToString & ": " & .Item("AB").ToString)
-                'drCli = dtClientiNew.NewRow
-                'drCliOpt = dtCliOptNew.NewRow
-                'drCli("CustSupp") = .Item("AA").ToString
-                'drCli("CustSuppType") = CustSuppType.Cliente
-                'Dim sRagSoc As String = dvClienOrd(iClienOrdFound).Item("F").ToString
-                'If dvClienOrd(iClienOrdFound).Item("E").ToString = "1" Then sRagSoc = If(String.IsNullOrEmpty(dvClienOrd(iClienOrdFound).Item("G").ToString), sRagSoc, sRagSoc & Environment.NewLine & dvClienOrd(iClienOrdFound).Item("G").ToString)
-                'drCli("CompanyName") = sRagSoc '("AB" della fattura)
-                'drCli("Address") = dvClienOrd(iClienOrdFound).Item("I").ToString '("AC" della fattura)
-                'drCli("City") = dvClienOrd(iClienOrdFound).Item("J").ToString '("AE" della fattura)
-                'drCli("County") = dvClienOrd(iClienOrdFound).Item("K").ToString '("AF" della fattura)
-                'drCli("Region") = Get_Regione(dvClienOrd(iClienOrdFound).Item("K").ToString)
-                'Dim iCAP As Integer
-                'If Integer.TryParse(dvClienOrd(iClienOrdFound).Item("L").ToString, iCAP) Then
-                '    drCli("ZIPCode") = iCAP.ToString("00000") '("AE" della fattura)
-                'End If
-                'drCli("Telephone1") = dvClienOrd(iClienOrdFound).Item("S").ToString
-                'drCli("Fax") = dvClienOrd(iClienOrdFound).Item("T").ToString
-                'drCli("ISOCountryCode") = Left(dvClienOrd(iClienOrdFound).Item("M").ToString, 2).ToUpper
-                'drCli("CustSuppKind") = TrovaNaturaCliFor(drCli("ISOCountryCode").ToString, dvISO, "Cliente: " & .Item("AA").ToString & " Doc. nr: " & .Item("O").ToString & Environment.NewLine, errori)
-                'drCli("FiscalCode") = dvClienOrd(iClienOrdFound).Item("O").ToString '("AI" della fattura)
-                'drCli("TaxIdNumber") = dvClienOrd(iClienOrdFound).Item("N").ToString '("AJ" della fattura)
-                'drCli("Currency") = If(.Item("R").ToString = "EUR", "EUR", .Item("O").ToString)
-                'drCli("NaturalPerson") = If(dvClienOrd(iClienOrdFound).Item("E").ToString = "1", "0", "1")
-                'If drCli("NaturalPerson") = "1" Then
-                '    Dim cognomeNome As String() = Split(dvClienOrd(iClienOrdFound).Item("G").ToString, "*")
-                '    If UBound(cognomeNome) <> -1 Then
-                '        Dim ok As Boolean = False
-                '        If cognomeNome.Length = 2 Then
-                '            ok = True
-                '        ElseIf cognomeNome.Length > 2 Then
-                '            'Cognomi composti controllare su Mago
-                '            avvisi.AppendLine("ANC1: Controllare correttezza Nome e Cognome: Cliente " & .Item("AA").ToString & ": " & .Item("AB").ToString)
-                '            ok = True
-                '        Else
-                '            'Assenza carattere split
-                '            errori.AppendLine("ENC1: Impossibile determinare Nome e Cognome: Cliente " & .Item("AA").ToString & ": " & .Item("AB").ToString)
-                '            ok = False
-                '        End If
-                '        If ok Then
-                '            drCliNatPers = dtCliNatPersNew.NewRow
-                '            drCliNatPers("CustSuppType") = CustSuppType.Cliente
-                '            drCliNatPers("CustSupp") = .Item("AA").ToString
-                '            drCliNatPers("Name") = cognomeNome(1)
-                '            drCliNatPers("LastName") = cognomeNome(0)
-                '            drCliNatPers("TBCreatedID") = My.Settings.mLOGINID 'ID utente
-                '            drCliNatPers("TBModifiedID") = My.Settings.mLOGINID 'ID utente
-                '            dtCliNatPersNew.Rows.Add(drCliNatPers)
-                '        End If
-                '    End If
-                'End If
-                ''Deprecata
-                ''drCli("Account") = "1CLI" & Int16.Parse((TrovaFiliale(.Item("AA").ToString, False))).ToString("000")
-                'drCli("Account") = "1CLI001"
-                'drCli("Presentation") = 1376260
-                'drCli("MailSendingType") = 12451840 'Tipo invio mail ( A: 12451841, non inviare: 12451840)
-                '''''''''''''''''''''''
-                ''Fattura Elettronica
-                '''''''''''''''''''''''
-                'drCli("ElectronicInvoicing") = "1"
-                'Dim isPA As Boolean = .Item("Z").ToString.Length = 6
-                'If isPA Then
-                '    drCliOpt("PublicAuthority") = "1"
-                '    drCliOpt("PASplitPayment") = "1"
-                'End If
-                'If IsDeprecated AndAlso dvClienOrd(iClienOrdFound).Item("P").ToString() = "A" Then 'CLPAR
-                '    '05/10/2021 : era stata aggiunta il 14/07/2021, ma non era cosi' vero che la lettera fosse giusta
-                '    'Il campo classe cliente =  A identifica una Pubblica Amministrazione
-                '    drCliOpt("PublicAuthority") = "1"
-                '    drCliOpt("PASplitPayment") = "1"
-                'End If
-
-                'drCli("IPACode") = If(.Item("Z").ToString = "0", "0000000", .Item("Z").ToString)
-                'Dim sPec As String() = Split(.Item("HI").ToString, ";")
-                'If Len(sPec(0)) > 64 Then
-                '    errori.AppendLine("E06: PEC troppo lunga su Cliente: " & .Item("AA").ToString & " dato non salvato")
-                '    l_Err.Add("E06", "PEC troppo lunga su Cliente: " & .Item("AA").ToString & " dato non salvato")
-                'Else
-                '    drCli("EICertifiedEMail") = sPec(0).ToLower
-                'End If
-                'drCli("SendByCertifiedEmail") = If(drCli("IPACode") = "0000000" AndAlso Not String.IsNullOrWhiteSpace(drCli("EICertifiedEMail")), "1", "0")
-                'drCli("TBCreatedID") = My.Settings.mLOGINID 'ID utente
-                'drCli("TBModifiedID") = My.Settings.mLOGINID 'ID utente
-
-                ''Options
-                'drCliOpt("Customer") = .Item("AA").ToString
-                'drCliOpt("CustSuppType") = CustSuppType.Cliente
-                'drCliOpt("Area") = TrovaFiliale(.Item("AA").ToString, True) ' Filiale / Ara di Vendita
-                'drCliOpt("UseReqForPymt") = "1"
-                'Dim cat As String = dvClienOrd(iClienOrdFound).Item("C").ToString
-                'Select Case cat
-                '    Case "O"
-                '        cat = "OR"
-                '    Case "S"
-                '        cat = "SP"
-                '    Case Else
-                '        cat = "OR"
-                'End Select
-                'drCliOpt("Category") = cat ' "OR" 'CATEG
-                'drCliOpt("CustomerClassification") = dvClienOrd(iClienOrdFound).Item("P").ToString 'CLPAR
-                'drCliOpt("DebitStampCharges") = "1" ' Bolli SPMAF
-                'drCliOpt("TBCreatedID") = My.Settings.mLOGINID 'ID utente
-                'drCliOpt("TBModifiedID") = My.Settings.mLOGINID 'ID utente
-
-#End Region
-#Region "Testa"
-                Dim rCli As New MaCustSupp With {
-                                    .CustSuppType = CustSuppType.Cliente,
-                                    .CustSupp = codice,
-                                    .Tbcreated = Now,
-                                    .Tbmodified = Now,
-                                    .TbcreatedId = sLoginId,
-                                    .TbmodifiedId = sLoginId
-                                    }
-                'Aggiungo la riga alla collection
-                efMaCustSupp.Add(rCli)
-
-#End Region
-#Region "Options - Altri dati"
-                Dim rCliOpt As New MaCustSuppCustomerOptions With {
-                                    .CustSuppType = CustSuppType.Cliente,
-                                    .Customer = codice,
-                                    .Tbcreated = Now,
-                                    .Tbmodified = Now,
-                                    .TbcreatedId = sLoginId,
-                                    .TbmodifiedId = sLoginId
-                                    }
-                'Aggiungo la riga alla collection
-                efMaCustSuppCustomerOptions.Add(rCliOpt)
-
-#End Region
-#Region "Sedi"
-                Dim rCliBr As New MaCustSuppBranches With {
-                                    .CustSuppType = CustSuppType.Cliente,
-                                    .CustSupp = codice,
-                                    .Tbcreated = Now,
-                                    .Tbmodified = Now,
-                                    .TbcreatedId = sLoginId,
-                                    .TbmodifiedId = sLoginId
-                                    }
-                'Aggiungo la riga alla collection
-                efMaCustSuppBranches.Add(rCliBr)
-#End Region
-#Region "Natural Person"
-                Dim rCliNatPer As New MaCustSuppNaturalPerson With {
-                                 .CustSuppType = CustSuppType.Cliente,
-                                 .CustSupp = codice,
-                                 .Tbcreated = Now,
-                                    .Tbmodified = Now,
-                                    .TbcreatedId = sLoginId,
-                                    .TbmodifiedId = sLoginId
-                                 }
-                'Aggiungo la riga alla collection
-                efMaCustSuppNaturalPerson.Add(rCliNatPer)
-#End Region
-#Region "Dichiarazioni di Intento"
-                If dvCliEle.Count > 0 Then
-                    If dvCliEle.Count = 1 Then
-                        Dim rIntento As New MaDeclarationOfIntent With {
-                                    .CustSuppType = CustSuppType.Cliente,
-                                    .CustSupp = codice,
-                                 .Tbcreated = Now,
-                                    .Tbmodified = Now,
-                                    .TbcreatedId = sLoginId,
-                                    .TbmodifiedId = sLoginId
-                                    }
-                        'Aggiungo la riga alla collection
-                        efMaDeclarationOfIntent.Add(rIntento)
-                    Else
-                        Dim mb As New MessageBoxWithDetails("Cliente: " & codice & " con piu' dichiarazioni di intento", GetCurrentMethod.Name, "")
-                        mb.ShowDialog()
-                    End If
-                End If
-#End Region
-#Region "Mandati"
-                If dvCliRid.Count > 0 Then
-                    If dvCliRid.Count = 1 Then
-                        Dim rRid As New MaSddmandate With {
-                                    .Customer = codice,
-                                 .Tbcreated = Now,
-                                    .Tbmodified = Now,
-                                    .TbcreatedId = sLoginId,
-                                    .TbmodifiedId = sLoginId
-                                    }
-                        'Aggiungo la riga alla collection
-                        efMaSddmandate.Add(rRid)
-                    Else
-                        Dim mb As New MessageBoxWithDetails("Cliente: " & codice & " con piu' mandati", GetCurrentMethod.Name, "")
-                        mb.ShowDialog()
-                    End If
-                End If
-#End Region
-            End If
-        Next
-#Region "Dispose"
-        dtCli.Dispose()
-        dtCliEle.Dispose()
-        dtCliRid.Dispose()
-        dtCliEse.Dispose()
-#End Region
-        'Dim efCli = From c In OrdiniCntx.MaCustSupp _
-        '            .Include(Function(o) o.MaCustSuppCustomerOptions) _
-        '            .Include(Function(br) br.MaCustSuppBranches) _
-        '            .Include(Function(np) np.MaCustSuppNaturalPerson) _
-        '            .Include(Function(nt) nt.MaCustSuppNotes) _
-        '            .ToList
-
-    End Sub
-    Private Sub LeggiOrdiniEsistenti()
-        'era cosi' Dim q = (From o In OrdContext.MaSaleOrd _
-        Dim q = (From o In OrdiniCntx.MaSaleOrd _
-                           .Include(Function(r) r.MaSaleOrdDetails) _
-                           .Include(Function(acc) acc.ALLOrdCliAcc) _
-                           .Include(Function(des) des.ALLordCliDescrizioni) _
-                           .Include(Function(con) con.ALLordCliContratto) _
-                               .ThenInclude(Of MaItems)(Function(it) it.MaItems) _
-                           .Include(Function(con) con.ALLordCliContratto) _
-                               .ThenInclude(Of AlltipoRigaServizio)(Function(trs) trs.AlltipoRigaServizio) _
-                           .Include(Function(con) con.ALLordCliContratto) _
-                                .ThenInclude(Function(att) att.AllordCliAttivita) _
-                                       .ThenInclude(Of Allattivita)(Function(at) at.Allattivita) _
-                           .Include(Function(att) att.AllordCliAttivita) _
-                               .ThenInclude(Of Allattivita)(Function(at) at.Allattivita)) ' _
-        'q = q.Where(Function(i) i.MaSaleOrdDetails..)
-        'AGGIUNGO  FILTRI
-        'Vengono esclusi a priori gli ordini con data cessazione > di Data Competenza
-        'Il filtro where che prende quelli senza data cessazione o con data successiva ( preimpostata da loro)
-        ' q = q.Where(Function(facc) facc.ALLOrdCliAcc.DataCessazione = sDataNulla OrElse facc.ALLOrdCliAcc.DataCessazione.Value.Date >= dataFattA)
-        '
-        ' q = q.Where(Function(oDate) oDate.OrderDate.Value.Date >= fromOrdDate AndAlso oDate.OrderDate.Value.Date <= toOrdDate)
-        'Sostituisco la logica di "uguale" aggiungendo un giorno, in questo modo prendo anche le cose create nello stesso giorno
-        ' q = q.Where(Function(oDate) oDate.OrderDate <= toOrdDate)
-        q.ToList
-
-        Debug.Print("Ordini estratti: " & q.Count.ToString)
-    End Sub
-    Private Sub LeggiTesteOrdiniEsistenti()
-        Dim q = From o In OrdiniCntx.MaSaleOrd.ToList
-        Debug.Print("Teste Ordini estratti: " & q.Count.ToString)
-    End Sub
     Private Sub CheckColonneExcel()
         If Not dtContratti.Columns.Contains("GRP CONTRATTO") Then
             MessageBox.Show("Impossibile continuare colonne assenti GRP CONTRATTO su _ONTRORD", "Check Ordini", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -713,12 +630,15 @@ Module ContrattiFox
         FLogin.prgCopy.Value = 1
         FLogin.prgCopy.Maximum = dtContratti.Rows.Count
         FLogin.prgCopy.Step = 1
+        Dim bAssocia As Boolean = FLogin.chkAssociaClienteUno.Checked
         For Each r As DataRow In dtContratti.Rows
             'Non necessaria -> Cliente 
             'If Not OrdiniCntx.MaCustSupp.AsNoTracking.Any(Function(k) k.CustSupp.Equals(r("ACGCOD").ToString) AndAlso k.CustSuppType.Equals(CustSuppType.Cliente)) Then errori.Add("Cliente assente su Mago :" & (r("ACGCOD")).ToString)
             'Si gestiscE un codice unico tramite tabella di macth ( elenco clienti spa)
             'Cliente
-            If Not CheckNuovoCliente(r("ACGCOD").ToString) Then errori.Add("Cliente assente su Mago :" & (r("ACGCOD")).ToString)
+            If bAssocia Then
+                If Not CheckNuovoCliente(r("ACGCOD").ToString) Then errori.Add("Cliente assente su Mago :" & (r("ACGCOD")).ToString)
+            End If
             'Numeratore Ordini
             Dim d As Date
             'Debug.Print(Date.TryParse(r("DTPRODUZ"), d))
@@ -791,9 +711,15 @@ Module ContrattiFox
         Dim intentoList As New List(Of String)
         Dim ridList As New List(Of String)
         Dim clienteCorrente As String = ""
-        EditTestoBarra("Assegnazione nuovo codice Cliente")
+        Dim bAssocia As Boolean = FLogin.chkAssociaClienteUno.Checked
+        If bAssocia Then
+            EditTestoBarra("Assegnazione nuovo codice Cliente")
+        Else
+
+            EditTestoBarra("Assegnazione Altri dati Cliente")
+        End If
         FLogin.prgCopy.Value = 1
-        FLogin.prgCopy.Maximum = dtContratti.Rows.Count
+            FLogin.prgCopy.Maximum = dtContratti.Rows.Count
         FLogin.prgCopy.Step = 1
         dtContratti.Columns.Add("NEWCODCLI", GetType(String))
 
@@ -815,26 +741,31 @@ Module ContrattiFox
 
         For Each r As DataRow In dtContratti.Rows
             Dim clienteACG As String = r("ACGCOD").ToString
-            Dim n As String = SostituisciCliente(clienteACG)
-            If n.Equals(String.Empty) Then
-                If Not Esegui Then
-                    noTranscode.Add("Cliente: " & clienteACG & " da saltare")
-                    n = "SKIP"
-                Else
+            Dim n As String = ""
+            If bAssocia Then
+                n = SostituisciCliente(clienteACG)
+                If n.Equals(String.Empty) Then
+                    'If Not Esegui Then
+                    'noTranscode.Add("Cliente: " & clienteACG & " da saltare")
+                    'n = "SKIP"
+                    'Else
                     noTranscode.Add("Cliente: " & clienteACG & " senza transcodifica")
-                    n = r("ACGCOD").ToString
+
+                    'End If
+                ElseIf Not n.Equals(r("ACGCOD").ToString) Then
+                    If CercaEsistenzaSuMago(n) = "NO" Then
+                        noTranscode.Add("Cliente: " & clienteACG & " codifica assente " & n)
+                    Else
+                        siTranscode.Add("Cliente: " & clienteACG & " trasformato in " & n)
+                    End If
                 End If
-            ElseIf Not n.Equals(r("ACGCOD").ToString) Then
-                If CercaEsistenzaSuMago(n) = "NO" Then
-                    noTranscode.Add("Cliente: " & clienteACG & " codifica assente " & n)
-                Else
-                    siTranscode.Add("Cliente: " & clienteACG & " trasformato in " & n)
-                End If
+            Else
+                n = r("ACGCOD").ToString()
             End If
             r("NEWCODCLI") = n
 
-            If Esegui Then
-                If Not clienteCorrente.Equals(clienteACG) Then
+            'If Esegui Then
+            If Not clienteCorrente.Equals(clienteACG) Then
                     clienteCorrente = clienteACG
 #Region "Dichiarazioni di Intento"
                     Dim intFox As MaDeclarationOfIntent = intento.Where(Function(c) c.CustSupp.Equals(clienteACG) AndAlso c.CustSuppType = CustSuppType.Cliente).FirstOrDefault
@@ -875,7 +806,7 @@ Module ContrattiFox
 
 #End Region
                 End If
-            End If
+            'End If
             AvanzaBarra()
         Next
         numbers.LastLogNo = lastNumber
@@ -957,7 +888,7 @@ Module ContrattiFox
             Dim iLineDescFatt As Short
             nrDistinte = 0
             nrDistinteUNO = 0
-            Dim nextDataFatt As String = New DateTime(2024, 7, 31).ToString
+            Dim nextDataFatt As String = New DateTime(2026, 9, 30).ToString
 #End Region
 
             EditTestoBarra("Scrivi Ordini")
@@ -971,54 +902,53 @@ Module ContrattiFox
                     If uselOk AndAlso Not lOK.Contains(r.Item("ACGCOD").ToString) Then Continue For
                     'If lExclude.Contains(r.Item("ACGCOD").ToString) Then Continue For
 
-                    If Esegui Then
-                        '''''''''''''''''''''''''''''''''
-                        '            ESCLUSIONI
-                        '    vari su singolo contratto
-                        '''''''''''''''''''''''''''''''''
-                        If r("GRP_CONTRATTO").ToString.Equals("CRS + QUOTA") Then Continue For
-                        If r("GRP_CONTRATTO").ToString.Equals("ft cc speciale") Then Continue For
+                    'If Esegui Then
+                    '''''''''''''''''''''''''''''''''
+                    '            ESCLUSIONI
+                    '    vari su singolo contratto
+                    '''''''''''''''''''''''''''''''''
+                    If r("GRP_CONTRATTO").ToString.Equals("CRS + QUOTA") Then Continue For
+                    If r("GRP_CONTRATTO").ToString.Equals("ft cc speciale") Then Continue For
 
-                        'Gestione contratti assegnati a cliente diverso 
-                        If Not String.IsNullOrWhiteSpace(r("GRP_CONTRATTO").ToString) Then
-                            Dim irows As Integer
-                            If r("GRP_CONTRATTO").ToString.Equals("SOSPESO") Then
-                                'CONTROLLO SU CAMPO GRP_Distinta
-                                irows = dvChkContratto_Cliente.FindRows(New Object() {r("GRP_distinta_fattura").ToString.Trim, r("ACGCOD").ToString.Trim}).Length
-                                avvisi.AppendLine("Contratto SOSPESO " & r("CONTRATTO").ToString.Trim & " del cliente " & r("ACGCOD").ToString.Trim & "")
-                            Else
-                                irows = dvChkContratto_Cliente.FindRows(New Object() {r("GRP_CONTRATTO").ToString.Trim, r("ACGCOD").ToString.Trim}).Length
-                            End If
-                            Select Case irows
-                                Case 0
-                                    'Contratto da raggruppare con altro cliente
-                                    Debug.Print(r("ACGCOD").ToString & " " & r("CONTRATTO").ToString.Trim & " da raggruppare dopo")
-                                    avvisi.AppendLine("Contratto " & r("CONTRATTO").ToString.Trim & " del cliente " & r("ACGCOD").ToString.Trim & " raggruppato con altro cliente")
-                                    contrattiDaUnire.Add(r)
-                                    Continue For
-                                Case 1
-                                    'ok
-                                Case Else
-                                    Dim msgLog As String = "Impossibile continuare!" & Environment.NewLine & "Esistono piu' contratti con codice:" & r("GRP_CONTRATTO").ToString.Trim
-                                    errori.AppendLine("ERRORE FATALE : Esistono piu' contratti con codice:" & r("GRP_CONTRATTO").ToString.Trim)
-                                    Dim mb As New MessageBoxWithDetails(msgLog, GetCurrentMethod.Name)
-                                    mb.ShowDialog()
-                                    End
-                            End Select
+                    'Gestione contratti assegnati a cliente diverso 
+                    If Not String.IsNullOrWhiteSpace(r("GRP_CONTRATTO").ToString) Then
+                        Dim irows As Integer
+                        If r("GRP_CONTRATTO").ToString.Equals("SOSPESO") Then
+                            'CONTROLLO SU CAMPO GRP_Distinta
+                            irows = dvChkContratto_Cliente.FindRows(New Object() {r("GRP_distinta_fattura").ToString.Trim, r("ACGCOD").ToString.Trim}).Length
+                            avvisi.AppendLine("Contratto SOSPESO " & r("CONTRATTO").ToString.Trim & " del cliente " & r("ACGCOD").ToString.Trim & "")
                         Else
-                            Debug.Print(r("ACGCOD").ToString & " " & r("CONTRATTO").ToString.Trim & " senza GRP Contratto")
-                            esclusi.AppendLine("Contratto " & r("CONTRATTO").ToString.Trim & " cliente " & r("ACGCOD").ToString.Trim & " senza GRP Contratto. Note: " & r("note"))
-                            Continue For
+                            irows = dvChkContratto_Cliente.FindRows(New Object() {r("GRP_CONTRATTO").ToString.Trim, r("ACGCOD").ToString.Trim}).Length
                         End If
+                        Select Case irows
+                            Case 0
+                                'Contratto da raggruppare con altro cliente
+                                Debug.Print(r("ACGCOD").ToString & " " & r("CONTRATTO").ToString.Trim & " da raggruppare dopo")
+                                avvisi.AppendLine("Contratto " & r("CONTRATTO").ToString.Trim & " del cliente " & r("ACGCOD").ToString.Trim & " raggruppato con altro cliente")
+                                contrattiDaUnire.Add(r)
+                                Continue For
+                            Case 1
+                                'ok
+                            Case Else
+                                Dim msgLog As String = "Impossibile continuare!" & Environment.NewLine & "Esistono piu' contratti con codice:" & r("GRP_CONTRATTO").ToString.Trim
+                                errori.AppendLine("ERRORE FATALE : Esistono piu' contratti con codice:" & r("GRP_CONTRATTO").ToString.Trim)
+                                Dim mb As New MessageBoxWithDetails(msgLog, GetCurrentMethod.Name)
+                                mb.ShowDialog()
+                                End
+                        End Select
+                    Else
+                        Debug.Print(r("ACGCOD").ToString & " " & r("CONTRATTO").ToString.Trim & " senza GRP Contratto")
+                        esclusi.AppendLine("Contratto " & r("CONTRATTO").ToString.Trim & " cliente " & r("ACGCOD").ToString.Trim & " senza GRP Contratto. Note: " & r("note"))
+                        Continue For
                     End If
-
+                    'End If
 
                     Dim contratto As String = r("CONTRATTO").ToString.Trim
                     Dim clienteFox As String = r("CLIENTE").ToString.Trim 'Usato per le relazioni interne con tabelle esistente su foxpro
                     Dim clienteACG As String = r("ACGCOD").ToString.Trim 'Codice usato dalla SPA
                     Dim clienteContratto As String = r("NEWCODCLI").ToString.Trim
                     Debug.Print(contratto & " ACGCOD: " & clienteACG & " -> NEW: " & clienteContratto)
-                    If Not Esegui AndAlso clienteContratto = "SKIP" Then Continue For
+                    If clienteContratto = "SKIP" Then Continue For
                     Dim centro As String = dvTabelle.CercaValoreSuTabelleFox("CC", r("CCOSTO").ToString).Trim
                     'Sostituisco caratteri strani
                     Dim s As String() = {"DNOTE", "DNOTE2", "DNOTE3", "DNOTE4", "DNOTE5", "DNOTE6", "DNOTE7", "DNOTE8", "DESCAN", "DFAT1", "DFAT2", "DFAT3", "DFAT4", "RAGSOC", "PRAGSOC", "INDIRIZZO"}
@@ -1038,11 +968,7 @@ Module ContrattiFox
                         masterDistinta = New DistintaMaster
                         masterOrder = New OrdineMaster
                     End If
-                    If Not Esegui Then masterOrder = New OrdineMaster With {
-                                    .ClienteFox = clienteFox,
-                                    .ClienteMago = clienteContratto,
-                                    .ClienteACG = clienteACG
-                                }
+
                     '''''''''''''''''''''''''''''''''
                     '            AVVISI
                     '    vari su singolo contratto
@@ -1076,7 +1002,8 @@ Module ContrattiFox
                                     .ClienteACG = clienteACG,
                                     .Contratto = sGRP,
                                     .RigheContratto = dvMasterOrd.Count,
-                                    .CdC = centro
+                                    .CdC = centro,
+                                    .RaggruppamentoFattura = sGRP
                                 }
                         End If
                         saleOrdId += 1
@@ -1108,19 +1035,34 @@ Module ContrattiFox
                     'Ricerca e creazione Sito/Impianto = Sede Cliente (clienteContratto) = nuovo codice
                     Dim newBranches As Boolean = False
                     Dim newBranchesACG As Boolean = False
-                    Dim ragSocSito As String
-                    If drClienord("PRAGSOC").ToString.Contains("*") Then
-                        'Persona Fisica : escludo la seconda parte
-                        'drClienord("CODRSO") = 1 
-                        ragSocSito = Left(r("RAGSOC").Trim, 128)
+                    Dim ragSocSito As String = ""
+                    If drClienord IsNot Nothing Then
+                        If drClienord("PRAGSOC").ToString.Contains("*") Then
+                            'Persona Fisica : escludo la seconda parte
+                            'drClienord("CODRSO") = 1 
+                            ragSocSito = Left(r("RAGSOC").Trim, 128)
+                        Else
+                            ragSocSito = Left(String.Concat(r("RAGSOC").Trim, " ", r("PRAGSOC")).Trim, 128)
+                        End If
                     Else
-                        ragSocSito = Left(String.Concat(r("RAGSOC").Trim, " ", r("PRAGSOC")).Trim, 128)
+                        Dim msgLog As String = "(NO SAVE) CLIENORD Assente. Ordine:" & contratto & " Cliente:" & clienteACG
+                        errori.AppendLine(msgLog)
+                        Debug.Print(msgLog)
                     End If
 
                     '20/09/2024 Cambiato la lettera di prefisso da I a F
                     If sediCliente.Any Then
                         'Controllo esistenza con RAGSOC + (replace CrLf  ) + PRAGSOC e INDIRIZZO
-                        Dim sediRidotte As List(Of MaCustSuppBranches) = sediCliente.FindAll(Function(f) f.CompanyName.Replace(Environment.NewLine, " ").Equals(ragSocSito) AndAlso f.Address.Equals(r("INDIRIZZO").ToString.Trim)).ToList
+                        ' 1. Normalizza i valori da cercare UNA VOLTA SOLA fuori dal ciclo
+                        Dim ragSocCercata As String = NormalizzaRagSoc(ragSocSito)
+                        Dim indirizzoCercato As String = NormalizzaIndirizzo(r("INDIRIZZO").ToString())
+
+                        ' 2. Esegui il filtro sulla lista (ora la Lambda è leggerissima)
+                        Dim sediRidotte As List(Of MaCustSuppBranches) = sediCliente.FindAll(
+                            Function(f)
+                                Return NormalizzaRagSoc(f.CompanyName).Equals(ragSocCercata) AndAlso
+                                       NormalizzaIndirizzo(f.Address).Equals(indirizzoCercato)
+                            End Function).ToList()
                         If sediRidotte.Count = 0 Then
                             newBranches = True
                             sito = "F" & (sediCliente.Count + 1).ToString("0000")
@@ -1149,6 +1091,8 @@ Module ContrattiFox
                                             .Region = Get_Regione(r("PROV").ToString.Trim),
                                             .Zipcode = r("CAP").ToString.Trim,
                                             .IsocountryCode = "IT",
+                                            .TaxIdNumber = drClienord("PIVA").ToString.Trim,
+                                            .FiscalCode = drClienord("CODFISC").ToString.Trim,
                                             .MailSendingType = 12451840,
                                             .Tbcreated = Now,
                                             .Tbmodified = Now,
@@ -1165,6 +1109,7 @@ Module ContrattiFox
                     End If
 
                     '02/10/2024 gestisco le doppie sedi (codice spa e nuovo )
+                    '29/09/2026 a causa dei tempi stretti l'import verrà fatto solo su codici Fox e quindi questo pezzo verrà saltato sempre
                     Dim sitoACG As String = ""
                     If ScriviEntrambeAnagrafiche AndAlso clienteACG <> clienteContratto Then
                         If sediClienteACG.Any Then
@@ -1197,6 +1142,8 @@ Module ContrattiFox
                                             .Region = Get_Regione(r("PROV").ToString.Trim),
                                             .Zipcode = r("CAP").ToString,
                                             .IsocountryCode = "IT",
+                                            .TaxIdNumber = drClienord("PIVA").ToString.Trim,
+                                            .FiscalCode = drClienord("CODFISC").ToString.Trim,
                                             .MailSendingType = 12451840,
                                             .Tbcreated = Now,
                                             .Tbmodified = Now,
@@ -1230,304 +1177,724 @@ Module ContrattiFox
                     End If
 
 #End Region
-                    If Esegui Then
+                    'If Esegui Then
 
 #Region "Controlli ed estrazioni"
-                        'Variabili
-                        Dim codiceRaggruppamento As String = ""
-                        Dim newCodragg As String = ""
-                        Dim drFattEle As DataRow = dtFattEle.NewRow
-                        Dim condPagAcg As String = ""
-                        Dim condPag As String = ""
-                        Dim vettore As String = ""
-                        Dim codIva As String = ""
-                        Dim ordNo As String = ""
-                        Dim curNfCounter As New MaNonFiscalNumbers
-                        Dim sRivolgersiA As String = ""
-                        Dim agente As String = ""
+                    'Variabili
+                    Dim codiceRaggruppamento As String = ""
+                    Dim newCodragg As String = ""
+                    Dim drFattEle As DataRow = dtFattEle.NewRow
+                    Dim condPagAcg As String = ""
+                    Dim condPag As String = ""
+                    Dim codIva As String = ""
+                    Dim ordNo As String = ""
+                    Dim curNfCounter As New MaNonFiscalNumbers
+                    Dim sRivolgersiA As String = ""
+                    Dim agente As String = ""
 
-                        If rowInOrder_cnt = 0 Then
-                            'Nuovo Ordine
-                            'Cliente
-                            clienteACG = r.Item("ACGCOD").ToString.Trim
-                            clienteContratto = r("NEWCODCLI").ToString
-                            'cliMago = OrdiniCntx.MaCustSupp.Find(CustSuppType.Cliente, clienteACG)
-                            cliMago = OrdiniCntx.MaCustSupp.Find(CustSuppType.Cliente, clienteContratto)
-                            If cliMago Is Nothing Then
-                                Dim mb As New MessageBoxWithDetails("Cliente non trovato su Mago:" & clienteContratto, GetCurrentMethod.Name)
-                                mb.ShowDialog()
-                                Continue For
-                            End If
+                    If rowInOrder_cnt = 0 Then
+                        'Nuovo Ordine
+                        'Cliente
+                        clienteACG = r.Item("ACGCOD").ToString.Trim
+                        clienteContratto = r("NEWCODCLI").ToString
+                        'cliMago = OrdiniCntx.MaCustSupp.Find(CustSuppType.Cliente, clienteACG)
+                        cliMago = OrdiniCntx.MaCustSupp.Find(CustSuppType.Cliente, clienteContratto)
+                        If cliMago Is Nothing Then
+                            Dim mb As New MessageBoxWithDetails("Cliente non trovato su Mago:" & clienteContratto, GetCurrentMethod.Name)
+                            mb.ShowDialog()
+                            Continue For
+                        End If
 
-                            masterOrder.Banca.CompanyBank = cliMago.CompanyBank.Trim
-                            masterOrder.Banca.CompanyCa = cliMago.CompanyCa.Trim
-                            masterOrder.Banca.CustSuppBank = cliMago.CustSuppBank.Trim
-                            masterOrder.Banca.CustomerCompanyCa = cliMago.CustomerCompanyCa.Trim
+                        masterOrder.Banca.CompanyBank = cliMago.CompanyBank.Trim
+                        masterOrder.Banca.CompanyCa = cliMago.CompanyCa.Trim
+                        masterOrder.Banca.CustSuppBank = cliMago.CustSuppBank.Trim
+                        masterOrder.Banca.CustomerCompanyCa = cliMago.CustomerCompanyCa.Trim
 
-                            'CodiceRaggruppamento
-                            Select Case r.GetChildRows("Raggruppamento_Ordine").Length
-                                Case 0
-                                    errori.AppendLine("Cliente _AGRFATT senza corrispondente righe di raggruppamento su: " & contratto & " CodiceRaggruppamento: " & codiceRaggruppamento)
-                                Case 1
-                                    codiceRaggruppamento = r.GetChildRows("Raggruppamento_Ordine").SingleOrDefault()("RAGRFATT").ToString.Trim '_AGRFATD
-                                    Try
-                                        drDatiFatturaXls = r.GetChildRows("Raggruppamento_Ordine").SingleOrDefault.GetParentRow("Ordini Raggruppati") ' _AGRFATT
-                                        If drDatiFatturaXls Is Nothing Then
-                                            errori.AppendLine("Cliente _AGRFATT non trovato su Contratto: " & contratto & " CodiceRaggruppamento: " & codiceRaggruppamento)
-                                        End If
-                                    Catch ex As InvalidOperationException
-                                        errori.AppendLine("Cliente _AGRFATT con piu' righe di raggruppamento su: " & contratto & " CodiceRaggruppamento: " & codiceRaggruppamento)
-                                    End Try
-                                Case Else
+                        'CodiceRaggruppamento
+                        Select Case r.GetChildRows("Raggruppamento_Ordine").Length
+                            Case 0
+                                errori.AppendLine("Cliente _AGRFATT senza corrispondente righe di raggruppamento su: " & contratto & " CodiceRaggruppamento: " & codiceRaggruppamento)
+                            Case 1
+                                codiceRaggruppamento = r.GetChildRows("Raggruppamento_Ordine").SingleOrDefault()("RAGRFATT").ToString.Trim '_AGRFATD
+                                Try
+                                    drDatiFatturaXls = r.GetChildRows("Raggruppamento_Ordine").SingleOrDefault.GetParentRow("Ordini Raggruppati") ' _AGRFATT
+                                    If drDatiFatturaXls Is Nothing Then
+                                        errori.AppendLine("Cliente _AGRFATT non trovato su Contratto: " & contratto & " CodiceRaggruppamento: " & codiceRaggruppamento)
+                                    End If
+                                Catch ex As InvalidOperationException
                                     errori.AppendLine("Cliente _AGRFATT con piu' righe di raggruppamento su: " & contratto & " CodiceRaggruppamento: " & codiceRaggruppamento)
-                            End Select
-                            masterOrder.RaggruppamentoFattura = codiceRaggruppamento
-                            newCodragg = r("vettore").ToString.Trim
-                            masterOrder.Vettore = newCodragg
+                                End Try
+                            Case Else
+                                errori.AppendLine("Cliente _AGRFATT con piu' righe di raggruppamento su: " & contratto & " CodiceRaggruppamento: " & codiceRaggruppamento)
+                        End Select
+                        masterOrder.RaggruppamentoFatturaFox = codiceRaggruppamento
+                        newCodragg = r("vettore").ToString.Trim
+                        masterOrder.Vettore = newCodragg
 
-                            'Cerco dati fattura elettronica coerenti con (raggruppamento se esiste)
-                            dvFattEle.RowFilter = $"CLIENTE = '{clienteFox}' AND RAGRFATT = '{codiceRaggruppamento}'"
-                            drFattEle = dtFattEle.NewRow
-                            If dvFattEle.Count = 1 Then
+                        'Cerco dati fattura elettronica coerenti con (raggruppamento se esiste)
+                        dvFattEle.RowFilter = $"CLIENTE = '{clienteFox}' AND RAGRFATT = '{codiceRaggruppamento}'"
+                        drFattEle = dtFattEle.NewRow
+                        If dvFattEle.Count = 1 Then
+                            drFattEle = dvFattEle(0).Row
+                        Else
+                            dvFattEle.RowFilter = $"CLIENTE = '{clienteFox}'"
+                            If dvFattEle.Count = 0 Then
+                                errori.AppendLine("Cliente (" & clienteACG & ") assente dai dati di Fatturazione Elettronica (CLIFTELE): " & contratto)
+                                'Dim mb As New MessageBoxWithDetails("Cliente (" & clienteACG & ") assente dai dati di Fatturazione Elettronica (CLIFTELE): " & contratto, GetCurrentMethod.Name)
+                                ' mb.ShowDialog()
+                            ElseIf dvFattEle.Count = 1 Then
                                 drFattEle = dvFattEle(0).Row
                             Else
-                                dvFattEle.RowFilter = $"CLIENTE = '{clienteFox}'"
-                                If dvFattEle.Count = 0 Then
-                                    errori.AppendLine("Cliente (" & clienteACG & ") assente dai dati di Fatturazione Elettronica (CLIFTELE): " & contratto)
-                                    'Dim mb As New MessageBoxWithDetails("Cliente (" & clienteACG & ") assente dai dati di Fatturazione Elettronica (CLIFTELE): " & contratto, GetCurrentMethod.Name)
-                                    ' mb.ShowDialog()
-                                ElseIf dvFattEle.Count = 1 Then
-                                    drFattEle = dvFattEle(0).Row
-                                Else
-                                    errori.AppendLine("Più righe di Fatturazione Elettronica (CLIFTELE) impossibile determinare quella corretta: " & contratto)
-                                    'Dim mb As New MessageBoxWithDetails("Più righe di Fatturazione Elettronica (CLIFTELE) impossibile determinare quella corretta: " & contratto, GetCurrentMethod.Name)
-                                    'mb.ShowDialog()
-                                End If
+                                errori.AppendLine("Più righe di Fatturazione Elettronica (CLIFTELE) impossibile determinare quella corretta: " & contratto)
+                                'Dim mb As New MessageBoxWithDetails("Più righe di Fatturazione Elettronica (CLIFTELE) impossibile determinare quella corretta: " & contratto, GetCurrentMethod.Name)
+                                'mb.ShowDialog()
                             End If
-                            masterOrder.CodiceSdi = drFattEle("F114").ToString.Trim
-                            masterOrder.Pec = drFattEle("F116").ToString.Trim
-                            masterOrder.RiferimentoAmministrazione = drFattEle("F126").ToString.Trim
-                            'Sede invio Documenti // Codice SDI
-                            If masterOrder.Contratto.Equals(contratto) Then
-                                'Cerco se Ragione Sociale e' quella di invio fattura o serve la sede
-                                'RAGRFATT.RAGSOC(PRAGSOC) = CLIENTE MAGO /SEDE LEGALE
-                                'RAGRFATT.R_RSO(R_PSO) = SEDE INVIO DOCUMENTO
-                                Dim newSendDoc As Boolean = False
-                                Dim ragSocDatifatturaXls As String
-                                Dim indirizzoDatifatturaXls As String
-                                If drDatiFatturaXls IsNot Nothing Then
-                                    ragSocDatifatturaXls = Left(String.Concat(drDatiFatturaXls("R_RSO").ToString.Trim, If(IsPrivato(cliMago.TaxIdNumber, cliMago.FiscalCode), "", " " & drDatiFatturaXls("R_PSO").ToString.Trim)).Trim, 128)
-                                    indirizzoDatifatturaXls = drDatiFatturaXls("INDIRIZZO").ToString().Trim
-                                End If
-                                Dim sendDocumentTo As String = ""
-                                'Dim IpaZero As String = If(cli.MaCustSuppCustomerOptions.PublicAuthority = "1", "000000", "0000000")
-                                If ragSocDatifatturaXls.Equals(cliMago.CompanyName.Replace(Environment.NewLine, " ")) AndAlso indirizzoDatifatturaXls.Equals(cliMago.Address) AndAlso masterOrder.CodiceSdi.Equals(cliMago.Ipacode) Then
-                                    'Corrette RagSoc, Indirizzo , IPA Code
-                                    sendDocumentTo = ""
-                                Else
-                                    'Filtro sedi uguale a RagSoc, Indirizzo
-                                    Dim sediRidotte As List(Of MaCustSuppBranches) = sediCliente.FindAll(Function(f) f.CompanyName.Replace(Environment.NewLine, " ").Equals(ragSocDatifatturaXls) AndAlso f.Address.Equals(indirizzoDatifatturaXls)).ToList
-                                    If sediRidotte.Count = 0 Then
-                                        'Se non trovo niente di simile nemmeno come RagSoc+Indirizzo la devo per forza creare
+                        End If
+                        masterOrder.CodiceSdi = drFattEle("F114").ToString.Trim
+                        masterOrder.Pec = drFattEle("F116").ToString.Trim
+                        masterOrder.RiferimentoAmministrazione = drFattEle("F126").ToString.Trim
+                        'Sede invio Documenti // Codice SDI
+                        If masterOrder.Contratto.Equals(contratto) Then
+                            'Cerco se Ragione Sociale e' quella di invio fattura o serve la sede
+                            'RAGRFATT.RAGSOC(PRAGSOC) = CLIENTE MAGO /SEDE LEGALE
+                            'RAGRFATT.R_RSO(R_PSO) = SEDE INVIO DOCUMENTO
+                            Dim newSendDoc As Boolean = False
+                            Dim ragSocDatifatturaXls As String = ""
+                            Dim indirizzoDatifatturaXls As String = ""
+                            If drDatiFatturaXls IsNot Nothing Then
+                                ragSocDatifatturaXls = Left(String.Concat(drDatiFatturaXls("R_RSO").ToString.Trim, If(IsPrivato(cliMago.TaxIdNumber, cliMago.FiscalCode), "", " " & drDatiFatturaXls("R_PSO").ToString.Trim)).Trim, 128)
+                                indirizzoDatifatturaXls = drDatiFatturaXls("INDIRIZZO").ToString().Trim
+                            End If
+                            Dim sendDocumentTo As String = ""
+                            'Dim IpaZero As String = If(cli.MaCustSuppCustomerOptions.PublicAuthority = "1", "000000", "0000000")
+                            If ragSocDatifatturaXls.Equals(cliMago.CompanyName.Replace(Environment.NewLine, " ")) AndAlso indirizzoDatifatturaXls.Equals(cliMago.Address) AndAlso masterOrder.CodiceSdi.Equals(cliMago.Ipacode) Then
+                                'Corrette RagSoc, Indirizzo , IPA Code
+                                sendDocumentTo = ""
+                            Else
+                                'Filtro sedi uguale a RagSoc, Indirizzo
+                                ' 1. Normalizza i dati provenienti dall'Excel UNA VOLTA SOLA prima del filtro
+                                Dim ragSocCercataXls As String = NormalizzaRagSoc(ragSocDatifatturaXls)
+                                Dim indirizzoCercatoXls As String = NormalizzaIndirizzo(indirizzoDatifatturaXls)
+
+                                ' 2. Esegui il filtro sulla lista in modo leggero e sicuro
+                                Dim sediRidotte As List(Of MaCustSuppBranches) = sediCliente.FindAll(
+                                    Function(f)
+                                        Return NormalizzaRagSoc(f.CompanyName).Equals(ragSocCercataXls) AndAlso
+                                               NormalizzaIndirizzo(f.Address).Equals(indirizzoCercatoXls)
+                                    End Function).ToList()
+
+                                ' 3. Gestisci il caso in cui non trovi corrispondenze
+                                If sediRidotte.Count = 0 Then     'Se non trovo niente di simile nemmeno come RagSoc+Indirizzo la devo per forza creare
+                                    newSendDoc = True
+                                    sendDocumentTo = "FT" & (sediCliente.Count + 1).ToString("000")
+                                ElseIf sediRidotte.Count = 1 Then
+                                    'Se ne ho una controllo ipa
+                                    If sediRidotte.First.Ipacode.Equals(cliMago.Ipacode) OrElse sediRidotte.First.Ipacode.Equals("") Then
+                                        'Solo se e' vuota posso usarla per l'indirizzo e lasciare IPA di Anagrafica
+                                        sendDocumentTo = sediRidotte.First.Branch
+                                    Else
                                         newSendDoc = True
                                         sendDocumentTo = "FT" & (sediCliente.Count + 1).ToString("000")
-                                    ElseIf sediRidotte.Count = 1 Then
+                                    End If
+                                Else
+                                    'Ho piu sedi con stesso indirizzo
+                                    'Ricomincio e cerco se l'IPA richiesto e' in una sede o se ho una sede senza nulla
+                                    Dim sediRidotte_IPA As List(Of MaCustSuppBranches) = sediRidotte.FindAll(Function(f) f.Ipacode.Equals(masterOrder.CodiceSdi))
+                                    If sediRidotte_IPA.Count = 0 Then
+                                        'Se non trovo niente controllo se ne ho una senza nulla
+                                        sediRidotte_IPA = sediRidotte.FindAll(Function(f) f.Ipacode.Equals(String.Empty))
                                         'Se ne ho una controllo ipa
-                                        If sediRidotte.First.Ipacode.Equals(cliMago.Ipacode) OrElse sediRidotte.First.Ipacode.Equals("") Then
-                                            'Solo se e' vuota posso usarla per l'indirizzo e lasciare IPA di Anagrafica
-                                            sendDocumentTo = sediRidotte.First.Branch
+                                        If sediRidotte_IPA.Count > 0 Then
+                                            sendDocumentTo = sediRidotte_IPA.First.Branch
                                         Else
                                             newSendDoc = True
                                             sendDocumentTo = "FT" & (sediCliente.Count + 1).ToString("000")
                                         End If
+                                    ElseIf sediRidotte_IPA.Count = 1 Then
+                                        sendDocumentTo = sediRidotte_IPA.First.Branch
                                     Else
-                                        'Ho piu sedi con stesso indirizzo
-                                        'Ricomincio e cerco se l'IPA richiesto e' in una sede o se ho una sede senza nulla
-                                        Dim sediRidotte_IPA As List(Of MaCustSuppBranches) = sediRidotte.FindAll(Function(f) f.Ipacode.Equals(masterOrder.CodiceSdi))
-                                        If sediRidotte_IPA.Count = 0 Then
-                                            'Se non trovo niente controllo se ne ho una senza nulla
-                                            sediRidotte_IPA = sediRidotte.FindAll(Function(f) f.Ipacode.Equals(String.Empty))
-                                            'Se ne ho una controllo ipa
-                                            If sediRidotte_IPA.Count > 0 Then
-                                                sendDocumentTo = sediRidotte_IPA.First.Branch
-                                            Else
-                                                newSendDoc = True
-                                                sendDocumentTo = "FT" & (sediCliente.Count + 1).ToString("000")
-                                            End If
-                                        ElseIf sediRidotte_IPA.Count = 1 Then
-                                            sendDocumentTo = sediRidotte_IPA.First.Branch
-                                        Else
-                                            Dim msgLog As String = "(NO SAVE) Più sedi simili (SendDocumenTo) con lo stesso CodiceSdi, impossibile determinare corretta. Ordine:" & contratto
-                                            errori.AppendLine(msgLog)
-                                            Debug.Print(msgLog)
-                                        End If
-                                    End If
-                                End If
-                                masterOrder.SedeInvioDoc = sendDocumentTo
-                                If newSendDoc Then
-                                    'todo: riferimento amministrazione(vedere dove va)
-                                    If drDatiFatturaXls IsNot Nothing Then
-                                        Dim rCliBr As New MaCustSuppBranches With {
-                                                    .CustSuppType = CustSuppType.Cliente,
-                                                    .CustSupp = clienteContratto,
-                                                    .Branch = sendDocumentTo,
-                                                    .CompanyName = ragSocDatifatturaXls,
-                                                    .Address = drDatiFatturaXls("INDIRIZZO").ToString,
-                                                    .City = drDatiFatturaXls("COMUNE").ToString,
-                                                    .County = drDatiFatturaXls("PROV").ToString,
-                                                    .Region = Get_Regione(drDatiFatturaXls("PROV").ToString),
-                                                    .Zipcode = drDatiFatturaXls("CAP").ToString,
-                                                    .IsocountryCode = "IT",
-                                                    .MailSendingType = 12451840,
-                                                    .Tbcreated = Now,
-                                                    .Tbmodified = Now,
-                                                    .TbcreatedId = sLoginId,
-                                                    .TbmodifiedId = sLoginId,
-                                                    .Ipacode = masterOrder.CodiceSdi,
-                                                    .AdministrationReference = ""
-                                                    }
-                                        'Aggiungo la riga alla collection
-                                        efMaCustSuppBranches.Add(rCliBr)
-                                        sediCliente.Add(rCliBr)
+                                        Dim msgLog As String = "(NO SAVE) Più sedi simili (SendDocumenTo) con lo stesso CodiceSdi, impossibile determinare corretta. Ordine:" & contratto
+                                        errori.AppendLine(msgLog)
+                                        Debug.Print(msgLog)
                                     End If
                                 End If
                             End If
+                            masterOrder.SedeInvioDoc = sendDocumentTo
+                            If newSendDoc Then
+                                'todo: riferimento amministrazione(vedere dove va)
+                                If drDatiFatturaXls IsNot Nothing Then
+                                    Dim rCliBr As New MaCustSuppBranches With {
+                                                .CustSuppType = CustSuppType.Cliente,
+                                                .CustSupp = clienteContratto,
+                                                .Branch = sendDocumentTo,
+                                                .CompanyName = ragSocDatifatturaXls,
+                                                .Address = drDatiFatturaXls("INDIRIZZO").ToString,
+                                                .City = drDatiFatturaXls("COMUNE").ToString,
+                                                .County = drDatiFatturaXls("PROV").ToString,
+                                                .Region = Get_Regione(drDatiFatturaXls("PROV").ToString),
+                                                .Zipcode = drDatiFatturaXls("CAP").ToString,
+                                                .IsocountryCode = "IT",
+                                                .TaxIdNumber = drClienord("PIVA").ToString.Trim,
+                                                .FiscalCode = drClienord("CODFISC").ToString.Trim,
+                                                .MailSendingType = 12451840,
+                                                .Tbcreated = Now,
+                                                .Tbmodified = Now,
+                                                .TbcreatedId = sLoginId,
+                                                .TbmodifiedId = sLoginId,
+                                                .Ipacode = masterOrder.CodiceSdi,
+                                                .AdministrationReference = ""
+                                                }
+                                    'Aggiungo la riga alla collection
+                                    efMaCustSuppBranches.Add(rCliBr)
+                                    sediCliente.Add(rCliBr)
+                                End If
+                            End If
+                        End If
 
-                            'Cond pag
-                            dvPagamentiFox.RowFilter = "CPAGAM = '" & r("CPAGAM").ToString.Trim & "' AND ( SPLITPAY IS NULL OR SPLITPAY = '' )"
-                            condPagAcg = dvPagamentiFox(0)("ACGCOD").ToString.Trim
-                            condPag = OrdiniCntx.MaPaymentTerms.AsNoTracking.First(Function(k) k.Acgcode.Equals(condPagAcg)).Payment
-                            masterOrder.CondPag = condPag
-                            'RID
-                            dvRID.RowFilter = $"CLIENTE = '{clienteFox}' AND RAGRFATT = '{codiceRaggruppamento}'"
-                            masterOrder.UMRCode = If(dvRID.Count = 1, dvRID(0)("CODINDIVID").ToString.Trim, "")
+                        'Cond pag
+                        dvPagamentiFox.RowFilter = "CPAGAM = '" & r("CPAGAM").ToString.Trim & "' AND ( SPLITPAY IS NULL OR SPLITPAY = '' )"
+                        condPagAcg = dvPagamentiFox(0)("ACGCOD").ToString.Trim
+                        condPag = OrdiniCntx.MaPaymentTerms.AsNoTracking.First(Function(k) k.Acgcode.Equals(condPagAcg)).Payment
+                        masterOrder.CondPag = condPag
+                        'RID
+                        dvRID.RowFilter = $"CLIENTE = '{clienteFox}' AND RAGRFATT = '{codiceRaggruppamento}'"
+                        masterOrder.UMRCode = If(dvRID.Count = 1, dvRID(0)("CODINDIVID").ToString.Trim, "")
 
-                            vettore = newCodragg
-                            codIva = OrdiniCntx.MaTaxCodes.AsNoTracking.First(Function(k) k.Acgcode.Equals(r("CIVA").ToString.Trim)).TaxCode
-                            masterOrder.CodIva = codIva
-                            Try
-                                curNfCounter = efMaNonFiscalNumbers.First(Function(k) k.BalanceYear = Year(r("DTPRODUZ")))
-                            Catch ex As Exception
-                                Debug.Print("Numeratore non fiscale (Anno Assente)")
-                                Dim nfn As New MaNonFiscalNumbers With {
-                                    .BalanceYear = Year(r("DTPRODUZ")),
-                                    .CodeType = CodeType.OrdCli,
-                                    .LastDocNo = 0,
-                                    .Separators = "/"
-                                    }
+                        codIva = OrdiniCntx.MaTaxCodes.AsNoTracking.First(Function(k) k.Acgcode.Equals(r("CIVA").ToString.Trim)).TaxCode
+                        masterOrder.CodIva = codIva
+                        Try
+                            curNfCounter = efMaNonFiscalNumbers.First(Function(k) k.BalanceYear = Year(r("DTPRODUZ")))
+                        Catch ex As Exception
+                            Debug.Print("Numeratore non fiscale (Anno Assente)")
+                            Dim nfn As New MaNonFiscalNumbers With {
+                                .BalanceYear = Year(r("DTPRODUZ")),
+                                .CodeType = CodeType.OrdCli,
+                                .LastDocNo = 0,
+                                .Separators = "/"
+                                }
 
-                                efMaNonFiscalNumbers.Add(nfn)
-                                curNfCounter = nfn
-                            End Try
-                            curNfCounter.LastDocNo += 1
-                            efMaNonFiscalNumbers.First(Function(k) k.BalanceYear = Year(r("DTPRODUZ"))).LastDocNo = curNfCounter.LastDocNo
-                            ordNo = Right(Year(r("DTPRODUZ")), 2) & curNfCounter.Separators & CInt(curNfCounter.LastDocNo).ToString("00000")
-                            masterOrder.OrderNo = ordNo
-                            iLineContratto = 0
+                            efMaNonFiscalNumbers.Add(nfn)
+                            curNfCounter = nfn
+                        End Try
+                        curNfCounter.LastDocNo += 1
+                        efMaNonFiscalNumbers.First(Function(k) k.BalanceYear = Year(r("DTPRODUZ"))).LastDocNo = curNfCounter.LastDocNo
+                        ordNo = Right(Year(r("DTPRODUZ")), 2) & curNfCounter.Separators & CInt(curNfCounter.LastDocNo).ToString("00000")
+                        masterOrder.OrderNo = ordNo
+                        iLineContratto = 0
 
-                            sRivolgersiA = String.Concat(r("DRIV1").ToString, r("DRIV2").ToString, r("DRIV3").ToString, r("DRIV4").ToString).Trim
-                            agente = TrovaAgente(r("PRODUTTORE").ToString.Trim, r("FILIALE"))
-                        Else
+                        sRivolgersiA = String.Concat(r("DRIV1").ToString, r("DRIV2").ToString, r("DRIV3").ToString, r("DRIV4").ToString).Trim
+                        agente = TrovaAgente(r("PRODUTTORE").ToString.Trim, r("FILIALE"))
+                    Else
 #Region "Controlli di congruenza"
-                            'CodiceRaggruppamento
-                            Select Case r.GetChildRows("Raggruppamento_Ordine").Length
-                                Case 0
-                                    errori.AppendLine("Raggruppamento assente dal file RAGRFATD (" & masterOrder.Contratto & ") su Contratto: " & contratto)
-                                Case 1
-                                    codiceRaggruppamento = r.GetChildRows("Raggruppamento_Ordine").SingleOrDefault()("RAGRFATT").ToString.Trim '_AGRFATD
-                                    'Cerco riferimento coerente con (raggruppamento se esiste)
-                                    dvFattEle.RowFilter = $"CLIENTE = '{clienteFox}' AND RAGRFATT = '{codiceRaggruppamento}'"
-                                    drFattEle = dtFattEle.NewRow
-                                    If dvFattEle.Count = 1 Then
+                        'CodiceRaggruppamento
+                        Select Case r.GetChildRows("Raggruppamento_Ordine").Length
+                            Case 0
+                                errori.AppendLine("Raggruppamento assente dal file RAGRFATD (" & masterOrder.Contratto & ") su Contratto: " & contratto)
+                            Case 1
+                                codiceRaggruppamento = r.GetChildRows("Raggruppamento_Ordine").SingleOrDefault()("RAGRFATT").ToString.Trim '_AGRFATD
+                                'Cerco riferimento coerente con (raggruppamento se esiste)
+                                dvFattEle.RowFilter = $"CLIENTE = '{clienteFox}' AND RAGRFATT = '{codiceRaggruppamento}'"
+                                drFattEle = dtFattEle.NewRow
+                                If dvFattEle.Count = 1 Then
+                                    drFattEle = dvFattEle(0).Row
+                                Else
+                                    dvFattEle.RowFilter = $"CLIENTE = '{clienteFox}'"
+                                    If dvFattEle.Count = 0 Then
+                                        errori.AppendLine("Cliente (" & clienteACG & ") assente dai dati di Fatturazione Elettronica (CLIFTELE): " & contratto)
+                                        'Dim mb As New MessageBoxWithDetails("Cliente (" & clienteACG & ") assente dai dati di Fatturazione Elettronica (CLIFTELE): " & contratto, GetCurrentMethod.Name)
+                                        'mb.ShowDialog()
+                                    ElseIf dvFattEle.Count = 1 Then
                                         drFattEle = dvFattEle(0).Row
                                     Else
-                                        dvFattEle.RowFilter = $"CLIENTE = '{clienteFox}'"
-                                        If dvFattEle.Count = 0 Then
-                                            errori.AppendLine("Cliente (" & clienteACG & ") assente dai dati di Fatturazione Elettronica (CLIFTELE): " & contratto)
-                                            'Dim mb As New MessageBoxWithDetails("Cliente (" & clienteACG & ") assente dai dati di Fatturazione Elettronica (CLIFTELE): " & contratto, GetCurrentMethod.Name)
-                                            'mb.ShowDialog()
-                                        ElseIf dvFattEle.Count = 1 Then
-                                            drFattEle = dvFattEle(0).Row
-                                        Else
-                                            errori.AppendLine("Più righe di Fatturazione Elettronica (CLIFTELE) impossibile determinare quella corretta: " & contratto)
-                                            'Dim mb As New MessageBoxWithDetails("Più righe di Fatturazione Elettronica (CLIFTELE) impossibile determinare quella corretta: " & contratto, GetCurrentMethod.Name)
-                                            'mb.ShowDialog()
-                                        End If
+                                        errori.AppendLine("Più righe di Fatturazione Elettronica (CLIFTELE) impossibile determinare quella corretta: " & contratto)
+                                        'Dim mb As New MessageBoxWithDetails("Più righe di Fatturazione Elettronica (CLIFTELE) impossibile determinare quella corretta: " & contratto, GetCurrentMethod.Name)
+                                        'mb.ShowDialog()
                                     End If
-                                    If Not codiceRaggruppamento.Equals(masterOrder.RaggruppamentoFattura) AndAlso CDbl(r("CANONE").ToString) <> 0 Then
-                                        errori.AppendLine("Raggruppamento fattura diverso da quello Master (" & masterOrder.Contratto & ") su Contratto: " & contratto)
-                                    End If
-                                Case Else
-                                    errori.AppendLine("Cliente _AGRFATT con piu' righe di raggruppamento su: " & contratto & " CodiceRaggruppamento: " & codiceRaggruppamento)
-                            End Select
+                                End If
+                                If Not codiceRaggruppamento.Equals(masterOrder.RaggruppamentoFatturaFox) AndAlso CDbl(r("CANONE").ToString) <> 0 Then
+                                    avvisi.AppendLine("Raggruppamento fattura diverso da quello impostato su Fox (" & masterOrder.RaggruppamentoFatturaFox & ") su Contratto: " & contratto)
+                                End If
+                            Case Else
+                                errori.AppendLine("Cliente _AGRFATT con piu' righe di raggruppamento su: " & contratto & " CodiceRaggruppamento: " & codiceRaggruppamento)
+                        End Select
 
-                            'Cond pag
-                            dvPagamentiFox.RowFilter = "CPAGAM = '" & r("CPAGAM").ToString.Trim & "' AND ( SPLITPAY IS NULL OR SPLITPAY = '' )"
-                            condPagAcg = dvPagamentiFox(0)("ACGCOD").ToString.Trim
-                            condPag = OrdiniCntx.MaPaymentTerms.AsNoTracking.First(Function(k) k.Acgcode.Equals(condPagAcg)).Payment
-                            If Not condPag.Equals(masterOrder.CondPag) Then
-                                errori.AppendLine("Pagamento diverso da quello Master (" & masterOrder.Contratto & ") su Contratto: " & contratto)
-                            End If
-                            'Stesso RID
-                            dvRID.RowFilter = $"CLIENTE = '{clienteFox}' AND RAGRFATT = '{codiceRaggruppamento}'"
-                            If Not masterOrder.UMRCode.Equals(If(dvRID.Count = 1, dvRID(0)("CODINDIVID").ToString.Trim, "")) Then
-                                errori.AppendLine("Codice UMR diverso da quello Master (" & masterOrder.Contratto & ") su Contratto: " & contratto)
-                            End If
-                            'Codice Iva
-                            codIva = OrdiniCntx.MaTaxCodes.AsNoTracking.First(Function(k) k.Acgcode.Equals(r("CIVA").ToString.Trim)).TaxCode
-                            If Not masterOrder.CodIva.Equals(codIva) Then
-                                errori.AppendLine("Codice IVA diverso da quello Master (" & masterOrder.Contratto & ") su Contratto: " & contratto)
-                            End If
+                        'Cond pag
+                        dvPagamentiFox.RowFilter = "CPAGAM = '" & r("CPAGAM").ToString.Trim & "' AND ( SPLITPAY IS NULL OR SPLITPAY = '' )"
+                        condPagAcg = dvPagamentiFox(0)("ACGCOD").ToString.Trim
+                        condPag = OrdiniCntx.MaPaymentTerms.AsNoTracking.First(Function(k) k.Acgcode.Equals(condPagAcg)).Payment
+                        If Not condPag.Equals(masterOrder.CondPag) Then
+                            errori.AppendLine("Pagamento diverso da quello Master (" & masterOrder.Contratto & ") su Contratto: " & contratto)
+                        End If
+                        'Stesso RID
+                        dvRID.RowFilter = $"CLIENTE = '{clienteFox}' AND RAGRFATT = '{codiceRaggruppamento}'"
+                        If Not masterOrder.UMRCode.Equals(If(dvRID.Count = 1, dvRID(0)("CODINDIVID").ToString.Trim, "")) Then
+                            errori.AppendLine("Codice UMR diverso da quello Master (" & masterOrder.Contratto & ") su Contratto: " & contratto)
+                        End If
+                        'Codice Iva
+                        codIva = OrdiniCntx.MaTaxCodes.AsNoTracking.First(Function(k) k.Acgcode.Equals(r("CIVA").ToString.Trim)).TaxCode
+                        If Not masterOrder.CodIva.Equals(codIva) Then
+                            errori.AppendLine("Codice IVA diverso da quello Master (" & masterOrder.Contratto & ") su Contratto: " & contratto)
+                        End If
 
 #End Region
-                        End If
+                    End If
 
 #End Region
 #Region "Riga Contratto (Fatturativa)"
-                        Dim servizioMago As String = TranscodificaServizio(r("TIPSERV").ToString)
-                        If servizioMago.Equals("XXXXX") Then errori.AppendLine("Trascodifica Servizio non esitente: " & r("TIPSERV").ToString & " su Contratto: " & contratto)
-                        Dim descriCanone As String = Left(r("DESCAN").ToString.Trim, 128)
-                        If descriCanone = "*" OrElse descriCanone = "-" OrElse descriCanone = "*/" Then descriCanone = ""
-                        If Left(descriCanone, 1).Equals("*") Then descriCanone = descriCanone.Substring(1).Trim
-                        'Valori
-                        Dim qtaOrdine As Double = TranscodificaQuantita(r("FREQ").ToString)
-                        'Gli importi sono sempre mensili
-                        Dim imponibileFattura As Double
-                        Double.TryParse(r("CANONE").ToString, imponibileFattura)
-                        Dim imponibileContratto As Double
-                        Double.TryParse(r("CANALLEUR").ToString, imponibileContratto)
-                        Dim impCanone_ALL1 As Double
-                        Double.TryParse(r("CANONE_ALL1").ToString, impCanone_ALL1)
-                        imponibileContratto -= impCanone_ALL1
-                        Dim valunitFattura As Double = Math.Round(imponibileFattura, 2)
-                        Dim valunitContratto As Double = Math.Round(imponibileContratto, 2)
-                        If qtaOrdine = 0 OrElse qtaOrdine = 999 Then
-                            errori.AppendLine("Indicato Canone ma frequenza uguale a NO su Contratto: " & contratto)
-                            valunitFattura = 0
-                            valunitContratto = 0
-                        End If
-                        If masterDistinta.GruppoDistinta.Equals(contratto) OrElse String.IsNullOrWhiteSpace(masterDistinta.GruppoDistinta) Then
-                            iLineDistinta = 0
+                    Dim servizioMago As String = TranscodificaServizio(r("TIPSERV").ToString)
+                    If servizioMago.Equals("XXXXX") Then errori.AppendLine("Trascodifica Servizio non esitente: " & r("TIPSERV").ToString & " su Contratto: " & contratto)
+                    Dim descriCanone As String = Left(r("DESCAN").ToString.Trim, 128)
+                    If descriCanone = "*" OrElse descriCanone = "-" OrElse descriCanone = "*/" Then descriCanone = ""
+                    If Left(descriCanone, 1).Equals("*") Then descriCanone = descriCanone.Substring(1).Trim
+                    'Valori
+                    Dim qtaOrdine As Double = TranscodificaQuantita(r("FREQ").ToString)
+                    'Gli importi sono sempre mensili
+                    Dim imponibileFattura As Double
+                    Double.TryParse(r("CANONE").ToString, imponibileFattura)
+                    Dim imponibileContratto As Double
+                    Double.TryParse(r("CANALLEUR").ToString, imponibileContratto)
+                    Dim impCanone_ALL1 As Double
+                    Double.TryParse(r("CANONE_ALL1").ToString, impCanone_ALL1)
+                    imponibileContratto -= impCanone_ALL1
+                    Dim valunitFattura As Double = Math.Round(imponibileFattura, 2)
+                    Dim valunitContratto As Double = Math.Round(imponibileContratto, 2)
+                    If qtaOrdine = 0 OrElse qtaOrdine = 999 Then
+                        errori.AppendLine("Indicato Canone ma frequenza uguale a NO su Contratto: " & contratto)
+                        valunitFattura = 0
+                        valunitContratto = 0
+                    End If
+                    If masterDistinta.GruppoDistinta.Equals(contratto) OrElse String.IsNullOrWhiteSpace(masterDistinta.GruppoDistinta) Then
+                        iLineDistinta = 0
+                        iLineDescFatt = 0
+                        iLineContratto += 1
+                        Dim rOrdContratto As New AllordCliContratto With {
+                            .IdOrdCli = saleOrdId,
+                            .Line = iLineContratto,
+                            .Servizio = servizioMago,
+                            .Descrizione = "",
+                            .Qta = qtaOrdine,
+                            .Um = "",
+                            .ValUnit = valunitFattura,
+                            .ValUnitIstat = valunitFattura,
+                            .DataUltRivIstat = Valid_Data(r("DTVARCAN").ToString),
+                            .Franchigia = 0,
+                            .Nota = "",
+                            .TipoRigaServizio = TranscodificaFrequenza(r("FREQ").ToString),
+                            .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
+                            .NonRiportaInFatt = "0",
+                            .Fatturato = "0",
+                            .DataFineElaborazione = sDataNulla,
+                            .DataProssimaFatt = DeterminaDataProssimaFatt(r("FREQ").ToString),
+                            .CodiceIva = codIva,
+                            .Tbcreated = Now,
+                            .Tbmodified = Now,
+                            .TbcreatedId = sLoginId,
+                            .TbmodifiedId = sLoginId,
+                            .SubLineDescFatt = 0,
+                            .SubLineDistinta = 0,
+                            .CdC = centro,
+                            .CodIntegra = contratto,
+                            .CodContratto = contratto,
+                            .Impianto = ""
+                            }
+
+                        'Aggiungo la riga alla collection
+                        efAllordCliContratto.Add(rOrdContratto)
+
+#Region "Descrizioni Fattura"
+                        Dim descriFatt As String = String.Concat(r("DFAT1"), r("DFAT2"), r("DFAT3"), r("DFAT4")).Trim
+                        If descriFatt = "*" OrElse descriFatt = "-" OrElse descriFatt = "*/" Then descriFatt = ""
+
+                        If Len(descriFatt) = 0 Then
+                            ' Se i campi DFAT1-DFAT2-DFAT3-DFAT4 sono vuoti DESCAN è proprio la descrizione del dettaglio di fattura, viceversa è solo una descrizione.
+                            ' Quelli con DESCAN a * o /* o - sono probabilmente frutto delle varie acquisizioni/fusioni per incorporazione.
                             iLineDescFatt = 0
-                            iLineContratto += 1
-                            Dim rOrdContratto As New AllordCliContratto With {
+                            'AggiungiDalAl
+                            If Len(descriCanone) > 0 Then
+                                Dim rOrdDescri As New AllordCliContrattoDescFatt With {
+                                         .IdOrdCli = saleOrdId,
+                                         .Line = iLineDescFatt + 1,
+                                         .RifLinea = iLineContratto,
+                                         .Codice = "",
+                                         .Descrizione = descriCanone,
+                                         .Tbcreated = Now,
+                                         .Tbmodified = Now,
+                                         .TbcreatedId = sLoginId,
+                                         .TbmodifiedId = sLoginId
+                                         }
+                                'Aggiungo la riga alla collection
+                                efAllordCliContrattoDescFatt.Add(rOrdDescri)
+                                'End If
+                            End If
+                        Else
+                            '20/10/2023 : Mail Laura dice di togliere a capo e righe vuote
+                            'Dim descriList As List(Of String) = GetListTextWithNewLines(descriFatt, 128)
+                            Dim descriList As List(Of String) = GetListTextWithoutNewLines(descriFatt, 128)
+                            If descriList.Count > 0 Then
+                                'If masterDistinta.RigheDistinta > 0 AndAlso rowToExclude_cnt > 0 Then
+                                '    errori.AppendLine("(NO SAVE) DescFatt: presente DFAT* Ordine:" & contratto)
+                                'Else
+                                For i = 0 To descriList.Count - 1
+                                    Dim rOrdDescri As New AllordCliContrattoDescFatt With {
+                                         .IdOrdCli = saleOrdId,
+                                         .Line = i + 1,
+                                         .RifLinea = iLineContratto,
+                                         .Codice = "",
+                                         .Descrizione = descriList(i),
+                                         .Tbcreated = Now,
+                                         .Tbmodified = Now,
+                                         .TbcreatedId = sLoginId,
+                                         .TbmodifiedId = sLoginId
+                                         }
+                                    'Aggiungo la riga alla collection
+                                    efAllordCliContrattoDescFatt.Add(rOrdDescri)
+                                Next
+                                'End If
+                            End If
+                            iLineDescFatt = descriList.Count
+                        End If
+                        'Aggiorno Sub
+                        efAllordCliContratto.Last.SubLineDescFatt = iLineDescFatt
+                    End If
+#End Region
+#Region "Distinta"
+                    'E' obbligatorio avere una riga distinta !!
+                    iLineDistinta += 1
+                    Dim rOrdDistinta As New AllordCliContrattoDistinta With {
+                        .IdOrdCli = saleOrdId,
+                        .Line = iLineDistinta,
+                        .RifLinea = iLineContratto,
+                        .Servizio = servizioMago,
+                        .Descrizione = If(String.IsNullOrWhiteSpace(descriCanone), r.Field(Of String)("DTS"), descriCanone),
+                        .Qta = qtaOrdine,
+                        .Um = "",
+                        .ValUnit = valunitContratto,
+                        .ValUnitIstat = valunitContratto,
+                        .DataUltRivIstat = Valid_Data(r("DTVARCAN").ToString),
+                        .TipoRigaServizio = TranscodificaFrequenza(r("FREQ").ToString),
+                        .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
+                        .DataFineElaborazione = sDataNulla,
+                        .DataProssimaFatt = DeterminaDataProssimaFatt(r("FREQ").ToString),
+                        .CodIntegra = contratto,
+                        .CodContratto = contratto,
+                        .Tbcreated = Now,
+                        .Tbmodified = Now,
+                        .TbcreatedId = sLoginId,
+                        .TbmodifiedId = sLoginId,
+                        .Nota = "",
+                        .CdC = centro,
+                        .Impianto = sito,
+                        .SubLineServAgg = 0
+                         }
+                    'Aggiungo la riga alla collection
+                    efAllordCliContrattoDistinta.Add(rOrdDistinta)
+                    nrDistinte += 1
+#End Region
+#Region "Attività di Sospensione"
+                    If Not masterDistinta.Sospeso Then
+                        If r("GRP_CONTRATTO").ToString.Equals("SOSPESO") Then
+                            r("motivo") = "SOSPESO"
+                            r("DATA_INIZIO_SOSP") = "01/01/2000"
+                            r("DATA_FINE_SOSP") = "31/12/2099"
+                        End If
+                        If Not String.IsNullOrWhiteSpace(r("motivo").ToString) Then
+                            Dim valoreOriginale As String = If(r("motivo") IsNot DBNull.Value, r("motivo").ToString(), "")
+                            Dim motivo As String = ""
+                            Select Case valoreOriginale.ToUpper()
+                                Case "ATTESA ATTIVAZIONE"
+                                    motivo = "ATTATT"
+                                Case "SOSPENSIONE"
+                                    motivo = "SOSPENSION"
+                                Case Else
+                                    motivo = valoreOriginale
+                            End Select
+                            If Len(motivo) > 10 Then
+                                errori.AppendLine("Motivo sospensione troppo lungo su Contratto: " & contratto)
+                                motivo = "ERRORE"
+                            End If
+
+                            Dim rOrdAttivita As New AllordCliAttivita With {
+                            .IdOrdCli = saleOrdId,
+                            .Line = 1,
+                            .RifLinea = iLineContratto,
+                            .Attivita = motivo,
+                            .DataInizio = Valid_Data(r("DATA_INIZIO_SOSP").ToString),
+                            .DataFine = Valid_Data(r("DATA_FINE_SOSP").ToString),
+                            .DaFatturare = "0",
+                            .DataRifatturazione = sDataNulla,
+                            .Fatturata = "0",
+                            .Nota = "",
+                            .RifServizio = servizioMago,
+                            .ValUnit = valunitFattura,
+                            .TestoFattura = "",
+                            .Tbcreated = Now,
+                            .Tbmodified = Now,
+                            .TbcreatedId = sLoginId,
+                            .TbmodifiedId = sLoginId
+                        }
+                            efAllordCliAttivita.Add(rOrdAttivita)
+                            masterDistinta.Sospeso = True
+                        End If
+                    End If
+#End Region
+#Region "Servizi Aggiuntivi"
+                    Try
+                        Dim iLineServAgg As Short = 0
+                        'Costo Servizi Aggiuntivi (loro li chiamano Canone)
+                        'ISPEZIONI
+                        If Not String.IsNullOrWhiteSpace(r("CANISP").ToString) AndAlso r("CANISP") > 0 Then
+                            iLineServAgg += 1
+                            Dim rOrdContrattoAgg As New AllordCliContrattoDistintaServAgg With {
                                 .IdOrdCli = saleOrdId,
-                                .Line = iLineContratto,
-                                .Servizio = servizioMago,
-                                .Descrizione = "",
-                                .Qta = qtaOrdine,
+                                .Line = iLineServAgg,
+                                .RifLinea = iLineDistinta,
+                                .RifRifLinea = iLineContratto,
+                                .Servizio = ServiziAggiuntivi.Ispezioni,
+                                .Descrizione = ServiziAggiuntivi.Ispezioni_Descri,
+                                .Qta = 1,
                                 .Um = "",
-                                .ValUnit = valunitFattura,
-                                .ValUnitIstat = valunitFattura,
+                                .ValUnit = r("CANISP"),
+                                .ValUnitIstat = r("CANISP"),
+                                .DataUltRivIstat = sDataNulla,
+                                .Franchigia = r("FRAISP"),
+                                .TipoRigaServizio = ServiziAggiuntivi.Frequenza,
+                                .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
+                                .DataFineElaborazione = sDataNulla,
+                                .DataProssimaFatt = nextDataFatt,
+                                .Periodicita = TranscodificaPeriodicita(r("PERISP").ToString),
+                                .Tbcreated = Now,
+                                .Tbmodified = Now,
+                                .TbcreatedId = sLoginId,
+                                .TbmodifiedId = sLoginId
+                                }
+                            'Aggiungo la riga alla collection
+                            efAllordCliContrattoDistintaServAgg.Add(rOrdContrattoAgg)
+                        End If
+                        'INTERVENTI
+                        If Not String.IsNullOrWhiteSpace(r("CANINT").ToString) AndAlso r("CANINT") > 0 Then
+                            iLineServAgg += 1
+                            Dim rOrdContrattoAgg As New AllordCliContrattoDistintaServAgg With {
+                                .IdOrdCli = saleOrdId,
+                                .Line = iLineServAgg,
+                                .RifLinea = iLineDistinta,
+                                .RifRifLinea = iLineContratto,
+                                .Servizio = ServiziAggiuntivi.Interventi,
+                                .Descrizione = ServiziAggiuntivi.Interventi_Descri,
+                                .Qta = 1,
+                                .Um = "",
+                                .ValUnit = r("CANINT"),
+                                .ValUnitIstat = r("CANINT"),
+                                .DataUltRivIstat = sDataNulla,
+                                .Franchigia = r("FRAINT"),
+                                .TipoRigaServizio = ServiziAggiuntivi.Frequenza,
+                                .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
+                                .DataFineElaborazione = sDataNulla,
+                                .DataProssimaFatt = nextDataFatt,
+                                .Periodicita = TranscodificaPeriodicita(r("PERINT").ToString),
+                                .Tbcreated = Now,
+                                .Tbmodified = Now,
+                                .TbcreatedId = sLoginId,
+                                .TbmodifiedId = sLoginId
+                                }
+                            'Aggiungo la riga alla collection
+                            efAllordCliContrattoDistintaServAgg.Add(rOrdContrattoAgg)
+                        End If
+                        'APERTURA/CHIUSURA
+                        If Not String.IsNullOrWhiteSpace(r("CANAPECHIU").ToString) AndAlso r("CANAPECHIU") > 0 Then
+                            iLineServAgg += 1
+                            Dim rOrdContrattoAgg As New AllordCliContrattoDistintaServAgg With {
+                                .IdOrdCli = saleOrdId,
+                                .Line = iLineServAgg,
+                                .RifLinea = iLineDistinta,
+                                .RifRifLinea = iLineContratto,
+                                .Servizio = ServiziAggiuntivi.AperturaChiusura,
+                                .Descrizione = ServiziAggiuntivi.AperturaChiusura_Descri,
+                                .Qta = 1,
+                                .Um = "",
+                                .ValUnit = r("CANAPECHIU"),
+                                .ValUnitIstat = r("CANAPECHIU"),
+                                .DataUltRivIstat = sDataNulla,
+                                .Franchigia = r("FRAAPE"),
+                                .TipoRigaServizio = ServiziAggiuntivi.Frequenza,
+                                .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
+                                .DataFineElaborazione = sDataNulla,
+                                .DataProssimaFatt = nextDataFatt,
+                                .Periodicita = TranscodificaPeriodicita(r("PERAPE").ToString),
+                                .Tbcreated = Now,
+                                .Tbmodified = Now,
+                                .TbcreatedId = sLoginId,
+                                .TbmodifiedId = sLoginId
+                                }
+                            'Aggiungo la riga alla collection
+                            efAllordCliContrattoDistintaServAgg.Add(rOrdContrattoAgg)
+                        End If
+                        'ASSISTENZA
+                        If Not String.IsNullOrWhiteSpace(r("CANASSIST").ToString) AndAlso r("CANASSIST") > 0 Then
+                            iLineServAgg += 1
+                            Dim rOrdContrattoAgg As New AllordCliContrattoDistintaServAgg With {
+                                .IdOrdCli = saleOrdId,
+                                .Line = iLineServAgg,
+                                .RifLinea = iLineDistinta,
+                                .RifRifLinea = iLineContratto,
+                                .Servizio = ServiziAggiuntivi.Assistenza,
+                                .Descrizione = ServiziAggiuntivi.Assistenza_Descri,
+                                .Qta = 1,
+                                .Um = "",
+                                .ValUnit = r("CANASSIST"),
+                                .ValUnitIstat = r("CANASSIST"),
+                                .DataUltRivIstat = sDataNulla,
+                                .Franchigia = r("FRAASS"),
+                                .TipoRigaServizio = ServiziAggiuntivi.Frequenza,
+                                .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
+                                .DataFineElaborazione = sDataNulla,
+                                .DataProssimaFatt = nextDataFatt,
+                                .Periodicita = TranscodificaPeriodicita(r("PERASS").ToString),
+                                .Tbcreated = Now,
+                                .Tbmodified = Now,
+                                .TbcreatedId = sLoginId,
+                                .TbmodifiedId = sLoginId
+                                }
+                            'Aggiungo la riga alla collection
+                            efAllordCliContrattoDistintaServAgg.Add(rOrdContrattoAgg)
+                        End If
+                        'PIANTONI
+                        If Not String.IsNullOrWhiteSpace(r("CANPIA").ToString) AndAlso r("CANPIA") > 0 Then
+                            iLineServAgg += 1
+                            Dim rOrdContrattoAgg As New AllordCliContrattoDistintaServAgg With {
+                                .IdOrdCli = saleOrdId,
+                                .Line = iLineServAgg,
+                                .RifLinea = iLineDistinta,
+                                .RifRifLinea = iLineContratto,
+                                .Servizio = ServiziAggiuntivi.Piantoni,
+                                .Descrizione = ServiziAggiuntivi.Piantoni_Descri,
+                                .Qta = 1,
+                                .Um = "",
+                                .ValUnit = r("CANPIA"),
+                                .ValUnitIstat = r("CANPIA"),
+                                .DataUltRivIstat = sDataNulla,
+                                .Franchigia = r("FRAPIA"),
+                                .TipoRigaServizio = ServiziAggiuntivi.Frequenza,
+                                .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
+                                .DataFineElaborazione = sDataNulla,
+                                .DataProssimaFatt = nextDataFatt,
+                                .Periodicita = TranscodificaPeriodicita(r("PERPIA").ToString),
+                                .Tbcreated = Now,
+                                .Tbmodified = Now,
+                                .TbcreatedId = sLoginId,
+                                .TbmodifiedId = sLoginId
+                                }
+                            'Aggiungo la riga alla collection
+                            efAllordCliContrattoDistintaServAgg.Add(rOrdContrattoAgg)
+                        End If
+                        'VIDEO ISP.
+                        If Not String.IsNullOrWhiteSpace(r("CANVID").ToString) AndAlso r("CANVID") > 0 Then
+                            iLineServAgg += 1
+                            Dim rOrdContrattoAgg As New AllordCliContrattoDistintaServAgg With {
+                             .IdOrdCli = saleOrdId,
+                             .Line = iLineServAgg,
+                             .RifLinea = iLineDistinta,
+                             .RifRifLinea = iLineContratto,
+                             .Servizio = ServiziAggiuntivi.VideoIsp,
+                             .Descrizione = ServiziAggiuntivi.VideoIsp_Descri,
+                             .Qta = 1,
+                             .Um = "",
+                             .ValUnit = r("CANVID"),
+                             .ValUnitIstat = r("CANVID"),
+                             .DataUltRivIstat = sDataNulla,
+                             .Franchigia = r("FRAVID"),
+                             .TipoRigaServizio = ServiziAggiuntivi.Frequenza,
+                             .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
+                             .DataFineElaborazione = sDataNulla,
+                             .DataProssimaFatt = nextDataFatt,
+                             .Periodicita = TranscodificaPeriodicita(r("PERVID").ToString),
+                             .Tbcreated = Now,
+                             .Tbmodified = Now,
+                             .TbcreatedId = sLoginId,
+                             .TbmodifiedId = sLoginId
+                             }
+                            'Aggiungo la riga alla collection
+                            efAllordCliContrattoDistintaServAgg.Add(rOrdContrattoAgg)
+                        End If
+                        'Aggiorno Sub
+                        efAllordCliContrattoDistinta.Last.SubLineServAgg = iLineServAgg
+                    Catch ex As Exception
+                        Dim mb As New MessageBoxWithDetails("Errore su analisi servizi aggiuntivi!" & Environment.NewLine & "Valori Assenti. Codice GRP_CONTRATTO (" & r("GRP_CONTRATTO").ToString, GetCurrentMethod.Name, ")")
+                        mb.ShowDialog()
+                    End Try
+#End Region
+                    'Parte di tecnologia Allsystem 1 (CANONE ALL1)
+                    Dim impTecno_ALL1 As Double
+                    Double.TryParse(r("CANONE_ALL1").ToString, impTecno_ALL1)
+                    If masterDistinta.RigheDistinta > 0 AndAlso impTecno_ALL1 <> 0 Then
+                        iLineDistinta += 1
+                        Dim rOrdDistintaAll1 As New AllordCliContrattoDistinta With {
+                            .IdOrdCli = saleOrdId,
+                            .Line = iLineDistinta,
+                            .RifLinea = iLineContratto,
+                            .Servizio = TECNO_ALL1,
+                            .Descrizione = tecno_All1Descri,
+                            .Qta = qtaOrdine,
+                            .Um = "",
+                            .ValUnit = Math.Round(impTecno_ALL1, 2),
+                            .ValUnitIstat = Math.Round(impTecno_ALL1, 2),
+                            .DataUltRivIstat = Valid_Data(r("DTVARCAN").ToString),
+                            .TipoRigaServizio = TranscodificaFrequenza(r("FREQ").ToString),
+                            .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
+                            .DataFineElaborazione = sDataNulla,
+                            .DataProssimaFatt = DeterminaDataProssimaFatt(r("FREQ").ToString),
+                            .CodIntegra = "",
+                            .CodContratto = contratto,
+                            .Tbcreated = Now,
+                            .Tbmodified = Now,
+                            .TbcreatedId = sLoginId,
+                            .TbmodifiedId = sLoginId,
+                            .Nota = "",
+                             .CdC = r("CDC_ALL1").ToString,
+                            .Impianto = sito,
+                            .SubLineServAgg = 0
+                         }
+                        'Aggiungo la riga alla collection
+                        efAllordCliContrattoDistinta.Add(rOrdDistintaAll1)
+                        nrDistinteUNO += 1
+                    End If
+                    'Aggiorno Sub
+                    efAllordCliContratto.Last.SubLineDistinta = iLineDistinta
+
+#Region "Estate Sicura"
+                    Dim iRowEstate As Integer = dvEstivi.Find(contratto)
+                    If iRowEstate <> -1 Then
+                        Dim drEstate As DataRow = dvEstivi(iRowEstate).Row
+                        If Not String.IsNullOrWhiteSpace(drEstate("DTFTEST").ToString) Then
+                            Dim valEstate As Double
+                            Double.TryParse(drEstate("FATTURA").ToString, valEstate)
+                            Dim sTipoRiga As String
+                            Select Case r("FREQ").ToString
+                                Case "0A", "1A", "2A", "3A", "4A", "6A"
+                                    sTipoRiga = "ESTANT"
+                                Case "0P", "1P", "2P", "3P", "4P", "6A"
+                                    sTipoRiga = "ESTPOS"
+                                Case Else
+                                    sTipoRiga = "ERRORE"
+                                    errori.AppendLine("Errore nel determinare frequenza Estate Sicura su contratto: " & contratto)
+                            End Select
+                            Dim rOrdEstate As New AllordCliContratto With {
+                                .IdOrdCli = saleOrdId,
+                                .Line = 0,
+                                .Servizio = "ESTATE",
+                                .Descrizione = "SERVIZI ESTIVI SUPPLEMENTARI LUG-AGO-SET",
+                                .Qta = 1,
+                                .Um = "",
+                                .ValUnit = Math.Round(valEstate, 2),
+                                .ValUnitIstat = Math.Round(valEstate, 2),
                                 .DataUltRivIstat = Valid_Data(r("DTVARCAN").ToString),
                                 .Franchigia = 0,
                                 .Nota = "",
-                                .TipoRigaServizio = TranscodificaFrequenza(r("FREQ").ToString),
+                                .TipoRigaServizio = sTipoRiga,
                                 .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
                                 .NonRiportaInFatt = "0",
                                 .Fatturato = "0",
                                 .DataFineElaborazione = sDataNulla,
-                                .DataProssimaFatt = DeterminaDataProssimaFatt(r("FREQ").ToString),
+                                .DataProssimaFatt = DeterminaDataProssimaFatt(drEstate("DTFTEST").ToString),
                                 .CodiceIva = codIva,
                                 .Tbcreated = Now,
                                 .Tbmodified = Now,
@@ -1540,712 +1907,313 @@ Module ContrattiFox
                                 .CodContratto = contratto,
                                 .Impianto = ""
                                 }
-
                             'Aggiungo la riga alla collection
-                            efAllordCliContratto.Add(rOrdContratto)
-
-#Region "Descrizioni Fattura"
-                            Dim descriFatt As String = String.Concat(r("DFAT1"), r("DFAT2"), r("DFAT3"), r("DFAT4")).Trim
-                            If descriFatt = "*" OrElse descriFatt = "-" OrElse descriFatt = "*/" Then descriFatt = ""
-
-                            If Len(descriFatt) = 0 Then
-                                ' Se i campi DFAT1-DFAT2-DFAT3-DFAT4 sono vuoti DESCAN è proprio la descrizione del dettaglio di fattura, viceversa è solo una descrizione.
-                                ' Quelli con DESCAN a * o /* o - sono probabilmente frutto delle varie acquisizioni/fusioni per incorporazione.
-                                iLineDescFatt = 0
-                                'AggiungiDalAl
-                                If Len(descriCanone) > 0 Then
-                                    Dim rOrdDescri As New AllordCliContrattoDescFatt With {
-                                             .IdOrdCli = saleOrdId,
-                                             .Line = iLineDescFatt + 1,
-                                             .RifLinea = iLineContratto,
-                                             .Codice = "",
-                                             .Descrizione = descriCanone,
-                                             .Tbcreated = Now,
-                                             .Tbmodified = Now,
-                                             .TbcreatedId = sLoginId,
-                                             .TbmodifiedId = sLoginId
-                                             }
-                                    'Aggiungo la riga alla collection
-                                    efAllordCliContrattoDescFatt.Add(rOrdDescri)
-                                    'End If
-                                End If
-                            Else
-                                '20/10/2023 : Mail Laura dice di togliere a capo e righe vuote
-                                'Dim descriList As List(Of String) = GetListTextWithNewLines(descriFatt, 128)
-                                Dim descriList As List(Of String) = GetListTextWithoutNewLines(descriFatt, 128)
-                                If descriList.Count > 0 Then
-                                    'If masterDistinta.RigheDistinta > 0 AndAlso rowToExclude_cnt > 0 Then
-                                    '    errori.AppendLine("(NO SAVE) DescFatt: presente DFAT* Ordine:" & contratto)
-                                    'Else
-                                    For i = 0 To descriList.Count - 1
-                                        Dim rOrdDescri As New AllordCliContrattoDescFatt With {
-                                             .IdOrdCli = saleOrdId,
-                                             .Line = i + 1,
-                                             .RifLinea = iLineContratto,
-                                             .Codice = "",
-                                             .Descrizione = descriList(i),
-                                             .Tbcreated = Now,
-                                             .Tbmodified = Now,
-                                             .TbcreatedId = sLoginId,
-                                             .TbmodifiedId = sLoginId
-                                             }
-                                        'Aggiungo la riga alla collection
-                                        efAllordCliContrattoDescFatt.Add(rOrdDescri)
-                                    Next
-                                    'End If
-                                End If
-                                iLineDescFatt = descriList.Count
-                            End If
-                            'Aggiorno Sub
-                            efAllordCliContratto.Last.SubLineDescFatt = iLineDescFatt
+                            efEstateSicura.Add(rOrdEstate)
+                            'E' obbligatorio avere una riga distinta !!
+                            'Ma la creo dopo per avere l'id delle Lina corretto
                         End If
-#End Region
-#Region "Distinta"
-                        'E' obbligatorio avere una riga distinta !!
-                        iLineDistinta += 1
-                        Dim rOrdDistinta As New AllordCliContrattoDistinta With {
-                            .IdOrdCli = saleOrdId,
-                            .Line = iLineDistinta,
-                            .RifLinea = iLineContratto,
-                            .Servizio = servizioMago,
-                            .Descrizione = If(String.IsNullOrWhiteSpace(descriCanone), r("DTS"), descriCanone),
-                            .Qta = qtaOrdine,
-                            .Um = "",
-                            .ValUnit = valunitContratto,
-                            .ValUnitIstat = valunitContratto,
-                            .DataUltRivIstat = Valid_Data(r("DTVARCAN").ToString),
-                            .TipoRigaServizio = TranscodificaFrequenza(r("FREQ").ToString),
-                            .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
-                            .DataFineElaborazione = sDataNulla,
-                            .DataProssimaFatt = DeterminaDataProssimaFatt(r("FREQ").ToString),
-                            .CodIntegra = contratto,
-                            .CodContratto = contratto,
-                            .Tbcreated = Now,
-                            .Tbmodified = Now,
-                            .TbcreatedId = sLoginId,
-                            .TbmodifiedId = sLoginId,
-                            .Nota = "",
-                            .CdC = centro,
-                            .Impianto = sito,
-                            .SubLineServAgg = 0
-                             }
-                        'Aggiungo la riga alla collection
-                        efAllordCliContrattoDistinta.Add(rOrdDistinta)
-                        nrDistinte += 1
-#End Region
-#Region "Attività di Sospensione"
-                        If Not masterDistinta.Sospeso Then
-                            If r("GRP_CONTRATTO").ToString.Equals("SOSPESO") Then
-                                r("motivo") = "SOSPESO"
-                                r("DATA_INIZIO_SOSP") = "01/01/2000"
-                                r("DATA_FINE_SOSP") = "31/12/2099"
-                            End If
-                            If Not String.IsNullOrWhiteSpace(r("motivo").ToString) Then
-                                Dim motivo As String = If(r("motivo").Equals("ATTESA ATTIVAZIONE"), "ATTATT", r("motivo"))
-                                If Len(motivo) > 10 Then
-                                    errori.AppendLine("Motivo sospensione troppo lungo su Contratto: " & contratto)
-                                    motivo = "ERRORE"
-                                End If
-                                Dim rOrdAttivita As New AllordCliAttivita With {
-                                .IdOrdCli = saleOrdId,
-                                .Line = 1,
-                                .RifLinea = iLineContratto,
-                                .Attivita = motivo,
-                                .DataInizio = Valid_Data(r("DATA_INIZIO_SOSP").ToString),
-                                .DataFine = Valid_Data(r("DATA_FINE_SOSP").ToString),
-                                .DaFatturare = "0",
-                                .DataRifatturazione = sDataNulla,
-                                .Fatturata = "0",
-                                .Nota = "",
-                                .RifServizio = servizioMago,
-                                .ValUnit = valunitFattura,
-                                .TestoFattura = "",
-                                .Tbcreated = Now,
-                                .Tbmodified = Now,
-                                .TbcreatedId = sLoginId,
-                                .TbmodifiedId = sLoginId
-                            }
-                                efAllordCliAttivita.Add(rOrdAttivita)
-                                masterDistinta.Sospeso = True
-                            End If
-                        End If
-#End Region
-#Region "Servizi Aggiuntivi"
-                        Try
-                            Dim iLineServAgg As Short = 0
-                            'Costo Servizi Aggiuntivi (loro li chiamano Canone)
-                            'ISPEZIONI
-                            If Not String.IsNullOrWhiteSpace(r("CANISP").ToString) AndAlso r("CANISP") > 0 Then
-                                iLineServAgg += 1
-                                Dim rOrdContrattoAgg As New AllordCliContrattoDistintaServAgg With {
-                                    .IdOrdCli = saleOrdId,
-                                    .Line = iLineServAgg,
-                                    .RifLinea = iLineDistinta,
-                                    .RifRifLinea = iLineContratto,
-                                    .Servizio = ServiziAggiuntivi.Ispezioni,
-                                    .Descrizione = ServiziAggiuntivi.Ispezioni_Descri,
-                                    .Qta = 1,
-                                    .Um = "",
-                                    .ValUnit = r("CANISP"),
-                                    .ValUnitIstat = r("CANISP"),
-                                    .DataUltRivIstat = sDataNulla,
-                                    .Franchigia = r("FRAISP"),
-                                    .TipoRigaServizio = ServiziAggiuntivi.Frequenza,
-                                    .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
-                                    .DataFineElaborazione = sDataNulla,
-                                    .DataProssimaFatt = nextDataFatt,
-                                    .Periodicita = TranscodificaPeriodicita(r("PERISP").ToString),
-                                    .Tbcreated = Now,
-                                    .Tbmodified = Now,
-                                    .TbcreatedId = sLoginId,
-                                    .TbmodifiedId = sLoginId
-                                    }
-                                'Aggiungo la riga alla collection
-                                efAllordCliContrattoDistintaServAgg.Add(rOrdContrattoAgg)
-                            End If
-                            'INTERVENTI
-                            If Not String.IsNullOrWhiteSpace(r("CANINT").ToString) AndAlso r("CANINT") > 0 Then
-                                iLineServAgg += 1
-                                Dim rOrdContrattoAgg As New AllordCliContrattoDistintaServAgg With {
-                                    .IdOrdCli = saleOrdId,
-                                    .Line = iLineServAgg,
-                                    .RifLinea = iLineDistinta,
-                                    .RifRifLinea = iLineContratto,
-                                    .Servizio = ServiziAggiuntivi.Interventi,
-                                    .Descrizione = ServiziAggiuntivi.Interventi_Descri,
-                                    .Qta = 1,
-                                    .Um = "",
-                                    .ValUnit = r("CANINT"),
-                                    .ValUnitIstat = r("CANINT"),
-                                    .DataUltRivIstat = sDataNulla,
-                                    .Franchigia = r("FRAINT"),
-                                    .TipoRigaServizio = ServiziAggiuntivi.Frequenza,
-                                    .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
-                                    .DataFineElaborazione = sDataNulla,
-                                    .DataProssimaFatt = nextDataFatt,
-                                    .Periodicita = TranscodificaPeriodicita(r("PERINT").ToString),
-                                    .Tbcreated = Now,
-                                    .Tbmodified = Now,
-                                    .TbcreatedId = sLoginId,
-                                    .TbmodifiedId = sLoginId
-                                    }
-                                'Aggiungo la riga alla collection
-                                efAllordCliContrattoDistintaServAgg.Add(rOrdContrattoAgg)
-                            End If
-                            'APERTURA/CHIUSURA
-                            If Not String.IsNullOrWhiteSpace(r("CANAPECHIU").ToString) AndAlso r("CANAPECHIU") > 0 Then
-                                iLineServAgg += 1
-                                Dim rOrdContrattoAgg As New AllordCliContrattoDistintaServAgg With {
-                                    .IdOrdCli = saleOrdId,
-                                    .Line = iLineServAgg,
-                                    .RifLinea = iLineDistinta,
-                                    .RifRifLinea = iLineContratto,
-                                    .Servizio = ServiziAggiuntivi.AperturaChiusura,
-                                    .Descrizione = ServiziAggiuntivi.AperturaChiusura_Descri,
-                                    .Qta = 1,
-                                    .Um = "",
-                                    .ValUnit = r("CANAPECHIU"),
-                                    .ValUnitIstat = r("CANAPECHIU"),
-                                    .DataUltRivIstat = sDataNulla,
-                                    .Franchigia = r("FRAAPE"),
-                                    .TipoRigaServizio = ServiziAggiuntivi.Frequenza,
-                                    .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
-                                    .DataFineElaborazione = sDataNulla,
-                                    .DataProssimaFatt = nextDataFatt,
-                                    .Periodicita = TranscodificaPeriodicita(r("PERAPE").ToString),
-                                    .Tbcreated = Now,
-                                    .Tbmodified = Now,
-                                    .TbcreatedId = sLoginId,
-                                    .TbmodifiedId = sLoginId
-                                    }
-                                'Aggiungo la riga alla collection
-                                efAllordCliContrattoDistintaServAgg.Add(rOrdContrattoAgg)
-                            End If
-                            'ASSISTENZA
-                            If Not String.IsNullOrWhiteSpace(r("CANASSIST").ToString) AndAlso r("CANASSIST") > 0 Then
-                                iLineServAgg += 1
-                                Dim rOrdContrattoAgg As New AllordCliContrattoDistintaServAgg With {
-                                    .IdOrdCli = saleOrdId,
-                                    .Line = iLineServAgg,
-                                    .RifLinea = iLineDistinta,
-                                    .RifRifLinea = iLineContratto,
-                                    .Servizio = ServiziAggiuntivi.Assistenza,
-                                    .Descrizione = ServiziAggiuntivi.Assistenza_Descri,
-                                    .Qta = 1,
-                                    .Um = "",
-                                    .ValUnit = r("CANASSIST"),
-                                    .ValUnitIstat = r("CANASSIST"),
-                                    .DataUltRivIstat = sDataNulla,
-                                    .Franchigia = r("FRAASS"),
-                                    .TipoRigaServizio = ServiziAggiuntivi.Frequenza,
-                                    .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
-                                    .DataFineElaborazione = sDataNulla,
-                                    .DataProssimaFatt = nextDataFatt,
-                                    .Periodicita = TranscodificaPeriodicita(r("PERASS").ToString),
-                                    .Tbcreated = Now,
-                                    .Tbmodified = Now,
-                                    .TbcreatedId = sLoginId,
-                                    .TbmodifiedId = sLoginId
-                                    }
-                                'Aggiungo la riga alla collection
-                                efAllordCliContrattoDistintaServAgg.Add(rOrdContrattoAgg)
-                            End If
-                            'PIANTONI
-                            If Not String.IsNullOrWhiteSpace(r("CANPIA").ToString) AndAlso r("CANPIA") > 0 Then
-                                iLineServAgg += 1
-                                Dim rOrdContrattoAgg As New AllordCliContrattoDistintaServAgg With {
-                                    .IdOrdCli = saleOrdId,
-                                    .Line = iLineServAgg,
-                                    .RifLinea = iLineDistinta,
-                                    .RifRifLinea = iLineContratto,
-                                    .Servizio = ServiziAggiuntivi.Piantoni,
-                                    .Descrizione = ServiziAggiuntivi.Piantoni_Descri,
-                                    .Qta = 1,
-                                    .Um = "",
-                                    .ValUnit = r("CANPIA"),
-                                    .ValUnitIstat = r("CANPIA"),
-                                    .DataUltRivIstat = sDataNulla,
-                                    .Franchigia = r("FRAPIA"),
-                                    .TipoRigaServizio = ServiziAggiuntivi.Frequenza,
-                                    .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
-                                    .DataFineElaborazione = sDataNulla,
-                                    .DataProssimaFatt = nextDataFatt,
-                                    .Periodicita = TranscodificaPeriodicita(r("PERPIA").ToString),
-                                    .Tbcreated = Now,
-                                    .Tbmodified = Now,
-                                    .TbcreatedId = sLoginId,
-                                    .TbmodifiedId = sLoginId
-                                    }
-                                'Aggiungo la riga alla collection
-                                efAllordCliContrattoDistintaServAgg.Add(rOrdContrattoAgg)
-                            End If
-                            'VIDEO ISP.
-                            If Not String.IsNullOrWhiteSpace(r("CANVID").ToString) AndAlso r("CANVID") > 0 Then
-                                iLineServAgg += 1
-                                Dim rOrdContrattoAgg As New AllordCliContrattoDistintaServAgg With {
-                                 .IdOrdCli = saleOrdId,
-                                 .Line = iLineServAgg,
-                                 .RifLinea = iLineDistinta,
-                                 .RifRifLinea = iLineContratto,
-                                 .Servizio = ServiziAggiuntivi.VideoIsp,
-                                 .Descrizione = ServiziAggiuntivi.VideoIsp_Descri,
-                                 .Qta = 1,
-                                 .Um = "",
-                                 .ValUnit = r("CANVID"),
-                                 .ValUnitIstat = r("CANVID"),
-                                 .DataUltRivIstat = sDataNulla,
-                                 .Franchigia = r("FRAVID"),
-                                 .TipoRigaServizio = ServiziAggiuntivi.Frequenza,
-                                 .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
-                                 .DataFineElaborazione = sDataNulla,
-                                 .DataProssimaFatt = nextDataFatt,
-                                 .Periodicita = TranscodificaPeriodicita(r("PERVID").ToString),
-                                 .Tbcreated = Now,
-                                 .Tbmodified = Now,
-                                 .TbcreatedId = sLoginId,
-                                 .TbmodifiedId = sLoginId
-                                 }
-                                'Aggiungo la riga alla collection
-                                efAllordCliContrattoDistintaServAgg.Add(rOrdContrattoAgg)
-                            End If
-                            'Aggiorno Sub
-                            efAllordCliContrattoDistinta.Last.SubLineServAgg = iLineServAgg
-                        Catch ex As Exception
-                            Dim mb As New MessageBoxWithDetails("Errore su analisi servizi aggiuntivi!" & Environment.NewLine & "Valori Assenti. Codice GRP_CONTRATTO (" & r("GRP_CONTRATTO").ToString, GetCurrentMethod.Name, ")")
-                            mb.ShowDialog()
-                        End Try
-#End Region
-                        'Parte di tecnologia Allsystem 1 (CANONE ALL1)
-                        Dim impTecno_ALL1 As Double
-                        Double.TryParse(r("CANONE_ALL1").ToString, impTecno_ALL1)
-                        If masterDistinta.RigheDistinta > 0 AndAlso impTecno_ALL1 <> 0 Then
-                            iLineDistinta += 1
-                            Dim rOrdDistintaAll1 As New AllordCliContrattoDistinta With {
-                                .IdOrdCli = saleOrdId,
-                                .Line = iLineDistinta,
-                                .RifLinea = iLineContratto,
-                                .Servizio = TECNO_ALL1,
-                                .Descrizione = tecno_All1Descri,
-                                .Qta = qtaOrdine,
-                                .Um = "",
-                                .ValUnit = Math.Round(impTecno_ALL1, 2),
-                                .ValUnitIstat = Math.Round(impTecno_ALL1, 2),
-                                .DataUltRivIstat = Valid_Data(r("DTVARCAN").ToString),
-                                .TipoRigaServizio = TranscodificaFrequenza(r("FREQ").ToString),
-                                .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
-                                .DataFineElaborazione = sDataNulla,
-                                .DataProssimaFatt = DeterminaDataProssimaFatt(r("FREQ").ToString),
-                                .CodIntegra = "",
-                                .CodContratto = contratto,
-                                .Tbcreated = Now,
-                                .Tbmodified = Now,
-                                .TbcreatedId = sLoginId,
-                                .TbmodifiedId = sLoginId,
-                                .Nota = "",
-                                 .CdC = r("CDC_ALL1").ToString,
-                                .Impianto = sito,
-                                .SubLineServAgg = 0
-                             }
-                            'Aggiungo la riga alla collection
-                            efAllordCliContrattoDistinta.Add(rOrdDistintaAll1)
-                            nrDistinteUNO += 1
-                        End If
-                        'Aggiorno Sub
-                        efAllordCliContratto.Last.SubLineDistinta = iLineDistinta
-
-#Region "Estate Sicura"
-                        Dim iRowEstate As Integer = dvEstivi.Find(contratto)
-                        If iRowEstate <> -1 Then
-                            Dim drEstate As DataRow = dvEstivi(iRowEstate).Row
-                            If Not String.IsNullOrWhiteSpace(drEstate("DTFTEST").ToString) Then
-                                Dim valEstate As Double
-                                Double.TryParse(drEstate("FATTURA").ToString, valEstate)
-                                Dim sTipoRiga As String
-                                Select Case r("FREQ").ToString
-                                    Case "0A", "1A", "2A", "3A", "4A", "6A"
-                                        sTipoRiga = "ESTANT"
-                                    Case "0P", "1P", "2P", "3P", "4P", "6A"
-                                        sTipoRiga = "ESTPOS"
-                                    Case Else
-                                        sTipoRiga = "ERRORE"
-                                        errori.AppendLine("Errore nel determinare frequenza Estate Sicura su contratto: " & contratto)
-                                End Select
-                                Dim rOrdEstate As New AllordCliContratto With {
-                                    .IdOrdCli = saleOrdId,
-                                    .Line = 0,
-                                    .Servizio = "ESTATE",
-                                    .Descrizione = "SERVIZI ESTIVI SUPPLEMENTARI LUG-AGO-SET",
-                                    .Qta = 1,
-                                    .Um = "",
-                                    .ValUnit = Math.Round(valEstate, 2),
-                                    .ValUnitIstat = Math.Round(valEstate, 2),
-                                    .DataUltRivIstat = Valid_Data(r("DTVARCAN").ToString),
-                                    .Franchigia = 0,
-                                    .Nota = "",
-                                    .TipoRigaServizio = sTipoRiga,
-                                    .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
-                                    .NonRiportaInFatt = "0",
-                                    .Fatturato = "0",
-                                    .DataFineElaborazione = sDataNulla,
-                                    .DataProssimaFatt = DeterminaDataProssimaFatt(drEstate("DTFTEST").ToString),
-                                    .CodiceIva = codIva,
-                                    .Tbcreated = Now,
-                                    .Tbmodified = Now,
-                                    .TbcreatedId = sLoginId,
-                                    .TbmodifiedId = sLoginId,
-                                    .SubLineDescFatt = 0,
-                                    .SubLineDistinta = 0,
-                                    .CdC = centro,
-                                    .CodIntegra = contratto,
-                                    .CodContratto = contratto,
-                                    .Impianto = ""
-                                    }
-                                'Aggiungo la riga alla collection
-                                efEstateSicura.Add(rOrdEstate)
-                                'E' obbligatorio avere una riga distinta !!
-                                'Ma la creo dopo per avere l'id delle Lina corretto
-                            End If
-                        End If
+                    End If
 #End Region
 
 #End Region
 
 #Region "Padre/Figlio"
-                        If Not String.IsNullOrWhiteSpace(r("CONTRSUCC").ToString) Then
-                            Dim rOrdFiglio As New AllordFiglio With {
+                    If Not String.IsNullOrWhiteSpace(r("CONTRSUCC").ToString) Then
+                        Dim rOrdFiglio As New AllordFiglio With {
+                        .IdOrdCli = saleOrdId,
+                        .IdOrdFiglio = 0,
+                        .NrOrdFiglio = Strings.Right(r("CONTRSUCC").ToString, 10),
+                        .Tbcreated = Now,
+                        .Tbmodified = Now,
+                        .TbcreatedId = sLoginId,
+                        .TbmodifiedId = sLoginId
+                         }
+                        efAllordFiglio.Add(rOrdFiglio)
+                    End If
+                    If Not String.IsNullOrWhiteSpace(r("CONTRPREC").ToString) Then
+                        Dim rOrdPadre As New AllordPadre With {
                             .IdOrdCli = saleOrdId,
-                            .IdOrdFiglio = 0,
-                            .NrOrdFiglio = Strings.Right(r("CONTRSUCC").ToString, 10),
+                            .IdOrdPadre = 0,
+                            .NrOrdPadre = Strings.Right(r("CONTRPREC").ToString, 10),
                             .Tbcreated = Now,
                             .Tbmodified = Now,
                             .TbcreatedId = sLoginId,
                             .TbmodifiedId = sLoginId
                              }
-                            efAllordFiglio.Add(rOrdFiglio)
-                        End If
-                        If Not String.IsNullOrWhiteSpace(r("CONTRPREC").ToString) Then
-                            Dim rOrdPadre As New AllordPadre With {
-                                .IdOrdCli = saleOrdId,
-                                .IdOrdPadre = 0,
-                                .NrOrdPadre = Strings.Right(r("CONTRPREC").ToString, 10),
-                                .Tbcreated = Now,
-                                .Tbmodified = Now,
-                                .TbcreatedId = sLoginId,
-                                .TbmodifiedId = sLoginId
-                                 }
-                            efAllordPadre.Add(rOrdPadre)
-                        End If
+                        efAllordPadre.Add(rOrdPadre)
+                    End If
 #End Region
 #Region "All Ordini Tipologia Servizi"
-                        If Not efAllordCliTipologiaServizi.Exists(Function(f) f.IdOrdCli.Equals(saleOrdId) AndAlso f.Tipologia.Equals(r("TIPSERV").ToString)) Then
-                            Dim rOrdTipologiaServizi As New AllordCliTipologiaServizi With {
-                                     .IdOrdCli = saleOrdId,
-                                     .Tipologia = r("TIPSERV").ToString,
-                                     .Tbcreated = Now,
-                                     .Tbmodified = Now,
-                                     .TbcreatedId = sLoginId,
-                                     .TbmodifiedId = sLoginId
-                                     }
-                            'Aggiungo la riga alla collection
-                            efAllordCliTipologiaServizi.Add(rOrdTipologiaServizi)
-                        End If
+                    If Not efAllordCliTipologiaServizi.Exists(Function(f) f.IdOrdCli.Equals(saleOrdId) AndAlso f.Tipologia.Equals(r("TIPSERV").ToString)) Then
+                        Dim rOrdTipologiaServizi As New AllordCliTipologiaServizi With {
+                                 .IdOrdCli = saleOrdId,
+                                 .Tipologia = r("TIPSERV").ToString,
+                                 .Tbcreated = Now,
+                                 .Tbmodified = Now,
+                                 .TbcreatedId = sLoginId,
+                                 .TbmodifiedId = sLoginId
+                                 }
+                        'Aggiungo la riga alla collection
+                        efAllordCliTipologiaServizi.Add(rOrdTipologiaServizi)
+                    End If
 #End Region
-                        If masterOrder.Contratto.Equals(contratto) Then
+                    If masterOrder.Contratto.Equals(contratto) Then
 #Region "Testa"
-                            'Data Consegna il (ExpectedDeliveryDate) = Decorrenza
-                            'Data Confermata il (ConfirmedDeliveryDate) = non usata
-                            'Non oltre il (CompulsoryDeliveryDate) = Data scadenza fissa o cessazione ( ma non comanda nulla)
-                            'todo:PaymentAddress
-                            Dim rOrd As New MaSaleOrd With {
-                                .Priority = r("FILIALE").ToString,
-                                .CustSuppType = CustSuppType.Cliente,
-                                .InternalOrdNo = masterOrder.OrderNo,
-                                .ExternalOrdNo = TranscodificaFiliale(r("FILIALE").ToString) & Today.ToString("dd/MM/yy"),
-                                .OrderDate = Valid_Data(r("DTPRODUZ").ToString),
-                                .Customer = clienteContratto,
-                                .Payment = condPag,
-                                .CustomerBank = masterOrder.Banca.CustSuppBank,
-                                .CompanyBank = masterOrder.Banca.CompanyBank,
-                                .SendDocumentsTo = masterOrder.SedeInvioDoc,
-                                .PaymentAddress = "",
-                                .Area = r("FILIALE").ToString,
-                                .Salesperson = agente,
-                                .Notes = masterOrder.UMRCode,
-                                .AccTpl = defOrdini.SaleOrderAccTpl,
-                                .TaxJournal = DeterminaRegistro(r("FREQ").ToString),
-                                .InvRsn = defOrdini.SaleOrderInvRsn,
-                                .ShippingReason = "Vend. cliente",
-                                .StubBook = "CLIENTI",
-                                .StoragePhase1 = "SEDE",
-                                .SpecificatorPhase1 = "",
-                                .SaleOrdId = saleOrdId,
-                                .Job = "",
-                                .CostCenter = centro,
-                                .PriceListValidityDate = Valid_Data(r("DTPRODUZ").ToString),
-                                .InvoicingCustomer = clienteContratto,
-                                .ExpectedDeliveryDate = Valid_Data(r("DTDECORR").ToString),
-                                .ConfirmedDeliveryDate = sDataNulla,
-                                .CompulsoryDeliveryDate = Valid_Data(r("DTCESSFATT").ToString),
-                                .Carrier1 = vettore,
-                                .OurReference = r("FILFATT").ToString,
-                                .YourReference = "",
-                                .CompanyCa = masterOrder.Banca.CompanyCa,
-                                .CompanyPymtCa = masterOrder.Banca.CustomerCompanyCa,
-                                .Presentation = 1376260,
-                                .ShipToAddress = "sede",
-                                .BankAuthorization = "",
-                                .ContractCode = drFattEle("F2126").ToString.Trim,
-                                .ProjectCode = drFattEle("F2127").ToString.Trim,
-                                .Tbguid = Guid.NewGuid,
-                                .Currency = "EUR",
-                                .AccrualPercAtInvoiceDate = 100,
-                                .InstallmStartDateIsAuto = "1",
-                                .SalespersonCommAuto = "0",
-                                .AreaManagerCommAuto = "0",
-                                .SalespersonCommPercAuto = "0",
-                                .AreaManagerCommPercAuto = "0",
-                                .Tbcreated = Now,
-                                .Tbmodified = Now,
-                                .TbcreatedId = sLoginId,
-                                .TbmodifiedId = sLoginId,
-                                .SubIdContratto = iLineContratto,
-                                .ACGCod = clienteACG,
-                                .Divisione = Divisione.Vigilanza
-                                }
-                            ' .SubIdDescrizione = iLineDescFatt
+                        'Data Consegna il (ExpectedDeliveryDate) = Decorrenza
+                        'Data Confermata il (ConfirmedDeliveryDate) = non usata
+                        'Non oltre il (CompulsoryDeliveryDate) = Data scadenza fissa o cessazione ( ma non comanda nulla)
+                        'todo:PaymentAddress
+                        Dim rOrd As New MaSaleOrd With {
+                            .Priority = r("FILIALE").ToString,
+                            .CustSuppType = CustSuppType.Cliente,
+                            .InternalOrdNo = masterOrder.OrderNo,
+                            .ExternalOrdNo = TranscodificaFiliale(r("FILIALE").ToString) & Today.ToString("dd/MM/yy"),
+                            .OrderDate = Valid_Data(r("DTPRODUZ").ToString),
+                            .Customer = clienteContratto,
+                            .Payment = condPag,
+                            .CustomerBank = masterOrder.Banca.CustSuppBank,
+                            .CompanyBank = masterOrder.Banca.CompanyBank,
+                            .SendDocumentsTo = masterOrder.SedeInvioDoc,
+                            .PaymentAddress = "",
+                            .Area = r("FILIALE").ToString,
+                            .Salesperson = agente,
+                            .Notes = masterOrder.UMRCode,
+                            .AccTpl = defOrdini.SaleOrderAccTpl,
+                            .TaxJournal = DeterminaRegistro(r("FREQ").ToString),
+                            .InvRsn = defOrdini.SaleOrderInvRsn,
+                            .ShippingReason = "Vend. cliente",
+                            .StubBook = "CLIENTI",
+                            .StoragePhase1 = "SEDE",
+                            .SpecificatorPhase1 = "",
+                            .SaleOrdId = saleOrdId,
+                            .Job = "",
+                            .CostCenter = centro,
+                            .PriceListValidityDate = Valid_Data(r("DTPRODUZ").ToString),
+                            .InvoicingCustomer = clienteContratto,
+                            .ExpectedDeliveryDate = Valid_Data(r("DTDECORR").ToString),
+                            .ConfirmedDeliveryDate = sDataNulla,
+                            .CompulsoryDeliveryDate = Valid_Data(r("DTCESSFATT").ToString),
+                            .Carrier1 = masterOrder.Vettore,
+                            .OurReference = r("FILFATT").ToString,
+                            .YourReference = "",
+                            .CompanyCa = masterOrder.Banca.CompanyCa,
+                            .CompanyPymtCa = masterOrder.Banca.CustomerCompanyCa,
+                            .Presentation = 1376260,
+                            .ShipToAddress = "sede",
+                            .BankAuthorization = "",
+                            .ContractCode = drFattEle("F2126").ToString.Trim,
+                            .ProjectCode = drFattEle("F2127").ToString.Trim,
+                            .Tbguid = Guid.NewGuid,
+                            .Currency = "EUR",
+                            .AccrualPercAtInvoiceDate = 100,
+                            .InstallmStartDateIsAuto = "1",
+                            .SalespersonCommAuto = "0",
+                            .AreaManagerCommAuto = "0",
+                            .SalespersonCommPercAuto = "0",
+                            .AreaManagerCommPercAuto = "0",
+                            .Tbcreated = Now,
+                            .Tbmodified = Now,
+                            .TbcreatedId = sLoginId,
+                            .TbmodifiedId = sLoginId,
+                            .SubIdContratto = iLineContratto,
+                            .ACGCod = clienteACG,
+                            .Divisione = Divisione.Vigilanza
+                            }
+                        ' .SubIdDescrizione = iLineDescFatt
 #Region "campi non usati"
-                            '.Language VARCHAR(8),
-                            '.NonStandardPayment Char(1)	, ZERO
-                            '.PriceList VARCHAR(8)
-                            ', NetOfTax CHAR (1) UNO
-                            ', FixingDate DATETIME DATA NULLA
-                            ', FixingIsManual CHAR (1) ZERO
-                            ', Fixing FLOAT
-                            ', AccrualType INT
+                        '.Language VARCHAR(8),
+                        '.NonStandardPayment Char(1)	, ZERO
+                        '.PriceList VARCHAR(8)
+                        ', NetOfTax CHAR (1) UNO
+                        ', FixingDate DATETIME DATA NULLA
+                        ', FixingIsManual CHAR (1) ZERO
+                        ', Fixing FLOAT
+                        ', AccrualType INT
 
-                            ', AreaManager VARCHAR (8)
-                            ', StoragePhase2 VARCHAR (8)
-                            ', SpecificatorPhase2 VARCHAR (12)
-                            ', Delivered CHAR (1)
-                            ', Invoiced CHAR (1)
-                            ', PreShipped CHAR (1)
-                            ', Printed CHAR (1)
-                            ', SentByEMail CHAR (1)
-                            ', UseBusinessYear CHAR (1)
-                            ', Cancelled CHAR (1)
-                            ', ProductLine VARCHAR (8)
-                            ', PriceListFromDeliveryDate CHAR (1)
-                            ', SingleDelivery CHAR (1)
-                            ', LastSubId INT
-                            ', ContractType INT
-                            ', AccGroup VARCHAR (2)
-                            ', Picked CHAR (1)
-                            ', SaleTypeByLine CHAR (1)
-                            ', SaleType INT
-                            ', Allocated CHAR (1)
-                            ', AllocationArea VARCHAR (8)
-                            ', IsBlocked CHAR (1)
-                            ', BlockType INT
-                            ', UnblockWorker INT
-                            ', UnblockDate DATETIME
-                            ', Port VARCHAR (8)
-                            ', Package VARCHAR (8)
-                            ', Transport VARCHAR (16)
-                            ', TaxCommunicationGroup VARCHAR (16)
-                            ', SentByPostaLite CHAR (1)
-                            ', Archived CHAR (1)
-                            ', FromExternalProgram INT
-                            ', ActiveSubcontracting CHAR (1)
-                            ', InvoiceFollows CHAR (1)
-                            ', InstallmStartDate DATETIME DATANULLA
-                            ', SalespersonCommTot FLOAT
-                            ', AreaManagerCommTot FLOAT
-                            ', BaseSalesperson FLOAT
-                            ', BaseAreaManager FLOAT
-                            ', SalespersonCommPerc FLOAT
-                            ', AreaManagerCommPerc FLOAT
-                            ', SalespersonPolicy VARCHAR (9)
-                            ', AreaManagerPolicy VARCHAR (9)
-                            ', Specificator1Type INT
-                            ', Specificator2Type INT
-                            ', OpenOrder CHAR (1)
-                            ', ContractNo VARCHAR (8)
-                            ', SubIdAttivita SMALLINT
-                            ', SubIdContratto SMALLINT
-                            ', SubIdDescrizione SMALLINT
+                        ', AreaManager VARCHAR (8)
+                        ', StoragePhase2 VARCHAR (8)
+                        ', SpecificatorPhase2 VARCHAR (12)
+                        ', Delivered CHAR (1)
+                        ', Invoiced CHAR (1)
+                        ', PreShipped CHAR (1)
+                        ', Printed CHAR (1)
+                        ', SentByEMail CHAR (1)
+                        ', UseBusinessYear CHAR (1)
+                        ', Cancelled CHAR (1)
+                        ', ProductLine VARCHAR (8)
+                        ', PriceListFromDeliveryDate CHAR (1)
+                        ', SingleDelivery CHAR (1)
+                        ', LastSubId INT
+                        ', ContractType INT
+                        ', AccGroup VARCHAR (2)
+                        ', Picked CHAR (1)
+                        ', SaleTypeByLine CHAR (1)
+                        ', SaleType INT
+                        ', Allocated CHAR (1)
+                        ', AllocationArea VARCHAR (8)
+                        ', IsBlocked CHAR (1)
+                        ', BlockType INT
+                        ', UnblockWorker INT
+                        ', UnblockDate DATETIME
+                        ', Port VARCHAR (8)
+                        ', Package VARCHAR (8)
+                        ', Transport VARCHAR (16)
+                        ', TaxCommunicationGroup VARCHAR (16)
+                        ', SentByPostaLite CHAR (1)
+                        ', Archived CHAR (1)
+                        ', FromExternalProgram INT
+                        ', ActiveSubcontracting CHAR (1)
+                        ', InvoiceFollows CHAR (1)
+                        ', InstallmStartDate DATETIME DATANULLA
+                        ', SalespersonCommTot FLOAT
+                        ', AreaManagerCommTot FLOAT
+                        ', BaseSalesperson FLOAT
+                        ', BaseAreaManager FLOAT
+                        ', SalespersonCommPerc FLOAT
+                        ', AreaManagerCommPerc FLOAT
+                        ', SalespersonPolicy VARCHAR (9)
+                        ', AreaManagerPolicy VARCHAR (9)
+                        ', Specificator1Type INT
+                        ', Specificator2Type INT
+                        ', OpenOrder CHAR (1)
+                        ', ContractNo VARCHAR (8)
+                        ', SubIdAttivita SMALLINT
+                        ', SubIdContratto SMALLINT
+                        ', SubIdDescrizione SMALLINT
 
 #End Region
-                            'Aggiungo la riga alla collection
-                            efMaSaleOrd.Add(rOrd)
+                        'Aggiungo la riga alla collection
+                        efMaSaleOrd.Add(rOrd)
 #End Region
 #Region "All OrdiniAcc"
-                            Dim rOrdAcc As New AllordCliAcc With {
+                        Dim rOrdAcc As New AllordCliAcc With {
+                        .IdOrdCli = saleOrdId,
+                        .ApplicoIstat = If(r("AUMENTO") = 1, "1", "0"),
+                        .MesiDurata = If(String.IsNullOrWhiteSpace(r("GGDURATA").ToString), 0, CalcolaDurataContratto(r("GGDURATA"))),
+                        .MesiRinnovo = If(String.IsNullOrWhiteSpace(r("GGDURATA").ToString), 0, CalcolaDurataContratto(r("GGDURATA"))),
+                        .Ggdisdetta = CShort(r("GGPREAVVIS")),
+                        .DataScadenzaFissa = sDataNulla,
+                        .DataRiscatto = sDataNulla,
+                        .ImportoRiscatto = 0,
+                        .DataRiduzione = sDataNulla,
+                        .ImportoRiduzione = 0,
+                        .PercRiduzione = 0,
+                        .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
+                        .DataCessazione = Valid_Data(r("scadenza").ToString),
+                        .MotivoCessazione = "",
+                        .TipoContratto = 1108934656,
+                        .ImpiantoProprietaCliente = "0",
+                        .ImportoCanone = If(String.IsNullOrWhiteSpace(r("CANORI").ToString), 0, Math.Round(CDbl(r("CANORI")), 2)),
+                        .ContributoInstallazione = 0,
+                        .OrdineSospeso = "0",
+                        .DataSospensione = sDataNulla,
+                        .MotivoSospensione = "",
+                        .Agente = agente,
+                        .ImportoProvvigione = 0,
+                        .Impianto = "",
+                        .Nota = "",
+                        .ModelloContratto = 1229717507,
+                        .CondPag = condPag,
+                        .SedeInvioDoc = masterOrder.SedeInvioDoc,
+                        .Vettore = masterOrder.Vettore,
+                        .CdC = centro,
+                        .ImpiantoDue = "",
+                        .Tbcreated = Now,
+                        .Tbmodified = Now,
+                        .TbcreatedId = sLoginId,
+                        .TbmodifiedId = sLoginId
+                        }
+                        '.ContributoInstallazione = If(String.IsNullOrWhiteSpace(r("CANALLEUR").ToString), 0, Math.Round(r("CANALLEUR"), 2)),
+                        '
+                        'incremento Data per portarla a post Data Odierna
+                        rOrdAcc.DataPrevistaScadenza = CalcolaScadenzaFutura(rOrdAcc)
+                        'Aggiungo la riga alla collection
+                        efAllordCliAcc.Add(rOrdAcc)
+
+#End Region
+#Region "Fattura Elettronica"
+                        Dim rOrdFattEle As New AllordCliFattEle With {
                             .IdOrdCli = saleOrdId,
-                            .ApplicoIstat = If(r("AUMENTO") = 1, "1", "0"),
-                            .MesiDurata = If(String.IsNullOrWhiteSpace(r("GGDURATA").ToString), 0, CalcolaDurataContratto(r("GGDURATA"))),
-                            .MesiRinnovo = If(String.IsNullOrWhiteSpace(r("GGDURATA").ToString), 0, CalcolaDurataContratto(r("GGDURATA"))),
-                            .Ggdisdetta = CShort(r("GGPREAVVIS")),
-                            .DataScadenzaFissa = sDataNulla,
-                            .DataRiscatto = sDataNulla,
-                            .ImportoRiscatto = 0,
-                            .DataRiduzione = sDataNulla,
-                            .ImportoRiduzione = 0,
-                            .PercRiduzione = 0,
-                            .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
-                            .DataCessazione = Valid_Data(r("scadenza").ToString),
-                            .MotivoCessazione = "",
-                            .TipoContratto = 1108934656,
-                            .ImpiantoProprietaCliente = "0",
-                            .ImportoCanone = If(String.IsNullOrWhiteSpace(r("CANORI").ToString), 0, Math.Round(CDbl(r("CANORI")), 2)),
-                            .ContributoInstallazione = 0,
-                            .OrdineSospeso = "0",
-                            .DataSospensione = sDataNulla,
-                            .MotivoSospensione = "",
-                            .Agente = agente,
-                            .ImportoProvvigione = 0,
-                            .Impianto = "",
-                            .Nota = "",
-                            .ModelloContratto = 1229717507,
-                            .CondPag = condPag,
-                            .SedeInvioDoc = masterOrder.SedeInvioDoc,
-                            .Vettore = vettore,
-                            .CdC = centro,
-                            .ImpiantoDue = "",
+                            .F2_1_1_5_4 = If(r("ZONAESA").ToString.Equals("4%"), "W", String.Empty),
+                            .F2_1_1_11 = drFattEle("F211111").ToString,
+                            .F2_1_2_1 = 0,
+                            .F2_1_2_2 = drFattEle("F2122").ToString,
+                            .F2_1_2_3 = Valid_Data(drFattEle("F2123").ToString),
+                            .F2_1_2_4 = drFattEle("F2124").ToString,
+                            .F2_1_2_5 = drFattEle("F2125").ToString,
+                            .F2_1_2_6 = drFattEle("F2126").ToString,
+                            .F2_1_2_7 = drFattEle("F2127").ToString,
+                            .F2_1_3_1 = 0,
+                            .F2_1_3_2 = drFattEle("F2132").ToString,
+                            .F2_1_3_3 = Valid_Data(drFattEle("F2133").ToString),
+                            .F2_1_3_4 = drFattEle("F2134").ToString,
+                            .F2_1_3_5 = "",
+                            .F2_1_3_6 = drFattEle("F2136").ToString,
+                            .F2_1_3_7 = drFattEle("F2137").ToString,
+                            .F2_1_5_1 = 0,
+                            .F2_1_5_2 = drFattEle("F2152").ToString,
+                            .F2_1_5_3 = Valid_Data(drFattEle("F2153").ToString),
+                            .F2_1_5_4 = drFattEle("F2154").ToString,
+                            .F2_1_5_5 = "",
+                            .F2_1_5_6 = drFattEle("F2156").ToString,
+                            .F2_1_5_7 = drFattEle("F2157").ToString,
                             .Tbcreated = Now,
                             .Tbmodified = Now,
                             .TbcreatedId = sLoginId,
                             .TbmodifiedId = sLoginId
-                            }
-                            '.ContributoInstallazione = If(String.IsNullOrWhiteSpace(r("CANALLEUR").ToString), 0, Math.Round(r("CANALLEUR"), 2)),
-                            '
-                            'incremento Data per portarla a post Data Odierna
-                            rOrdAcc.DataPrevistaScadenza = CalcolaScadenzaFutura(rOrdAcc)
-                            'Aggiungo la riga alla collection
-                            efAllordCliAcc.Add(rOrdAcc)
-
-#End Region
-#Region "Fattura Elettronica"
-                            Dim rOrdFattEle As New AllordCliFattEle With {
-                                .IdOrdCli = saleOrdId,
-                                .F2_1_1_5_4 = If(r("ZONAESA").ToString.Equals("4%"), "W", String.Empty),
-                                .F2_1_1_11 = drFattEle("F211111").ToString,
-                                .F2_1_2_1 = 0,
-                                .F2_1_2_2 = drFattEle("F2122").ToString,
-                                .F2_1_2_3 = Valid_Data(drFattEle("F2123").ToString),
-                                .F2_1_2_4 = drFattEle("F2124").ToString,
-                                .F2_1_2_5 = drFattEle("F2125").ToString,
-                                .F2_1_2_6 = drFattEle("F2126").ToString,
-                                .F2_1_2_7 = drFattEle("F2127").ToString,
-                                .F2_1_3_1 = 0,
-                                .F2_1_3_2 = drFattEle("F2132").ToString,
-                                .F2_1_3_3 = Valid_Data(drFattEle("F2133").ToString),
-                                .F2_1_3_4 = drFattEle("F2134").ToString,
-                                .F2_1_3_5 = "",
-                                .F2_1_3_6 = drFattEle("F2136").ToString,
-                                .F2_1_3_7 = drFattEle("F2137").ToString,
-                                .F2_1_5_1 = 0,
-                                .F2_1_5_2 = drFattEle("F2152").ToString,
-                                .F2_1_5_3 = Valid_Data(drFattEle("F2153").ToString),
-                                .F2_1_5_4 = drFattEle("F2154").ToString,
-                                .F2_1_5_5 = "",
-                                .F2_1_5_6 = drFattEle("F2156").ToString,
-                                .F2_1_5_7 = drFattEle("F2157").ToString,
-                                .Tbcreated = Now,
-                                .Tbmodified = Now,
-                                .TbcreatedId = sLoginId,
-                                .TbmodifiedId = sLoginId
-                            }
-                            efAllordCliFattEle.Add(rOrdFattEle)
+                        }
+                        efAllordCliFattEle.Add(rOrdFattEle)
 #End Region
 #Region "Shipping"
-                            Dim rOrdShipping As New MaSaleOrdShipping With {
-                                .SaleOrdId = saleOrdId,
-                                .Carrier1 = vettore,
-                                .ShipToAddress = "",
-                                .NoOfPacksIsAuto = "1",
-                                .NetWeightIsAuto = "1",
-                                .GrossWeightIsAuto = "1",
-                                .GrossVolumeIsAuto = "1",
-                                .UseOrderPort = "0",
-                                .PortAuto = "1",
-                                .Tbcreated = Now,
-                                .Tbmodified = Now,
-                                .TbcreatedId = sLoginId,
-                                .TbmodifiedId = sLoginId
-                                 }
-                            efMaSaleOrdShipping.Add(rOrdShipping)
+                        Dim rOrdShipping As New MaSaleOrdShipping With {
+                            .SaleOrdId = saleOrdId,
+                            .Carrier1 = masterOrder.Vettore,
+                            .ShipToAddress = "",
+                            .NoOfPacksIsAuto = "1",
+                            .NetWeightIsAuto = "1",
+                            .GrossWeightIsAuto = "1",
+                            .GrossVolumeIsAuto = "1",
+                            .UseOrderPort = "0",
+                            .PortAuto = "1",
+                            .Tbcreated = Now,
+                            .Tbmodified = Now,
+                            .TbcreatedId = sLoginId,
+                            .TbmodifiedId = sLoginId
+                             }
+                        efMaSaleOrdShipping.Add(rOrdShipping)
 #End Region
 #Region "Summary"
-                            Dim rOrdSummary As New MaSaleOrdSummary With {
-                                .SaleOrdId = saleOrdId,
-                                .StampsChargesTaxCode = defVendite.StampsTaxAmount,
-                                .CollectionChargesTaxCode = defVendite.CollectionTaxAmount,
-                                .InsuranceChargesIsAuto = "0",
-                                .Tbcreated = Now,
-                                .Tbmodified = Now,
-                                .TbcreatedId = sLoginId,
-                                .TbmodifiedId = sLoginId
-                                 }
-                            efMaSaleOrdSummary.Add(rOrdSummary)
+                        Dim rOrdSummary As New MaSaleOrdSummary With {
+                            .SaleOrdId = saleOrdId,
+                            .StampsChargesTaxCode = defVendite.StampsTaxAmount,
+                            .CollectionChargesTaxCode = defVendite.CollectionTaxAmount,
+                            .InsuranceChargesIsAuto = "0",
+                            .Tbcreated = Now,
+                            .Tbmodified = Now,
+                            .TbcreatedId = sLoginId,
+                            .TbmodifiedId = sLoginId
+                             }
+                        efMaSaleOrdSummary.Add(rOrdSummary)
 #End Region
 #Region "Note Ordini"
-                            Dim rOrdNotes As New MaSaleOrdNotes With {
-                                .SaleOrdId = saleOrdId,
-                                .Notes = Left(r("DNOTE").ToString.Trim, 251),
-                                .Tbcreated = Now,
-                                .Tbmodified = Now,
-                                .TbcreatedId = sLoginId,
-                                .TbmodifiedId = sLoginId
-                                 }
-                            efMaSaleOrdNotes.Add(rOrdNotes)
+                        Dim rOrdNotes As New MaSaleOrdNotes With {
+                            .SaleOrdId = saleOrdId,
+                            .Notes = Left(r("DNOTE").ToString.Trim, 251),
+                            .Tbcreated = Now,
+                            .Tbmodified = Now,
+                            .TbcreatedId = sLoginId,
+                            .TbmodifiedId = sLoginId
+                             }
+                        efMaSaleOrdNotes.Add(rOrdNotes)
 #End Region
-                        End If
-
-
-                        'Fine esclusione
                     End If
+
+
+                    'Fine esclusione
+                    'End If
                     AvanzaBarra()
                 Catch ex As Exception
+                    Debug.Print("ERRORE: " & ex.Message & vbCrLf & ex.StackTrace)
                     Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                     mb.ShowDialog()
                     Continue For
@@ -2314,6 +2282,8 @@ Module ContrattiFox
                                             .Region = Get_Regione(rA("PROV").ToString),
                                             .Zipcode = rA("CAP").ToString,
                                             .IsocountryCode = "IT",
+                                            .TaxIdNumber = drClienord("PIVA").ToString.Trim,
+                                            .FiscalCode = drClienord("CODFISC").ToString.Trim,
                                             .MailSendingType = 12451840,
                                             .Tbcreated = Now,
                                             .Tbmodified = Now,
@@ -2759,7 +2729,7 @@ Module ContrattiFox
         msgLog = "Ordini da Inserire : " & totOrdini.ToString
         My.Application.Log.DefaultFileLogWriter.WriteLine(msgLog)
         FLogin.lstStatoConnessione.Items.Add(msgLog)
-        If Not Esegui Then totOrdini = 1
+        'If Not Esegui Then totOrdini = 1
         If totOrdini > 0 Then
             'Parametri
             'https://github.com/borisdj/EFCore.BulkExtensions
@@ -2768,318 +2738,318 @@ Module ContrattiFox
                 Dim iStep As Integer
                 Try
                     OrdiniCntx.Database.ExecuteSqlRaw("DBCC TRACEON(610)")
-                    If Esegui Then
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento teste ordini")
-                        If efMaSaleOrd.Any Then
-                            Dim t = efMaSaleOrd.Count
-                            Dim cfgOrd As New BulkConfig With {
+                    'If Esegui Then
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Inserimento teste ordini")
+                    If efMaSaleOrd.Any Then
+                        Dim t = efMaSaleOrd.Count
+                        Dim cfgOrd As New BulkConfig With {
                                     .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
                                     .BulkCopyTimeout = 0,
                                     .CalculateStats = True,
                                     .BatchSize = If(t < 5000, 0, t / 10),
                                     .NotifyAfter = If(t <= 10, t, t / 10)
                                     }
-                            OrdiniCntx.BulkInsertOrUpdate(efMaSaleOrd, cfgOrd, Function(d) d)
-                            Debug.Print("MaSaleOrd Ins:" & cfgOrd.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrd.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("MaSaleOrd Ins:" & cfgOrd.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrd.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento totali ordini")
-                        If efMaSaleOrdSummary.Any Then
-                            Dim t = efMaSaleOrdSummary.Count
-                            Dim cfgOrdTot As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efMaSaleOrdSummary, cfgOrdTot, Function(d) d)
-                            Debug.Print("MaSaleOrdSummary Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("MaSaleOrdSummary Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento Dati Spedizione ordini")
-                        If efMaSaleOrdShipping.Any Then
-                            Dim t = efMaSaleOrdShipping.Count
-                            Dim cfgOrdTot As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efMaSaleOrdShipping, cfgOrdTot, Function(d) d)
-                            Debug.Print("MaSaleOrdShipping Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("MaSaleOrdShipping Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento note ordini")
-                        If efMaSaleOrdNotes.Any Then
-                            Dim t = efMaSaleOrdNotes.Count
-                            Dim cfgOrdTot As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efMaSaleOrdNotes, cfgOrdTot, Function(d) d)
-                            Debug.Print("MaSaleOrdNotes Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("MaSaleOrdNotes Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento dati accessori ordini")
-                        If efAllordCliAcc.Any Then
-                            Dim t = efAllordCliAcc.Count
-                            Dim cfgOrdAcc As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efAllordCliAcc, cfgOrdAcc, Function(d) d)
-                            Debug.Print("ALLOrdCliAcc Ins:" & cfgOrdAcc.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdAcc.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("ALLOrdCliAcc Ins:" & cfgOrdAcc.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdAcc.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento dati Fattura Elettronica")
-                        If efAllordCliFattEle.Any Then
-                            Dim t = efAllordCliFattEle.Count
-                            Dim cfgOrdFattEle As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efAllordCliFattEle, cfgOrdFattEle, Function(d) d)
-                            Debug.Print("ALLOrdCliFattEle Ins:" & cfgOrdFattEle.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdFattEle.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("ALLOrdCliFattEle Ins:" & cfgOrdFattEle.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdFattEle.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento righe contratto ")
-                        If efAllordCliContratto.Any Then
-                            Dim t = efAllordCliContratto.Count
-                            Dim cfgOrdCon As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efAllordCliContratto, cfgOrdCon, Function(d) d)
-                            Debug.Print("AllordCliContratto Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("AllordCliContratto Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento righe descrizioni contratto ")
-                        If efAllordCliContrattoDescFatt.Any Then
-                            Dim t = efAllordCliContrattoDescFatt.Count
-                            Dim cfgOrdConDescFatt As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efAllordCliContrattoDescFatt, cfgOrdConDescFatt, Function(d) d)
-                            Debug.Print("AllordCliContratto_DescFatt Ins:" & cfgOrdConDescFatt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDescFatt.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("AllordCliContratto_DescFatt Ins:" & cfgOrdConDescFatt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDescFatt.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento righe attività contratto ")
-                        If efAllordCliAttivita.Any Then
-                            Dim t = efAllordCliAttivita.Count
-                            Dim cfgOrdConAtt As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efAllordCliAttivita, cfgOrdConAtt, Function(d) d)
-                            Debug.Print("ALLOrdCliAttivita Ins:" & cfgOrdConAtt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConAtt.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("ALLOrdCliAttivita Ins:" & cfgOrdConAtt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConAtt.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento righe distinta contratto ")
-                        If efAllordCliContrattoDistinta.Any Then
-                            Dim t = efAllordCliContrattoDistinta.Count
-                            Dim cfgOrdConDist As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efAllordCliContrattoDistinta, cfgOrdConDist, Function(d) d)
-                            Debug.Print("ALLOrdCliContratto_Distinta Ins:" & cfgOrdConDist.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDist.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("ALLOrdCliContratto_Distinta Ins:" & cfgOrdConDist.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDist.StatsInfo.StatsNumberUpdated.ToString)
-                            'Check di numeri
-                            Debug.Print("Righe file Excel: " & dtContratti.Rows.Count.ToString)
-                            bulkMessage.AppendLine("Righe file Excel: " & dtContratti.Rows.Count.ToString)
-                            Debug.Print("Righe distinta: " & nrDistinte.ToString)
-                            bulkMessage.AppendLine("Righe distinta: " & nrDistinte.ToString)
-                            Debug.Print("Righe distinta UNO " & nrDistinteUNO.ToString)
-                            bulkMessage.AppendLine("Righe distinta UNO " & nrDistinteUNO.ToString)
-                            Debug.Print("Discrepanze " & cfgOrdConDist.StatsInfo.StatsNumberInserted - (nrDistinte + nrDistinteUNO).ToString)
-                            bulkMessage.AppendLine("Discrepanze " & cfgOrdConDist.StatsInfo.StatsNumberInserted - (nrDistinte + nrDistinteUNO).ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento righe servizi aggiuntivi contratto ")
-                        If efAllordCliContrattoDistintaServAgg.Any Then
-                            Dim t = efAllordCliContrattoDistintaServAgg.Count
-                            Dim cfgOrdConServAgg As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efAllordCliContrattoDistintaServAgg, cfgOrdConServAgg, Function(d) d)
-                            Debug.Print("ALLOrdCliContratto_Distinta_ServAgg Ins:" & cfgOrdConServAgg.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConServAgg.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("ALLOrdCliContratto_Distinta_ServAgg Ins:" & cfgOrdConServAgg.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConServAgg.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento righe Descrizioni ")
-                        If efAllordCliDescrizioni.Any Then
-                            Dim t = efAllordCliDescrizioni.Count
-                            Dim cfgOrdCon As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efAllordCliDescrizioni, cfgOrdCon, Function(d) d)
-                            Debug.Print("AllordCliDescrizioni Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("AllordCliDescrizioni Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento ordini Figlio ")
-                        If efAllordFiglio.Any Then
-                            Dim t = efAllordFiglio.Count
-                            Dim cfgOrdCon As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efAllordFiglio, cfgOrdCon, Function(d) d)
-                            Debug.Print("AllordFiglio Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("AllordFiglio Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento ordini Padre ")
-                        If efAllordPadre.Any Then
-                            Dim t = efAllordPadre.Count
-                            Dim cfgOrdCon As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efAllordPadre, cfgOrdCon, Function(d) d)
-                            Debug.Print("AllordPadre Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("AllordPadre Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento righe Tipologie Servizi ")
-                        If efAllordCliTipologiaServizi.Any Then
-                            Dim t = efAllordCliTipologiaServizi.Count
-                            Dim cfgOrdCon As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efAllordCliTipologiaServizi, cfgOrdCon, Function(d) d)
-                            Debug.Print("AllordCliTipologiaServizi Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("AllordCliTipologiaServizi Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento Dichiarazioni di Intento ")
-                        If efMaDeclarationOfIntent.Any Then
-                            Dim t = efMaDeclarationOfIntent.Count
-                            Dim cfgOrdCon As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efMaDeclarationOfIntent, cfgOrdCon, Function(d) d)
-                            Debug.Print("MaDeclarationOfIntent Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("MaDeclarationOfIntent Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Contatore Dichiarazioni di Intento  ")
-                        If efMaDeclarationOfIntentNumbers.Any Then
-                            Dim t = efMaDeclarationOfIntentNumbers.Count
-                            Dim cfgOrdCon As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efMaDeclarationOfIntentNumbers, cfgOrdCon, Function(d) d)
-                            Debug.Print("MaDeclarationOfIntentNumbers Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("MaDeclarationOfIntentNumbers Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Inserimento mandati ")
-                        If efMaSddmandate.Any Then
-                            Dim t = efMaSddmandate.Count
-                            Dim cfgOrdCon As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efMaSddmandate, cfgOrdCon, Function(d) d)
-                            Debug.Print("MaSddmandate Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("MaSddmandate Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: IdNumbers ")
-                        If efMaIdnumbers.Any Then
-                            Dim t = efMaIdnumbers.Count
-                            Dim cfgOrdCon As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efMaIdnumbers, cfgOrdCon, Function(d) d)
-                            Debug.Print("MaIdnumbers Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("MaIdnumbers Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-                        iStep += 1
-                        EditTestoBarra("Salvataggio: Non Fiscal Numbers ")
-                        If efMaNonFiscalNumbers.Any Then
-                            Dim t = efMaNonFiscalNumbers.Count
-                            Dim cfgOrdCon As New BulkConfig With {
-                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
-                                    .BulkCopyTimeout = 0,
-                                    .CalculateStats = True,
-                                    .BatchSize = If(t < 5000, 0, t / 10),
-                                    .NotifyAfter = t / 10
-                                    }
-                            OrdiniCntx.BulkInsertOrUpdate(efMaNonFiscalNumbers, cfgOrdCon, Function(d) d)
-                            Debug.Print("MaNonFiscalNumbers Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                            bulkMessage.AppendLine("MaNonFiscalNumbers Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
-                        End If
-
+                        OrdiniCntx.BulkInsertOrUpdate(efMaSaleOrd, cfgOrd, Function(d) d)
+                        Debug.Print("MaSaleOrd Ins:" & cfgOrd.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrd.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("MaSaleOrd Ins:" & cfgOrd.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrd.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Inserimento totali ordini")
+                    If efMaSaleOrdSummary.Any Then
+                        Dim t = efMaSaleOrdSummary.Count
+                        Dim cfgOrdTot As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efMaSaleOrdSummary, cfgOrdTot, Function(d) d)
+                        Debug.Print("MaSaleOrdSummary Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("MaSaleOrdSummary Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
+                    End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Inserimento Dati Spedizione ordini")
+                    If efMaSaleOrdShipping.Any Then
+                        Dim t = efMaSaleOrdShipping.Count
+                        Dim cfgOrdTot As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efMaSaleOrdShipping, cfgOrdTot, Function(d) d)
+                        Debug.Print("MaSaleOrdShipping Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("MaSaleOrdShipping Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
+                    End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Inserimento note ordini")
+                    If efMaSaleOrdNotes.Any Then
+                        Dim t = efMaSaleOrdNotes.Count
+                        Dim cfgOrdTot As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efMaSaleOrdNotes, cfgOrdTot, Function(d) d)
+                        Debug.Print("MaSaleOrdNotes Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("MaSaleOrdNotes Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
+                    End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Inserimento dati accessori ordini")
+                    If efAllordCliAcc.Any Then
+                        Dim t = efAllordCliAcc.Count
+                        Dim cfgOrdAcc As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efAllordCliAcc, cfgOrdAcc, Function(d) d)
+                        Debug.Print("ALLOrdCliAcc Ins:" & cfgOrdAcc.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdAcc.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("ALLOrdCliAcc Ins:" & cfgOrdAcc.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdAcc.StatsInfo.StatsNumberUpdated.ToString)
+                    End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Inserimento dati Fattura Elettronica")
+                    If efAllordCliFattEle.Any Then
+                        Dim t = efAllordCliFattEle.Count
+                        Dim cfgOrdFattEle As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efAllordCliFattEle, cfgOrdFattEle, Function(d) d)
+                        Debug.Print("ALLOrdCliFattEle Ins:" & cfgOrdFattEle.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdFattEle.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("ALLOrdCliFattEle Ins:" & cfgOrdFattEle.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdFattEle.StatsInfo.StatsNumberUpdated.ToString)
+                    End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Inserimento righe contratto ")
+                    If efAllordCliContratto.Any Then
+                        Dim t = efAllordCliContratto.Count
+                        Dim cfgOrdCon As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efAllordCliContratto, cfgOrdCon, Function(d) d)
+                        Debug.Print("AllordCliContratto Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("AllordCliContratto Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                    End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Inserimento righe descrizioni contratto ")
+                    If efAllordCliContrattoDescFatt.Any Then
+                        Dim t = efAllordCliContrattoDescFatt.Count
+                        Dim cfgOrdConDescFatt As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efAllordCliContrattoDescFatt, cfgOrdConDescFatt, Function(d) d)
+                        Debug.Print("AllordCliContratto_DescFatt Ins:" & cfgOrdConDescFatt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDescFatt.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("AllordCliContratto_DescFatt Ins:" & cfgOrdConDescFatt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDescFatt.StatsInfo.StatsNumberUpdated.ToString)
+                    End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Inserimento righe attività contratto ")
+                    If efAllordCliAttivita.Any Then
+                        Dim t = efAllordCliAttivita.Count
+                        Dim cfgOrdConAtt As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efAllordCliAttivita, cfgOrdConAtt, Function(d) d)
+                        Debug.Print("ALLOrdCliAttivita Ins:" & cfgOrdConAtt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConAtt.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("ALLOrdCliAttivita Ins:" & cfgOrdConAtt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConAtt.StatsInfo.StatsNumberUpdated.ToString)
+                    End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Inserimento righe distinta contratto ")
+                    If efAllordCliContrattoDistinta.Any Then
+                        Dim t = efAllordCliContrattoDistinta.Count
+                        Dim cfgOrdConDist As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efAllordCliContrattoDistinta, cfgOrdConDist, Function(d) d)
+                        Debug.Print("ALLOrdCliContratto_Distinta Ins:" & cfgOrdConDist.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDist.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("ALLOrdCliContratto_Distinta Ins:" & cfgOrdConDist.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDist.StatsInfo.StatsNumberUpdated.ToString)
+                        'Check di numeri
+                        Debug.Print("Righe file Excel: " & dtContratti.Rows.Count.ToString)
+                        bulkMessage.AppendLine("Righe file Excel: " & dtContratti.Rows.Count.ToString)
+                        Debug.Print("Righe distinta: " & nrDistinte.ToString)
+                        bulkMessage.AppendLine("Righe distinta: " & nrDistinte.ToString)
+                        Debug.Print("Righe distinta UNO " & nrDistinteUNO.ToString)
+                        bulkMessage.AppendLine("Righe distinta UNO " & nrDistinteUNO.ToString)
+                        Debug.Print("Discrepanze " & cfgOrdConDist.StatsInfo.StatsNumberInserted - (nrDistinte + nrDistinteUNO).ToString)
+                        bulkMessage.AppendLine("Discrepanze " & cfgOrdConDist.StatsInfo.StatsNumberInserted - (nrDistinte + nrDistinteUNO).ToString)
+                    End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Inserimento righe servizi aggiuntivi contratto ")
+                    If efAllordCliContrattoDistintaServAgg.Any Then
+                        Dim t = efAllordCliContrattoDistintaServAgg.Count
+                        Dim cfgOrdConServAgg As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efAllordCliContrattoDistintaServAgg, cfgOrdConServAgg, Function(d) d)
+                        Debug.Print("ALLOrdCliContratto_Distinta_ServAgg Ins:" & cfgOrdConServAgg.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConServAgg.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("ALLOrdCliContratto_Distinta_ServAgg Ins:" & cfgOrdConServAgg.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConServAgg.StatsInfo.StatsNumberUpdated.ToString)
+                    End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Inserimento righe Descrizioni ")
+                    If efAllordCliDescrizioni.Any Then
+                        Dim t = efAllordCliDescrizioni.Count
+                        Dim cfgOrdCon As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efAllordCliDescrizioni, cfgOrdCon, Function(d) d)
+                        Debug.Print("AllordCliDescrizioni Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("AllordCliDescrizioni Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                    End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Inserimento ordini Figlio ")
+                    If efAllordFiglio.Any Then
+                        Dim t = efAllordFiglio.Count
+                        Dim cfgOrdCon As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efAllordFiglio, cfgOrdCon, Function(d) d)
+                        Debug.Print("AllordFiglio Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("AllordFiglio Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                    End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Inserimento ordini Padre ")
+                    If efAllordPadre.Any Then
+                        Dim t = efAllordPadre.Count
+                        Dim cfgOrdCon As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efAllordPadre, cfgOrdCon, Function(d) d)
+                        Debug.Print("AllordPadre Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("AllordPadre Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                    End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Inserimento righe Tipologie Servizi ")
+                    If efAllordCliTipologiaServizi.Any Then
+                        Dim t = efAllordCliTipologiaServizi.Count
+                        Dim cfgOrdCon As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efAllordCliTipologiaServizi, cfgOrdCon, Function(d) d)
+                        Debug.Print("AllordCliTipologiaServizi Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("AllordCliTipologiaServizi Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                    End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Inserimento Dichiarazioni di Intento ")
+                    If efMaDeclarationOfIntent.Any Then
+                        Dim t = efMaDeclarationOfIntent.Count
+                        Dim cfgOrdCon As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efMaDeclarationOfIntent, cfgOrdCon, Function(d) d)
+                        Debug.Print("MaDeclarationOfIntent Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("MaDeclarationOfIntent Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                    End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Contatore Dichiarazioni di Intento  ")
+                    If efMaDeclarationOfIntentNumbers.Any Then
+                        Dim t = efMaDeclarationOfIntentNumbers.Count
+                        Dim cfgOrdCon As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efMaDeclarationOfIntentNumbers, cfgOrdCon, Function(d) d)
+                        Debug.Print("MaDeclarationOfIntentNumbers Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("MaDeclarationOfIntentNumbers Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                    End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Inserimento mandati ")
+                    If efMaSddmandate.Any Then
+                        Dim t = efMaSddmandate.Count
+                        Dim cfgOrdCon As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efMaSddmandate, cfgOrdCon, Function(d) d)
+                        Debug.Print("MaSddmandate Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("MaSddmandate Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                    End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: IdNumbers ")
+                    If efMaIdnumbers.Any Then
+                        Dim t = efMaIdnumbers.Count
+                        Dim cfgOrdCon As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efMaIdnumbers, cfgOrdCon, Function(d) d)
+                        Debug.Print("MaIdnumbers Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("MaIdnumbers Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                    End If
+                    iStep += 1
+                    EditTestoBarra("Salvataggio: Non Fiscal Numbers ")
+                    If efMaNonFiscalNumbers.Any Then
+                        Dim t = efMaNonFiscalNumbers.Count
+                        Dim cfgOrdCon As New BulkConfig With {
+                                    .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
+                                    .BulkCopyTimeout = 0,
+                                    .CalculateStats = True,
+                                    .BatchSize = If(t < 5000, 0, t / 10),
+                                    .NotifyAfter = t / 10
+                                    }
+                        OrdiniCntx.BulkInsertOrUpdate(efMaNonFiscalNumbers, cfgOrdCon, Function(d) d)
+                        Debug.Print("MaNonFiscalNumbers Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                        bulkMessage.AppendLine("MaNonFiscalNumbers Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
+                    End If
+
+                    'End If
                     iStep += 1
                     EditTestoBarra("Salvataggio: Corrispondenze Clienti")
                     If efAllCustSuppFox.Any Then
@@ -3223,6 +3193,7 @@ Module ContrattiFox
 
 
                     If someTrouble Then
+                        Debug.Print("ROLLBACK")
                         bulkTrans.Rollback()
                         bulkMessage.AppendLine("[Salvataggio] Sono stati riscontrati degli errori. Eseguita rollback")
                     Else
@@ -3233,7 +3204,6 @@ Module ContrattiFox
                         bulkMessage.AppendLine("[RIASSUNTO] " & msgLog)
                         FLogin.lstStatoConnessione.Items.Add(msgLog)
                     End If
-                    OrdiniCntx.Database.ExecuteSqlRaw("DBCC TRACEOFF(610)")
 
                 Catch ex As Exception
                     If ex.Message.Contains("Il client per la copia bulk ha inviato una lunghezza di colonna non valida per il colid") Then
@@ -3285,6 +3255,9 @@ Module ContrattiFox
 
                     Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                     mb.ShowDialog()
+                Finally
+                    OrdiniCntx.Database.ExecuteSqlRaw("DBCC TRACEOFF(610)")
+
                 End Try
             End Using
 
@@ -3604,23 +3577,23 @@ Module ContrattiFox
 
         Select Case v.ToUpper
             Case "0A", "12A"
-                Return New DateTime(2025, 1, 1).ToString    'ANNUALE)
+                Return New DateTime(2027, 1, 1).ToString    'ANNUALE)
             Case "0P", "12P", "6P"
-                Return New DateTime(2024, 12, 31).ToString   'ANNUALE
+                Return New DateTime(2026, 12, 31).ToString   'ANNUALE
             Case "1A", "2A", "3A", "6A"
-                Return New DateTime(2024, 7, 1).ToString
+                Return New DateTime(2026, 10, 1).ToString
             Case "1P"
-                Return New DateTime(2024, 7, 31).ToString      'MENSILE
+                Return New DateTime(2026, 9, 30).ToString      'MENSILE
             Case "2P", "4P"
-                Return New DateTime(2024, 8, 31).ToString
+                Return New DateTime(2026, 10, 31).ToString
             Case "3P"
-                Return New DateTime(2024, 9, 30).ToString      'TRIMESTRALE
+                Return New DateTime(2026, 9, 30).ToString      'TRIMESTRALE
             Case "4A"
-                Return New DateTime(2024, 9, 1).ToString
+                Return New DateTime(2027, 1, 1).ToString
             Case "NO"
-                Return New DateTime(2024, 7, 31).ToString       'SOLO CANONI SUPPLEMENTARI
+                Return New DateTime(2026, 9, 30).ToString       'SOLO CANONI SUPPLEMENTARI
             Case Else
-                Return New DateTime(2024, 7, 1).ToString
+                Return New DateTime(2026, 10, 1).ToString
         End Select
 
     End Function
@@ -3732,6 +3705,7 @@ Module ContrattiFox
         Public ClienteACG As String
         Public ClienteMago As String
         Public RaggruppamentoFattura As String
+        Public RaggruppamentoFatturaFox As String
         Public RigheContratto As Integer
         Public CondPag As String
         Public CodIva As String
@@ -3751,6 +3725,7 @@ Module ContrattiFox
             ClienteACG = ""
             ClienteMago = ""
             RaggruppamentoFattura = ""
+            RaggruppamentoFatturaFox = ""
             RigheContratto = 0
             CondPag = ""
             CodIva = ""
@@ -3810,3 +3785,275 @@ Module ContrattiFox
     End Class
 End Module
 
+Partial Module ContrattiFox
+    ''' <summary>
+    ''' ! INCOMPLETA  ! Aggiungo Clienti Nuovi ( MaCustSupp,Options, Branches,NatualPerson)
+    ''' </summary>
+    Private Sub ScriviClientiNuovi()
+        Dim dtCli As DataTable = ds.Tables("_LIENORD")
+        Dim dtCliEle As DataTable = ds.Tables("_LIFTELE")
+        Dim dtCliRid As DataTable = ds.Tables("_RID")
+        Dim dtCliEse As DataTable = ds.Tables("_SENTIIV")
+        Dim dvCliEle = New DataView(dtCliEle)
+        Dim dvCliRid = New DataView(dtCliRid)
+        Dim dvCliEse = New DataView(dtCliEse)
+
+        For Each r As DataRow In dtCli.Rows
+            Dim codice As String = r.Item("ACGCOD").ToString
+            Dim c = OrdiniCntx.MaCustSupp.Find(CustSuppType.Cliente, codice)
+            'Dim w = OrdiniCntx.MaCustSupp.AsNoTracking.Where(Function(k) k.CustSuppType.Equals(CustSuppType.Cliente) AndAlso k.CustSupp.Equals(codice)).First
+            If c Is Nothing Then
+                Debug.Print("Nuovo Cliente:(" & codice & ") ")
+                dvCliEle.RowFilter = $"ACGCOD = '{codice}'"
+                dvCliRid.RowFilter = $"ACGCOD = '{codice}'"
+                dvCliEse.RowFilter = $"ACGCOD = '{codice}'"
+                'TrovaFiliale()
+
+#Region "clienord da Fatture"
+                '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+                'Creo nuovo cliente passando informazioni dalla fattura ed dal CLIENORD
+                '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+                'Debug.Print("Nuovo cliente: " & .Item("AA").ToString)
+                'listOfNewClienti.Add(.Item("AA").ToString & ": " & .Item("AB").ToString)
+                ''TAG l_NewCli.Add("N01", .Item("AA").ToString & ": " & .Item("AB").ToString, LogLevel.None, .Item("AA").ToString)
+                'l_NewCli.Add("N01", .Item("AA").ToString & ": " & .Item("AB").ToString)
+                'drCli = dtClientiNew.NewRow
+                'drCliOpt = dtCliOptNew.NewRow
+                'drCli("CustSupp") = .Item("AA").ToString
+                'drCli("CustSuppType") = CustSuppType.Cliente
+                'Dim sRagSoc As String = dvClienOrd(iClienOrdFound).Item("F").ToString
+                'If dvClienOrd(iClienOrdFound).Item("E").ToString = "1" Then sRagSoc = If(String.IsNullOrEmpty(dvClienOrd(iClienOrdFound).Item("G").ToString), sRagSoc, sRagSoc & Environment.NewLine & dvClienOrd(iClienOrdFound).Item("G").ToString)
+                'drCli("CompanyName") = sRagSoc '("AB" della fattura)
+                'drCli("Address") = dvClienOrd(iClienOrdFound).Item("I").ToString '("AC" della fattura)
+                'drCli("City") = dvClienOrd(iClienOrdFound).Item("J").ToString '("AE" della fattura)
+                'drCli("County") = dvClienOrd(iClienOrdFound).Item("K").ToString '("AF" della fattura)
+                'drCli("Region") = Get_Regione(dvClienOrd(iClienOrdFound).Item("K").ToString)
+                'Dim iCAP As Integer
+                'If Integer.TryParse(dvClienOrd(iClienOrdFound).Item("L").ToString, iCAP) Then
+                '    drCli("ZIPCode") = iCAP.ToString("00000") '("AE" della fattura)
+                'End If
+                'drCli("Telephone1") = dvClienOrd(iClienOrdFound).Item("S").ToString
+                'drCli("Fax") = dvClienOrd(iClienOrdFound).Item("T").ToString
+                'drCli("ISOCountryCode") = Left(dvClienOrd(iClienOrdFound).Item("M").ToString, 2).ToUpper
+                'drCli("CustSuppKind") = TrovaNaturaCliFor(drCli("ISOCountryCode").ToString, dvISO, "Cliente: " & .Item("AA").ToString & " Doc. nr: " & .Item("O").ToString & Environment.NewLine, errori)
+                'drCli("FiscalCode") = dvClienOrd(iClienOrdFound).Item("O").ToString '("AI" della fattura)
+                'drCli("TaxIdNumber") = dvClienOrd(iClienOrdFound).Item("N").ToString '("AJ" della fattura)
+                'drCli("Currency") = If(.Item("R").ToString = "EUR", "EUR", .Item("O").ToString)
+                'drCli("NaturalPerson") = If(dvClienOrd(iClienOrdFound).Item("E").ToString = "1", "0", "1")
+                'If drCli("NaturalPerson") = "1" Then
+                '    Dim cognomeNome As String() = Split(dvClienOrd(iClienOrdFound).Item("G").ToString, "*")
+                '    If UBound(cognomeNome) <> -1 Then
+                '        Dim ok As Boolean = False
+                '        If cognomeNome.Length = 2 Then
+                '            ok = True
+                '        ElseIf cognomeNome.Length > 2 Then
+                '            'Cognomi composti controllare su Mago
+                '            avvisi.AppendLine("ANC1: Controllare correttezza Nome e Cognome: Cliente " & .Item("AA").ToString & ": " & .Item("AB").ToString)
+                '            ok = True
+                '        Else
+                '            'Assenza carattere split
+                '            errori.AppendLine("ENC1: Impossibile determinare Nome e Cognome: Cliente " & .Item("AA").ToString & ": " & .Item("AB").ToString)
+                '            ok = False
+                '        End If
+                '        If ok Then
+                '            drCliNatPers = dtCliNatPersNew.NewRow
+                '            drCliNatPers("CustSuppType") = CustSuppType.Cliente
+                '            drCliNatPers("CustSupp") = .Item("AA").ToString
+                '            drCliNatPers("Name") = cognomeNome(1)
+                '            drCliNatPers("LastName") = cognomeNome(0)
+                '            drCliNatPers("TBCreatedID") = My.Settings.mLOGINID 'ID utente
+                '            drCliNatPers("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+                '            dtCliNatPersNew.Rows.Add(drCliNatPers)
+                '        End If
+                '    End If
+                'End If
+                ''Deprecata
+                ''drCli("Account") = "1CLI" & Int16.Parse((TrovaFiliale(.Item("AA").ToString, False))).ToString("000")
+                'drCli("Account") = "1CLI001"
+                'drCli("Presentation") = 1376260
+                'drCli("MailSendingType") = 12451840 'Tipo invio mail ( A: 12451841, non inviare: 12451840)
+                '''''''''''''''''''''''
+                ''Fattura Elettronica
+                '''''''''''''''''''''''
+                'drCli("ElectronicInvoicing") = "1"
+                'Dim isPA As Boolean = .Item("Z").ToString.Length = 6
+                'If isPA Then
+                '    drCliOpt("PublicAuthority") = "1"
+                '    drCliOpt("PASplitPayment") = "1"
+                'End If
+                'If IsDeprecated AndAlso dvClienOrd(iClienOrdFound).Item("P").ToString() = "A" Then 'CLPAR
+                '    '05/10/2021 : era stata aggiunta il 14/07/2021, ma non era cosi' vero che la lettera fosse giusta
+                '    'Il campo classe cliente =  A identifica una Pubblica Amministrazione
+                '    drCliOpt("PublicAuthority") = "1"
+                '    drCliOpt("PASplitPayment") = "1"
+                'End If
+
+                'drCli("IPACode") = If(.Item("Z").ToString = "0", "0000000", .Item("Z").ToString)
+                'Dim sPec As String() = Split(.Item("HI").ToString, ";")
+                'If Len(sPec(0)) > 64 Then
+                '    errori.AppendLine("E06: PEC troppo lunga su Cliente: " & .Item("AA").ToString & " dato non salvato")
+                '    l_Err.Add("E06", "PEC troppo lunga su Cliente: " & .Item("AA").ToString & " dato non salvato")
+                'Else
+                '    drCli("EICertifiedEMail") = sPec(0).ToLower
+                'End If
+                'drCli("SendByCertifiedEmail") = If(drCli("IPACode") = "0000000" AndAlso Not String.IsNullOrWhiteSpace(drCli("EICertifiedEMail")), "1", "0")
+                'drCli("TBCreatedID") = My.Settings.mLOGINID 'ID utente
+                'drCli("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+
+                ''Options
+                'drCliOpt("Customer") = .Item("AA").ToString
+                'drCliOpt("CustSuppType") = CustSuppType.Cliente
+                'drCliOpt("Area") = TrovaFiliale(.Item("AA").ToString, True) ' Filiale / Ara di Vendita
+                'drCliOpt("UseReqForPymt") = "1"
+                'Dim cat As String = dvClienOrd(iClienOrdFound).Item("C").ToString
+                'Select Case cat
+                '    Case "O"
+                '        cat = "OR"
+                '    Case "S"
+                '        cat = "SP"
+                '    Case Else
+                '        cat = "OR"
+                'End Select
+                'drCliOpt("Category") = cat ' "OR" 'CATEG
+                'drCliOpt("CustomerClassification") = dvClienOrd(iClienOrdFound).Item("P").ToString 'CLPAR
+                'drCliOpt("DebitStampCharges") = "1" ' Bolli SPMAF
+                'drCliOpt("TBCreatedID") = My.Settings.mLOGINID 'ID utente
+                'drCliOpt("TBModifiedID") = My.Settings.mLOGINID 'ID utente
+
+#End Region
+#Region "Testa"
+                Dim rCli As New MaCustSupp With {
+                                    .CustSuppType = CustSuppType.Cliente,
+                                    .CustSupp = codice,
+                                    .Tbcreated = Now,
+                                    .Tbmodified = Now,
+                                    .TbcreatedId = sLoginId,
+                                    .TbmodifiedId = sLoginId
+                                    }
+                'Aggiungo la riga alla collection
+                efMaCustSupp.Add(rCli)
+
+#End Region
+#Region "Options - Altri dati"
+                Dim rCliOpt As New MaCustSuppCustomerOptions With {
+                                    .CustSuppType = CustSuppType.Cliente,
+                                    .Customer = codice,
+                                    .Tbcreated = Now,
+                                    .Tbmodified = Now,
+                                    .TbcreatedId = sLoginId,
+                                    .TbmodifiedId = sLoginId
+                                    }
+                'Aggiungo la riga alla collection
+                efMaCustSuppCustomerOptions.Add(rCliOpt)
+
+#End Region
+#Region "Sedi"
+                Dim rCliBr As New MaCustSuppBranches With {
+                                    .CustSuppType = CustSuppType.Cliente,
+                                    .CustSupp = codice,
+                                    .Tbcreated = Now,
+                                    .Tbmodified = Now,
+                                    .TbcreatedId = sLoginId,
+                                    .TbmodifiedId = sLoginId
+                                    }
+                'Aggiungo la riga alla collection
+                efMaCustSuppBranches.Add(rCliBr)
+#End Region
+#Region "Natural Person"
+                Dim rCliNatPer As New MaCustSuppNaturalPerson With {
+                                 .CustSuppType = CustSuppType.Cliente,
+                                 .CustSupp = codice,
+                                 .Tbcreated = Now,
+                                    .Tbmodified = Now,
+                                    .TbcreatedId = sLoginId,
+                                    .TbmodifiedId = sLoginId
+                                 }
+                'Aggiungo la riga alla collection
+                efMaCustSuppNaturalPerson.Add(rCliNatPer)
+#End Region
+#Region "Dichiarazioni di Intento"
+                If dvCliEle.Count > 0 Then
+                    If dvCliEle.Count = 1 Then
+                        Dim rIntento As New MaDeclarationOfIntent With {
+                                    .CustSuppType = CustSuppType.Cliente,
+                                    .CustSupp = codice,
+                                 .Tbcreated = Now,
+                                    .Tbmodified = Now,
+                                    .TbcreatedId = sLoginId,
+                                    .TbmodifiedId = sLoginId
+                                    }
+                        'Aggiungo la riga alla collection
+                        efMaDeclarationOfIntent.Add(rIntento)
+                    Else
+                        Dim mb As New MessageBoxWithDetails("Cliente: " & codice & " con piu' dichiarazioni di intento", GetCurrentMethod.Name, "")
+                        mb.ShowDialog()
+                    End If
+                End If
+#End Region
+#Region "Mandati"
+                If dvCliRid.Count > 0 Then
+                    If dvCliRid.Count = 1 Then
+                        Dim rRid As New MaSddmandate With {
+                                    .Customer = codice,
+                                 .Tbcreated = Now,
+                                    .Tbmodified = Now,
+                                    .TbcreatedId = sLoginId,
+                                    .TbmodifiedId = sLoginId
+                                    }
+                        'Aggiungo la riga alla collection
+                        efMaSddmandate.Add(rRid)
+                    Else
+                        Dim mb As New MessageBoxWithDetails("Cliente: " & codice & " con piu' mandati", GetCurrentMethod.Name, "")
+                        mb.ShowDialog()
+                    End If
+                End If
+#End Region
+            End If
+        Next
+#Region "Dispose"
+        dtCli.Dispose()
+        dtCliEle.Dispose()
+        dtCliRid.Dispose()
+        dtCliEse.Dispose()
+#End Region
+        'Dim efCli = From c In OrdiniCntx.MaCustSupp _
+        '            .Include(Function(o) o.MaCustSuppCustomerOptions) _
+        '            .Include(Function(br) br.MaCustSuppBranches) _
+        '            .Include(Function(np) np.MaCustSuppNaturalPerson) _
+        '            .Include(Function(nt) nt.MaCustSuppNotes) _
+        '            .ToList
+
+    End Sub
+    Private Sub LeggiOrdiniEsistenti()
+        'era cosi' Dim q = (From o In OrdContext.MaSaleOrd _
+        Dim q = (From o In OrdiniCntx.MaSaleOrd _
+                           .Include(Function(r) r.MaSaleOrdDetails) _
+                           .Include(Function(acc) acc.ALLOrdCliAcc) _
+                           .Include(Function(des) des.ALLordCliDescrizioni) _
+                           .Include(Function(con) con.ALLordCliContratto) _
+                               .ThenInclude(Of MaItems)(Function(it) it.MaItems) _
+                           .Include(Function(con) con.ALLordCliContratto) _
+                               .ThenInclude(Of AlltipoRigaServizio)(Function(trs) trs.AlltipoRigaServizio) _
+                           .Include(Function(con) con.ALLordCliContratto) _
+                                .ThenInclude(Function(att) att.AllordCliAttivita) _
+                                       .ThenInclude(Of Allattivita)(Function(at) at.Allattivita) _
+                           .Include(Function(att) att.AllordCliAttivita) _
+                               .ThenInclude(Of Allattivita)(Function(at) at.Allattivita)) ' _
+        'q = q.Where(Function(i) i.MaSaleOrdDetails..)
+        'AGGIUNGO  FILTRI
+        'Vengono esclusi a priori gli ordini con data cessazione > di Data Competenza
+        'Il filtro where che prende quelli senza data cessazione o con data successiva ( preimpostata da loro)
+        ' q = q.Where(Function(facc) facc.ALLOrdCliAcc.DataCessazione = sDataNulla OrElse facc.ALLOrdCliAcc.DataCessazione.Value.Date >= dataFattA)
+        '
+        ' q = q.Where(Function(oDate) oDate.OrderDate.Value.Date >= fromOrdDate AndAlso oDate.OrderDate.Value.Date <= toOrdDate)
+        'Sostituisco la logica di "uguale" aggiungendo un giorno, in questo modo prendo anche le cose create nello stesso giorno
+        ' q = q.Where(Function(oDate) oDate.OrderDate <= toOrdDate)
+        q.ToList
+
+        Debug.Print("Ordini estratti: " & q.Count.ToString)
+    End Sub
+    Private Sub LeggiTesteOrdiniEsistenti()
+        Dim q = From o In OrdiniCntx.MaSaleOrd.ToList
+        Debug.Print("Teste Ordini estratti: " & q.Count.ToString)
+    End Sub
+End Module

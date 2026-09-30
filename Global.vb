@@ -844,7 +844,7 @@ Module MagoNet
     ''' <param name="value"></param>
     ''' <returns></returns>
     Public Function Valid_Data(value As String) As String
-        Return If(String.IsNullOrWhiteSpace(value), sDataNulla, value)
+        Return If(String.IsNullOrWhiteSpace(value) OrElse value.Trim() = "??", sDataNulla, value)
     End Function
 End Module
 Public Module FiltriAnalitici
