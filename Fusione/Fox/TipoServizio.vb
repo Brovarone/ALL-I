@@ -27,7 +27,7 @@
             Case "FL"
                 esito = "XXXXX"
             Case "HU"
-                esito = "XXXXX"
+                esito = "IMPIANTI HUB"
             Case "IV"
                 esito = "ISPEZIONI VISTA"
             Case "KA"

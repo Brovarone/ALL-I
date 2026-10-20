@@ -1091,8 +1091,6 @@ Module ContrattiFox
                                             .Region = Get_Regione(r("PROV").ToString.Trim),
                                             .Zipcode = r("CAP").ToString.Trim,
                                             .IsocountryCode = "IT",
-                                            .TaxIdNumber = drClienord("PIVA").ToString.Trim,
-                                            .FiscalCode = drClienord("CODFISC").ToString.Trim,
                                             .MailSendingType = 12451840,
                                             .Tbcreated = Now,
                                             .Tbmodified = Now,
@@ -1103,6 +1101,10 @@ Module ContrattiFox
                                             .Latitude = Strings.Left(contratto, 16),
                                             .Longitude = Strings.Left(clienteACG, 16)
                                             }
+                        If drClienord IsNot Nothing Then
+                            rCliBr.TaxIdNumber = drClienord("PIVA").ToString.Trim
+                            rCliBr.FiscalCode = drClienord("CODFISC").ToString.Trim
+                        End If
                         'Aggiungo la riga alla collection
                         efMaCustSuppBranches.Add(rCliBr)
                         sediCliente.Add(rCliBr)
@@ -2735,10 +2737,10 @@ Module ContrattiFox
             'https://github.com/borisdj/EFCore.BulkExtensions
 
             Using bulkTrans = OrdiniCntx.Database.BeginTransaction
-                Dim iStep As Integer
+                Dim iStep As Integer = 0
                 Try
                     OrdiniCntx.Database.ExecuteSqlRaw("DBCC TRACEON(610)")
-                    'If Esegui Then
+                    ' -- Step 1
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento teste ordini")
                     If efMaSaleOrd.Any Then
@@ -2754,6 +2756,7 @@ Module ContrattiFox
                         Debug.Print("MaSaleOrd Ins:" & cfgOrd.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrd.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("MaSaleOrd Ins:" & cfgOrd.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrd.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    ' -- Step 2
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento totali ordini")
                     If efMaSaleOrdSummary.Any Then
@@ -2769,6 +2772,7 @@ Module ContrattiFox
                         Debug.Print("MaSaleOrdSummary Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("MaSaleOrdSummary Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    ' -- Step 3
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento Dati Spedizione ordini")
                     If efMaSaleOrdShipping.Any Then
@@ -2784,6 +2788,7 @@ Module ContrattiFox
                         Debug.Print("MaSaleOrdShipping Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("MaSaleOrdShipping Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    ' -- Step 4
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento note ordini")
                     If efMaSaleOrdNotes.Any Then
@@ -2799,6 +2804,7 @@ Module ContrattiFox
                         Debug.Print("MaSaleOrdNotes Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("MaSaleOrdNotes Ins:" & cfgOrdTot.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdTot.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    ' -- Step 5
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento dati accessori ordini")
                     If efAllordCliAcc.Any Then
@@ -2814,6 +2820,7 @@ Module ContrattiFox
                         Debug.Print("ALLOrdCliAcc Ins:" & cfgOrdAcc.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdAcc.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("ALLOrdCliAcc Ins:" & cfgOrdAcc.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdAcc.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    ' -- Step 6
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento dati Fattura Elettronica")
                     If efAllordCliFattEle.Any Then
@@ -2829,6 +2836,7 @@ Module ContrattiFox
                         Debug.Print("ALLOrdCliFattEle Ins:" & cfgOrdFattEle.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdFattEle.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("ALLOrdCliFattEle Ins:" & cfgOrdFattEle.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdFattEle.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    ' -- Step 7
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento righe contratto ")
                     If efAllordCliContratto.Any Then
@@ -2844,6 +2852,7 @@ Module ContrattiFox
                         Debug.Print("AllordCliContratto Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("AllordCliContratto Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    ' -- Step 8
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento righe descrizioni contratto ")
                     If efAllordCliContrattoDescFatt.Any Then
@@ -2859,6 +2868,7 @@ Module ContrattiFox
                         Debug.Print("AllordCliContratto_DescFatt Ins:" & cfgOrdConDescFatt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDescFatt.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("AllordCliContratto_DescFatt Ins:" & cfgOrdConDescFatt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConDescFatt.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    ' -- Step 9
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento righe attività contratto ")
                     If efAllordCliAttivita.Any Then
@@ -2874,6 +2884,7 @@ Module ContrattiFox
                         Debug.Print("ALLOrdCliAttivita Ins:" & cfgOrdConAtt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConAtt.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("ALLOrdCliAttivita Ins:" & cfgOrdConAtt.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConAtt.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    ' -- Step 10
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento righe distinta contratto ")
                     If efAllordCliContrattoDistinta.Any Then
@@ -2898,6 +2909,7 @@ Module ContrattiFox
                         Debug.Print("Discrepanze " & cfgOrdConDist.StatsInfo.StatsNumberInserted - (nrDistinte + nrDistinteUNO).ToString)
                         bulkMessage.AppendLine("Discrepanze " & cfgOrdConDist.StatsInfo.StatsNumberInserted - (nrDistinte + nrDistinteUNO).ToString)
                     End If
+                    ' -- Step 11
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento righe servizi aggiuntivi contratto ")
                     If efAllordCliContrattoDistintaServAgg.Any Then
@@ -2913,6 +2925,7 @@ Module ContrattiFox
                         Debug.Print("ALLOrdCliContratto_Distinta_ServAgg Ins:" & cfgOrdConServAgg.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConServAgg.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("ALLOrdCliContratto_Distinta_ServAgg Ins:" & cfgOrdConServAgg.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdConServAgg.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    ' -- Step 12
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento righe Descrizioni ")
                     If efAllordCliDescrizioni.Any Then
@@ -2928,6 +2941,7 @@ Module ContrattiFox
                         Debug.Print("AllordCliDescrizioni Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("AllordCliDescrizioni Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    ' -- Step 13
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento ordini Figlio ")
                     If efAllordFiglio.Any Then
@@ -2943,6 +2957,7 @@ Module ContrattiFox
                         Debug.Print("AllordFiglio Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("AllordFiglio Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    ' -- Step 14
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento ordini Padre ")
                     If efAllordPadre.Any Then
@@ -2958,6 +2973,7 @@ Module ContrattiFox
                         Debug.Print("AllordPadre Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("AllordPadre Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    ' -- Step 15
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento righe Tipologie Servizi ")
                     If efAllordCliTipologiaServizi.Any Then
@@ -2973,6 +2989,7 @@ Module ContrattiFox
                         Debug.Print("AllordCliTipologiaServizi Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("AllordCliTipologiaServizi Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    ' -- Step 16
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento Dichiarazioni di Intento ")
                     If efMaDeclarationOfIntent.Any Then
@@ -2988,6 +3005,7 @@ Module ContrattiFox
                         Debug.Print("MaDeclarationOfIntent Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("MaDeclarationOfIntent Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    ' -- Step 17
                     iStep += 1
                     EditTestoBarra("Salvataggio: Contatore Dichiarazioni di Intento  ")
                     If efMaDeclarationOfIntentNumbers.Any Then
@@ -3003,6 +3021,7 @@ Module ContrattiFox
                         Debug.Print("MaDeclarationOfIntentNumbers Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("MaDeclarationOfIntentNumbers Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    ' -- Step 18
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento mandati ")
                     If efMaSddmandate.Any Then
@@ -3018,6 +3037,7 @@ Module ContrattiFox
                         Debug.Print("MaSddmandate Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("MaSddmandate Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    ' -- Step 19
                     iStep += 1
                     EditTestoBarra("Salvataggio: IdNumbers ")
                     If efMaIdnumbers.Any Then
@@ -3033,6 +3053,7 @@ Module ContrattiFox
                         Debug.Print("MaIdnumbers Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                         bulkMessage.AppendLine("MaIdnumbers Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                     End If
+                    ' -- Step 20
                     iStep += 1
                     EditTestoBarra("Salvataggio: Non Fiscal Numbers ")
                     If efMaNonFiscalNumbers.Any Then
@@ -3049,7 +3070,7 @@ Module ContrattiFox
                         bulkMessage.AppendLine("MaNonFiscalNumbers Ins:" & cfgOrdCon.StatsInfo.StatsNumberInserted.ToString & " Agg:" & cfgOrdCon.StatsInfo.StatsNumberUpdated.ToString)
                     End If
 
-                    'End If
+                    ' -- Step 21
                     iStep += 1
                     EditTestoBarra("Salvataggio: Corrispondenze Clienti")
                     If efAllCustSuppFox.Any Then
@@ -3077,6 +3098,7 @@ Module ContrattiFox
                         'Debug.Print("AllCustSuppFox Ins:" & cfgCorrispondenze.StatsInfo.StatsNumberInserted.ToString)
                         'bulkMessage.AppendLine("AllCustSuppFox Ins:" & cfgCorrispondenze.StatsInfo.StatsNumberInserted.ToString)
                     End If
+                    ' -- Step 22
                     iStep += 1
                     EditTestoBarra("Salvataggio: Inserimento Sedi Clienti")
                     If efMaCustSuppBranches.Any Then
@@ -3093,6 +3115,9 @@ Module ContrattiFox
                         Catch ex As Exception
                             ' Rollback in caso di errore
                             bulkTrans.Rollback()
+
+                            FLogin.lstStatoConnessione.Items.Add(" --- ERRORI in Inserimento Sedi Clienti ---")
+                            bulkMessage.AppendLine("Errore nel salvataggio di efMaCustSuppBranches: " & ex.Message)
 
                             Dim conn = New SqlConnection With {
                                 .ConnectionString = "Data Source=" & FLogin.txtSERVER.Text & "; Database=" & FLogin.TxtTmpDB_UNO.Text & ";User Id=" & FLogin.txtID.Text & ";Password=" & FLogin.txtPSW.Text & ";"
@@ -3112,7 +3137,7 @@ Module ContrattiFox
                                 For Each item In efMaCustSuppBranches
                                     Try
                                         ' Creazione del comando SQL per l'inserimento di ogni riga
-                                        Using cmd As New SqlCommand("INSERT INTO MaCustSuppBranches " &
+                                        Using cmd As New SqlCommand("INSERT INTO MA_CustSuppBranches " &
                                             "(CustSuppType, CustSupp, Branch, CompanyName, Address, Zipcode, City, County, Country, IsocountryCode, " &
                                             "TaxIdNumber, FiscalCode, Siacode, Telephone1, Telephone2, Telex, Fax, ContactPerson, Language, Internet, Email, " &
                                             "Disabled, WorkingTime, TaxOffice, MailSendingType, Notes, Salesperson, AreaManager, SkypeId, Region, " &
@@ -3125,63 +3150,66 @@ Module ContrattiFox
                                             "@Region, @Latitude, @Longitude, @Address2, @StreetNo, @District, @FederalState, @Ipacode, @AdministrationReference, " &
                                             "@Tbcreated, @Tbmodified, @TbcreatedId, @TbmodifiedId, @FiscalName, @EishipTypeData, @EishipTextData, @EishipNumberData)", conn)
 
-                                            ' Aggiungi i parametri in base alle proprietà della classe
+                                            ' Aggiungi i parametri in base alle proprietà della classe (con protezione DBNull)
                                             cmd.Parameters.AddWithValue("@CustSuppType", item.CustSuppType)
-                                            cmd.Parameters.AddWithValue("@CustSupp", item.CustSupp)
-                                            cmd.Parameters.AddWithValue("@Branch", item.Branch)
-                                            cmd.Parameters.AddWithValue("@CompanyName", item.CompanyName)
-                                            cmd.Parameters.AddWithValue("@Address", item.Address)
-                                            cmd.Parameters.AddWithValue("@Zipcode", item.Zipcode)
-                                            cmd.Parameters.AddWithValue("@City", item.City)
-                                            cmd.Parameters.AddWithValue("@County", item.County)
-                                            cmd.Parameters.AddWithValue("@Country", item.Country)
-                                            cmd.Parameters.AddWithValue("@IsocountryCode", item.IsocountryCode)
-                                            cmd.Parameters.AddWithValue("@TaxIdNumber", item.TaxIdNumber)
-                                            cmd.Parameters.AddWithValue("@FiscalCode", item.FiscalCode)
-                                            cmd.Parameters.AddWithValue("@Siacode", item.Siacode)
-                                            cmd.Parameters.AddWithValue("@Telephone1", item.Telephone1)
-                                            cmd.Parameters.AddWithValue("@Telephone2", item.Telephone2)
-                                            cmd.Parameters.AddWithValue("@Telex", item.Telex)
-                                            cmd.Parameters.AddWithValue("@Fax", item.Fax)
-                                            cmd.Parameters.AddWithValue("@ContactPerson", item.ContactPerson)
-                                            cmd.Parameters.AddWithValue("@Language", item.Language)
-                                            cmd.Parameters.AddWithValue("@Internet", item.Internet)
-                                            cmd.Parameters.AddWithValue("@Email", item.Email)
-                                            cmd.Parameters.AddWithValue("@Disabled", item.Disabled)
-                                            cmd.Parameters.AddWithValue("@WorkingTime", item.WorkingTime)
-                                            cmd.Parameters.AddWithValue("@TaxOffice", item.TaxOffice)
+                                            cmd.Parameters.AddWithValue("@CustSupp", If(item.CustSupp, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Branch", If(item.Branch, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@CompanyName", If(item.CompanyName, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Address", If(item.Address, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Zipcode", If(item.Zipcode, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@City", If(item.City, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@County", If(item.County, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Country", If(item.Country, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@IsocountryCode", If(item.IsocountryCode, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@TaxIdNumber", If(item.TaxIdNumber, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@FiscalCode", If(item.FiscalCode, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Siacode", If(item.Siacode, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Telephone1", If(item.Telephone1, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Telephone2", If(item.Telephone2, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Telex", If(item.Telex, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Fax", If(item.Fax, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@ContactPerson", If(item.ContactPerson, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Language", If(item.Language, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Internet", If(item.Internet, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Email", If(item.Email, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Disabled", If(item.Disabled, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@WorkingTime", If(item.WorkingTime, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@TaxOffice", If(item.TaxOffice, DBNull.Value))
                                             cmd.Parameters.AddWithValue("@MailSendingType", If(item.MailSendingType, DBNull.Value))
-                                            cmd.Parameters.AddWithValue("@Notes", item.Notes)
-                                            cmd.Parameters.AddWithValue("@Salesperson", item.Salesperson)
-                                            cmd.Parameters.AddWithValue("@AreaManager", item.AreaManager)
-                                            cmd.Parameters.AddWithValue("@SkypeId", item.SkypeId)
-                                            cmd.Parameters.AddWithValue("@Region", item.Region)
-                                            cmd.Parameters.AddWithValue("@Latitude", item.Latitude)
-                                            cmd.Parameters.AddWithValue("@Longitude", item.Longitude)
-                                            cmd.Parameters.AddWithValue("@Address2", item.Address2)
-                                            cmd.Parameters.AddWithValue("@StreetNo", item.StreetNo)
-                                            cmd.Parameters.AddWithValue("@District", item.District)
-                                            cmd.Parameters.AddWithValue("@FederalState", item.FederalState)
-                                            cmd.Parameters.AddWithValue("@Ipacode", item.Ipacode)
-                                            cmd.Parameters.AddWithValue("@AdministrationReference", item.AdministrationReference)
+                                            cmd.Parameters.AddWithValue("@Notes", If(item.Notes, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Salesperson", If(item.Salesperson, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@AreaManager", If(item.AreaManager, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@SkypeId", If(item.SkypeId, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Region", If(item.Region, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Latitude", If(item.Latitude, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Longitude", If(item.Longitude, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Address2", If(item.Address2, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@StreetNo", If(item.StreetNo, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@District", If(item.District, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@FederalState", If(item.FederalState, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@Ipacode", If(item.Ipacode, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@AdministrationReference", If(item.AdministrationReference, DBNull.Value))
                                             cmd.Parameters.AddWithValue("@Tbcreated", item.Tbcreated)
                                             cmd.Parameters.AddWithValue("@Tbmodified", item.Tbmodified)
                                             cmd.Parameters.AddWithValue("@TbcreatedId", item.TbcreatedId)
                                             cmd.Parameters.AddWithValue("@TbmodifiedId", item.TbmodifiedId)
-                                            cmd.Parameters.AddWithValue("@FiscalName", item.FiscalName)
-                                            cmd.Parameters.AddWithValue("@EishipTypeData", item.EishipTypeData)
-                                            cmd.Parameters.AddWithValue("@EishipTextData", item.EishipTextData)
+                                            cmd.Parameters.AddWithValue("@FiscalName", If(item.FiscalName, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@EishipTypeData", If(item.EishipTypeData, DBNull.Value))
+                                            cmd.Parameters.AddWithValue("@EishipTextData", If(item.EishipTextData, DBNull.Value))
                                             cmd.Parameters.AddWithValue("@EishipNumberData", If(item.EishipNumberData, DBNull.Value))
+
 
                                             ' Esegui l'inserimento della riga
                                             cmd.ExecuteNonQuery()
 
                                         End Using
                                     Catch exRow As SqlException
+                                        Debug.Print("Errore nella riga con custsupp " & item.CustSupp.ToString() & ":   " & exRow.Message)
+                                        bulkMessage.AppendLine("Errore nella riga con custsupp " & item.CustSupp.ToString() & ":   " & exRow.Message)
+
                                         ' Log della riga che ha causato l'errore
-                                        Dim mb As New MessageBoxWithDetails("Errore nella riga con custsupp " & item.CustSupp.ToString() & ": " & exRow.Message, GetCurrentMethod.Name, exRow.StackTrace)
-                                        mb.ShowDialog()
-                                        'Console.WriteLine("Errore nella riga con custsupp " & item.CustSupp.ToString() & ": " & exRow.Message)
+                                        'Dim mb As New MessageBoxWithDetails("Errore nella riga con custsupp " & item.CustSupp.ToString() & ": " & exRow.Message, GetCurrentMethod.Name, exRow.StackTrace)
+                                        'mb.ShowDialog()
                                     End Try
                                 Next
                             End If
@@ -3219,41 +3247,51 @@ Module ContrattiFox
                                     .SqlBulkCopyOptions = SqlBulkCopyOptions.KeepNulls,
                                     .BulkCopyTimeout = 0
                                     }
-                        Try
-                            bulkTrans.Rollback()
-                            bulkTrans.Dispose()
 
-                            Using bulkTrans1 = OrdiniCntx.Database.BeginTransaction
+                        bulkTrans.Rollback()
+                        bulkTrans.Dispose()
 
-                                For Each o In efMaSaleOrd
-                                    Dim Olist As New List(Of MaSaleOrd)
+                        Dim contatore As Integer
+                        For Each o In efMaSaleOrd
+                            contatore += 1
+                            Dim Olist As New List(Of MaSaleOrd)
+                            Try
+                                Using bulkTrans1 = OrdiniCntx.Database.BeginTransaction
                                     Olist.Add(o)
                                     Debug.Print(o.InternalOrdNo & " " & o.Customer)
                                     OrdiniCntx.BulkInsertOrUpdate(Olist, cfgOrd, Function(d) d)
-                                Next
-                            End Using
-                        Catch exxx As Exception
+                                End Using
 
-                        End Try
-                        Dim pattern As String = "\d+"
-                        Dim match As Match = Regex.Match(ex.Message.ToString(), pattern)
-                        Dim index = Convert.ToInt32(match.Value) - 1
+                            Catch exSingle As Exception
+                                ' ABBIAMO TROVATO IL RECORD COLPEVOLE!
+                                Dim msgDettaglio As New StringBuilder()
+                                msgDettaglio.AppendLine($"=== CRASH IDENTIFICATO AL RECORD N. {contatore} ===")
+                                msgDettaglio.AppendLine($"Ordine N.: {o.InternalOrdNo} - Cliente: {o.Customer}")
+                                msgDettaglio.AppendLine($"Errore riscontrato: {exSingle.Message}")
+                                msgDettaglio.AppendLine("--- VALORI DEI CAMPI DI TESTO (Sospetti truncation) ---")
+                                msgDettaglio.AppendLine($"ExternalOrdNo: '{o.ExternalOrdNo}' (Lunghezza: {If(o.ExternalOrdNo IsNot Nothing, o.ExternalOrdNo.Length, 0)})")
+                                msgDettaglio.AppendLine($"Notes: '{o.Notes}' (Lunghezza: {If(o.Notes IsNot Nothing, o.Notes.Length, 0)})")
+                                msgDettaglio.AppendLine($"Carrier1 (Vettore): '{o.Carrier1}' (Lunghezza: {If(o.Carrier1 IsNot Nothing, o.Carrier1.Length, 0)})")
+                                msgDettaglio.AppendLine($"OurReference: '{o.OurReference}' (Lunghezza: {If(o.OurReference IsNot Nothing, o.OurReference.Length, 0)})")
+                                msgDettaglio.AppendLine($"ContractCode: '{o.ContractCode}' (Lunghezza: {If(o.ContractCode IsNot Nothing, o.ContractCode.Length, 0)})")
+                                msgDettaglio.AppendLine($"ProjectCode: '{o.ProjectCode}' (Lunghezza: {If(o.ProjectCode IsNot Nothing, o.ProjectCode.Length, 0)})")
+                                msgDettaglio.AppendLine($"Priority (Filiale): '{o.Priority}' (Lunghezza: {If(o.Priority IsNot Nothing, o.Priority.Value.ToString, 0)})")
 
-                        Dim fi As System.Reflection.FieldInfo = GetType(SqlBulkCopy).GetField("_sortedColumnMappings", BindingFlags.NonPublic Or BindingFlags.Instance)
-                        Dim sortedColumns = fi.GetValue(OrdiniCntx)
-                        Dim items = CType(sortedColumns.[GetType]().GetField("_items", BindingFlags.NonPublic Or BindingFlags.Instance).GetValue(sortedColumns), Object())
-                        Dim itemdata As FieldInfo = items(index).[GetType]().GetField("_metadata", BindingFlags.NonPublic Or BindingFlags.Instance)
-                        Dim metadata = itemdata.GetValue(items(index))
+                                ' Scriviamo tutto nel file di log di Mago/ClickOnce
+                                My.Application.Log.DefaultFileLogWriter.WriteLine(msgDettaglio.ToString())
 
-                        Dim column = metadata.[GetType]().GetField("column", BindingFlags.[Public] Or BindingFlags.NonPublic Or BindingFlags.Instance).GetValue(metadata)
-                        Dim length = metadata.[GetType]().GetField("length", BindingFlags.[Public] Or BindingFlags.NonPublic Or BindingFlags.Instance).GetValue(metadata)
-                        ' Throw New DataFormatException(String.Format("Column: {0} contains data with a length greater than: {1}", column, length));
+                                ' Mostriamo a video l'esito bloccante
+                                MessageBox.Show(msgDettaglio.ToString(), "Diagnostica Bulk: Record Corrotto Trovato", MessageBoxButtons.OK, MessageBoxIcon.Error)
 
+                                ' Interrompiamo il ciclo perché abbiamo trovato il colpevole
+
+                            End Try
+                        Next
                     End If
                     someTrouble = True
+                    FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Errore allo step " & iStep.ToString)
 
-
-                    Dim mb As New MessageBoxWithDetails(ex.Message, GetCurrentMethod.Name, ex.StackTrace)
+                    Dim mb As New MessageBoxWithDetails("Step" & iStep.ToString & Environment.NewLine & ex.Message, GetCurrentMethod.Name, ex.StackTrace)
                     mb.ShowDialog()
                 Finally
                     OrdiniCntx.Database.ExecuteSqlRaw("DBCC TRACEOFF(610)")
@@ -3578,17 +3616,19 @@ Module ContrattiFox
         Select Case v.ToUpper
             Case "0A", "12A"
                 Return New DateTime(2027, 1, 1).ToString    'ANNUALE)
-            Case "0P", "12P", "6P"
-                Return New DateTime(2026, 12, 31).ToString   'ANNUALE
-            Case "1A", "2A", "3A", "6A"
+            Case "0P", "12P", "6P", "4P"
+                Return New DateTime(2026, 12, 31).ToString
+            Case "1A", "3A"
                 Return New DateTime(2026, 10, 1).ToString
+            Case "2A"
+                Return New DateTime(2026, 11, 1).ToString
             Case "1P"
                 Return New DateTime(2026, 9, 30).ToString      'MENSILE
-            Case "2P", "4P"
+            Case "2P"
                 Return New DateTime(2026, 10, 31).ToString
             Case "3P"
                 Return New DateTime(2026, 9, 30).ToString      'TRIMESTRALE
-            Case "4A"
+            Case "4A", "6A"
                 Return New DateTime(2027, 1, 1).ToString
             Case "NO"
                 Return New DateTime(2026, 9, 30).ToString       'SOLO CANONI SUPPLEMENTARI
@@ -3596,6 +3636,49 @@ Module ContrattiFox
                 Return New DateTime(2026, 10, 1).ToString
         End Select
 
+    End Function
+    ''' <summary>
+    ''' Data della prossima fattura per il codice frequenza indicato.
+    ''' v: mesi + "A" (anticipato) / "P" (posticipato). "0" = 12 mesi, "NO" = nessuna periodicità.
+    ''' dataRiferimento: data da cui partire; se omessa usa oggi.
+    ''' Ritorna "yyyy-MM-dd" (non ambiguo tra culture).
+    ''' </summary>
+    Private Function DeterminaDataProssimaFatt(ByVal v As String,
+                                           Optional ByVal dataRiferimento As Date = Nothing) As String
+        If dataRiferimento = Date.MinValue Then dataRiferimento = Date.Today
+        Dim dataRif As Date = dataRiferimento.Date
+        Dim codice As String = If(v, String.Empty).Trim().ToUpperInvariant()
+
+        ' Solo canoni supplementari: nessuna periodicità, si parte dalla data di riferimento
+        If codice = "NO" Then Return FormattaData(dataRif)
+
+        Dim mesi As Integer
+        Select Case codice
+            Case "0A", "0P", "12A", "12P" : mesi = 12
+            Case "1A", "1P" : mesi = 1
+            Case "2A", "2P" : mesi = 2
+            Case "3A", "3P" : mesi = 3
+            Case "4A", "4P" : mesi = 4
+            Case "6A", "6P" : mesi = 6
+            Case Else                     ' comportamento storico: primo del mese successivo
+                Return FormattaData(New Date(dataRif.Year, dataRif.Month, 1).AddMonths(1))
+        End Select
+
+        ' Inizio del periodo di calendario che contiene la data di riferimento
+        Dim inizioPeriodo As New Date(dataRif.Year, ((dataRif.Month - 1) \ mesi) * mesi + 1, 1)
+
+        If codice.EndsWith("A") Then
+            ' Anticipato: primo giorno del primo periodo non ancora iniziato
+            If inizioPeriodo <= dataRif Then inizioPeriodo = inizioPeriodo.AddMonths(mesi)
+            Return FormattaData(inizioPeriodo)
+        Else
+            ' Posticipato: ultimo giorno del periodo in corso
+            Return FormattaData(inizioPeriodo.AddMonths(mesi).AddDays(-1))
+        End If
+    End Function
+
+    Private Function FormattaData(ByVal d As Date) As String
+        Return d.ToString("yyyy-MM-dd", Globalization.CultureInfo.InvariantCulture)
     End Function
     Private Function DeterminaRegistro(v As String) As String
         'V1 Anticipati

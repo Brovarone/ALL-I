@@ -148,18 +148,22 @@
                 End Select
             Case "05" ' Novara
                 esito = "05NO_XXX"
-                esito = "05NO_XXX"
                 Select Case codice.ToUpper
                     Case "017"
                         esito = "UFFICIO"
                     Case "C41"
                     Case "C42"
                         esito = "SECURGES"
+                    Case "C43"
+                        esito = "CARPINO"
                     Case "C44"
                         esito = "BOZZA P"
                     Case "C47"
+                        esito = "RICCI"
                     Case "C50"
+                        esito = "MAX POL"
                     Case "C52"
+                        esito = "RIGAMONT"
                     Case "C53"
                         esito = "AULETTA"
                     Case "N08"
