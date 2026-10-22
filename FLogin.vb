@@ -1004,11 +1004,22 @@ Public Class FLogin
                                 Exit For
                             End If
                         Next
-                        ReDim Preserve contratti(contratti.Length + 2) '( ACGTRPG,ElencoClienti ,EstateSicura)
-                        ReDim Preserve contrattiFound(contratti.Length - 1)
-                        Dim iACGTRPG As Integer = contrattiFound.Length - 3
-                        Dim iElencoClientiSpa As Integer = contrattiFound.Length - 2
-                        Dim iEstateSicura As Integer = contrattiFound.Length - 1
+                        Dim iACGTRPG As Integer
+                        Dim iElencoClientiSpa As Integer
+                        Dim iEstateSicura As Integer = -1
+                        '( ACGTRPG,ElencoClienti , + EstateSicura solo se richiesto dal flag)
+                        If ELAB_ESTATE_SICURA Then
+                            ReDim Preserve contratti(contratti.Length + 2)
+                            ReDim Preserve contrattiFound(contratti.Length - 1)
+                            iACGTRPG = contrattiFound.Length - 3
+                            iElencoClientiSpa = contrattiFound.Length - 2
+                            iEstateSicura = contrattiFound.Length - 1
+                        Else
+                            ReDim Preserve contratti(contratti.Length + 1)
+                            ReDim Preserve contrattiFound(contratti.Length - 1)
+                            iACGTRPG = contrattiFound.Length - 2
+                            iElencoClientiSpa = contrattiFound.Length - 1
+                        End If
                         fileInFolder = Directory.GetFiles(If(String.IsNullOrWhiteSpace(My.Settings.mFOXPATH), FolderPath, My.Settings.mFOXPATH), "*.*", SearchOption.TopDirectoryOnly)
                         'Condizioni pagamento
                         For Each sFile As String In fileInFolder
@@ -1032,17 +1043,19 @@ Public Class FLogin
                                 Exit For
                             End If
                         Next
-                        '24/06/2024 ESTATE SICURA
-                        For Each sFile As String In fileInFolder
-                            Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
-                            bFound = sNomeFile.ToUpper.Equals("ESTIVI ESTATE SICURA 2024")
-                            If bFound Then
-                                contrattiFound(iEstateSicura) = True
-                                contratti(iEstateSicura) = sFile
-                                listaFiles.Add(sFile)
-                                Exit For
-                            End If
-                        Next
+                        '24/06/2024 ESTATE SICURA (elaborata solo se richiesto dal flag)
+                        If ELAB_ESTATE_SICURA Then
+                            For Each sFile As String In fileInFolder
+                                Dim sNomeFile As String = System.IO.Path.GetFileNameWithoutExtension(sFile).ToUpper
+                                bFound = sNomeFile.ToUpper.Equals("ESTIVI ESTATE SICURA 2024")
+                                If bFound Then
+                                    contrattiFound(iEstateSicura) = True
+                                    contratti(iEstateSicura) = sFile
+                                    listaFiles.Add(sFile)
+                                    Exit For
+                                End If
+                            Next
+                        End If
                         If Not contrattiFound(iACGTRPG) Then
                             allOk = False
                             MessageBox.Show("Impossibile continuare l'elaborazione dei Contratti a causa di file mancanti: ACGTRPG ")
@@ -1053,10 +1066,12 @@ Public Class FLogin
                             MessageBox.Show("Impossibile continuare l'elaborazione dei Contratti a causa di file mancanti: ELENCO CLIENTI SPA ")
                             Exit For
                         End If
-                        If Not contrattiFound(iEstateSicura) Then
-                            allOk = False
-                            MessageBox.Show("Impossibile continuare l'elaborazione dei Contratti a causa di file mancanti: ESTIVI ESTATE SICURA 2024 ")
-                            Exit For
+                        If iEstateSicura >= 0 Then
+                            If Not contrattiFound(iEstateSicura) Then
+                                allOk = False
+                                MessageBox.Show("Impossibile continuare l'elaborazione dei Contratti a causa di file mancanti: ESTIVI ESTATE SICURA 2024 ")
+                                Exit For
+                            End If
                         End If
 
                         If allOk Then ProcessaGruppoContratti(contratti, "Contratti")

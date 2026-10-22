@@ -15,6 +15,7 @@
     Private Sub BtnOk_Click(sender As Object, e As EventArgs) Handles BtnOk.Click
         GeneraListaPathFiliali()
         ALSO2023 = ChkAlso2023.Checked
+        ELAB_ESTATE_SICURA = ChkEstateSicura.Checked
         Me.DialogResult = System.Windows.Forms.DialogResult.OK
         Me.Close()
     End Sub

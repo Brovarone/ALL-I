@@ -56,6 +56,7 @@ Module Variabili
     Public Const TECNO_ALL1 As String = "NOLEGGIO SPA"
     Public Const slash As String = "\"
     Public ALSO2023 As Boolean ' Variabile per import file di confronto contratti !
+    Public ELAB_ESTATE_SICURA As Boolean ' Flag per elaborare o meno il file excel "ESTIVI ESTATE SICURA 2024" (default False)
 
     'Contesto LINQ2EF Core
     'Public InitialMagoContext As MagoContext

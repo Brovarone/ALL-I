@@ -312,6 +312,16 @@ Partial Class frmFoxFiliali
         Me.ChkAlso2023.Text = "Con File 2023"
         Me.ChkAlso2023.UseVisualStyleBackColor = True
         '
+        'ChkEstateSicura
+        '
+        Me.ChkEstateSicura.AutoSize = True
+        Me.ChkEstateSicura.Location = New System.Drawing.Point(19, 309)
+        Me.ChkEstateSicura.Name = "ChkEstateSicura"
+        Me.ChkEstateSicura.Size = New System.Drawing.Size(150, 17)
+        Me.ChkEstateSicura.TabIndex = 13
+        Me.ChkEstateSicura.Text = "Elabora Estate Sicura"
+        Me.ChkEstateSicura.UseVisualStyleBackColor = True
+        '
         'frmFoxFiliali
         '
         Me.AcceptButton = Me.BtnOk
@@ -319,6 +329,7 @@ Partial Class frmFoxFiliali
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.CancelButton = Me.BtnAnnulla
         Me.ClientSize = New System.Drawing.Size(345, 372)
+        Me.Controls.Add(Me.ChkEstateSicura)
         Me.Controls.Add(Me.ChkAlso2023)
         Me.Controls.Add(Me.BtnAnnulla)
         Me.Controls.Add(Me.BtnOk)
@@ -358,4 +369,5 @@ Partial Class frmFoxFiliali
     Friend WithEvents BtnOk As Button
     Friend WithEvents BtnAnnulla As Button
     Friend WithEvents ChkAlso2023 As CheckBox
+    Friend WithEvents ChkEstateSicura As CheckBox
 End Class

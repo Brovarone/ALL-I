@@ -184,6 +184,10 @@ Module ContrattiFox
         efAllordCliTipologiaServizi = New List(Of AllordCliTipologiaServizi)
         efAllordPadre = New List(Of AllordPadre)
         efAllordFiglio = New List(Of AllordFiglio)
+        efEstateSicura = New List(Of AllordCliContratto)
+        'Reset tabelle Estate Sicura: potrebbero non essere presenti se il flag ELAB_ESTATE_SICURA e' False
+        dtEstivi = Nothing
+        dvEstivi = Nothing
         efMaCustSupp = New List(Of MaCustSupp)
         efMaCustSuppBranches = New List(Of MaCustSuppBranches)
         efMaCustSuppCustomerOptions = New List(Of MaCustSuppCustomerOptions)
@@ -327,8 +331,13 @@ Module ContrattiFox
             dvPagamentiFox = New DataView(dtPagamentiFox)
             dtElencoClientiSpa = ds.Tables("ELENCO CLIENTI SPA")
             dvElencoClientiSpa = New DataView(dtElencoClientiSpa, "", "CliFor", DataViewRowState.CurrentRows)
-            dtEstivi = ds.Tables("ESTIVI")
-            dvEstivi = New DataView(dtEstivi, "", "CONTRATTO", DataViewRowState.CurrentRows)
+            If ds.Tables.Contains("ESTIVI") Then
+                dtEstivi = ds.Tables("ESTIVI")
+                dvEstivi = New DataView(dtEstivi, "", "CONTRATTO", DataViewRowState.CurrentRows)
+            Else
+                dtEstivi = Nothing
+                dvEstivi = Nothing
+            End If
         Catch ex As Exception
             Debug.Print("Errore nell'inizializzazione delle View globali: " & ex.Message)
         End Try
@@ -441,8 +450,13 @@ Module ContrattiFox
         dvPagamentiFox = New DataView(dtPagamentiFox)
         dtElencoClientiSpa = ds.Tables("ELENCO CLIENTI SPA")
         dvElencoClientiSpa = New DataView(dtElencoClientiSpa, "", "CliFor", DataViewRowState.CurrentRows)
-        dtEstivi = ds.Tables("ESTIVI")
-        dvEstivi = New DataView(dtEstivi, "", "CONTRATTO", DataViewRowState.CurrentRows)
+        If ds.Tables.Contains("ESTIVI") Then
+            dtEstivi = ds.Tables("ESTIVI")
+            dvEstivi = New DataView(dtEstivi, "", "CONTRATTO", DataViewRowState.CurrentRows)
+        Else
+            dtEstivi = Nothing
+            dvEstivi = Nothing
+        End If
 
     End Sub
     Private Function FindRelationTrouble(t1 As DataTable, t2 As DataTable, key As String, Optional key1 As String = "", Optional col As Integer = 0, Optional col1 As Integer = 0) As List(Of String)
@@ -535,8 +549,10 @@ Module ContrattiFox
         dvPagamentiFox.Dispose()
         dtElencoClientiSpa.Dispose()
         dvElencoClientiSpa.Dispose()
-        dtEstivi.Dispose()
-        dvEstivi.Dispose()
+        If dtEstivi IsNot Nothing Then
+            dtEstivi.Dispose()
+            dvEstivi.Dispose()
+        End If
     End Sub
     Private Sub ConnettiContestoPartite()
         EditTestoBarra("Connessione al contesto")
@@ -719,7 +735,7 @@ Module ContrattiFox
             EditTestoBarra("Assegnazione Altri dati Cliente")
         End If
         FLogin.prgCopy.Value = 1
-            FLogin.prgCopy.Maximum = dtContratti.Rows.Count
+        FLogin.prgCopy.Maximum = dtContratti.Rows.Count
         FLogin.prgCopy.Step = 1
         dtContratti.Columns.Add("NEWCODCLI", GetType(String))
 
@@ -766,46 +782,46 @@ Module ContrattiFox
 
             'If Esegui Then
             If Not clienteCorrente.Equals(clienteACG) Then
-                    clienteCorrente = clienteACG
+                clienteCorrente = clienteACG
 #Region "Dichiarazioni di Intento"
-                    Dim intFox As MaDeclarationOfIntent = intento.Where(Function(c) c.CustSupp.Equals(clienteACG) AndAlso c.CustSuppType = CustSuppType.Cliente).FirstOrDefault
-                    If intFox IsNot Nothing Then
-                        Dim intNew As MaDeclarationOfIntent = intento.Where(Function(c) c.CustSupp.Equals(n) AndAlso c.CustSuppType = CustSuppType.Cliente).FirstOrDefault
-                        If intNew Is Nothing Then
-                            intNew = intFox
-                            intNew.CustSupp = n
-                            lastNumber += 1
-                            intNew.LogNo = lastNumber.ToString("000000")
-                            lastDeclId += 1
-                            intNew.DeclId = lastDeclId
-                            efMaDeclarationOfIntent.Add(intNew)
-                            intentoList.Add(n)
-                        End If
-                        'Else
-                        '    Dim mb As New MessageBoxWithDetails("Cliente: " & clienteFox & " con piu' dichiarazioni di intento", GetCurrentMethod.Name, "")
-                        '    mb.ShowDialog()
+                Dim intFox As MaDeclarationOfIntent = intento.Where(Function(c) c.CustSupp.Equals(clienteACG) AndAlso c.CustSuppType = CustSuppType.Cliente).FirstOrDefault
+                If intFox IsNot Nothing Then
+                    Dim intNew As MaDeclarationOfIntent = intento.Where(Function(c) c.CustSupp.Equals(n) AndAlso c.CustSuppType = CustSuppType.Cliente).FirstOrDefault
+                    If intNew Is Nothing Then
+                        intNew = intFox
+                        intNew.CustSupp = n
+                        lastNumber += 1
+                        intNew.LogNo = lastNumber.ToString("000000")
+                        lastDeclId += 1
+                        intNew.DeclId = lastDeclId
+                        efMaDeclarationOfIntent.Add(intNew)
+                        intentoList.Add(n)
                     End If
+                    'Else
+                    '    Dim mb As New MessageBoxWithDetails("Cliente: " & clienteFox & " con piu' dichiarazioni di intento", GetCurrentMethod.Name, "")
+                    '    mb.ShowDialog()
+                End If
 
 #End Region
 #Region "Mandati"
-                    'Cerco nell partite se trovo un Rid con il "vecchio" codice Fox/Acg
-                    Dim ridACG As MaPyblsRcvblsDetails = elencoRID.Where(Function(c) c.CustSupp.Equals(clienteACG) AndAlso Not String.IsNullOrEmpty(c.MandateCode)).FirstOrDefault
-                    If ridACG IsNot Nothing Then
-                        'Se esite cerco se ho già creato il RID sul nuovo
-                        Dim ridNew As MaSddmandate = anagraficaRID.Where(Function(c) c.Customer.Equals(n) AndAlso c.MandateCode.Equals(ridACG.MandateCode)).FirstOrDefault
-                        If ridNew Is Nothing Then
-                            'Se non c'e' cerco il vecchio e lo copio 
-                            Dim ridOld As MaSddmandate = anagraficaRID.Where(Function(c) c.Customer.Equals(clienteACG) AndAlso c.MandateCode.Equals(ridACG.MandateCode)).FirstOrDefault
-                            ridNew = ridOld
-                            'Cambio il cliente
-                            ridNew.Customer = n
-                            efMaSddmandate.Add(ridNew)
-                            ridList.Add(n & " -> Mandato: " & ridNew.MandateCode)
-                        End If
+                'Cerco nell partite se trovo un Rid con il "vecchio" codice Fox/Acg
+                Dim ridACG As MaPyblsRcvblsDetails = elencoRID.Where(Function(c) c.CustSupp.Equals(clienteACG) AndAlso Not String.IsNullOrEmpty(c.MandateCode)).FirstOrDefault
+                If ridACG IsNot Nothing Then
+                    'Se esite cerco se ho già creato il RID sul nuovo
+                    Dim ridNew As MaSddmandate = anagraficaRID.Where(Function(c) c.Customer.Equals(n) AndAlso c.MandateCode.Equals(ridACG.MandateCode)).FirstOrDefault
+                    If ridNew Is Nothing Then
+                        'Se non c'e' cerco il vecchio e lo copio 
+                        Dim ridOld As MaSddmandate = anagraficaRID.Where(Function(c) c.Customer.Equals(clienteACG) AndAlso c.MandateCode.Equals(ridACG.MandateCode)).FirstOrDefault
+                        ridNew = ridOld
+                        'Cambio il cliente
+                        ridNew.Customer = n
+                        efMaSddmandate.Add(ridNew)
+                        ridList.Add(n & " -> Mandato: " & ridNew.MandateCode)
                     End If
+                End If
 
 #End Region
-                End If
+            End If
             'End If
             AvanzaBarra()
         Next
@@ -1481,7 +1497,7 @@ Module ContrattiFox
                             .DataUltRivIstat = Valid_Data(r("DTVARCAN").ToString),
                             .Franchigia = 0,
                             .Nota = "",
-                            .TipoRigaServizio = TranscodificaFrequenza(r("FREQ").ToString),
+                            .TipoRigaServizio = TranscodificaTipoRigaServizio(r("TIPSERV").ToString, TranscodificaFrequenza(r("FREQ").ToString)),
                             .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
                             .NonRiportaInFatt = "0",
                             .Fatturato = "0",
@@ -1573,7 +1589,7 @@ Module ContrattiFox
                         .ValUnit = valunitContratto,
                         .ValUnitIstat = valunitContratto,
                         .DataUltRivIstat = Valid_Data(r("DTVARCAN").ToString),
-                        .TipoRigaServizio = TranscodificaFrequenza(r("FREQ").ToString),
+                        .TipoRigaServizio = TranscodificaTipoRigaServizio(r("TIPSERV").ToString, TranscodificaFrequenza(r("FREQ").ToString)),
                         .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
                         .DataFineElaborazione = sDataNulla,
                         .DataProssimaFatt = DeterminaDataProssimaFatt(r("FREQ").ToString),
@@ -1863,7 +1879,7 @@ Module ContrattiFox
                     efAllordCliContratto.Last.SubLineDistinta = iLineDistinta
 
 #Region "Estate Sicura"
-                    Dim iRowEstate As Integer = dvEstivi.Find(contratto)
+                    Dim iRowEstate As Integer = If(dtEstivi Is Nothing, -1, dvEstivi.Find(contratto))
                     If iRowEstate <> -1 Then
                         Dim drEstate As DataRow = dvEstivi(iRowEstate).Row
                         If Not String.IsNullOrWhiteSpace(drEstate("DTFTEST").ToString) Then
@@ -2332,7 +2348,7 @@ Module ContrattiFox
                         .ValUnit = valunitContratto,
                         .ValUnitIstat = valunitContratto,
                         .DataUltRivIstat = Valid_Data(rA("DTVARCAN").ToString),
-                        .TipoRigaServizio = rifDistinta.TipoRigaServizio,
+                        .TipoRigaServizio = TranscodificaTipoRigaServizio(rA("TIPSERV").ToString, rifDistinta.TipoRigaServizio),
                         .DataDecorrenza = Valid_Data(rA("DTDECORR").ToString),
                         .DataFineElaborazione = sDataNulla,
                         .DataProssimaFatt = DeterminaDataProssimaFatt(rA("FREQ").ToString),
@@ -2665,6 +2681,17 @@ Module ContrattiFox
             For Each f In efAllordFiglio
                 idSub -= 1
                 f.IdOrdFiglio = idSub
+            Next
+#End Region
+#Region "Controllo descrizioni assenti"
+            'Se l'ordine non ha né descrizioni di testa (ALLOrdCliDescrizioni) né descrizioni di corpo (ALLOrdCliContratto_DescFatt)
+            'lo segnalo tra gli Avvisi (rischio fattura senza testi descrittivi)
+            For Each o In efMaSaleOrd
+                Dim haDescrTesta As Boolean = efAllordCliDescrizioni.Any(Function(d) d.IdOrdCli = o.SaleOrdId AndAlso Not String.IsNullOrWhiteSpace(d.Descrizione))
+                Dim haDescrCorpo As Boolean = efAllordCliContrattoDescFatt.Any(Function(d) d.IdOrdCli = o.SaleOrdId AndAlso Not String.IsNullOrWhiteSpace(d.Descrizione))
+                If Not haDescrTesta AndAlso Not haDescrCorpo Then
+                    avvisi.AppendLine("Ordine " & o.InternalOrdNo & " (Cliente " & o.Customer & ") senza descrizioni in fattura: né di testa (ALLOrdCliDescrizioni) né di corpo (ALLOrdCliContratto_DescFatt) !")
+                End If
             Next
 #End Region
 #Region "Adeguamenti post import"

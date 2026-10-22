@@ -85,6 +85,17 @@
         End Select
         Return esito
     End Function
+    ''' <summary>
+    ''' Riga "AGG" (servizi aggiuntivi): il TipoRigaServizio deve essere "CONS" o "SUPPLEMENTAR".
+    ''' </summary>
+    Public Function TranscodificaTipoRigaServizio(ByVal tipserv As String, ByVal tipoRigaCorrente As String) As String
+        Select Case tipserv.Trim.ToUpper
+            Case "AGG"
+                Return "SUPPLEMENTAR"
+            Case Else
+                Return tipoRigaCorrente
+        End Select
+    End Function
     Public Function TranscodificaEventoIntegra(ByVal codice As String) As String
         Dim esito As String
         Select Case codice.ToUpper
