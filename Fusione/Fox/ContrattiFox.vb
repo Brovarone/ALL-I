@@ -111,11 +111,8 @@ Module ContrattiFox
                         title = "RID"
                 End Select
                 My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- " & title & "  ---")
-                Dim l As List(Of String) = avvisiList(i)
-                For n = 0 To l.Count - 1
-                    My.Application.Log.DefaultFileLogWriter.WriteLine(l(n))
-                    FLogin.lstStatoConnessione.Items.Add(l(n))
-                Next
+                'Scrivo i messaggi raggruppati e ordinati per tipo
+                My.Application.Log.DefaultFileLogWriter.WriteLine(RaggruppaOrdinaMessaggi(avvisiList(i)).ToString)
             Next
             FLogin.lstStatoConnessione.Items.Add("Riscontrate nuove Associazioni clienti. Controllare log.")
         End If
@@ -128,11 +125,8 @@ Module ContrattiFox
             If sb.Count > 0 Then
                 For i = 0 To sb.Count - 1
                     My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- " & If(i = 0, "Errori", "Avvisi") & "  ---" & Environment.NewLine)
-                    Dim l As List(Of String) = sb(i)
-                    For n = 0 To l.Count - 1
-                        My.Application.Log.DefaultFileLogWriter.WriteLine(l(n))
-                        FLogin.lstStatoConnessione.Items.Add(l(n))
-                    Next
+                    'Scrivo i messaggi raggruppati e ordinati per tipo
+                    My.Application.Log.DefaultFileLogWriter.WriteLine(RaggruppaOrdinaMessaggi(sb(i)).ToString)
                 Next
                 FLogin.lstStatoConnessione.Items.Add("Impossibile continuare controllare errori precedenti")
                 MessageBox.Show("Riscontrati Errori formali controllare log", "Importa Contratti Fox", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -2719,17 +2713,17 @@ Module ContrattiFox
 #End Region
             DisposeTables()
 
-            'Scrivo i LOG
+            'Scrivo i LOG (raggruppati e ordinati per tipo di messaggio)
             If esclusi.Length > 0 Then
-                My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Esclusi ---" & Environment.NewLine & esclusi.ToString)
+                My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Esclusi ---" & Environment.NewLine & RaggruppaOrdinaMessaggi(esclusi).ToString)
                 FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrate esclusioni : Controllare file di Log")
             End If
             If errori.Length > 0 Then
-                My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Errori ---" & Environment.NewLine & errori.ToString)
+                My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Errori ---" & Environment.NewLine & RaggruppaOrdinaMessaggi(errori).ToString)
                 FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati errori : Controllare file di Log")
             End If
             If avvisi.Length > 0 Then
-                My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Avvisi ---" & Environment.NewLine & avvisi.ToString)
+                My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Avvisi ---" & Environment.NewLine & RaggruppaOrdinaMessaggi(avvisi).ToString)
                 FLogin.lstStatoConnessione.Items.Add("Presenti avvisi : Controllare file di Log")
             End If
         Catch ex As Exception
@@ -2737,6 +2731,38 @@ Module ContrattiFox
             mb.ShowDialog()
         End Try
     End Sub
+
+    ''' <summary>
+    ''' Ripulisce e riordina i messaggi di un StringBuilder: rimuove righe vuote,
+    ''' raggruppa i messaggi identici con il numero di occorrenze e li ordina
+    ''' alfabeticamente, in modo che i messaggi dello stesso tipo risultino insieme.
+    ''' </summary>
+    Private Function RaggruppaOrdinaMessaggi(sb As StringBuilder) As StringBuilder
+        Dim res As New StringBuilder
+        If sb Is Nothing OrElse sb.Length = 0 Then Return res
+        Dim gruppi = sb.ToString _
+            .Split(New String() {Environment.NewLine, vbLf}, StringSplitOptions.RemoveEmptyEntries) _
+            .Select(Function(s) s.TrimEnd) _
+            .Where(Function(s) Not String.IsNullOrWhiteSpace(s)) _
+            .GroupBy(Function(s) s) _
+            .OrderBy(Function(g) g.Key, StringComparer.CurrentCulture)
+        For Each g In gruppi
+            If g.Count() > 1 Then
+                res.AppendLine(g.Key & "  (x" & g.Count().ToString & ")")
+            Else
+                res.AppendLine(g.Key)
+            End If
+        Next
+        Return res
+    End Function
+
+    ''' <summary>
+    ''' Come RaggruppaOrdinaMessaggi(StringBuilder) ma per una semplice lista di messaggi.
+    ''' </summary>
+    Private Function RaggruppaOrdinaMessaggi(l As List(Of String)) As StringBuilder
+        If l Is Nothing Then Return New StringBuilder
+        Return RaggruppaOrdinaMessaggi(New StringBuilder(String.Join(Environment.NewLine, l)))
+    End Function
 
     Private Function CalcolaScadenzaFutura(rOrdAcc As AllordCliAcc) As Date
         Dim d As Date = rOrdAcc.DataDecorrenza.Value
@@ -3329,7 +3355,7 @@ Module ContrattiFox
             'Scrivo i LOG
             If bulkMessage.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Inserimento Dati ---" & Environment.NewLine & bulkMessage.ToString)
             If errori.Length > 0 Then
-                My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Errori ---" & Environment.NewLine & errori.ToString)
+                My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Errori ---" & Environment.NewLine & RaggruppaOrdinaMessaggi(errori).ToString)
                 FLogin.lstStatoConnessione.Items.Add("ATTENZIONE ! Riscontrati errori durante il salvataggio: Controllare file di Log")
             End If
             'If IsDebugging AndAlso debugging.Length > 0 Then My.Application.Log.DefaultFileLogWriter.WriteLine(Environment.NewLine & " --- Debugging ---" & Environment.NewLine & debugging.ToString)

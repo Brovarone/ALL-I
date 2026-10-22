@@ -1043,9 +1043,9 @@ Partial Class FLogin
         Me.chkAssociaClienteUno.AutoSize = True
         Me.chkAssociaClienteUno.Location = New System.Drawing.Point(10, 12)
         Me.chkAssociaClienteUno.Name = "chkAssociaClienteUno"
-        Me.chkAssociaClienteUno.Size = New System.Drawing.Size(86, 17)
+        Me.chkAssociaClienteUno.Size = New System.Drawing.Size(124, 17)
         Me.chkAssociaClienteUno.TabIndex = 7
-        Me.chkAssociaClienteUno.Text = "Cambia clifor"
+        Me.chkAssociaClienteUno.Text = "Associa cliente UNO"
         Me.chkAssociaClienteUno.UseVisualStyleBackColor = True
         '
         'BtnOrdiniFox
