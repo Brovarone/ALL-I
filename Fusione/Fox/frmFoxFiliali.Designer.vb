@@ -45,6 +45,7 @@ Partial Class frmFoxFiliali
         Me.BtnOk = New System.Windows.Forms.Button()
         Me.BtnAnnulla = New System.Windows.Forms.Button()
         Me.ChkAlso2023 = New System.Windows.Forms.CheckBox()
+        Me.ChkEstateSicura = New System.Windows.Forms.CheckBox()
         Me.GroupOrdinari.SuspendLayout()
         Me.GroupSpeciali.SuspendLayout()
         Me.SuspendLayout()
@@ -285,7 +286,7 @@ Partial Class frmFoxFiliali
         '
         'BtnOk
         '
-        Me.BtnOk.Location = New System.Drawing.Point(84, 321)
+        Me.BtnOk.Location = New System.Drawing.Point(84, 344)
         Me.BtnOk.Name = "BtnOk"
         Me.BtnOk.Size = New System.Drawing.Size(75, 23)
         Me.BtnOk.TabIndex = 10
@@ -295,7 +296,7 @@ Partial Class frmFoxFiliali
         'BtnAnnulla
         '
         Me.BtnAnnulla.DialogResult = System.Windows.Forms.DialogResult.Cancel
-        Me.BtnAnnulla.Location = New System.Drawing.Point(171, 321)
+        Me.BtnAnnulla.Location = New System.Drawing.Point(171, 344)
         Me.BtnAnnulla.Name = "BtnAnnulla"
         Me.BtnAnnulla.Size = New System.Drawing.Size(75, 23)
         Me.BtnAnnulla.TabIndex = 11
@@ -317,7 +318,7 @@ Partial Class frmFoxFiliali
         Me.ChkEstateSicura.AutoSize = True
         Me.ChkEstateSicura.Location = New System.Drawing.Point(19, 309)
         Me.ChkEstateSicura.Name = "ChkEstateSicura"
-        Me.ChkEstateSicura.Size = New System.Drawing.Size(150, 17)
+        Me.ChkEstateSicura.Size = New System.Drawing.Size(128, 17)
         Me.ChkEstateSicura.TabIndex = 13
         Me.ChkEstateSicura.Text = "Elabora Estate Sicura"
         Me.ChkEstateSicura.UseVisualStyleBackColor = True
@@ -328,7 +329,7 @@ Partial Class frmFoxFiliali
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.CancelButton = Me.BtnAnnulla
-        Me.ClientSize = New System.Drawing.Size(345, 372)
+        Me.ClientSize = New System.Drawing.Size(345, 381)
         Me.Controls.Add(Me.ChkEstateSicura)
         Me.Controls.Add(Me.ChkAlso2023)
         Me.Controls.Add(Me.BtnAnnulla)
