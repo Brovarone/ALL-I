@@ -669,8 +669,15 @@ Module ContrattiFox
             If Right(TrovaAgente(r("PRODUTTORE").ToString, r("FILIALE")), 3) = "XXX" Then avvisi.Add("Agente assente su Mago(PRODUTTORE):" & r("PRODUTTORE").ToString & " Contratto: " & r("CONTRATTO").ToString)
             'Tipo Servizio
             If TranscodificaServizio(r("TIPSERV").ToString).Equals("XXXXX") Then avvisi.Add("Trascodifica Servizio assente: " & r("TIPSERV").ToString & " Contratto: " & r("CONTRATTO").ToString)
+            'Tipserv: 'AGG' e 'NO' sono valori della colonna FREQ, se presenti su TIPSERV sono refuso
+            Dim tipservCheck As String = r("TIPSERV").ToString.Trim.ToUpper
+            If tipservCheck.Equals("AGG") OrElse tipservCheck.Equals("NO") Then errori.Add("Tipserv '" & tipservCheck & "' non valido (valore colonna FREQ) su Contratto: " & r("CONTRATTO").ToString)
             'Frequenza = NO e Canone <> 0
-            If r("FREQ").ToString = "NO" AndAlso CDbl(r("CANONE")) <> 0 Then errori.Add("Contratto con frequenza = NO ma Canone <> 0 :" & r("CONTRATTO").ToString)
+            If r("FREQ").ToString.Trim.ToUpper.Equals("NO") AndAlso Not ValoreZero(r("CANONE").ToString) Then errori.Add("Contratto con frequenza = NO ma Canone <> 0 :" & r("CONTRATTO").ToString)
+            'Canone e CanAllEur a zero: possibile refuso (legittimo solo per FREQ = 'AGG')
+            If ValoreZero(r("CANONE").ToString) AndAlso ValoreZero(r("CANALLEUR").ToString) AndAlso Not r("FREQ").ToString.Trim.ToUpper.Equals("AGG") Then
+                avvisi.Add("Canone e CanAllEur a zero su Contratto: " & r("CONTRATTO").ToString & " FREQ: " & r("FREQ").ToString)
+            End If
             'GRP_Contratto
             If String.IsNullOrWhiteSpace(r("GRP_CONTRATTO").ToString) Then errori.Add("Contratto con GRP Contratto assente :" & r("CONTRATTO").ToString)
             'GRP_distinta_fattura
@@ -1470,6 +1477,16 @@ Module ContrattiFox
                     imponibileContratto -= impCanone_ALL1
                     Dim valunitFattura As Double = Math.Round(imponibileFattura, 2)
                     Dim valunitContratto As Double = Math.Round(imponibileContratto, 2)
+                    'Refuso: canone e canall a zero (legittimo solo per FREQ = 'AGG') -> non riporta in fattura, frequenza invariata
+                    'Canone a zero ma CANALLEUR valorizzato -> non riporta in fattura (senza esclusioni su FREQ)
+                    Dim nonRiportaInFatt As String = "0"
+                    If ValoreZero(r("CANONE").ToString) AndAlso ValoreZero(r("CANALLEUR").ToString) AndAlso Not r("FREQ").ToString.Trim.ToUpper.Equals("AGG") Then
+                        nonRiportaInFatt = "1"
+                        avvisi.AppendLine("Canone e CanAllEur a zero: imposto NonRiportaInFatt su Contratto: " & contratto & " FREQ: " & r("FREQ").ToString)
+                    ElseIf ValoreZero(r("CANONE").ToString) AndAlso Not ValoreZero(r("CANALLEUR").ToString) Then
+                        nonRiportaInFatt = "1"
+                        avvisi.AppendLine("Canone a zero ma CanAllEur valorizzato: imposto NonRiportaInFatt su Contratto: " & contratto & " FREQ: " & r("FREQ").ToString)
+                    End If
                     If qtaOrdine = 0 OrElse qtaOrdine = 999 Then
                         errori.AppendLine("Indicato Canone ma frequenza uguale a NO su Contratto: " & contratto)
                         valunitFattura = 0
@@ -1493,7 +1510,7 @@ Module ContrattiFox
                             .Nota = "",
                             .TipoRigaServizio = TranscodificaTipoRigaServizio(r("TIPSERV").ToString, TranscodificaFrequenza(r("FREQ").ToString)),
                             .DataDecorrenza = Valid_Data(r("DTDECORR").ToString),
-                            .NonRiportaInFatt = "0",
+                            .NonRiportaInFatt = nonRiportaInFatt,
                             .Fatturato = "0",
                             .DataFineElaborazione = sDataNulla,
                             .DataProssimaFatt = DeterminaDataProssimaFatt(r("FREQ").ToString),
@@ -3586,9 +3603,19 @@ Module ContrattiFox
         Return result
     End Function
 
+    ''' <summary>
+    ''' True se il valore è da considerare zero: vuoto, non numerico (es. '-') o numericamente 0
+    ''' </summary>
+    Private Function ValoreZero(ByVal valore As String) As Boolean
+        If String.IsNullOrWhiteSpace(valore) Then Return True
+        Dim d As Double
+        If Not Double.TryParse(valore.Trim, d) Then Return True
+        Return d = 0
+    End Function
+
     Private Function TranscodificaQuantita(ByVal codice As String) As Double
         Dim esito As Double
-        Select Case codice.ToUpper
+        Select Case codice.Trim.ToUpper
             Case "0A", "0P"
                 esito = 12      'ANNUALE
             Case "1A", "1P"
@@ -3744,13 +3771,15 @@ Module ContrattiFox
     End Function
     Private Function TranscodificaFrequenza(ByVal codice As String) As String
         Dim esito As String
-        Select Case codice.ToUpper
+        Select Case codice.Trim.ToUpper
             Case "0A"
                 esito = "12A"                'ANNUALE
             Case "0P"
                 esito = "12P"
+            Case "AGG", "NO"
+                esito = ServiziAggiuntivi.Frequenza   'SERVIZI AGGIUNTIVI: valore ammesso solo su FREQ -> SUPPLEMENTAR
             Case Else
-                esito = codice
+                esito = codice.Trim
         End Select
         Return esito
     End Function
