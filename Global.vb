@@ -57,6 +57,7 @@ Module Variabili
     Public Const slash As String = "\"
     Public ALSO2023 As Boolean ' Variabile per import file di confronto contratti !
     Public ELAB_ESTATE_SICURA As Boolean ' Flag per elaborare o meno il file excel "ESTIVI ESTATE SICURA 2024" (default False)
+    Public DEFINTIVO As Boolean ' Import filiali: se True MA_SaleOrd.ExternalOrdNo non viene scritto (resta "")
 
     'Contesto LINQ2EF Core
     'Public InitialMagoContext As MagoContext
@@ -965,6 +966,11 @@ Public Module Common
             Next
         Next
 
+        'Flush dell'ultima porzione di testo residua
+        If currString.Length > 0 Then
+            result.Add(currString.ToString.Trim)
+        End If
+
         Return result
     End Function
 
@@ -993,6 +999,11 @@ Public Module Common
                 currString.AppendFormat(" {0}", word)
             End If
         Next
+
+        'Flush dell'ultima porzione di testo residua
+        If currString.Length > 0 Then
+            result.Add(currString.ToString.Trim)
+        End If
 
         Return result
     End Function

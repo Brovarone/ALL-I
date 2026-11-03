@@ -46,6 +46,7 @@ Partial Class frmFoxFiliali
         Me.BtnAnnulla = New System.Windows.Forms.Button()
         Me.ChkAlso2023 = New System.Windows.Forms.CheckBox()
         Me.ChkEstateSicura = New System.Windows.Forms.CheckBox()
+        Me.ChkDefinitivo = New System.Windows.Forms.CheckBox()
         Me.GroupOrdinari.SuspendLayout()
         Me.GroupSpeciali.SuspendLayout()
         Me.SuspendLayout()
@@ -323,6 +324,16 @@ Partial Class frmFoxFiliali
         Me.ChkEstateSicura.Text = "Elabora Estate Sicura"
         Me.ChkEstateSicura.UseVisualStyleBackColor = True
         '
+        'ChkDefinitivo
+        '
+        Me.ChkDefinitivo.AutoSize = True
+        Me.ChkDefinitivo.Location = New System.Drawing.Point(193, 286)
+        Me.ChkDefinitivo.Name = "ChkDefinitivo"
+        Me.ChkDefinitivo.Size = New System.Drawing.Size(70, 17)
+        Me.ChkDefinitivo.TabIndex = 14
+        Me.ChkDefinitivo.Text = "Definitivo"
+        Me.ChkDefinitivo.UseVisualStyleBackColor = True
+        '
         'frmFoxFiliali
         '
         Me.AcceptButton = Me.BtnOk
@@ -330,6 +341,7 @@ Partial Class frmFoxFiliali
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.CancelButton = Me.BtnAnnulla
         Me.ClientSize = New System.Drawing.Size(345, 381)
+        Me.Controls.Add(Me.ChkDefinitivo)
         Me.Controls.Add(Me.ChkEstateSicura)
         Me.Controls.Add(Me.ChkAlso2023)
         Me.Controls.Add(Me.BtnAnnulla)
@@ -371,4 +383,5 @@ Partial Class frmFoxFiliali
     Friend WithEvents BtnAnnulla As Button
     Friend WithEvents ChkAlso2023 As CheckBox
     Friend WithEvents ChkEstateSicura As CheckBox
+    Friend WithEvents ChkDefinitivo As CheckBox
 End Class
