@@ -944,7 +944,7 @@ Public Module Common
         End If
         'value = value.Replace("  ", " ")
         'Dim words = value.Split(" "c)
-        Dim lines = Regex.Split(Regex.Replace(Regex.Replace(value, vbCrLf, Environment.NewLine), "  ", " "), Environment.NewLine)
+        Dim lines = Regex.Split(Regex.Replace(Regex.Replace(value.Replace("_x000D_", " "), "\r\n|\r|\n", Environment.NewLine), "  ", " "), Environment.NewLine)
         'Dim sb = New StringBuilder()
         Dim currString = New StringBuilder()
         For Each line In lines
@@ -979,7 +979,8 @@ Public Module Common
         If String.IsNullOrWhiteSpace(value) Then
             Return result
         End If
-        Dim tmpValue As String = Regex.Replace(Regex.Replace(value, vbCrLf, Environment.NewLine), Environment.NewLine, " ")
+        Dim tmpValue As String = value.Replace("_x000D_", " ")
+        tmpValue = Regex.Replace(tmpValue, "\r\n|\r|\n", " ")
         If Len(tmpValue) <= charactersToWrapAt Then
             result.Add(tmpValue)
             Return result

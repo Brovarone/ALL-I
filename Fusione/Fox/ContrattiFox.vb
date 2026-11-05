@@ -1,4 +1,4 @@
-﻿Imports System.Data
+Imports System.Data
 Imports System.Data.SqlClient
 Imports System.Text
 Imports System.Text.RegularExpressions
@@ -1487,6 +1487,8 @@ Module ContrattiFox
                         nonRiportaInFatt = "1"
                         avvisi.AppendLine("Canone a zero ma CanAllEur valorizzato: imposto NonRiportaInFatt su Contratto: " & contratto & " FREQ: " & r("FREQ").ToString)
                     End If
+                    'Escluso dalla fatturazione: nessuna prossima fatturazione
+                    Dim dataProssimaFatt As String = If(nonRiportaInFatt = "1", sDataNulla, DeterminaDataProssimaFatt(r("FREQ").ToString))
                     If qtaOrdine = 0 OrElse qtaOrdine = 999 Then
                         errori.AppendLine("Indicato Canone ma frequenza uguale a NO su Contratto: " & contratto)
                         valunitFattura = 0
@@ -1513,7 +1515,7 @@ Module ContrattiFox
                             .NonRiportaInFatt = nonRiportaInFatt,
                             .Fatturato = "0",
                             .DataFineElaborazione = sDataNulla,
-                            .DataProssimaFatt = DeterminaDataProssimaFatt(r("FREQ").ToString),
+                            .DataProssimaFatt = dataProssimaFatt,
                             .CodiceIva = codIva,
                             .Tbcreated = Now,
                             .Tbmodified = Now,
@@ -1531,18 +1533,39 @@ Module ContrattiFox
                         efAllordCliContratto.Add(rOrdContratto)
 
 #Region "Descrizioni Fattura"
-                        Dim descriFatt As String = String.Concat(r("DFAT1"), r("DFAT2"), r("DFAT3"), r("DFAT4")).Trim
-                        If descriFatt = "*" OrElse descriFatt = "-" OrElse descriFatt = "*/" Then descriFatt = ""
-
-                        If Len(descriFatt) = 0 Then
-                            ' Se i campi DFAT1-DFAT2-DFAT3-DFAT4 sono vuoti DESCAN è proprio la descrizione del dettaglio di fattura, viceversa è solo una descrizione.
-                            ' Quelli con DESCAN a * o /* o - sono probabilmente frutto delle varie acquisizioni/fusioni per incorporazione.
-                            iLineDescFatt = 0
-                            'AggiungiDalAl
-                            If Len(descriCanone) > 0 Then
+                        Dim dfatCells As String() = {r("DFAT1").ToString, r("DFAT2").ToString, r("DFAT3").ToString, r("DFAT4").ToString}
+                        iLineDescFatt = 0
+                        Dim haDfat As Boolean = False
+                        For Each dfatCell In dfatCells
+                            Dim cella As String = dfatCell.Trim
+                            If cella = "*" OrElse cella = "-" OrElse cella = "*/" OrElse String.IsNullOrWhiteSpace(cella) Then Continue For
+                            haDfat = True
+                            ' Ogni ritorno a capo dentro la cella genera una riga distinta in ALLOrdCliContratto_DescFatt
+                            Dim linee As List(Of String) = GetListTextWithNewLines(cella, 128)
+                            For Each linea In linee
+                                If String.IsNullOrWhiteSpace(linea) Then Continue For
+                                iLineDescFatt += 1
                                 Dim rOrdDescri As New AllordCliContrattoDescFatt With {
                                          .IdOrdCli = saleOrdId,
-                                         .Line = iLineDescFatt + 1,
+                                         .Line = iLineDescFatt,
+                                         .RifLinea = iLineContratto,
+                                         .Codice = "",
+                                         .Descrizione = Left(linea, 128),
+                                         .Tbcreated = Now,
+                                         .Tbmodified = Now,
+                                         .TbcreatedId = sLoginId,
+                                         .TbmodifiedId = sLoginId
+                                         }
+                                efAllordCliContrattoDescFatt.Add(rOrdDescri)
+                            Next
+                        Next
+                        If Not haDfat Then
+                            ' Se tutti i campi DFAT1-DFAT2-DFAT3-DFAT4 sono vuoti, DESCAN è la descrizione del dettaglio di fattura
+                            If Len(descriCanone) > 0 Then
+                                iLineDescFatt = 1
+                                Dim rOrdDescri As New AllordCliContrattoDescFatt With {
+                                         .IdOrdCli = saleOrdId,
+                                         .Line = 1,
                                          .RifLinea = iLineContratto,
                                          .Codice = "",
                                          .Descrizione = Left(descriCanone, 128),
@@ -1551,36 +1574,8 @@ Module ContrattiFox
                                          .TbcreatedId = sLoginId,
                                          .TbmodifiedId = sLoginId
                                          }
-                                'Aggiungo la riga alla collection
                                 efAllordCliContrattoDescFatt.Add(rOrdDescri)
-                                'End If
                             End If
-                        Else
-                            '20/10/2023 : Mail Laura dice di togliere a capo e righe vuote
-                            'Dim descriList As List(Of String) = GetListTextWithNewLines(descriFatt, 128)
-                            Dim descriList As List(Of String) = GetListTextWithoutNewLines(descriFatt, 128)
-                            If descriList.Count > 0 Then
-                                'If masterDistinta.RigheDistinta > 0 AndAlso rowToExclude_cnt > 0 Then
-                                '    errori.AppendLine("(NO SAVE) DescFatt: presente DFAT* Ordine:" & contratto)
-                                'Else
-                                For i = 0 To descriList.Count - 1
-                                    Dim rOrdDescri As New AllordCliContrattoDescFatt With {
-                                         .IdOrdCli = saleOrdId,
-                                         .Line = i + 1,
-                                         .RifLinea = iLineContratto,
-                                         .Codice = "",
-                                         .Descrizione = Left(descriList(i), 128),
-                                         .Tbcreated = Now,
-                                         .Tbmodified = Now,
-                                         .TbcreatedId = sLoginId,
-                                         .TbmodifiedId = sLoginId
-                                         }
-                                    'Aggiungo la riga alla collection
-                                    efAllordCliContrattoDescFatt.Add(rOrdDescri)
-                                Next
-                                'End If
-                            End If
-                            iLineDescFatt = descriList.Count
                         End If
                         'Aggiorno Sub
                         efAllordCliContratto.Last.SubLineDescFatt = iLineDescFatt
