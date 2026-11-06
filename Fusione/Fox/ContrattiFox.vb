@@ -1,5 +1,6 @@
 Imports System.Data
 Imports System.Data.SqlClient
+Imports System.Collections.Generic
 Imports System.Text
 Imports System.Text.RegularExpressions
 Imports System.Reflection.MethodBase
@@ -919,6 +920,7 @@ Module ContrattiFox
             FLogin.prgCopy.Value = 1
             FLogin.prgCopy.Maximum = dtContratti.Rows.Count
             FLogin.prgCopy.Step = 1
+            Dim attivitaLinePerOrdine As New Dictionary(Of Integer, Integer)()
             For Each drv As DataRowView In dvContratti
                 Try
                     Dim r As DataRow = drv.Row
@@ -1647,9 +1649,17 @@ Module ContrattiFox
                                 motivo = "ERRORE"
                             End If
 
+                            Dim lineaAttivita As Integer = 1
+                            If attivitaLinePerOrdine.TryGetValue(saleOrdId, lineaAttivita) Then
+                                lineaAttivita += 1
+                                attivitaLinePerOrdine(saleOrdId) = lineaAttivita
+                                avvisi.AppendLine("Ordine con più righe di sospensione (Line=" & lineaAttivita & ") su Contratto: " & contratto & " Ordine: " & saleOrdId.ToString)
+                            Else
+                                attivitaLinePerOrdine(saleOrdId) = 1
+                            End If
                             Dim rOrdAttivita As New AllordCliAttivita With {
                             .IdOrdCli = saleOrdId,
-                            .Line = 1,
+                            .Line = lineaAttivita,
                             .RifLinea = iLineContratto,
                             .Attivita = motivo,
                             .DataInizio = Valid_Data(r("DATA_INIZIO_SOSP").ToString),
