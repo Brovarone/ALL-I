@@ -647,46 +647,53 @@ Module ContrattiFox
             'Si gestiscE un codice unico tramite tabella di macth ( elenco clienti spa)
             'Cliente
             If bAssocia Then
-                If Not CheckNuovoCliente(r("ACGCOD").ToString) Then errori.Add("Cliente assente su Mago :" & (r("ACGCOD")).ToString)
+                If Not CheckNuovoCliente(r("ACGCOD").ToString) Then errori.Add("Cliente assente su Mago: " & (r("ACGCOD")).ToString)
+            Else
+                If Not OrdiniCntx.MaCustSupp.AsNoTracking.Any(Function(k) k.CustSupp.Equals(r("ACGCOD").ToString) AndAlso k.CustSuppType.Equals(CustSuppType.Cliente)) Then errori.Add("Cliente assente su Mago: " & (r("ACGCOD")).ToString)
             End If
             'Numeratore Ordini
             Dim d As Date
             'Debug.Print(Date.TryParse(r("DTPRODUZ"), d))
             If Not Date.TryParse(r("DTPRODUZ"), d) OrElse d < New Date(1900, 1, 1) Then
-                avvisi.Add("DTAPRODUZ illeggibile contratto:" & r("CONTRATTO").ToString)
+                avvisi.Add("DTAPRODUZ illeggibile contratto: " & r("CONTRATTO").ToString)
             Else
-                If Not OrdiniCntx.MaNonFiscalNumbers.AsNoTracking.Any(Function(k) k.CodeType = CodeType.OrdCli AndAlso k.BalanceYear = Year(r("DTPRODUZ"))) Then avvisi.Add("Contatore Ordini non trovato:" & r("DTPRODUZ").ToString)
+                If Not OrdiniCntx.MaNonFiscalNumbers.AsNoTracking.Any(Function(k) k.CodeType = CodeType.OrdCli AndAlso k.BalanceYear = Year(r("DTPRODUZ"))) Then avvisi.Add("Contatore Ordini non trovato: " & r("DTPRODUZ").ToString)
             End If
             'Codice Iva
-            If Not OrdiniCntx.MaTaxCodes.AsNoTracking.Any(Function(k) k.Acgcode.Equals(r("CIVA").ToString)) Then avvisi.Add("Valore assente su Mago - Iva(CIVA):" & (r("CIVA")).ToString)
+            If Not OrdiniCntx.MaTaxCodes.AsNoTracking.Any(Function(k) k.Acgcode.Equals(r("CIVA").ToString)) Then avvisi.Add("Valore assente su Mago - Iva(CIVA): " & (r("CIVA")).ToString)
             'Pagamento
-            If OrdiniCntx.MaPaymentTerms.AsNoTracking.Any(Function(k) k.Acgcode.Equals(r("CPAGAM").ToString)) Then avvisi.Add("Valore assente su Mago - Pagamento:" & (r("CPAGAM")).ToString)
+            If OrdiniCntx.MaPaymentTerms.AsNoTracking.Any(Function(k) k.Acgcode.Equals(r("CPAGAM").ToString)) Then avvisi.Add("Valore assente su Mago - Pagamento: " & (r("CPAGAM")).ToString)
             'Contropartita
             Dim contropartitaFox As String = dvTabelle.CercaValoreSuTabelleFox("TS", r("TIPSERV").ToString)
-            If String.IsNullOrEmpty(dvPdc.CercaContropartitaFox(contropartitaFox)) Then avvisi.Add("Valore assente su Mago - Contropartita(TIPSERV):" & r("TIPSERV").ToString)
+            If String.IsNullOrEmpty(dvPdc.CercaContropartitaFox(contropartitaFox)) Then avvisi.Add("Valore assente su Mago - Contropartita(TIPSERV): " & r("TIPSERV").ToString)
             'AGENTE
             Dim produttore As String = dvTabelle.CercaValoreSuTabelleFox("PT", r("PRODUTTORE").ToString)
-            If Right(TrovaAgente(r("PRODUTTORE").ToString, r("FILIALE")), 3) = "XXX" Then avvisi.Add("Agente assente su Mago(PRODUTTORE):" & r("PRODUTTORE").ToString & " Contratto: " & r("CONTRATTO").ToString)
+            Dim agenteMago As String = TrovaAgente(r("PRODUTTORE").ToString, r("FILIALE"))
+            If String.IsNullOrWhiteSpace(r("PRODUTTORE").ToString) Then
+                avvisi.Add("Agente assente su Mago(PRODUTTORE):" & r("PRODUTTORE").ToString & " Contratto: " & r("CONTRATTO").ToString)
+            ElseIf Right(agenteMago, 3) = "XXX" Then
+                errori.Add("Agente assente su Mago(PRODUTTORE):" & r("PRODUTTORE").ToString & " Contratto: " & r("CONTRATTO").ToString)
+            End If
             'Tipo Servizio
             If TranscodificaServizio(r("TIPSERV").ToString).Equals("XXXXX") Then avvisi.Add("Trascodifica Servizio assente: " & r("TIPSERV").ToString & " Contratto: " & r("CONTRATTO").ToString)
             'Tipserv: 'AGG' e 'NO' sono valori della colonna FREQ, se presenti su TIPSERV sono refuso
             Dim tipservCheck As String = r("TIPSERV").ToString.Trim.ToUpper
             If tipservCheck.Equals("AGG") OrElse tipservCheck.Equals("NO") Then errori.Add("Tipserv '" & tipservCheck & "' non valido (valore colonna FREQ) su Contratto: " & r("CONTRATTO").ToString)
             'Frequenza = NO e Canone <> 0
-            If r("FREQ").ToString.Trim.ToUpper.Equals("NO") AndAlso Not ValoreZero(r("CANONE").ToString) Then errori.Add("Contratto con frequenza = NO ma Canone <> 0 :" & r("CONTRATTO").ToString)
+            If r("FREQ").ToString.Trim.ToUpper.Equals("NO") AndAlso Not ValoreZero(r("CANONE").ToString) Then errori.Add("Contratto con frequenza = NO ma Canone <> 0: " & r("CONTRATTO").ToString)
             'Canone e CanAllEur a zero: possibile refuso (legittimo solo per FREQ = 'AGG')
             If ValoreZero(r("CANONE").ToString) AndAlso ValoreZero(r("CANALLEUR").ToString) AndAlso Not r("FREQ").ToString.Trim.ToUpper.Equals("AGG") Then
                 avvisi.Add("Canone e CanAllEur a zero su Contratto: " & r("CONTRATTO").ToString & " FREQ: " & r("FREQ").ToString)
             End If
             'GRP_Contratto
-            If String.IsNullOrWhiteSpace(r("GRP_CONTRATTO").ToString) Then errori.Add("Contratto con GRP Contratto assente :" & r("CONTRATTO").ToString)
+            If String.IsNullOrWhiteSpace(r("GRP_CONTRATTO").ToString) Then errori.Add("Contratto con GRP Contratto assente : " & r("CONTRATTO").ToString)
             'GRP_distinta_fattura
-            If String.IsNullOrWhiteSpace(r("GRP_distinta_fattura").ToString) Then errori.Add("Contratto con GRP distinta fattura :" & r("CONTRATTO").ToString)
+            If String.IsNullOrWhiteSpace(r("GRP_distinta_fattura").ToString) Then errori.Add("Contratto con GRP distinta fattura : " & r("CONTRATTO").ToString)
             'contratto accorpato non presente
             Dim dvCheckGrp_Contratto As New DataView(dtContratti, "CONTRATTO='" & r("GRP_CONTRATTO").ToString & "'", "ACGCOD, GRP_CONTRATTO", DataViewRowState.CurrentRows)
             If dvCheckGrp_Contratto.Count = 0 Then errori.Add("Codice GRP_CONTRATTO (" & r("GRP_CONTRATTO").ToString & ") assente in CONTRATTO")
 
-            If Len(r("DNOTE").ToString.Trim) > 251 Then avvisi.Add("DNOTE troppo lunga su contratto:" & (r("CONTRATTO")).ToString)
+            If Len(r("DNOTE").ToString.Trim) > 251 Then avvisi.Add("DNOTE troppo lunga su contratto: " & (r("CONTRATTO")).ToString)
             'Rimpiazzo caratteri Speciali conosciuti e cerco per non gestiti
             'Elenco Caratteri speciali
             Dim s As String() = {"DNOTE", "DNOTE2", "DNOTE3", "DNOTE4", "DNOTE5", "DNOTE6", "DNOTE7", "DNOTE8", "DESCAN", "DFAT1", "DFAT2", "DFAT3", "DFAT4", "RAGSOC", "PRAGSOC", "INDIRIZZO"}
@@ -1219,6 +1226,7 @@ Module ContrattiFox
                         'cliMago = OrdiniCntx.MaCustSupp.Find(CustSuppType.Cliente, clienteACG)
                         cliMago = OrdiniCntx.MaCustSupp.Find(CustSuppType.Cliente, clienteContratto)
                         If cliMago Is Nothing Then
+                            errori.AppendLine("Cliente non trovato su Mago:" & clienteContratto)
                             Dim mb As New MessageBoxWithDetails("Cliente non trovato su Mago:" & clienteContratto, GetCurrentMethod.Name)
                             mb.ShowDialog()
                             Continue For
@@ -1490,9 +1498,11 @@ Module ContrattiFox
                     'Escluso dalla fatturazione: nessuna prossima fatturazione
                     Dim dataProssimaFatt As String = If(nonRiportaInFatt = "1", sDataNulla, DeterminaDataProssimaFatt(r("FREQ").ToString))
                     If qtaOrdine = 0 OrElse qtaOrdine = 999 Then
-                        errori.AppendLine("Indicato Canone ma frequenza uguale a NO su Contratto: " & contratto)
                         valunitFattura = 0
                         valunitContratto = 0
+                    End If
+                    If qtaOrdine = 0 AndAlso Not ValoreZero(r("CANONE").ToString) Then
+                        errori.AppendLine("Indicato Canone ma frequenza uguale a NO su Contratto: " & contratto)
                     End If
                     If masterDistinta.GruppoDistinta.Equals(contratto) OrElse String.IsNullOrWhiteSpace(masterDistinta.GruppoDistinta) Then
                         iLineDistinta = 0
@@ -2336,9 +2346,11 @@ Module ContrattiFox
                     Dim valunitFattura As Double = Math.Round(imponibileFattura, 2)
                     Dim valunitContratto As Double = Math.Round(imponibileContratto, 2)
                     If qtaOrdine = 0 OrElse qtaOrdine = 999 Then
-                        errori.AppendLine("Indicato Canone ma frequenza uguale a NO su Contratto: " & rA("CONTRATTO").ToString)
                         valunitFattura = 0
                         valunitContratto = 0
+                    End If
+                    If qtaOrdine = 0 AndAlso Not ValoreZero(rA("CANONE").ToString) Then
+                        errori.AppendLine("Indicato Canone ma frequenza uguale a NO su Contratto: " & rA("CONTRATTO").ToString)
                     End If
                     iLineDistinta = rifContratto.SubLineDistinta
                     iLineContratto = rifContratto.Line
